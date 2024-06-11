@@ -5,7 +5,7 @@ import {repository} from '@loopback/repository';
 import bcrypt from 'bcryptjs';
 import dayjs from 'dayjs';
 import {Credentials, PasswordHasherBindings, ResponseServiceBindings, SendgridServiceBindings, UserServiceBindings} from '../keys';
-import {RoleModuleRepository, RoleRepository, UserRepository} from '../repositories';
+import {ModuleRepository, RoleModuleRepository, RoleRepository, UserRepository} from '../repositories';
 import {BcryptHasher} from './bcrypt.service';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
@@ -35,6 +35,8 @@ export class AuthService {
     public roleRepository: RoleRepository,
     @repository(RoleModuleRepository)
     public roleModuleRepository: RoleModuleRepository,
+    @repository(ModuleRepository)
+    public moduleRepository: ModuleRepository,
     @inject(ResponseServiceBindings.RESPONSE_SERVICE)
     public responseService: ResponseService,
     @inject(SendgridServiceBindings.SENDGRID_SERVICE)
@@ -230,5 +232,54 @@ export class AuthService {
     }
   }
 
+  async hasPermissions(body: {module: string}, token: string) {
+    const getUserByToken = this.userService.getTokenData(token);
+    const user = await this.userRepository.findById(getUserByToken?.id, {
+      include: [
+        {
+          relation: 'userData',
+          scope: {
+            fields: ['id', 'imageURL', 'userRoleId'],
+          }
+        }],
 
+    });
+
+    const module = await this.moduleRepository.findOne({
+      where: {name: body.module},
+    })
+
+    if (!module) return this.responseService.forbbiden("No se ha encontrado el modulo")
+
+    let roleModule: any;
+    try {
+      if (user.isSuperAdmin) {
+        roleModule = await this.roleModuleRepository.findOne({
+          where: {moduleId: module?.id},
+          include: [{relation: 'module', scope: {fields: ['name', 'description', 'categoryName']}}],
+          fields: ['create', 'read', 'update', 'del']
+        })
+        roleModule.create = true;
+        roleModule.update = true;
+        roleModule.del = true;
+        roleModule.read = true;
+
+      } else {
+        roleModule = await this.roleModuleRepository.findOne({
+          where: {roleId: user.roleId, moduleId: module?.id},
+          include: [{relation: 'module', scope: {fields: ['name', 'description', 'categoryName']}}],
+          fields: ['create', 'read', 'update', 'del']
+        })
+      }
+
+      if (!roleModule) return this.responseService.forbbiden("No se han encontrado modulos")
+
+      return roleModule;
+    } catch (error) {
+      if (error.message === "Cannot set properties of null (setting 'create')")
+        return this.responseService.notFound("No se pudo encontrar el <roleModule>")
+      return this.responseService.internalServerError(error.message ? error.message : error)
+    }
+
+  }
 }
