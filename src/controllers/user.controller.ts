@@ -88,6 +88,9 @@ export class UserController {
                   avatar: {type: 'string'},
                   isAdmin: {type: 'boolean', nullable: true},
                   roleId: {type: 'number'},
+                  immediateBossId: {type: 'number'},
+                  isMaster: {type: 'boolean'},
+                  typeUser: {type: 'string'},
                 }
               },
               userData: {
@@ -95,6 +98,19 @@ export class UserController {
                 properties: {
                   birthdate: {type: 'string', format: 'date-time'},
                   cellphone: {type: 'string'},
+                  address: {
+                    type: 'object',
+                    properties: {
+                      state: {type: 'string'},
+                      city: {type: 'string'},
+                      street: {type: 'string'},
+                      suburb: {type: 'string'},
+                      zipCode: {type: 'string'},
+                      extNum: {type: 'string'},
+                      intNum: {type: 'string'},
+                      country: {type: 'string'}
+                    }
+                  },
                 }
               }
             }

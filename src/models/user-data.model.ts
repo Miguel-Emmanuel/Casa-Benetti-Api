@@ -1,4 +1,5 @@
 import {belongsTo, model, property} from '@loopback/repository';
+import {Address} from './base/address.model';
 import {BaseEntity} from './base/base-entity.model';
 import {User} from './user.model';
 
@@ -40,6 +41,11 @@ export class UserData extends BaseEntity {
 
   @belongsTo(() => User)
   userId: number;
+
+  @property({
+    type: 'object',
+  })
+  address?: Address;
 
   constructor(data?: Partial<UserData>) {
     super(data);
