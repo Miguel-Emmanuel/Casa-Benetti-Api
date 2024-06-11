@@ -18,9 +18,9 @@ export async function migrate(args: string[]) {
     models: [
       'Organization',
       'Role',
+      'UserData',
       'User',
       'UserCredentials',
-      'UserData',
       'Module',
       'RoleModule',
       'Document'
