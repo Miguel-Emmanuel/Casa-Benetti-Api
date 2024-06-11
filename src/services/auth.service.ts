@@ -64,7 +64,7 @@ export class AuthService {
 
     const userRole = await this.roleRepository.findOne({
       where: {id: user.roleId},
-      fields: ['id', 'name', 'description', 'isActive'],
+      fields: ['id', 'name', 'description', 'isActive', 'accessLevel'],
     })
 
     const roleModules = await this.roleModuleRepository.find({
