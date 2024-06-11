@@ -27,17 +27,21 @@ export class UserRepository extends SoftCrudRepository<
 
   public readonly userData: BelongsToAccessor<UserData, typeof User.prototype.id>;
 
+  public readonly immediateBoss: BelongsToAccessor<User, typeof User.prototype.id>;
+
   constructor(
     //@inject('models.User') model: User,
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('UserCredentialsRepository') protected userCredentialsRepositoryGetter: Getter<UserCredentialsRepository>, @repository.getter('RoleRepository') protected roleRepositoryGetter: Getter<RoleRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('UserDataRepository') protected userDataRepositoryGetter: Getter<UserDataRepository>,
+    @repository.getter('UserCredentialsRepository') protected userCredentialsRepositoryGetter: Getter<UserCredentialsRepository>, @repository.getter('RoleRepository') protected roleRepositoryGetter: Getter<RoleRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('UserDataRepository') protected userDataRepositoryGetter: Getter<UserDataRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>,
   ) {
     super(
       User,
       dataSource
     );
+    this.immediateBoss = this.createBelongsToAccessorFor('immediateBoss', userRepositoryGetter,);
+    this.registerInclusionResolver('immediateBoss', this.immediateBoss.inclusionResolver);
 
     this.definePersistedModel(User)
     this.modelClass.observe('before save', async (ctx: any) => {

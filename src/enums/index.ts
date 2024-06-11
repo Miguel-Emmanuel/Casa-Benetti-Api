@@ -19,3 +19,15 @@ export enum LogModificationType {
 export enum ModuleCategories {
   CATALOGS = 'Catálogos'
 }
+
+export enum TypeUserE {
+  ADMINISTRADOR = 'Administrador',
+  INDEPENDIENTE = 'Independiente'
+}
+
+
+export enum AccessLevelRolE {
+  PERSONAL = 'Personal',
+  SUCURSAL = 'Sucursal',
+  GLOBAL = 'Global',
+}

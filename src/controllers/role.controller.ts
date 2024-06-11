@@ -40,7 +40,7 @@ export class RoleController {
               properties: {
                 name: {type: 'string'},
                 description: {type: 'string'},
-                accessLevel: {type: 'number'},
+                accessLevel: {type: 'string'},
                 isActive: {type: 'boolean'},
                 roleModules: {
                   type: 'array',
@@ -71,7 +71,7 @@ export class RoleController {
             properties: {
               name: {type: 'string'},
               description: {type: 'string'},
-              accessLevel: {type: 'number'},
+              accessLevel: {type: 'string'},
               isActive: {type: 'boolean'},
               roleModules: {
                 type: 'array',
@@ -205,7 +205,7 @@ export class RoleController {
             properties: {
               name: {type: 'string'},
               description: {type: 'string'},
-              accessLevel: {type: 'number'},
+              accessLevel: {type: 'string'},
               isActive: {type: 'boolean'},
               organizationId: {type: 'number'},
               roleModules: {

@@ -109,7 +109,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
   async findUserByToken(token: string): Promise<(User & UserRelations | undefined)> {
     token = token.replace("Bearer ", "");
-    let userTokenData = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const userTokenData = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
     if (userTokenData) {
       const user = await this.userRepository.findOne({
         where: {id: userTokenData.id},
@@ -181,11 +181,9 @@ export class MyUserService implements UserService<User, Credentials> {
       return this.responseService.badRequest('¡Oh, no! La organización no es válida o está desactivada, revisa por favor e intenta de nuevo.');
     }
 
-    if (user.isAdmin === false) {
-      const userRole = await this.roleRepository.findOne({where: {id: user.roleId, isActive: true}})
-      if (!userRole)
-        return this.responseService.badRequest('¡Oh, no! El rol no es válida o está desactivada, revisa por favor e intenta de nuevo.');
-    }
+    const userRole = await this.roleRepository.findOne({where: {id: user.roleId, isActive: true}})
+    if (!userRole)
+      return this.responseService.badRequest('¡Oh, no! El rol no es válida o está desactivada, revisa por favor e intenta de nuevo.');
 
 
 
@@ -193,9 +191,8 @@ export class MyUserService implements UserService<User, Credentials> {
     user.password = !user.password ? passwordGenerator(8) : user.password;
     const password = await this.hasher.hashPassword(user.password);
     const decryptedPassword = user.password;
-    const date = new Date();
     delete user.password;
-    const savedUser = await this.userRepository.create({...user, email: email?.toLowerCase(), organizationId});
+    const savedUser = await this.userRepository.create({...user, email: email?.toLowerCase(), organizationId, isActive: true});
 
     try {
       const savedUserData = await this.userDataRepository.create({...userData, userId: savedUser.id});
@@ -206,10 +203,11 @@ export class MyUserService implements UserService<User, Credentials> {
         to: email,
         templateId: SendgridTemplates.NEW_USER.id,
         dynamicTemplateData: {
-          subject: `¡Bienvenido!`,
+          subject: SendgridTemplates.NEW_USER.subject,
           name: `${savedUser.firstName} ${savedUser.lastName}`,
           username: email,
-          password: decryptedPassword
+          password: decryptedPassword,
+          url: process.env.URL_FRONTEND
         },
       };
 
@@ -421,7 +419,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
     const userRole = await this.roleRepository.findOne({
       where: {id: user.roleId},
-      fields: ['id', 'name', 'description', 'isActive'],
+      fields: ['id', 'name', 'description', 'isActive', 'accessLevel'],
     })
 
     const roleModules = await this.roleModuleRepository.find({
@@ -430,7 +428,7 @@ export class MyUserService implements UserService<User, Credentials> {
       fields: ['create', 'read', 'update', 'del', 'moduleId']
     })
 
-    let groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
+    const groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
       const {module, ...current} = currentValue;
       if (!module)
         return previousValue;
@@ -439,8 +437,8 @@ export class MyUserService implements UserService<User, Credentials> {
       return previousValue;
     }, {});
 
-    let list = Object.keys(groupList);
-    let newList = list?.map(module => ({
+    const list = Object.keys(groupList);
+    const newList = list?.map(module => ({
       category: module,
       modules: groupList[module]
     }))

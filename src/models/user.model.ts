@@ -1,5 +1,6 @@
 import {UserCredentialsWithRelations} from '@loopback/authentication-jwt';
 import {belongsTo, hasOne, model, property} from '@loopback/repository';
+import {TypeUserE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Organization} from './organization.model';
 import {Role} from './role.model';
@@ -121,6 +122,20 @@ export class User extends BaseEntity {
 
   @belongsTo(() => UserData)
   userDataId: number;
+
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  isMaster?: boolean;
+
+  @property({
+    type: 'string',
+  })
+  typeUser?: TypeUserE;
+
+  @belongsTo(() => User)
+  immediateBossId: number;
 
   constructor(
     data?: Partial<User>

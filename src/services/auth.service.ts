@@ -5,7 +5,7 @@ import {repository} from '@loopback/repository';
 import bcrypt from 'bcryptjs';
 import dayjs from 'dayjs';
 import {Credentials, PasswordHasherBindings, ResponseServiceBindings, SendgridServiceBindings, UserServiceBindings} from '../keys';
-import {RoleModuleRepository, RoleRepository, UserRepository} from '../repositories';
+import {ModuleRepository, RoleModuleRepository, RoleRepository, UserRepository} from '../repositories';
 import {BcryptHasher} from './bcrypt.service';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
@@ -35,6 +35,8 @@ export class AuthService {
     public roleRepository: RoleRepository,
     @repository(RoleModuleRepository)
     public roleModuleRepository: RoleModuleRepository,
+    @repository(ModuleRepository)
+    public moduleRepository: ModuleRepository,
     @inject(ResponseServiceBindings.RESPONSE_SERVICE)
     public responseService: ResponseService,
     @inject(SendgridServiceBindings.SENDGRID_SERVICE)
@@ -64,7 +66,7 @@ export class AuthService {
 
     const userRole = await this.roleRepository.findOne({
       where: {id: user.roleId},
-      fields: ['id', 'name', 'description', 'isActive'],
+      fields: ['id', 'name', 'description', 'isActive', 'accessLevel'],
     })
 
     const roleModules = await this.roleModuleRepository.find({
@@ -73,7 +75,7 @@ export class AuthService {
       fields: ['create', 'read', 'update', 'del', 'moduleId']
     })
 
-    let groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
+    const groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
       const {module, ...current} = currentValue;
       if (!module)
         return previousValue;
@@ -82,8 +84,8 @@ export class AuthService {
       return previousValue;
     }, {});
 
-    let list = Object.keys(groupList);
-    let newList = list?.map(module => ({
+    const list = Object.keys(groupList);
+    const newList = list?.map(module => ({
       category: module,
       modules: groupList[module]
     }))
@@ -105,16 +107,11 @@ export class AuthService {
       if (!userToResetPassword?.userDataId) return this.responseService.badRequest('El correo no está registrado en el sistema. Compruebe la información e inténtelo de nuevo.')
       if (!userToResetPassword?.isActive) return this.responseService.badRequest('¡Oh, no! el usuario con el que intentas acceder está desactivado, por lo tanto no puedes realizar esta acción. Por favor, contacta a tu administrador.')
 
-
-      // const {isActive} = await this.organizationRepository.findById(userToResetPassword?.organizationId)
-
-      // if (!isActive) return this.responseService.badRequest('¡Oh, no! La empresa a la que intentas acceder está desactivada, por lo tanto no puedes iniciar sesión. Por favor, contacta a tu administrador e intenta de nuevo.')
-      const HOST_URL = process.env.PAGE_URL;
-
       if (userToResetPassword) {
         const hash = bcrypt.hashSync('}*/.,41-a[wRñ{1337}|', 8).toString();
         const token = Buffer.from(hash).toString('base64');
-        const linkResetPassword = HOST_URL + '/login?token=' + token;
+        const linkResetPassword = `${process.env.URL_FRONTEND}/login?token=${token}`;
+
 
         const options = {
           to: requestResetPassword.email,
@@ -188,7 +185,6 @@ export class AuthService {
           templateId: SendgridTemplates.USER_PASSWORD_CHANGED.id,
           dynamicTemplateData: {
             subject: SendgridTemplates.USER_PASSWORD_CHANGED.subject,
-            buttonURL: process.env.PAGE_URL,
             password: resetPassword.password,
             username: `${userByToken?.firstName} ${userByToken?.lastName}`
           },
@@ -236,5 +232,54 @@ export class AuthService {
     }
   }
 
+  async hasPermissions(body: {module: string}, token: string) {
+    const getUserByToken = this.userService.getTokenData(token);
+    const user = await this.userRepository.findById(getUserByToken?.id, {
+      include: [
+        {
+          relation: 'userData',
+          scope: {
+            fields: ['id', 'imageURL', 'userRoleId'],
+          }
+        }],
 
+    });
+
+    const module = await this.moduleRepository.findOne({
+      where: {name: body.module},
+    })
+
+    if (!module) return this.responseService.forbbiden("No se ha encontrado el modulo")
+
+    let roleModule: any;
+    try {
+      if (user.isSuperAdmin) {
+        roleModule = await this.roleModuleRepository.findOne({
+          where: {moduleId: module?.id},
+          include: [{relation: 'module', scope: {fields: ['name', 'description', 'categoryName']}}],
+          fields: ['create', 'read', 'update', 'del']
+        })
+        roleModule.create = true;
+        roleModule.update = true;
+        roleModule.del = true;
+        roleModule.read = true;
+
+      } else {
+        roleModule = await this.roleModuleRepository.findOne({
+          where: {roleId: user.roleId, moduleId: module?.id},
+          include: [{relation: 'module', scope: {fields: ['name', 'description', 'categoryName']}}],
+          fields: ['create', 'read', 'update', 'del']
+        })
+      }
+
+      if (!roleModule) return this.responseService.forbbiden("No se han encontrado modulos")
+
+      return roleModule;
+    } catch (error) {
+      if (error.message === "Cannot set properties of null (setting 'create')")
+        return this.responseService.notFound("No se pudo encontrar el <roleModule>")
+      return this.responseService.internalServerError(error.message ? error.message : error)
+    }
+
+  }
 }

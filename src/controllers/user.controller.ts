@@ -81,20 +81,43 @@ export class UserController {
               user: {
                 type: 'object',
                 properties: {
-                  email: {type: 'string'},
+                  email: {type: 'string', format: 'email'},
                   organizationId: {type: 'number'},
                   firstName: {type: 'string'},
                   lastName: {type: 'string'},
                   avatar: {type: 'string'},
                   isAdmin: {type: 'boolean', nullable: true},
                   roleId: {type: 'number'},
+                  immediateBossId: {type: 'number'},
+                  isMaster: {type: 'boolean'},
+                  typeUser: {type: 'string'},
                 }
               },
               userData: {
                 type: 'object',
                 properties: {
                   birthdate: {type: 'string', format: 'date-time'},
-                  cellphone: {type: 'string'},
+                  cellphone: {
+                    type: 'string', minLength: 10,
+                    maxLength: 10,
+                    errorMessage: {
+                      minLength: 'Name should be at least 10 characters.',
+                      maxLength: 'Name should not exceed 10 characters.',
+                    }
+                  },
+                  address: {
+                    type: 'object',
+                    properties: {
+                      state: {type: 'string'},
+                      city: {type: 'string'},
+                      street: {type: 'string'},
+                      suburb: {type: 'string'},
+                      zipCode: {type: 'string'},
+                      extNum: {type: 'string'},
+                      intNum: {type: 'string'},
+                      country: {type: 'string'}
+                    }
+                  },
                 }
               }
             }
