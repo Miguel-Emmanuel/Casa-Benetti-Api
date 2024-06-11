@@ -192,7 +192,7 @@ export class MyUserService implements UserService<User, Credentials> {
     const password = await this.hasher.hashPassword(user.password);
     const decryptedPassword = user.password;
     delete user.password;
-    const savedUser = await this.userRepository.create({...user, email: email?.toLowerCase(), organizationId});
+    const savedUser = await this.userRepository.create({...user, email: email?.toLowerCase(), organizationId, isActive: true});
 
     try {
       const savedUserData = await this.userDataRepository.create({...userData, userId: savedUser.id});

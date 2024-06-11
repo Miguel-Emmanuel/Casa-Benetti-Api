@@ -30,6 +30,14 @@ export class UserData extends BaseEntity {
 
   @property({
     type: 'string',
+    jsonSchema: {
+      minLength: 10,
+      maxLength: 10,
+      errorMessage: {
+        minLength: 'Name should be at least 10 characters.',
+        maxLength: 'Name should not exceed 10 characters.',
+      }
+    }
   })
   cellphone?: string;
 

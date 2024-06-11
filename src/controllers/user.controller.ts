@@ -81,7 +81,7 @@ export class UserController {
               user: {
                 type: 'object',
                 properties: {
-                  email: {type: 'string'},
+                  email: {type: 'string', format: 'email'},
                   organizationId: {type: 'number'},
                   firstName: {type: 'string'},
                   lastName: {type: 'string'},
@@ -97,7 +97,14 @@ export class UserController {
                 type: 'object',
                 properties: {
                   birthdate: {type: 'string', format: 'date-time'},
-                  cellphone: {type: 'string'},
+                  cellphone: {
+                    type: 'string', minLength: 10,
+                    maxLength: 10,
+                    errorMessage: {
+                      minLength: 'Name should be at least 10 characters.',
+                      maxLength: 'Name should not exceed 10 characters.',
+                    }
+                  },
                   address: {
                     type: 'object',
                     properties: {

@@ -1,5 +1,4 @@
 import {hasMany, model, property} from '@loopback/repository';
-import {AccessLevelRolE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {User} from './user.model';
 
@@ -32,7 +31,7 @@ export class Role extends BaseEntity {
   @property({
     type: 'string',
   })
-  accessLevel: AccessLevelRolE;
+  accessLevel: string;
 
   @property({
     type: 'number',
