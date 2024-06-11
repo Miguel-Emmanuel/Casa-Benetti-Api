@@ -3,17 +3,17 @@ import sgMail from '@sendgrid/mail';
 
 export const SendgridTemplates = {
   USER_RESET_PASSWORD: {
-    id: 'd-b0e5f8f91104447c8339178e04e410de',
+    id: 'd-5970cdbd1dc948a88ae9b1ba8af64507',
     subject: '¡Solicitud de cambio de contraseña!',
   },
   USER_PASSWORD_CHANGED: {
-    id: 'd-1be897d651474ee0add01bede2966359',
-    subject: '¡Solicitud de cambio de contraseña!',
+    id: 'd-6bba46eecad54dfb8529d75aca9b0f0c',
+    subject: '¡Contraseña actualizada!',
   },
   NEW_USER: {
-    id: 'd-bdde2a6892874dfb91d3c073fcf80677',
-    subject: '¡Bienvenido!',
-  },
+    id: 'd-3baf6b26baa041eab3ca8e8f1e321da1',
+    subject: '¡Bienvenido a Casa Benetti!',
+  }
 };
 
 @injectable({scope: BindingScope.TRANSIENT})

@@ -73,7 +73,7 @@ export class AuthService {
       fields: ['create', 'read', 'update', 'del', 'moduleId']
     })
 
-    let groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
+    const groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
       const {module, ...current} = currentValue;
       if (!module)
         return previousValue;
@@ -82,8 +82,8 @@ export class AuthService {
       return previousValue;
     }, {});
 
-    let list = Object.keys(groupList);
-    let newList = list?.map(module => ({
+    const list = Object.keys(groupList);
+    const newList = list?.map(module => ({
       category: module,
       modules: groupList[module]
     }))
@@ -105,16 +105,11 @@ export class AuthService {
       if (!userToResetPassword?.userDataId) return this.responseService.badRequest('El correo no está registrado en el sistema. Compruebe la información e inténtelo de nuevo.')
       if (!userToResetPassword?.isActive) return this.responseService.badRequest('¡Oh, no! el usuario con el que intentas acceder está desactivado, por lo tanto no puedes realizar esta acción. Por favor, contacta a tu administrador.')
 
-
-      // const {isActive} = await this.organizationRepository.findById(userToResetPassword?.organizationId)
-
-      // if (!isActive) return this.responseService.badRequest('¡Oh, no! La empresa a la que intentas acceder está desactivada, por lo tanto no puedes iniciar sesión. Por favor, contacta a tu administrador e intenta de nuevo.')
-      const HOST_URL = process.env.PAGE_URL;
-
       if (userToResetPassword) {
         const hash = bcrypt.hashSync('}*/.,41-a[wRñ{1337}|', 8).toString();
         const token = Buffer.from(hash).toString('base64');
-        const linkResetPassword = HOST_URL + '/login?token=' + token;
+        const linkResetPassword = `${process.env.URL_FRONTEND}/login?token=${token}`;
+
 
         const options = {
           to: requestResetPassword.email,
@@ -188,7 +183,6 @@ export class AuthService {
           templateId: SendgridTemplates.USER_PASSWORD_CHANGED.id,
           dynamicTemplateData: {
             subject: SendgridTemplates.USER_PASSWORD_CHANGED.subject,
-            buttonURL: process.env.PAGE_URL,
             password: resetPassword.password,
             username: `${userByToken?.firstName} ${userByToken?.lastName}`
           },

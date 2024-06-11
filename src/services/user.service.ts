@@ -203,10 +203,11 @@ export class MyUserService implements UserService<User, Credentials> {
         to: email,
         templateId: SendgridTemplates.NEW_USER.id,
         dynamicTemplateData: {
-          subject: `¡Bienvenido!`,
+          subject: SendgridTemplates.NEW_USER.subject,
           name: `${savedUser.firstName} ${savedUser.lastName}`,
           username: email,
-          password: decryptedPassword
+          password: decryptedPassword,
+          url: process.env.URL_FRONTEND
         },
       };
 
