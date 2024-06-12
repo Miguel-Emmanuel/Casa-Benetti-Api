@@ -6,6 +6,8 @@ export enum LogModelName {
     USER = 'User',
     DOCUMENT = "Document",
     PRODUCT = 'Product',
+    BRANCH = "Branch",
+    WAREHOUSE = "Warehouse"
 }
 
 export enum LogModificationType {
@@ -33,7 +35,6 @@ export enum AccessLevelRolE {
     SUCURSAL = 'Sucursal',
     GLOBAL = 'Global',
 }
-
 
 export enum ClassificationE {
     ACCESORIO = "Accesorio",

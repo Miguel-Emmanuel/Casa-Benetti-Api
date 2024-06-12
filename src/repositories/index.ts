@@ -9,8 +9,11 @@ export * from './user-credentials.repository';
 export * from './user-data.repository';
 export * from './user.repository';
 
+export * from './branch.repository';
 export * from './product.repository';
-export * from './quotation.repository';
-export * from './quotation-project-manager.repository';
 export * from './quotation-designer.repository';
 export * from './quotation-products.repository';
+export * from './quotation-project-manager.repository';
+export * from './quotation.repository';
+export * from './warehouse.repository';
+
