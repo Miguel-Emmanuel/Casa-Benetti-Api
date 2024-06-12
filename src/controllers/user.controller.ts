@@ -3,6 +3,7 @@ import {TokenServiceBindings} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
 import {Count, CountSchema, Filter, FilterExcludingWhere, repository, Where} from '@loopback/repository';
 import {del, get, getModelSchemaRef, param, patch, post, requestBody, response, Response, RestBindings} from '@loopback/rest';
+import {TypeUserE} from '../enums';
 import {PasswordHasherBindings, ResponseServiceBindings, SendgridServiceBindings, UserServiceBindings} from '../keys';
 import {User, UserData} from '../models';
 import {OrganizationRepository, RoleModuleRepository, RoleRepository, UserDataRepository, UserRepository} from '../repositories';
@@ -90,7 +91,7 @@ export class UserController {
                   roleId: {type: 'number'},
                   immediateBossId: {type: 'number'},
                   isMaster: {type: 'boolean'},
-                  typeUser: {type: 'string'},
+                  typeUser: {type: 'string', enum: [...Object.values(TypeUserE)], },
                 }
               },
               userData: {
