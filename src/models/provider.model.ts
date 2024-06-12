@@ -1,6 +1,7 @@
-import {Model, model, property} from '@loopback/repository';
+import {Model, belongsTo, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {BaseEntity} from './base/base-entity.model';
+import {Organization} from './organization.model';
 
 @model()
 class TaxData extends Model {
@@ -86,14 +87,14 @@ export class ContactInformation extends Model {
     postgresql: {
       table: 'catalog_Provider' // Nombre de la tabla en PostgreSQL
     },
-    // foreignKeys: {
-    //   fk_organization_organizationId: {
-    //     name: 'fk_organization_organizationId',
-    //     entity: 'Organization',
-    //     entityKey: 'id',
-    //     foreignKey: 'organizationid',
-    //   },
-    // }
+    foreignKeys: {
+      fk_organization_organizationId: {
+        name: 'fk_organization_organizationId',
+        entity: 'Organization',
+        entityKey: 'id',
+        foreignKey: 'organizationid',
+      },
+    }
   }
 })
 export class Provider extends BaseEntity {
@@ -133,7 +134,8 @@ export class Provider extends BaseEntity {
   })
   contactInformation?: ContactInformation;
 
-
+  @belongsTo(() => Organization)
+  organizationId?: number;
 
   constructor(data?: Partial<Provider>) {
     super(data);

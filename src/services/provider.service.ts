@@ -19,7 +19,7 @@ export class ProviderService {
 
   async create(provider: Provider) {
     try {
-      return this.providerRepository.create({...provider,/* organizationId: this.user.organizationId*/});
+      return this.providerRepository.create({...provider, organizationId: this.user.organizationId});
     } catch (error) {
       return this.responseService.internalServerError(
         error.message ? error.message : error
