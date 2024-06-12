@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, Where, repository} from '@loopback/repository';
+import {SecurityBindings, UserProfile} from '@loopback/security';
 import {ResponseServiceBindings} from '../keys';
 import {Branch} from '../models';
 import {BranchRepository} from '../repositories';
@@ -12,11 +13,15 @@ export class BranchService {
     public branchRepository: BranchRepository,
     @inject(ResponseServiceBindings.RESPONSE_SERVICE)
     public responseService: ResponseService,
+    @inject(SecurityBindings.USER)
+    private user: UserProfile,
   ) { }
 
   async create(branch: Branch) {
     try {
-      return this.branchRepository.create(branch);
+      console.log("CREATE", this.user.email);
+
+      return this.branchRepository.create({...branch, organizationId: this.user.organizationId});
     } catch (error) {
       return this.responseService.internalServerError(
         error.message ? error.message : error

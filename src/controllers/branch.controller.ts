@@ -11,8 +11,6 @@ import {
   get,
   getModelSchemaRef,
   param,
-  post,
-  requestBody,
   response
 } from '@loopback/rest';
 import {BranchServiceBindings} from '../keys';
@@ -29,26 +27,26 @@ export class BranchController {
     public branchService: BranchService
   ) { }
 
-  @post('/branches')
-  @response(200, {
-    description: 'Branch model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Branch)}},
-  })
-  async create(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Branch, {
-            title: 'NewBranch',
-            exclude: ['id'],
-          }),
-        },
-      },
-    })
-    branch: Omit<Branch, 'id'>,
-  ): Promise<Branch> {
-    return this.branchRepository.create(branch);
-  }
+  // @post('/branches')
+  // @response(200, {
+  //   description: 'Branch model instance',
+  //   content: {'application/json': {schema: getModelSchemaRef(Branch)}},
+  // })
+  // async create(
+  //   @requestBody({
+  //     content: {
+  //       'application/json': {
+  //         schema: getModelSchemaRef(Branch, {
+  //           title: 'NewBranch',
+  //           exclude: ['id'],
+  //         }),
+  //       },
+  //     },
+  //   })
+  //   branch: Omit<Branch, 'id'>,
+  // ): Promise<object> {
+  //   return this.branchService.create(branch);
+  // }
 
   @get('/branches/count')
   @response(200, {

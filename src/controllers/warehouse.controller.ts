@@ -44,8 +44,8 @@ export class WarehouseController {
   //     },
   //   })
   //   warehouse: Omit<Warehouse, 'id'>,
-  // ): Promise<Warehouse> {
-  //   return this.warehouseRepository.create(warehouse);
+  // ): Promise<object> {
+  //   return this.warehouseService.create(warehouse);
   // }
 
   @get('/warehouses/count')
