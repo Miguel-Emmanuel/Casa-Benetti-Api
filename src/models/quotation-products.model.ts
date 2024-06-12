@@ -38,6 +38,12 @@ export class QuotationProducts extends Entity {
     })
     isSeparate?: boolean;
 
+    //Porcentaje apartado
+    @property({
+        type: 'boolean',
+    })
+    percentageSeparate?: boolean;
+
     //Dias de apartado
     @property({
         type: 'number',
