@@ -16,6 +16,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {CreateRequestBody} from '../RequestBody/quotation.request';
 import {Quotation} from '../models';
 import {QuotationService} from '../services';
 
@@ -31,16 +32,7 @@ export class QuotationController {
         content: {'application/json': {schema: getModelSchemaRef(Quotation)}},
     })
     async create(
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(Quotation, {
-                        title: 'NewQuotation',
-                        exclude: ['id'],
-                    }),
-                },
-            },
-        })
+        @requestBody(CreateRequestBody)
         quotation: Omit<Quotation, 'id'>,
     ): Promise<Quotation> {
         return this.quotationService.create(quotation);

@@ -57,19 +57,19 @@ export class Quotation extends Entity {
     })
     isreferencedClient: boolean;
 
-    //Se requiere project manager
-    @property({
-        type: 'boolean',
-        required: true,
-    })
-    isProjectManager: boolean;
-
     //Comision del cliente referenciado
     @property({
         type: 'number',
         required: false,
     })
     commissionPercentagereferencedClient: number;
+
+    //Se requiere project manager
+    @property({
+        type: 'boolean',
+        required: true,
+    })
+    isProjectManager: boolean;
 
     @hasMany(() => User, {through: {model: () => QuotationProjectManager}})
     projectManagers: User[];
@@ -145,10 +145,17 @@ export class Quotation extends Entity {
 
     //Tipo de cambio
     @property({
-        type: 'number',
+        type: 'string',
         required: false,
     })
     exchangeRate: ExchangeRateE;
+
+    //Tipo de cambio monto
+    @property({
+        type: 'number',
+        required: false,
+    })
+    exchangeRateAmount: number;
 
     //Saldo
     @property({
