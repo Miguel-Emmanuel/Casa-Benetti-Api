@@ -6,6 +6,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
             schema: {
                 type: 'object',
                 properties: {
+                    id: {
+                        type: 'number',
+                        nullable: true
+                    },
                     client: {
                         type: 'object',
                         properties: {
@@ -78,7 +82,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                             isProjectManager: {
                                 type: 'boolean'
                             },
-                            projectManager: {
+                            projectManagers: {
                                 type: 'array',
                                 items: {
                                     type: 'object',

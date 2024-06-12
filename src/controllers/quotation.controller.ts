@@ -17,6 +17,7 @@ import {
     response
 } from '@loopback/rest';
 import {CreateRequestBody} from '../RequestBody/quotation.request';
+import {CreateQuotation} from '../interface';
 import {Quotation} from '../models';
 import {QuotationService} from '../services';
 
@@ -33,9 +34,9 @@ export class QuotationController {
     })
     async create(
         @requestBody(CreateRequestBody)
-        quotation: Omit<Quotation, 'id'>,
+        data: CreateQuotation,
     ): Promise<Quotation> {
-        return this.quotationService.create(quotation);
+        return this.quotationService.create(data);
     }
 
     @get('/quotations/count')

@@ -2,6 +2,7 @@ import {TypeSaleE} from '../enums';
 import {Address} from '../models';
 
 export interface CreateQuotation {
+    id: number,
     client: {
         clientId: number;
         firstName: string;
@@ -23,7 +24,7 @@ export interface CreateQuotation {
         commissionPercentagereferencedClient: number;
         referencedClientId: number;
         isProjectManager: boolean;
-        projectManager: {
+        projectManagers: {
             userId: number;
             commissionPercentageProjectManager: number;
         }[],
@@ -45,6 +46,15 @@ export interface CreateQuotation {
         subtotal: number;
     }[],
     quotation: {
-
+        subtotal: number;
+        percentageAdditionalDiscount: number;
+        additionalDiscount: number;
+        percentageIva: number;
+        iva: number;
+        total: number;
+        percentageAdvance: number;
+        advance: number;
+        exchangeRate: number;
+        balance: number;
     }
 }
