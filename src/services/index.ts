@@ -13,3 +13,4 @@ export * from './quotation.service';
 export * from './role.service';
 export * from './warehouse.service';
 
+export * from './brand.service';
