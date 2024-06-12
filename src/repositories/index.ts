@@ -11,6 +11,7 @@ export * from './user.repository';
 
 export * from './branch.repository';
 export * from './product.repository';
+export * from './provider.repository';
 export * from './quotation-designer.repository';
 export * from './quotation-products.repository';
 export * from './quotation-project-manager.repository';

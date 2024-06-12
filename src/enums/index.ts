@@ -7,7 +7,8 @@ export enum LogModelName {
     DOCUMENT = "Document",
     PRODUCT = 'Product',
     BRANCH = "Branch",
-    WAREHOUSE = "Warehouse"
+    WAREHOUSE = "Warehouse",
+    PROVIDER = "Provider"
 }
 
 export enum LogModificationType {
