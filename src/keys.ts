@@ -4,6 +4,7 @@ import {BindingKey} from '@loopback/core';
 import * as dotenv from 'dotenv';
 import {DbDataSource} from './datasources';
 import {User} from './models';
+import {BranchService} from './services';
 import {PasswordHasher} from './services/bcrypt.service';
 import {SendgridService} from './services/sendgrid.service';
 import {FileUploadHandler} from './types';
@@ -84,5 +85,11 @@ export namespace OperationHookBindings {
 export namespace SendgridServiceBindings {
   export const SENDGRID_SERVICE = BindingKey.create<SendgridService>(
     'sendgrid.properties'
+  );
+}
+
+export namespace BranchServiceBindings {
+  export const BRANCH_SERVICE = BindingKey.create<BranchService>(
+    'branch.service'
   );
 }

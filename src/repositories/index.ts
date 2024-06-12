@@ -9,3 +9,4 @@ export * from './user-credentials.repository';
 export * from './user-data.repository';
 export * from './user.repository';
 
+export * from './branch.repository';
