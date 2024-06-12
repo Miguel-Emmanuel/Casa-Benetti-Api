@@ -32,7 +32,7 @@ export class ShowroomCredit extends Model {
   @property({
     type: 'string',
   })
-  showroomCredit?: string;
+  nameShowroomCredit?: string;
 
   // Días de Crédito
   @property({
