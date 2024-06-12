@@ -4,12 +4,11 @@ import {BaseEntity} from './base/base-entity.model';
 @model({
   settings: {
     postgresql: {
-      table: 'catalog_Branch' // Nombre de la tabla en PostgreSQL
+      table: 'catalog_Warehouse' // Nombre de la tabla en PostgreSQL
     }
   }
 })
-export class Branch extends BaseEntity {
-
+export class Warehouse extends BaseEntity {
   @property({
     type: 'number',
     id: true,
@@ -20,7 +19,7 @@ export class Branch extends BaseEntity {
   @property({
     type: 'number',
   })
-  id_branch?: number;
+  id_warehouse?: number;
 
   @property({
     type: 'string',
@@ -65,13 +64,14 @@ export class Branch extends BaseEntity {
   })
   phone?: string;
 
-  constructor(data?: Partial<Branch>) {
+
+  constructor(data?: Partial<Warehouse>) {
     super(data);
   }
 }
 
-export interface BranchRelations {
+export interface WarehouseRelations {
   // describe navigational properties here
 }
 
-export type BranchWithRelations = Branch & BranchRelations;
+export type WarehouseWithRelations = Warehouse & WarehouseRelations;

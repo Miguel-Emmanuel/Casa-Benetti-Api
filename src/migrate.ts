@@ -24,7 +24,8 @@ export async function migrate(args: string[]) {
       'Module',
       'RoleModule',
       'Document',
-      'Branch'
+      'Branch',
+      'Warehouse'
     ],
   });
 
