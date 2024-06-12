@@ -107,6 +107,11 @@ export class Provider extends BaseEntity {
   id?: number;
 
   @property({
+    type: 'number',
+  })
+  providerId?: number;
+
+  @property({
     type: 'string',
   })
   status?: string;
