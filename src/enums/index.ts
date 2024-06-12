@@ -17,7 +17,8 @@ export enum LogModificationType {
 }
 
 export enum ModuleCategories {
-    CATALOGS = 'Catálogos'
+    CATALOGS = 'Catálogos',
+    COTIZACIONES = 'Cotizaciones'
 }
 
 export enum TypeUserE {
