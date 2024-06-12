@@ -4,7 +4,8 @@ export enum LogModelName {
     USER_DATA = 'UserData',
     ROLE = 'Role',
     USER = 'User',
-    DOCUMENT = "Document"
+    DOCUMENT = "Document",
+    PRODUCT = 'Product',
 }
 
 export enum LogModificationType {

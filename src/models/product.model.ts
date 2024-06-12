@@ -8,6 +8,14 @@ import {Organization} from './organization.model';
     settings: {
         postgresql: {
             table: 'catalog_Product' // Nombre de la tabla en PostgreSQL
+        },
+        foreignKeys: {
+            fk_organization_organizationId: {
+                name: 'fk_organization_organizationId',
+                entity: 'Organization',
+                entityKey: 'id',
+                foreignKey: 'organizationid',
+            },
         }
     }
 })

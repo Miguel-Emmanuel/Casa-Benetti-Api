@@ -13,3 +13,5 @@ export * from './user-data.model';
 export * from './user.model';
 
 export * from './product.model';
+export * from './quotation.model';
+export * from './quotation-project-manager.model';
