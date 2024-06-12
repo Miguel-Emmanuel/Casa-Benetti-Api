@@ -1,33 +1,72 @@
 export enum LogModelName {
-  ORGANIZATION = 'Organization',
-  ROLE_MODULE = 'RoleModule',
-  USER_DATA = 'UserData',
-  ROLE = 'Role',
-  USER = 'User',
-  DOCUMENT = "Document"
+    ORGANIZATION = 'Organization',
+    ROLE_MODULE = 'RoleModule',
+    USER_DATA = 'UserData',
+    ROLE = 'Role',
+    USER = 'User',
+    DOCUMENT = "Document"
 }
 
 export enum LogModificationType {
-  CREATE = "Create",
-  UPDATE = "Update",
-  ACTIVATE = "Activate",
-  DEACTIVATE = "Deactivate",
-  READ = "Read",
-  DELETE = "Delete",
+    CREATE = "Create",
+    UPDATE = "Update",
+    ACTIVATE = "Activate",
+    DEACTIVATE = "Deactivate",
+    READ = "Read",
+    DELETE = "Delete",
 }
 
 export enum ModuleCategories {
-  CATALOGS = 'Catálogos'
+    CATALOGS = 'Catálogos'
 }
 
 export enum TypeUserE {
-  ADMINISTRADOR = 'Administrador',
-  INDEPENDIENTE = 'Independiente'
+    ADMINISTRADOR = 'Administrador',
+    INDEPENDIENTE = 'Independiente'
 }
 
 
 export enum AccessLevelRolE {
-  PERSONAL = 'Personal',
-  SUCURSAL = 'Sucursal',
-  GLOBAL = 'Global',
+    PERSONAL = 'Personal',
+    SUCURSAL = 'Sucursal',
+    GLOBAL = 'Global',
+}
+
+
+export enum ClassificationE {
+    ACCESORIO = "Accesorio",
+    COCINAS = 'Cocinas',
+    COMPLEMENTO = 'Complemento',
+    DOCUMENTACION = 'Documentación',
+    EQUIPOS = 'Equipos',
+    ILUMINACION = 'Iluminación',
+    KIT = 'Kit',
+    MOBILIARIO = 'Mobiliario',
+    SISTEMAS = 'Sistemas',
+    SERVICIO = 'Servicio'
+}
+
+export enum LocationE {
+    COCINA = 'Cocina',
+    RECAMARA = 'Recamara',
+    SALA = 'Sala',
+}
+
+export enum TypeArticleE {
+    PRODUCTO_TERMINADO = 'Producto terminado',
+    PRODUCTO_ENSAMBLADO = 'Producto ensamblado',
+    SUBENSAMBLE = 'Subensamble/Parte',
+    SERVICIO = 'Servicio',
+}
+
+export enum UOME {
+    PIEZA = 'Pieza',
+    SET = 'Set/Kit',
+    SERVICIO = 'Servicio',
+}
+
+export enum CurrencyE {
+    EURO = 'Euro',
+    USD = 'USD',
+    PESO_MEXICANO = 'Peso Mexicano',
 }
