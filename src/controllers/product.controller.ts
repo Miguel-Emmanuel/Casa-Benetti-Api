@@ -17,7 +17,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {Product} from '../models';
+import {Document, Product} from '../models';
 import {ProductService} from '../services';
 
 @authenticate('jwt')
@@ -36,16 +36,32 @@ export class ProductController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Product, {
-                        title: 'NewProduct',
-                        exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment'],
-                    }),
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            product: getModelSchemaRef(Product, {
+                                title: 'NewProduct',
+                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment'],
+                            }),
+                            documents: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        fileURL: {type: 'string'},
+                                        name: {type: 'string'},
+                                        extension: {type: 'string'}
+                                    }
+                                }
+                            }
+                        }
+                    },
                 },
             },
         })
-        product: Omit<Product, 'id'>,
+        data: {product: Omit<Product, 'id'>, documents: [Document]},
     ): Promise<Product> {
-        return this.productService.create(product);
+        return this.productService.create(data);
     }
 
     @get('/products/count')

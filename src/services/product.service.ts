@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {ResponseServiceBindings} from '../keys';
-import {Product} from '../models';
+import {Document, Product} from '../models';
 import {ProductRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -17,11 +17,22 @@ export class ProductService {
         private user: UserProfile,
     ) { }
 
-    async create(product: Omit<Product, 'id'>,) {
+    async create(data: {product: Omit<Product, 'id'>, documents: [Document]}) {
         try {
-            return await this.productRepository.create({...product, organizationId: this.user.organizationId});
+            const {product, documents} = data;
+            const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
+            await this.createDocuments(response.id, documents)
+            return response;
         } catch (error) {
             throw this.responseService.badRequest(error.message ?? error)
+        }
+    }
+
+    async createDocuments(productId: number, documents: [Document]) {
+        if (documents) {
+            for (const document of documents) {
+                await this.productRepository.documents(productId).create(document);
+            }
         }
     }
 
