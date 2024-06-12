@@ -5,6 +5,7 @@ export enum LogModelName {
     ROLE = 'Role',
     USER = 'User',
     DOCUMENT = "Document",
+    PRODUCT = 'Product',
     BRANCH = "Branch",
     WAREHOUSE = "Warehouse",
     PROVIDER = "Provider"
@@ -34,4 +35,47 @@ export enum AccessLevelRolE {
     PERSONAL = 'Personal',
     SUCURSAL = 'Sucursal',
     GLOBAL = 'Global',
+}
+
+export enum ClassificationE {
+    ACCESORIO = "Accesorio",
+    COCINAS = 'Cocinas',
+    COMPLEMENTO = 'Complemento',
+    DOCUMENTACION = 'Documentación',
+    EQUIPOS = 'Equipos',
+    ILUMINACION = 'Iluminación',
+    KIT = 'Kit',
+    MOBILIARIO = 'Mobiliario',
+    SISTEMAS = 'Sistemas',
+    SERVICIO = 'Servicio'
+}
+
+export enum LocationE {
+    COCINA = 'Cocina',
+    RECAMARA = 'Recamara',
+    SALA = 'Sala',
+}
+
+export enum TypeArticleE {
+    PRODUCTO_TERMINADO = 'Producto terminado',
+    PRODUCTO_ENSAMBLADO = 'Producto ensamblado',
+    SUBENSAMBLE = 'Subensamble/Parte',
+    SERVICIO = 'Servicio',
+}
+
+export enum UOME {
+    PIEZA = 'Pieza',
+    SET = 'Set/Kit',
+    SERVICIO = 'Servicio',
+}
+
+export enum CurrencyE {
+    EURO = 'Euro',
+    USD = 'USD',
+    PESO_MEXICANO = 'Peso Mexicano',
+}
+
+export enum TypeSaleE {
+    VENTA = 'Venta',
+    PRESTAMO = 'Prestamo'
 }
