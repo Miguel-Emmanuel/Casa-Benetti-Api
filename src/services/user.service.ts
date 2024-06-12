@@ -359,9 +359,9 @@ export class MyUserService implements UserService<User, Credentials> {
     const {organizationId} = this.getTokenData(token);;
     await this.validateIfOrganizationIsActiveAndExist(organizationId);
     if (filter?.include)
-      filter.include = [...filter.include, {relation: 'userData', scope: {include: [{relation: 'documents', scope: {fields: ['id', 'fileURL', 'name', 'extension', 'userDataId', 'createdBy', 'updatedBy', 'createdAt']}}]}}]
+      filter.include = [...filter.include, {relation: 'userData'}]
     else
-      filter = {...filter, include: [{relation: 'userData', scope: {include: [{relation: 'documents', scope: {fields: ['id', 'fileURL', 'name', 'extension', 'userDataId', 'createdBy', 'updatedBy', 'createdAt']}}]}}]};
+      filter = {...filter, include: [{relation: 'userData'}]};
     const user: any = await this.userRepository.findOne({where: {id, organizationId}, ...filter});
     if (!user)
       throw this.responseService.notFound('El usuario no ha sido encontrado.')
@@ -370,15 +370,6 @@ export class MyUserService implements UserService<User, Credentials> {
     const updatedBy = await this.userRepository.findByIdOrDefault(user.updatedBy);
     user.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
     user.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
-    if (user?.userData?.documents) {
-      for (let index = 0; index < user.userData.documents.length; index++) {
-        const element = user.userData.documents[index];
-        const createdBy = await this.userRepository.findByIdOrDefault(element.createdBy);
-        const updatedBy = await this.userRepository.findByIdOrDefault(element.updatedBy);
-        element.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
-        element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
-      }
-    }
     return user;
   }
 

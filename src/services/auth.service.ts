@@ -234,16 +234,7 @@ export class AuthService {
 
   async hasPermissions(body: {module: string}, token: string) {
     const getUserByToken = this.userService.getTokenData(token);
-    const user = await this.userRepository.findById(getUserByToken?.id, {
-      include: [
-        {
-          relation: 'userData',
-          scope: {
-            fields: ['id', 'imageURL', 'userRoleId'],
-          }
-        }],
-
-    });
+    const user = await this.userRepository.findById(getUserByToken?.id);
 
     const module = await this.moduleRepository.findOne({
       where: {name: body.module},
