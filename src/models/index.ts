@@ -15,3 +15,4 @@ export * from './user.model';
 export * from './product.model';
 export * from './quotation.model';
 export * from './quotation-project-manager.model';
+export * from './quotation-designer.model';
