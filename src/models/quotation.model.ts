@@ -1,4 +1,5 @@
 import {Entity, hasMany, model, property} from '@loopback/repository';
+import {ExchangeRateE, StatusQuotationE} from '../enums';
 import {Product} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
@@ -85,6 +86,88 @@ export class Quotation extends Entity {
 
     @hasMany(() => Product, {through: {model: () => QuotationProducts}})
     products: Product[];
+
+    //Subtotal
+    @property({
+        type: 'number',
+        required: false,
+    })
+    subtotal: number;
+
+    //Porcentaje descuento adicional
+    @property({
+        type: 'number',
+        required: false,
+    })
+    percentageAdditionalDiscount: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    additionalDiscount: number;
+
+    //Iva porcentaje
+    @property({
+        type: 'number',
+        required: false,
+    })
+    percentageIva: number;
+
+    //Iva total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    iva: number;
+
+    //Total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    total: number;
+
+    //Porcentaje anticipo
+    @property({
+        type: 'number',
+        required: false,
+    })
+    percentageAdvance: number;
+
+    //Anticipo total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    advance: number;
+
+    //Tipo de cambio
+    @property({
+        type: 'number',
+        required: false,
+    })
+    exchangeRate: ExchangeRateE;
+
+    //Saldo
+    @property({
+        type: 'number',
+        required: false,
+    })
+    balance: number;
+
+    //Estatus de la cotizacion
+    @property({
+        type: 'string',
+    })
+    status: StatusQuotationE;
+
+    //Es borrador
+    @property({
+        type: 'boolean',
+    })
+    isDraft: boolean;
 
     constructor(data?: Partial<Quotation>) {
         super(data);

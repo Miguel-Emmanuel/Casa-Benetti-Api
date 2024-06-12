@@ -78,3 +78,18 @@ export enum TypeSaleE {
     VENTA = 'Venta',
     PRESTAMO = 'Prestamo'
 }
+
+
+export enum ExchangeRateE {
+    EUR = 'EUR',
+    USD = 'USD',
+    MXN = 'MXN',
+    NA = 'No aplica',
+}
+
+export enum StatusQuotationE {
+    ENPROCESO = 'En proceso',
+    ENREVISION = 'En revisión por Administración',
+    CERRADA = 'Cerrada',
+    RECHAZADA = 'Rechazada',
+}
