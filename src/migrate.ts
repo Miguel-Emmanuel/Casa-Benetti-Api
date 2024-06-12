@@ -30,7 +30,8 @@ export async function migrate(args: string[]) {
       'QuotationProducts',
       'QuotationDesigner',
       'Branch',
-      'Warehouse'
+      'Warehouse',
+      'Provider'
     ],
   });
 
