@@ -42,6 +42,10 @@ export class Document extends BaseEntity {
   })
   userDataId?: number;
 
+  @property({
+    type: 'number',
+  })
+  productId?: number;
 
   constructor(data?: Partial<Document>) {
     super(data);
