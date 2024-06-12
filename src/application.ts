@@ -17,11 +17,11 @@ import multer from 'multer';
 import path from 'path';
 import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
-import {AuthServiceBindings, BranchServiceBindings, DataSourceBindings, FILE_UPLOAD_SERVICE, OperationHookBindings, PasswordHasherBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
+import {AuthServiceBindings, BranchServiceBindings, DataSourceBindings, FILE_UPLOAD_SERVICE, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
 import {OperationHook} from './operation-hooks';
 import {UserCredentialsRepository, UserRepository} from './repositories';
 import {MySequence} from './sequence';
-import {AuthService, BcryptHasher, BranchService, JWTService, MyUserService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
+import {AuthService, BcryptHasher, BranchService, JWTService, MyUserService, ProviderService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
 export {ApplicationConfig};
 
 export class BaseApiLb4Application extends BootMixin(
@@ -96,6 +96,7 @@ export class BaseApiLb4Application extends BootMixin(
     this.bind(RoleBindings.ROLE_SERVICE).toClass(RoleService);
     this.bind(BranchServiceBindings.BRANCH_SERVICE).toClass(BranchService);
     this.bind(WarehouseServiceBindings.WAREHOUSE_SERVICE).toClass(WarehouseService);
+    this.bind(ProviderServiceBindings.PROVIDER_SERVICE).toClass(ProviderService);
 
     //this.bind(ConfigurationBindings.CONFIGURATION_SERVICE).toClass(ConfigurationService);
     this.bind(UserServiceBindings.USER_REPOSITORY).toClass(UserRepository);

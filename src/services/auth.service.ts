@@ -249,7 +249,7 @@ export class AuthService {
           where: {moduleId: module?.id},
           include: [{relation: 'module', scope: {fields: ['name', 'description', 'categoryName']}}],
           fields: ['create', 'read', 'update', 'del']
-        })
+        }) ?? {}
         roleModule.create = true;
         roleModule.update = true;
         roleModule.del = true;
