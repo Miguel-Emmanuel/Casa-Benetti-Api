@@ -14,3 +14,4 @@ export * from './user.model';
 
 export * from './branch.model';
 export * from './warehouse.model';
+export * from './provider.model';

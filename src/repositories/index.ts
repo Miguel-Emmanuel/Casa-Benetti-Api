@@ -11,3 +11,4 @@ export * from './user.repository';
 
 export * from './branch.repository';
 export * from './warehouse.repository';
+export * from './provider.repository';

@@ -7,3 +7,4 @@ export * from './user.controller';
 export * from './module.controller';
 export * from './branch.controller';
 export * from './warehouse.controller';
+export * from './provider.controller';
