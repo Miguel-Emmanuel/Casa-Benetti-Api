@@ -29,7 +29,7 @@ export class Branch extends BaseEntity {
   @property({
     type: 'number',
   })
-  id_branch?: number;
+  branchId?: number;
 
   @property({
     type: 'string',

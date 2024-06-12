@@ -28,7 +28,7 @@ export class Warehouse extends BaseEntity {
   @property({
     type: 'number',
   })
-  id_warehouse?: number;
+  warehouseId?: number;
 
   @property({
     type: 'string',

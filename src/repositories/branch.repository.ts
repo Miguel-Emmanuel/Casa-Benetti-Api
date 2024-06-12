@@ -1,5 +1,5 @@
 import {Getter, inject} from '@loopback/core';
-import {DefaultCrudRepository, repository, BelongsToAccessor} from '@loopback/repository';
+import {BelongsToAccessor, DefaultCrudRepository, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
@@ -9,7 +9,7 @@ import {OrganizationRepository} from './organization.repository';
 
 export class BranchRepository extends DefaultCrudRepository<
   Branch,
-  typeof Branch.prototype.id_branch,
+  typeof Branch.prototype.id,
   BranchRelations
 > {
 
