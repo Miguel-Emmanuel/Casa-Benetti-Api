@@ -1,6 +1,12 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'quotation_QuotationDesigner' // Nombre de la tabla en PostgreSQL
+        },
+    }
+})
 export class QuotationDesigner extends Entity {
     @property({
         type: 'number',

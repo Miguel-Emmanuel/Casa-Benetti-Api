@@ -1,5 +1,7 @@
 import {Entity, hasMany, model, property} from '@loopback/repository';
+import {Product} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
+import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {User} from './user.model';
 
@@ -80,6 +82,9 @@ export class Quotation extends Entity {
 
     @hasMany(() => User, {through: {model: () => QuotationDesigner}})
     designers: User[];
+
+    @hasMany(() => Product, {through: {model: () => QuotationProducts}})
+    products: Product[];
 
     constructor(data?: Partial<Quotation>) {
         super(data);

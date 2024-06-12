@@ -72,3 +72,8 @@ export enum CurrencyE {
     USD = 'USD',
     PESO_MEXICANO = 'Peso Mexicano',
 }
+
+export enum TypeSaleE {
+    VENTA = 'Venta',
+    PRESTAMO = 'Prestamo'
+}
