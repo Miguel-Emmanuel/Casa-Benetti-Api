@@ -1,6 +1,7 @@
-import {model, property} from '@loopback/repository';
+import {belongsTo, model, property} from '@loopback/repository';
 import {ClassificationE, CurrencyE, LocationE, TypeArticleE, UOME} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
+import {Organization} from './organization.model';
 
 @model({
     settings: {
@@ -172,6 +173,9 @@ export class Product extends BaseEntity {
         required: false,
     })
     tariffFraction: number;
+
+    @belongsTo(() => Organization)
+    organizationId: number;
 
     constructor(data?: Partial<Product>) {
         super(data);

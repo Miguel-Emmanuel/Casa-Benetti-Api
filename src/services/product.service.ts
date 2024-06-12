@@ -19,7 +19,7 @@ export class ProductService {
 
     async create(product: Omit<Product, 'id'>,) {
         try {
-            return await this.productRepository.create(product);
+            return await this.productRepository.create({...product, organizationId: this.user.organizationId});
         } catch (error) {
             throw this.responseService.badRequest(error.message ?? error)
         }
