@@ -13,7 +13,7 @@ export class Customer extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
 
     constructor(data?: Partial<Customer>) {

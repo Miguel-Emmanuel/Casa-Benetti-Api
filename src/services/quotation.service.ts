@@ -1,6 +1,7 @@
 import {UserRepository} from '@loopback/authentication-jwt';
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {SecurityBindings, UserProfile} from '@loopback/security';
 import {StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, Products, ProjectManagers} from '../interface';
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
@@ -28,11 +29,15 @@ export class QuotationService {
         public productRepository: ProductRepository,
         @repository(CustomerRepository)
         public customerRepository: CustomerRepository,
+        @inject(SecurityBindings.USER)
+        private user: UserProfile,
     ) { }
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft} = data;
-        await this.findUserById(quotation.referenceCustomerId);
+        const {isReferencedCustomer} = quotation;
+        if (isReferencedCustomer === true)
+            await this.findUserById(quotation.referenceCustomerId);
         const customerId = await this.createOrGetCustomer(customer);
         if (id === null) {
             await this.validateBodyQuotation(data);
@@ -46,6 +51,7 @@ export class QuotationService {
             const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
             await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
+            return createQuotation;
         } else {
             const findQuotation = await this.findQuotationById(id);
             const bodyQuotation = {
@@ -58,7 +64,7 @@ export class QuotationService {
             await this.quotationRepository.updateById(id, bodyQuotation)
             await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
             await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
-
+            return this.findQuotationById(id);
         }
 
     }
@@ -183,7 +189,44 @@ export class QuotationService {
     }
 
     async find(filter?: Filter<Quotation>,) {
-        return this.quotationRepository.find(filter);
+        console.log(this.user);
+        const accessLevel = this.user.accessLevel;
+        const filterInclude = [
+            {
+                relation: 'customer',
+                scope: {
+                    fields: ['id',]
+                }
+            },
+            {
+                relation: 'projectManagers',
+                scope: {
+                    fields: ['id', 'firstName']
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...filterInclude
+            ]
+        else
+            filter = {
+                ...filter, include: [...filterInclude]
+            };
+        return (await this.quotationRepository.find(filter)).map(value => {
+            const {id, customer, projectManagers, total, status, updatedAt} = value;
+            // const { } = customer;
+            return {
+                id,
+                customerName: customer.id,
+                pm: projectManagers?.length > 0 ? projectManagers[0].firstName : '',
+                total,
+                branchName: '',
+                status,
+                updatedAt
+            }
+        });
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Quotation>) {

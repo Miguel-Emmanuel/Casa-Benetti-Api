@@ -4,7 +4,7 @@ import {TypeUserE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch} from './branch.model';
 import {Organization} from './organization.model';
-import {Role} from './role.model';
+import {Role, RoleWithRelations} from './role.model';
 import {UserCredentials} from './user-credentials.model';
 import {UserData, UserDataWithRelations} from './user-data.model';
 
@@ -151,6 +151,7 @@ export class User extends BaseEntity {
 export interface UserRelations {
   userData: UserDataWithRelations
   userCredentials: UserCredentialsWithRelations
+  role: RoleWithRelations
   // describe navigational properties here
 }
 

@@ -166,6 +166,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                         properties: {
                             referenceCustomerId: {
                                 type: 'number',
+                                nullable: true
                             },
                             isArchitect: {
                                 type: 'boolean',

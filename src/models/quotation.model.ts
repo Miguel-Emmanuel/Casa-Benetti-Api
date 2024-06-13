@@ -1,5 +1,6 @@
-import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, StatusQuotationE} from '../enums';
+import {BaseEntity} from './base/base-entity.model';
 import {Customer} from './customer.model';
 import {Organization} from './organization.model';
 import {Product} from './product.model';
@@ -35,7 +36,7 @@ import {User} from './user.model';
         }
     }
 })
-export class Quotation extends Entity {
+export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         id: true,
@@ -212,6 +213,7 @@ export interface QuotationRelations {
     projectManagers: User[],
     designers: User[],
     products: Product[];
+    customer: Customer;
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

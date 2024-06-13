@@ -1,4 +1,4 @@
-import {ExchangeRateE, TypeSaleE} from '../enums';
+import {ExchangeRateE, StatusQuotationE, TypeSaleE} from '../enums';
 import {Address} from '../models';
 
 export interface ProjectManagers {
@@ -63,4 +63,14 @@ export interface CreateQuotation {
         exchangeRate: ExchangeRateE;
         balance: number;
     }
+}
+
+export interface QuotationFindResponse {
+    id: number;
+    customerName: number;
+    pm: string | undefined;
+    total: number;
+    branchName: string;
+    status: StatusQuotationE;
+    updatedAt: Date | undefined;
 }

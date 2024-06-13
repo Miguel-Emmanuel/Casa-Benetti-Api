@@ -1,5 +1,5 @@
 import {TokenService, UserService} from '@loopback/authentication';
-import {TokenServiceBindings, UserRelations} from '@loopback/authentication-jwt';
+import {TokenServiceBindings} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {UserProfile, securityId} from '@loopback/security';
@@ -9,7 +9,7 @@ import {customAlphabet} from 'nanoid';
 import {LogModificationType} from '../enums';
 import {Credentials, PasswordHasherBindings, ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {UserData} from '../models';
-import {User} from '../models/user.model';
+import {User, UserRelations} from '../models/user.model';
 import {OrganizationRepository, RoleModuleRepository, RoleRepository, UserDataRepository, UserRepository} from '../repositories';
 import {BcryptHasher, ResponseService} from './';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
@@ -44,7 +44,7 @@ export class MyUserService implements UserService<User, Credentials> {
     @repository(RoleModuleRepository)
     public roleModuleRepository: RoleModuleRepository,
   ) { }
-  async verifyCredentials(credentials: Credentials): Promise<User> {
+  async verifyCredentials(credentials: Credentials): Promise<User & UserRelations> {
 
     const {email} = credentials;
     //Verificar parametros requeridos del body
@@ -56,7 +56,7 @@ export class MyUserService implements UserService<User, Credentials> {
     if (credentials.email !== undefined) {
       const foundUserEmail = await this.userRepository.findOne({
         where: {email: credentials.email},
-        include: [{relation: 'userCredentials'}],
+        include: [{relation: 'userCredentials'}, {relation: 'role'}],
       });
       foundUser = foundUserEmail;
     } else if (
@@ -65,7 +65,7 @@ export class MyUserService implements UserService<User, Credentials> {
     ) {
       const foundUserUsername = await this.userRepository.findOne({
         where: {username: credentials.username},
-        include: [{relation: 'userCredentials'}],
+        include: [{relation: 'userCredentials'}, {relation: 'role'}],
       });
       foundUser = foundUserUsername;
     }
@@ -86,7 +86,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
     return foundUser;
   }
-  convertToUserProfile(user: User, organizationId?: number): UserProfile {
+  convertToUserProfile(user: (User & UserRelations), organizationId?: number): UserProfile {
     let userName = '';
     if (user.firstName) {
       userName = user.firstName;
@@ -97,11 +97,13 @@ export class MyUserService implements UserService<User, Credentials> {
     if (userName === '' && user.username) {
       userName = user.username;
     }
+    const accessLevel = user?.role?.accessLevel ?? null;
     const userProfile: UserProfile = {
       [securityId]: `${user.id}`,
       email: user.email,
       name: userName,
       organizationId,
+      accessLevel
     };
 
     return userProfile;
@@ -394,7 +396,11 @@ export class MyUserService implements UserService<User, Credentials> {
           scope: {
             fields: ['id', 'imageURL', 'userRoleId', 'organizationId'],
           }
-        }],
+        },
+        {
+          relation: 'role'
+        }
+      ],
 
     });
     if (user.isDeleted === true)
