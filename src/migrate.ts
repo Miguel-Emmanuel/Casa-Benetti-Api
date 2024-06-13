@@ -32,12 +32,12 @@ export async function migrate(args: string[]) {
       'Branch',
       'Warehouse',
       'Provider',
+      'ProviderBrand',
+      'Expense',
       'Product',
       'QuotationProducts',
       'QuotationProjectManager',
       'Brand',
-      'ProviderBrand',
-      'Expense'
     ],
   });
 
