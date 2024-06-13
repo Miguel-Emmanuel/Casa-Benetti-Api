@@ -98,6 +98,10 @@ export enum StatusQuotationE {
     RECHAZADA = 'Rechazada',
 }
 
+export enum StatusProduct {
+    PEDIDO = 'Pedido'
+}
+
 export enum TypeRegimenE {
     PERSONA_FISICA = 'Persona Fisica',
     PERSONA_MORAL = 'Persona Moral',

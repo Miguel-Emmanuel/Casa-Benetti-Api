@@ -1,4 +1,4 @@
-import {ExchangeRateE, TypeSaleE} from '../enums';
+import {ExchangeRateE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address} from '../models';
 
 export interface ProjectManagers {
@@ -19,21 +19,24 @@ export interface Products {
     reservationDays: number;
     quantity: number;
     percentageDiscountProduct: number;
+    discountProduct: number;
     percentageAdditionalDiscount: number;
+    additionalDiscount: number;
     subtotal: number;
 }
 
 export interface Customer {
     customerId: number;
-    firstName: string;
+    name: string;
     lastName: string;
     secondLastName: string;
-    address: Address;
-    addressDescription: string;
+    address?: Address;
+    addressDescription?: string;
     phone: string;
-    isInvoice: string;
+    invoice: boolean;
     rfc: string;
     businessName: string;
+    regimen: TypeRegimenE;
     groupId: number;
 }
 export interface CreateQuotation {
@@ -62,5 +65,76 @@ export interface CreateQuotation {
         advance: number;
         exchangeRate: ExchangeRateE;
         balance: number;
+    }
+}
+
+export interface QuotationFindResponse {
+    id: number;
+    customerName: string;
+    pm: string | undefined;
+    total: number;
+    branchName: string | undefined;
+    status: StatusQuotationE;
+    updatedAt: Date | undefined;
+}
+
+export interface ProjectManagersById {
+    projectManagerName: string;
+    commissionPercentageProjectManager: number;
+}
+
+export interface DesignersById {
+    designerName: string;
+    commissionPercentageDesigner: number;
+}
+
+export interface ProductsById {
+    SKU: string;
+    brandName: string;
+    status: string;
+    description: string;
+    image: string | undefined;
+    mainFinish: string;
+
+    sale: TypeSaleE | string;
+    quantity: number;
+    percentageDiscountProduct: number;
+    discountProduct: number;
+    percentageAdditionalDiscount: number;
+    additionalDiscount: number;
+    subtotal: number;
+}
+export interface QuotationFindOneResponse {
+    customer: {
+        firstName: string;
+        lastName: string;
+        secondLastName: string;
+        address?: Address,
+        addressDescription?: string;
+        phone: string;
+        invoice: boolean;
+        rfc: string;
+        businessName: string;
+        regimen: string;
+        group: string
+    },
+    products: ProductsById[],
+    quotation: {
+        subtotal: number;
+        additionalDiscount: number;
+        percentageIva: number;
+        iva: number;
+        total: number;
+        advance: number;
+        exchangeRate: ExchangeRateE;
+        balance: number;
+    },
+    commisions: {
+        architectName: string;
+        commissionPercentageArchitect: number;
+        referencedCustomerName: string;
+        projectManagers: ProjectManagersById[],
+        designers: DesignersById[]
+
     }
 }
