@@ -19,7 +19,9 @@ const products = Joi.object({
     provedorId: Joi.number(),
     quantity: Joi.number(),
     percentageDiscountProduct: Joi.number(),
+    discountProduct: Joi.number(),
     percentageAdditionalDiscount: Joi.number(),
+    additionalDiscount: Joi.number(),
     subtotal: Joi.number(),
 
 })
@@ -46,6 +48,7 @@ export const schemaCreateQuotition = Joi.object({
         isInvoice: Joi.boolean().allow(null),
         rfc: Joi.string().allow(null),
         businessName: Joi.string().allow(null),
+        taxRegime: Joi.string().allow(null),
         groupId: Joi.number().allow(null),
 
     }),

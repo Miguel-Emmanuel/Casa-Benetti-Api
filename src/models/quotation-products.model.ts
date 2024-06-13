@@ -77,12 +77,26 @@ export class QuotationProducts extends Entity {
     })
     percentageDiscountProduct: number;
 
-    //Descuento adicional
+    //Descuento por producto total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    discountProduct: number;
+
+    //Descuento adicional porcentaje
     @property({
         type: 'number',
         required: false,
     })
     percentageAdditionalDiscount: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    additionalDiscount: number;
 
     //Subtotal con descuento
     @property({

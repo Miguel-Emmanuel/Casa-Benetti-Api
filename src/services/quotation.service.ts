@@ -3,7 +3,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, Products, ProjectManagers} from '../interface';
+import {CreateQuotation, Customer, Designers, Products, ProjectManagers, QuotationFindOneResponse} from '../interface';
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
@@ -105,7 +105,7 @@ export class QuotationService {
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product)
-                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
         }
     }
 
@@ -156,9 +156,9 @@ export class QuotationService {
             if (product) {
                 const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
                 if (findQuotationP)
-                    await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
                 else
-                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
             }
         }
     }
@@ -229,8 +229,53 @@ export class QuotationService {
         });
     }
 
-    async findById(id: number, filter?: FilterExcludingWhere<Quotation>) {
-        return this.quotationRepository.findById(id, filter);
+    async findById(id: number, filter?: FilterExcludingWhere<Quotation>): Promise<QuotationFindOneResponse> {
+        const filterInclude = [
+            {
+                relation: 'customer',
+                scope: {
+                    fields: ['id',]
+                }
+            },
+            {
+                relation: 'products',
+
+            },
+            {
+                relation: 'projectManagers',
+                scope: {
+                    fields: ['id', 'firstName']
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...filterInclude
+            ]
+        else
+            filter = {
+                ...filter, include: [...filterInclude]
+            };
+        const quotation = await this.quotationRepository.findById(id, filter);
+        console.log(quotation.products)
+        const response: any = {
+            customer: {
+                firstName: '',
+                lastName: '',
+                secondLastName: '',
+                address: '',
+                addressDescription: '',
+                phone: '',
+                invoice: true,
+                rfc: '',
+                businessName: '',
+                taxRegime: '',
+                group: '',
+            },
+            products: []
+        }
+        return response
     }
 
     async updateById(id: number, quotation: Quotation,) {

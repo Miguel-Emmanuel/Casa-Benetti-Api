@@ -110,6 +110,7 @@ export class Product extends BaseEntity {
     })
     mainMaterial: string;
 
+    //Acabado principal
     @property({
         type: 'string',
         required: false,

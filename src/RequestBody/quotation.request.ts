@@ -90,6 +90,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 type: 'string',
                                 nullable: true
                             },
+                            taxRegime: {
+                                type: 'string',
+                                nullable: true
+                            },
                             groupId: {
                                 type: 'number',
                                 nullable: true
@@ -152,7 +156,13 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 percentageDiscountProduct: {
                                     type: 'number'
                                 },
+                                discountProduct: {
+                                    type: 'number'
+                                },
                                 percentageAdditionalDiscount: {
+                                    type: 'number'
+                                },
+                                additionalDiscount: {
                                     type: 'number'
                                 },
                                 subtotal: {

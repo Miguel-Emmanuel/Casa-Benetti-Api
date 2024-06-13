@@ -18,7 +18,7 @@ import {
     response
 } from '@loopback/rest';
 import {CreateRequestBody} from '../RequestBody/quotation.request';
-import {CreateQuotation, QuotationFindResponse} from '../interface';
+import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse} from '../interface';
 import {Quotation} from '../models';
 import {QuotationService} from '../services';
 
@@ -83,7 +83,7 @@ export class QuotationController {
     async findById(
         @param.path.number('id') id: number,
         @param.filter(Quotation, {exclude: 'where'}) filter?: FilterExcludingWhere<Quotation>
-    ): Promise<Quotation> {
+    ): Promise<QuotationFindOneResponse> {
         return this.quotationService.findById(id, filter);
     }
 
