@@ -22,3 +22,4 @@ export * from './brand.repository';
 export * from './provider-brand.repository';
 export * from './customer.repository';
 export * from './group.repository';
+export * from './expense.repository';

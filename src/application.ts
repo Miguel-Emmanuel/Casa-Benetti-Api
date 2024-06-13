@@ -17,11 +17,11 @@ import multer from 'multer';
 import path from 'path';
 import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
-import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
+import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, ExpenseServiceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
 import {OperationHook} from './operation-hooks';
 import {UserCredentialsRepository, UserRepository} from './repositories';
 import {MySequence} from './sequence';
-import {AuthService, BcryptHasher, BranchService, BrandService, CustomerService, GroupService, JWTService, MyUserService, ProviderService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
+import {AuthService, BcryptHasher, BranchService, BrandService, CustomerService, ExpenseService, GroupService, JWTService, MyUserService, ProviderService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
 export {ApplicationConfig};
 
 export class BaseApiLb4Application extends BootMixin(
@@ -100,6 +100,7 @@ export class BaseApiLb4Application extends BootMixin(
     this.bind(BrandServiceBindings.BRAND_SERVICE).toClass(BrandService);
     this.bind(CustomerServiceBindings.CUSTOMER_SERVICE).toClass(CustomerService);
     this.bind(GroupServiceBindings.GROUP_SERVICE).toClass(GroupService);
+    this.bind(ExpenseServiceBindings.EXPENSE_SERVICE).toClass(ExpenseService);
 
     //this.bind(ConfigurationBindings.CONFIGURATION_SERVICE).toClass(ConfigurationService);
     this.bind(UserServiceBindings.USER_REPOSITORY).toClass(UserRepository);
