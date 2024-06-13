@@ -26,3 +26,5 @@ export * from './provider-brand.model';
 export * from './customer.model';
 export * from './group.model';
 export * from './expense.model';
+export * from './classification.model';
+export * from './line.model';

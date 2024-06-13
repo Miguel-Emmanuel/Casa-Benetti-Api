@@ -73,6 +73,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     commissionPercentageArchitect: number;
 
@@ -90,6 +93,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     commissionPercentagereferencedCustomer: number;
 
@@ -120,6 +126,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     subtotal: number;
 
@@ -127,6 +136,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     percentageAdditionalDiscount: number;
 
@@ -140,6 +152,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     additionalDiscount: number;
 
@@ -147,6 +162,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     percentageIva: number;
 
@@ -154,6 +172,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     iva: number;
 
@@ -161,6 +182,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     total: number;
 
@@ -168,6 +192,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     percentageAdvance: number;
 
@@ -175,6 +202,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     advance: number;
 
@@ -189,6 +219,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     exchangeRateAmount: number;
 
@@ -196,6 +229,9 @@ export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     balance: number;
 

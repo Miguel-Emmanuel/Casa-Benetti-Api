@@ -16,3 +16,4 @@ export * from './quotation.controller';
 export * from './customer.controller';
 export * from './group.controller';
 export * from './expense.controller';
+export * from './classification.controller';

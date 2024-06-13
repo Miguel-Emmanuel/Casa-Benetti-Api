@@ -1,8 +1,10 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {ClassificationE, CurrencyE, LocationE, StatusProduct, TypeArticleE, UOME} from '../enums';
+import {CurrencyE, LocationE, StatusProduct, TypeArticleE, UOME} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Brand, BrandWithRelations} from './brand.model';
+import {Classification} from './classification.model';
 import {Document} from './document.model';
+import {Line} from './line.model';
 import {Organization} from './organization.model';
 import {Provider} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
@@ -49,23 +51,29 @@ export class Product extends BaseEntity {
     })
     SKU: string;
 
-    @property({
-        type: 'string',
-        required: false,
-        jsonSchema: {
-            enum: [...Object.values(ClassificationE)]
-        }
-    })
-    classification: ClassificationE;
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    //     jsonSchema: {
+    //         enum: [...Object.values(ClassificationE)]
+    //     }
+    // })
+    // classification: ClassificationE;
 
-    @property({
-        type: 'string',
-        required: false,
-        jsonSchema: {
-            enum: [...Object.values(ClassificationE)]
-        }
-    })
-    line: ClassificationE;
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    //     jsonSchema: {
+    //         enum: [...Object.values(ClassificationE)]
+    //     }
+    // })
+    // line: ClassificationE;
+
+    @belongsTo(() => Classification)
+    classificationId: number;
+
+    @belongsTo(() => Line)
+    lineId: number;
 
     @property({
         type: 'string',
@@ -176,18 +184,27 @@ export class Product extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     factor: number;
 
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     price: number;
 
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     discount: number;
 
@@ -200,14 +217,17 @@ export class Product extends BaseEntity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     tariffFraction: number;
 
     @belongsTo(() => Organization)
     organizationId: number;
 
-    @hasMany(() => Document)
-    documents: Document[];
+    @hasOne(() => Document)
+    document: Document;
 
     @hasMany(() => Quotation, {through: {model: () => QuotationProducts}})
     quotations: Quotation[];

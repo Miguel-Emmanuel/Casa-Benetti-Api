@@ -48,6 +48,9 @@ export class QuotationProjectManager extends Entity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     commissionPercentageProjectManager: number;
 

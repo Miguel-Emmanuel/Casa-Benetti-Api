@@ -53,19 +53,28 @@ export class QuotationProducts extends Entity {
 
     //Porcentaje apartado
     @property({
-        type: 'boolean',
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     percentageSeparate?: number;
 
     //Dias de apartado
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     reservationDays?: number;
 
     //Cantidad por producto
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     quantity: number;
 
@@ -73,6 +82,9 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     percentageDiscountProduct: number;
 
@@ -80,6 +92,9 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     discountProduct: number;
 
@@ -87,6 +102,9 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     percentageAdditionalDiscount: number;
 
@@ -94,6 +112,9 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     additionalDiscount: number;
 
@@ -101,6 +122,9 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     subtotal: number;
 
