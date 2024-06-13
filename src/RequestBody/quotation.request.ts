@@ -1,4 +1,5 @@
 import {RequestBodyObject} from '@loopback/rest';
+import {ExchangeRateE} from '../enums';
 
 export const CreateRequestBody: Partial<RequestBodyObject> = {
     content: {
@@ -10,112 +11,117 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                         type: 'number',
                         nullable: true
                     },
-                    client: {
+                    isDraft: {
+                        type: 'boolean'
+                    },
+                    customer: {
                         type: 'object',
                         properties: {
-                            clientId: {
+                            customerId: {
                                 type: 'number',
                                 nullable: true
                             },
                             firstName: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true
                             },
                             lastName: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true
                             },
                             secondLastName: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true
                             },
                             address: {
                                 type: 'object',
                                 properties: {
-                                    state: {type: 'string'},
-                                    city: {type: 'string'},
-                                    street: {type: 'string'},
-                                    suburb: {type: 'string'},
-                                    zipCode: {type: 'string'},
-                                    extNum: {type: 'string'},
-                                    intNum: {type: 'string'},
-                                    country: {type: 'string'}
+                                    state: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    city: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    street: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    suburb: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    zipCode: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    extNum: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    intNum: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    country: {
+                                        type: 'string',
+                                        nullable: true
+                                    }
                                 }
                             },
                             addressDescription: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true
                             },
                             phone: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true
                             },
                             isInvoice: {
-                                type: 'boolean'
+                                type: 'boolean',
+                                nullable: true
                             },
                             rfc: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true
                             },
                             businessName: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true
                             },
                             groupId: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             }
                         }
                     },
-                    commissions: {
-                        type: 'object',
-                        properties: {
-                            isArchitect: {
-                                type: 'boolean'
-                            },
-                            architectName: {
-                                type: 'string'
-                            },
-                            commissionPercentageArchitect: {
-                                type: 'number'
-                            },
-                            isReferencedCustomer: {
-                                type: 'boolean'
-                            },
-                            commissionPercentagereferencedCustomer: {
-                                type: 'number'
-                            },
-                            referencedClientId: {
-                                type: 'number'
-                            },
-                            isProjectManager: {
-                                type: 'boolean'
-                            },
-                            projectManagers: {
-                                type: 'array',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        userId: {
-                                            type: 'number'
-                                        },
-                                        commissionPercentageProjectManager: {
-                                            type: 'number'
-                                        }
-                                    }
-                                }
-                            },
-                            isDesigner: {
-                                type: 'boolean'
-                            },
-                            designers: {
-                                type: 'array',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        userId: {
-                                            type: 'number'
-                                        },
-                                        commissionPercentageDesigner: {
-                                            type: 'number'
-                                        }
-                                    }
+                    projectManagers: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                userId: {
+                                    type: 'number'
+                                },
+                                commissionPercentageProjectManager: {
+                                    type: 'number'
                                 }
                             }
-
-
+                        }
+                    },
+                    designers: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                userId: {
+                                    type: 'number'
+                                },
+                                commissionPercentageDesigner: {
+                                    type: 'number'
+                                }
+                            }
                         }
                     },
                     products: {
@@ -158,35 +164,77 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     quotation: {
                         type: 'object',
                         properties: {
+                            referenceCustomerId: {
+                                type: 'number',
+                            },
+                            isArchitect: {
+                                type: 'boolean',
+                                nullable: true
+                            },
+                            architectName: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            commissionPercentageArchitect: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            isReferencedCustomer: {
+                                type: 'boolean',
+                                nullable: true
+                            },
+                            commissionPercentagereferencedCustomer: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            isProjectManager: {
+                                type: 'boolean',
+                                nullable: true
+                            },
+                            isDesigner: {
+                                type: 'boolean',
+                                nullable: true
+                            },
                             subtotal: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             percentageAdditionalDiscount: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             additionalDiscount: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             percentageIva: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             iva: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             total: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             percentageAdvance: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             advance: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                             exchangeRate: {
-                                type: 'string'
+                                type: 'string',
+                                nullable: true,
+                                enum: [...Object.values(ExchangeRateE)]
                             },
                             balance: {
-                                type: 'number'
+                                type: 'number',
+                                nullable: true
                             },
                         }
                     }

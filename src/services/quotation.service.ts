@@ -1,11 +1,12 @@
+import {UserRepository} from '@loopback/authentication-jwt';
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {StatusQuotationE} from '../enums';
-import {CreateQuotation} from '../interface';
+import {CreateQuotation, Customer, Designers, Products, ProjectManagers} from '../interface';
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
-import {QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {CustomerRepository, ProductRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -21,56 +22,145 @@ export class QuotationService {
         public quotationDesignerRepository: QuotationDesignerRepository,
         @repository(QuotationProductsRepository)
         public quotationProductsRepository: QuotationProductsRepository,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
+        @repository(ProductRepository)
+        public productRepository: ProductRepository,
+        @repository(CustomerRepository)
+        public customerRepository: CustomerRepository,
     ) { }
 
     async create(data: CreateQuotation) {
-        const {client, commissions, id, quotation, products} = data;
+        const {id, customer, projectManagers, designers, products, quotation, isDraft} = data;
+        await this.findUserById(quotation.referenceCustomerId);
+        const customerId = await this.createOrGetCustomer(customer);
         if (id === null) {
             await this.validateBodyQuotation(data);
-            const {isArchitect, architectName, commissionPercentageArchitect, isReferencedCustomer, commissionPercentagereferencedCustomer, isProjectManager, isDesigner, projectManagers, designers} = commissions;
-            const {subtotal, additionalDiscount, percentageIva, iva, total, percentageAdvance, advance, exchangeRate, balance, } = quotation;
             const bodyQuotation = {
-                isArchitect,
-                architectName,
-                commissionPercentageArchitect,
-                isReferencedCustomer,
-                commissionPercentagereferencedCustomer,
-                isProjectManager,
-                isDesigner,
-                subtotal,
-                additionalDiscount,
-                percentageIva,
-                iva,
-                total,
-                percentageAdvance,
-                advance,
-                exchangeRate,
+                ...quotation,
                 exchangeRateAmount: 15,
-                balance,
                 status: StatusQuotationE.ENPROCESO,
-                isDraft: false
+                customerId,
+                isDraft
             }
             const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
-            for (const element of projectManagers) {
-                await this.quotationProjectManagerRepository.create({quotationId: createQuotation.id, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager});
-            }
-            for (const element of designers) {
-                await this.quotationDesignerRepository.create({quotationId: createQuotation.id, userId: element.userId, commissionPercentageDesigner: element.commissionPercentageDesigner});
-            }
-            for (const element of products) {
-                await this.quotationProductsRepository.create({quotationId: createQuotation.id, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
-            }
+            await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
         } else {
-            await this.findQuotationById(id);
+            const findQuotation = await this.findQuotationById(id);
+            const bodyQuotation = {
+                ...quotation,
+                exchangeRateAmount: 15,
+                status: StatusQuotationE.ENPROCESO,
+                customerId,
+                isDraft
+            }
+            await this.quotationRepository.updateById(id, bodyQuotation)
+            await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
+            await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
+
+        }
+
+    }
+    async findUserById(id: number) {
+        const user = await this.userRepository.findOne({where: {id}})
+        if (!user)
+            throw this.responseService.badRequest('El cliente referido no existe.');
+        return user;
+    }
+
+    async createOrGetCustomer(customer: Customer) {
+        const {customerId, ...dataCustomer} = customer;
+        if (customerId) {
+            const findCustomer = await this.customerRepository.findOne({where: {id: customerId}});
+            if (!findCustomer)
+                throw this.responseService.badRequest('El cliente id no existe.')
+
+            return findCustomer.id;
+        } else {
+            // const createCustomer = await this.customerRepository.create({...dataCustomer});
+            const createCustomer = await this.customerRepository.create({});
+            return createCustomer.id;
         }
 
     }
 
+    async createManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
+        for (const element of projectManagers) {
+            const user = await this.userRepository.findOne({where: {id: element.userId}});
+            if (user)
+                await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+        }
+        for (const element of designers) {
+            const user = await this.userRepository.findOne({where: {id: element.userId}});
+            if (user)
+                await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageDesigner: element.commissionPercentageDesigner});
+        }
+        for (const element of products) {
+            const product = await this.productRepository.findOne({where: {id: element.productId}});
+            if (product)
+                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+        }
+    }
+
+    async deleteManyQuotation(quotation: Quotation, projectManagers: ProjectManagers[], designers: Designers[], products: Products[],) {
+        const {id} = quotation;
+        const projectManagersMap = projectManagers.map((value) => value.userId);
+        const projectManagersDelete = quotation?.projectManagers?.filter((value) => !projectManagersMap.includes(value?.id ?? 0)) ?? []
+        console.log('projectManagersDelete: ', projectManagersDelete)
+        for (const element of projectManagersDelete) {
+            await this.quotationRepository.projectManagers(id).unlink(element.id)
+        }
+        const designersMap = designers.map((value) => value.userId);
+        const designersDelete = quotation.designers?.filter((value) => !designersMap.includes(value?.id ?? 0)) ?? []
+        for (const element of designersDelete) {
+            await this.quotationRepository.designers(id).unlink(element.id)
+        }
+        const productsMap = products.map((value) => value.productId);
+        const productsDelete = quotation.products?.filter((value) => !productsMap.includes(value?.id ?? 0)) ?? []
+        for (const element of productsDelete) {
+            await this.quotationRepository.products(id).unlink(element.id)
+        }
+    }
+
+    async updateManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
+
+        for (const element of projectManagers) {
+            const user = await this.userRepository.findOne({where: {id: element.userId}});
+            if (user) {
+                const findQuotationPM = await this.quotationProjectManagerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
+                if (findQuotationPM)
+                    await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+                else
+                    await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+            }
+        }
+        for (const element of designers) {
+            const user = await this.userRepository.findOne({where: {id: element.userId}});
+            if (user) {
+                const findQuotationD = await this.quotationDesignerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
+                if (findQuotationD)
+                    await this.quotationDesignerRepository.updateById(findQuotationD.id, {commissionPercentageDesigner: element.commissionPercentageDesigner});
+                else
+                    await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageDesigner: element.commissionPercentageDesigner});
+            }
+        }
+        for (const element of products) {
+            const product = await this.productRepository.findOne({where: {id: element.productId}});
+            if (product) {
+                const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
+                if (findQuotationP)
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+                else
+                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+            }
+        }
+    }
+
     async findQuotationById(id: number) {
-        const quotation = await this.quotationRepository.findOne({where: {id}})
+        const quotation = await this.quotationRepository.findOne({where: {id}, include: [{relation: 'projectManagers'}, {relation: 'designers'}, {relation: 'products'}]})
         if (!quotation)
-            throw this.responseService.badRequest('La cotizacion no existe');
+            throw this.responseService.badRequest('La cotizacion no existe.');
         return quotation;
     }
 

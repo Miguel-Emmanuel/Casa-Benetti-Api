@@ -34,16 +34,16 @@ export class Quotation extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     //Cliente
     @belongsTo(() => Customer)
-    customerId: number;
+    customerId?: number;
 
     //Hay Arquitecto o despacho
     @property({
         type: 'boolean',
-        required: true,
+        required: false,
     })
     isArchitect: boolean;
 
@@ -64,12 +64,12 @@ export class Quotation extends Entity {
     //Hay  cliente referenciado
     @property({
         type: 'boolean',
-        required: true,
+        required: false,
     })
     isReferencedCustomer: boolean;
 
     @belongsTo(() => User)
-    referenceCustomerId: number;
+    referenceCustomerId?: number;
 
     //Comision del cliente referenciado
     @property({
@@ -81,7 +81,7 @@ export class Quotation extends Entity {
     //Se requiere project manager
     @property({
         type: 'boolean',
-        required: true,
+        required: false,
     })
     isProjectManager: boolean;
 
@@ -91,7 +91,7 @@ export class Quotation extends Entity {
     //Se requiere proyectista
     @property({
         type: 'boolean',
-        required: true,
+        required: false,
     })
     isDesigner: boolean;
 
@@ -181,12 +181,14 @@ export class Quotation extends Entity {
     //Estatus de la cotizacion
     @property({
         type: 'string',
+        required: false,
     })
     status: StatusQuotationE;
 
     //Es borrador
     @property({
         type: 'boolean',
+        required: false,
     })
     isDraft: boolean;
 
@@ -197,6 +199,9 @@ export class Quotation extends Entity {
 
 export interface QuotationRelations {
     // describe navigational properties here
+    projectManagers: User[],
+    designers: User[],
+    products: Product[];
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;
