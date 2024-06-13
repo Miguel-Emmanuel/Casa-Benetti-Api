@@ -19,7 +19,7 @@ export class GroupService {
 
   async create(group: Group) {
     try {
-      return this.groupRepository.create({...group, /*organizationId: this.user.organizationId*/});
+      return this.groupRepository.create({...group, organizationId: this.user.organizationId});
     } catch (error) {
       return this.responseService.internalServerError(
         error.message ? error.message : error

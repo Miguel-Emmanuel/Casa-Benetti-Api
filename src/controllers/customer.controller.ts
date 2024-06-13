@@ -41,7 +41,7 @@ export class CustomerController {
         'application/json': {
           schema: getModelSchemaRef(Customer, {
             title: 'NewCustomer',
-            exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment"],
+            exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment", "organizationId"],
           }),
         },
       },

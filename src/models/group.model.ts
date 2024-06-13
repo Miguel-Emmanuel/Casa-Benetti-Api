@@ -1,19 +1,21 @@
-import {model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {BaseEntity} from './base/base-entity.model';
+import {Customer} from './customer.model';
+import {Organization} from './organization.model';
 
 @model({
   settings: {
     postgresql: {
       table: 'catalog_Group' // Nombre de la tabla en PostgreSQL
     },
-    // foreignKeys: {
-    //   fk_organization_organizationId: {
-    //     name: 'fk_organization_organizationId',
-    //     entity: 'Organization',
-    //     entityKey: 'id',
-    //     foreignKey: 'organizationid',
-    //   },
-    // }
+    foreignKeys: {
+      fk_group_organization: {
+        name: 'fk_group_organization',
+        entity: 'Organization',
+        entityKey: 'id',
+        foreignKey: 'organizationid',
+      },
+    }
   }
 })
 export class Group extends BaseEntity {
@@ -29,7 +31,19 @@ export class Group extends BaseEntity {
   @property({
     type: 'string',
   })
-  name?: string;
+  name: string;
+
+  //Descripcion
+  @property({
+    type: 'string',
+  })
+  description: string;
+
+  @hasMany(() => Customer)
+  customers: Customer[];
+
+  @belongsTo(() => Organization)
+  organizationId: number;
 
 
   constructor(data?: Partial<Group>) {
