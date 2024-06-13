@@ -10,7 +10,7 @@ import {LogModificationType} from '../enums';
 import {Credentials, PasswordHasherBindings, ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {UserData} from '../models';
 import {User, UserRelations} from '../models/user.model';
-import {OrganizationRepository, RoleModuleRepository, RoleRepository, UserDataRepository, UserRepository} from '../repositories';
+import {BranchRepository, OrganizationRepository, RoleModuleRepository, RoleRepository, UserDataRepository, UserRepository} from '../repositories';
 import {BcryptHasher, ResponseService} from './';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -43,6 +43,8 @@ export class MyUserService implements UserService<User, Credentials> {
     public jwtService: TokenService,
     @repository(RoleModuleRepository)
     public roleModuleRepository: RoleModuleRepository,
+    @repository(BranchRepository)
+    public branchRepository: BranchRepository,
   ) { }
   async verifyCredentials(credentials: Credentials): Promise<User & UserRelations> {
 
@@ -169,7 +171,11 @@ export class MyUserService implements UserService<User, Credentials> {
     const {user, userData} = body;
 
     if (!userData) return this.responseService.badRequest('¡Oh, no! Hubo un error al momento de crear los datos de un nuevo usuario, valide los datos y vuelva a intentarlo por favor');
-    const {email} = user;
+    const {email, branchId} = user;
+
+    const branch = await this.branchRepository.findOne({where: {id: branchId}})
+    if (!branch)
+      return this.responseService.badRequest('La sucursal no se ha encontrado.');
 
     const emailValidator = await this.userRepository.find({
       where: {email: user.email?.toLowerCase()}
