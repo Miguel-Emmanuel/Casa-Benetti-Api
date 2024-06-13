@@ -95,3 +95,7 @@ export enum StatusQuotationE {
     CERRADA = 'Cerrada',
     RECHAZADA = 'Rechazada',
 }
+
+export enum StatusProduct {
+    PEDIDO = 'Pedido'
+}

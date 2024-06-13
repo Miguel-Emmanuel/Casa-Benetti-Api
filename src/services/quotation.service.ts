@@ -3,7 +3,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, Products, ProjectManagers, QuotationFindOneResponse} from '../interface';
+import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse} from '../interface';
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
@@ -190,7 +190,7 @@ export class QuotationService {
 
     async find(filter?: Filter<Quotation>,) {
         console.log(this.user);
-        const accessLevel = this.user.accessLevel;
+        // const accessLevel = this.user.accessLevel;
         const filterInclude = [
             {
                 relation: 'customer',
@@ -239,13 +239,27 @@ export class QuotationService {
             },
             {
                 relation: 'products',
+                scope: {
+                    include: ['quotationProducts', 'brand', 'documents']
+                }
 
             },
             {
                 relation: 'projectManagers',
                 scope: {
-                    fields: ['id', 'firstName']
+                    fields: ['id', 'firstName'],
+                    include: ['quotationProjectManager']
                 }
+            },
+            {
+                relation: 'designers',
+                scope: {
+                    fields: ['id', 'firstName'],
+                    include: ['quotationDesigner']
+                }
+            },
+            {
+                relation: 'referenceCustomer'
             }
         ]
         if (filter?.include)
@@ -258,8 +272,43 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         const quotation = await this.quotationRepository.findById(id, filter);
-        console.log(quotation.products)
-        const response: any = {
+        console.log(quotation)
+        const products: ProductsById[] = [];
+        const projectManagers: ProjectManagersById[] = [];
+        const designers: DesignersById[] = [];
+        for (const iterator of quotation?.products ?? []) {
+            products.push({
+                SKU: iterator.SKU,
+                brandName: iterator?.brand?.brandName ?? '',
+                status: '',
+                description: iterator.description,
+                image: iterator?.documents.length > 0 ? iterator?.documents[0].fileURL : '',
+                mainFinish: iterator.mainFinish,
+                sale: iterator.quotationProducts.typeSale ?? '',
+                quantity: iterator.quotationProducts.quantity,
+                percentageDiscountProduct: iterator.quotationProducts.percentageDiscountProduct,
+                discountProduct: iterator.quotationProducts.discountProduct,
+                percentageAdditionalDiscount: iterator.quotationProducts.percentageAdditionalDiscount,
+                additionalDiscount: iterator.quotationProducts.additionalDiscount,
+                subtotal: iterator.quotationProducts.subtotal,
+            })
+        }
+
+        for (const iterator of quotation?.projectManagers ?? []) {
+            projectManagers.push({
+                projectManagerName: iterator.firstName,
+                commissionPercentageProjectManager: iterator.quotationProjectManager.commissionPercentageProjectManager,
+            })
+        }
+
+        for (const iterator of quotation?.designers ?? []) {
+            designers.push({
+                designerName: iterator.firstName,
+                commissionPercentageDesigner: iterator.quotationDesigner.commissionPercentageDesigner,
+            })
+        }
+
+        const response: QuotationFindOneResponse = {
             customer: {
                 firstName: '',
                 lastName: '',
@@ -273,7 +322,25 @@ export class QuotationService {
                 taxRegime: '',
                 group: '',
             },
-            products: []
+            products: products,
+            quotation: {
+                subtotal: quotation.subtotal,
+                additionalDiscount: quotation.additionalDiscount,
+                percentageIva: quotation.percentageIva,
+                iva: quotation.iva,
+                total: quotation.total,
+                advance: quotation.advance,
+                exchangeRate: quotation.exchangeRate,
+                balance: quotation.balance,
+            },
+            commisions: {
+                architectName: quotation.architectName,
+                commissionPercentageArchitect: quotation.commissionPercentageArchitect,
+                // referencedCustomerName: quotation.referenceCustomerId,
+                referencedCustomerName: '',
+                projectManagers: projectManagers,
+                designers: designers
+            }
         }
         return response
     }

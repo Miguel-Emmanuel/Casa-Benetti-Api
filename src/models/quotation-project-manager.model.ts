@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {User} from './user.model';
 
 @model({
     settings: {
@@ -40,10 +41,8 @@ export class QuotationProjectManager extends Entity {
     })
     quotationId?: number;
 
-    @property({
-        type: 'number',
-    })
-    userId?: number;
+    @belongsTo(() => User)
+    userId: number;
 
     //Comision del proyect manager
     @property({

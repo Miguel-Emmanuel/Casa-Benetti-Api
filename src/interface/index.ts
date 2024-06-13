@@ -78,7 +78,32 @@ export interface QuotationFindResponse {
     updatedAt: Date | undefined;
 }
 
+export interface ProjectManagersById {
+    projectManagerName: string;
+    commissionPercentageProjectManager: number;
+}
 
+export interface DesignersById {
+    designerName: string;
+    commissionPercentageDesigner: number;
+}
+
+export interface ProductsById {
+    SKU: string;
+    brandName: string;
+    status: string;
+    description: string;
+    image: string | undefined;
+    mainFinish: string;
+
+    sale: TypeSaleE | string;
+    quantity: number;
+    percentageDiscountProduct: number;
+    discountProduct: number;
+    percentageAdditionalDiscount: number;
+    additionalDiscount: number;
+    subtotal: number;
+}
 export interface QuotationFindOneResponse {
     customer: {
         firstName: string;
@@ -94,21 +119,7 @@ export interface QuotationFindOneResponse {
         taxRegime: string;
         group: string
     },
-    products: {
-        SKU: string;
-        brandName: string;
-        status: string;
-        description: string;
-        image: string;
-        mainFinish: string;
-        sale: boolean;
-        quantity: number;
-        percentageDiscountProduct: number;
-        discountProduct: number;
-        percentageAdditionalDiscount: number;
-        additionalDiscount: number;
-        subtotal: number;
-    }[],
+    products: ProductsById[],
     quotation: {
         subtotal: number;
         additionalDiscount: number;
@@ -123,14 +134,8 @@ export interface QuotationFindOneResponse {
         architectName: string;
         commissionPercentageArchitect: number;
         referencedCustomerName: string;
-        projectManagers: {
-            projectManagerName: string;
-            commissionPercentageProjectManager: number;
-        }[],
-        designers: {
-            designerName: string;
-            commissionPercentageDesigner: number;
-        }[]
+        projectManagers: ProjectManagersById[],
+        designers: DesignersById[]
 
     }
 }

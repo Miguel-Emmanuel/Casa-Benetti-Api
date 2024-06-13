@@ -1,9 +1,10 @@
+import {UserWithRelations} from '@loopback/authentication-jwt';
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Customer} from './customer.model';
 import {Organization} from './organization.model';
-import {Product} from './product.model';
+import {Product, ProductWithRelations} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
@@ -212,8 +213,9 @@ export interface QuotationRelations {
     // describe navigational properties here
     projectManagers: User[],
     designers: User[],
-    products: Product[];
+    products: ProductWithRelations[];
     customer: Customer;
+    referenceCustomer: UserWithRelations;
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

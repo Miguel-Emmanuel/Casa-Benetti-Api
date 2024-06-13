@@ -1,10 +1,11 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
-import {ClassificationE, CurrencyE, LocationE, TypeArticleE, UOME} from '../enums';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
+import {ClassificationE, CurrencyE, LocationE, StatusProduct, TypeArticleE, UOME} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
-import {Brand} from './brand.model';
+import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Organization} from './organization.model';
 import {Provider} from './provider.model';
+import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 
 @model({
     settings: {
@@ -207,8 +208,20 @@ export class Product extends BaseEntity {
     @hasMany(() => Document)
     documents: Document[];
 
+    @hasOne(() => QuotationProducts)
+    quotationProducts: QuotationProducts;
+    // @hasMany(() => QuotationProducts)
+    // quotationProducts: QuotationProducts[];
+
     @belongsTo(() => Brand)
     brandId: number;
+
+    @property({
+        type: 'string',
+        required: false,
+        default: StatusProduct.PEDIDO
+    })
+    status: StatusProduct;
 
     constructor(data?: Partial<Product>) {
         super(data);
@@ -217,6 +230,8 @@ export class Product extends BaseEntity {
 
 export interface ProductRelations {
     // describe navigational properties here
+    quotationProducts: QuotationProductsWithRelations
+    brand: BrandWithRelations
 }
 
 export type ProductWithRelations = Product & ProductRelations;
