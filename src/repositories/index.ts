@@ -18,3 +18,6 @@ export * from './quotation-project-manager.repository';
 export * from './quotation.repository';
 export * from './warehouse.repository';
 
+export * from './brand.repository';
+export * from './provider-brand.repository';
+export * from './customer.repository';

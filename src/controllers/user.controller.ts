@@ -50,7 +50,7 @@ export class UserController {
                   type: 'object',
                   properties: {
                     email: {type: 'string'},
-                    organizationId: {type: 'number'},
+                    branchId: {type: 'number'},
                     firstName: {type: 'string'},
                     lastName: {type: 'string'},
                     avatar: {type: 'string'},
@@ -83,7 +83,7 @@ export class UserController {
                 type: 'object',
                 properties: {
                   email: {type: 'string', format: 'email'},
-                  organizationId: {type: 'number'},
+                  branchId: {type: 'number'},
                   firstName: {type: 'string'},
                   lastName: {type: 'string'},
                   avatar: {type: 'string'},

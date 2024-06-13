@@ -1,4 +1,6 @@
-import {Entity, hasMany, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {ExchangeRateE, StatusQuotationE} from '../enums';
+import {Customer} from './customer.model';
 import {Product} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
@@ -10,14 +12,20 @@ import {User} from './user.model';
         postgresql: {
             table: 'quotation_Quotation' // Nombre de la tabla en PostgreSQL
         },
-        // foreignKeys: {
-        //     fk_organization_organizationId: {
-        //         name: 'fk_organization_organizationId',
-        //         entity: 'Organization',
-        //         entityKey: 'id',
-        //         foreignKey: 'organizationid',
-        //     },
-        // }
+        foreignKeys: {
+            fk_customer_customerId: {
+                name: 'fk_customer_customerId',
+                entity: 'Customer',
+                entityKey: 'id',
+                foreignKey: 'customerid',
+            },
+            fk_user_referenceCustomerId: {
+                name: 'fk_user_referenceCustomerId',
+                entity: 'User',
+                entityKey: 'id',
+                foreignKey: 'referencecustomerid',
+            },
+        }
     }
 })
 export class Quotation extends Entity {
@@ -26,12 +34,16 @@ export class Quotation extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
+
+    //Cliente
+    @belongsTo(() => Customer)
+    customerId?: number;
 
     //Hay Arquitecto o despacho
     @property({
         type: 'boolean',
-        required: true,
+        required: false,
     })
     isArchitect: boolean;
 
@@ -52,23 +64,26 @@ export class Quotation extends Entity {
     //Hay  cliente referenciado
     @property({
         type: 'boolean',
-        required: true,
+        required: false,
     })
-    isreferencedClient: boolean;
+    isReferencedCustomer: boolean;
 
-    //Se requiere project manager
-    @property({
-        type: 'boolean',
-        required: true,
-    })
-    isProjectManager: boolean;
+    @belongsTo(() => User)
+    referenceCustomerId?: number;
 
     //Comision del cliente referenciado
     @property({
         type: 'number',
         required: false,
     })
-    commissionPercentagereferencedClient: number;
+    commissionPercentagereferencedCustomer: number;
+
+    //Se requiere project manager
+    @property({
+        type: 'boolean',
+        required: false,
+    })
+    isProjectManager: boolean;
 
     @hasMany(() => User, {through: {model: () => QuotationProjectManager}})
     projectManagers: User[];
@@ -76,7 +91,7 @@ export class Quotation extends Entity {
     //Se requiere proyectista
     @property({
         type: 'boolean',
-        required: true,
+        required: false,
     })
     isDesigner: boolean;
 
@@ -86,6 +101,97 @@ export class Quotation extends Entity {
     @hasMany(() => Product, {through: {model: () => QuotationProducts}})
     products: Product[];
 
+    //Subtotal
+    @property({
+        type: 'number',
+        required: false,
+    })
+    subtotal: number;
+
+    //Porcentaje descuento adicional
+    @property({
+        type: 'number',
+        required: false,
+    })
+    percentageAdditionalDiscount: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    additionalDiscount: number;
+
+    //Iva porcentaje
+    @property({
+        type: 'number',
+        required: false,
+    })
+    percentageIva: number;
+
+    //Iva total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    iva: number;
+
+    //Total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    total: number;
+
+    //Porcentaje anticipo
+    @property({
+        type: 'number',
+        required: false,
+    })
+    percentageAdvance: number;
+
+    //Anticipo total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    advance: number;
+
+    //Tipo de cambio
+    @property({
+        type: 'string',
+        required: false,
+    })
+    exchangeRate: ExchangeRateE;
+
+    //Tipo de cambio monto
+    @property({
+        type: 'number',
+        required: false,
+    })
+    exchangeRateAmount: number;
+
+    //Saldo
+    @property({
+        type: 'number',
+        required: false,
+    })
+    balance: number;
+
+    //Estatus de la cotizacion
+    @property({
+        type: 'string',
+        required: false,
+    })
+    status: StatusQuotationE;
+
+    //Es borrador
+    @property({
+        type: 'boolean',
+        required: false,
+    })
+    isDraft: boolean;
+
     constructor(data?: Partial<Quotation>) {
         super(data);
     }
@@ -93,6 +199,9 @@ export class Quotation extends Entity {
 
 export interface QuotationRelations {
     // describe navigational properties here
+    projectManagers: User[],
+    designers: User[],
+    products: Product[];
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

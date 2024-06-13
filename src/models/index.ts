@@ -21,3 +21,6 @@ export * from './quotation-project-manager.model';
 export * from './quotation.model';
 export * from './warehouse.model';
 
+export * from './brand.model';
+export * from './provider-brand.model';
+export * from './customer.model';

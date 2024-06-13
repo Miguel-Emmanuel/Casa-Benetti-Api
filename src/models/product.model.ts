@@ -1,8 +1,10 @@
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ClassificationE, CurrencyE, LocationE, TypeArticleE, UOME} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
+import {Brand} from './brand.model';
 import {Document} from './document.model';
 import {Organization} from './organization.model';
+import {Provider} from './provider.model';
 
 @model({
     settings: {
@@ -15,6 +17,18 @@ import {Organization} from './organization.model';
                 entity: 'Organization',
                 entityKey: 'id',
                 foreignKey: 'organizationid',
+            },
+            fk_provider_providerId: {
+                name: 'fk_provider_providerId',
+                entity: 'Provider',
+                entityKey: 'id',
+                foreignKey: 'providerid',
+            },
+            fk_brand_brandId: {
+                name: 'fk_brand_brandId',
+                entity: 'Brand',
+                entityKey: 'id',
+                foreignKey: 'brandid',
             },
         }
     }
@@ -126,6 +140,9 @@ export class Product extends BaseEntity {
     })
     isPurchasable: boolean;
 
+    @belongsTo(() => Provider)
+    providerId: number;
+
     @property({
         type: 'string',
         required: false,
@@ -188,6 +205,9 @@ export class Product extends BaseEntity {
 
     @hasMany(() => Document)
     documents: Document[];
+
+    @belongsTo(() => Brand)
+    brandId: number;
 
     constructor(data?: Partial<Product>) {
         super(data);

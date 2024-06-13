@@ -24,14 +24,18 @@ export async function migrate(args: string[]) {
       'Module',
       'RoleModule',
       'Document',
-      'Product',
+      'Customer',
       'Quotation',
       'QuotationProjectManager',
-      'QuotationProducts',
       'QuotationDesigner',
       'Branch',
       'Warehouse',
-      'Provider'
+      'Provider',
+      'Product',
+      'QuotationProducts',
+      'QuotationProjectManager',
+      'Brand',
+      'ProviderBrand'
     ],
   });
 
