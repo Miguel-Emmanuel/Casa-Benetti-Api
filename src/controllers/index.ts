@@ -10,4 +10,6 @@ export * from './role.controller';
 export * from './user.controller';
 export * from './warehouse.controller';
 
+export * from './brand.controller';
 export * from './quotation.controller';
+

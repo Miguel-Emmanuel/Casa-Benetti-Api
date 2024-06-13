@@ -32,7 +32,9 @@ export async function migrate(args: string[]) {
       'Warehouse',
       'Provider',
       'Product',
-      'QuotationProjectManager'
+      'QuotationProjectManager',
+      'Brand',
+      'ProviderBrand'
     ],
   });
 
