@@ -9,7 +9,9 @@ export enum LogModelName {
     BRANCH = "Branch",
     WAREHOUSE = "Warehouse",
     PROVIDER = "Provider",
-    BRAND = "Brand"
+    BRAND = "Brand",
+    CUSTOMER = "Customer",
+    GROUP = "Group"
 }
 
 export enum LogModificationType {
@@ -98,4 +100,10 @@ export enum StatusQuotationE {
 
 export enum StatusProduct {
     PEDIDO = 'Pedido'
+}
+
+export enum TypeRegimenE {
+    PERSONA_FISICA = 'Persona Fisica',
+    PERSONA_MORAL = 'Persona Moral',
+    PERSONA_FISICA_EMPRESARIAL = 'Persona Fisica con actividad empresarial'
 }
