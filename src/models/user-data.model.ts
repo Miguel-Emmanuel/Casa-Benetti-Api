@@ -8,15 +8,15 @@ import {User} from './user.model';
     postgresql: {
       table: 'user_UserData', // Nombre de la tabla en PostgreSQL
     },
-    foreignKeys: {
-      fk_user_userId: {
-        name: 'fk_user_userId',
-        entity: 'User',
-        entityKey: 'id',
-        foreignKey: 'userid',
+    // foreignKeys: {
+    //   fk_user_userId: {
+    //     name: 'fk_user_userId',
+    //     entity: 'User',
+    //     entityKey: 'id',
+    //     foreignKey: 'userid',
 
-      }
-    }
+    //   }
+    // }
   }
 })
 export class UserData extends BaseEntity {
