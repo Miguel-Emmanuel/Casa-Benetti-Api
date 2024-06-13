@@ -272,7 +272,6 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         const quotation = await this.quotationRepository.findById(id, filter);
-        console.log(quotation)
         const products: ProductsById[] = [];
         const projectManagers: ProjectManagersById[] = [];
         const designers: DesignersById[] = [];

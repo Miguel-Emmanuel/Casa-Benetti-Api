@@ -103,7 +103,8 @@ export class MyUserService implements UserService<User, Credentials> {
       email: user.email,
       name: userName,
       organizationId,
-      accessLevel
+      accessLevel,
+      branchId: user.branchId,
     };
 
     return userProfile;
