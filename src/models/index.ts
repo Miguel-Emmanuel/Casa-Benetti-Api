@@ -23,3 +23,4 @@ export * from './warehouse.model';
 
 export * from './brand.model';
 export * from './provider-brand.model';
+export * from './customer.model';
