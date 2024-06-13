@@ -17,3 +17,4 @@ export * from './brand.service';
 export * from './customer.service';
 export * from './group.service';
 export * from './expense.service';
+export * from './classification.service';
