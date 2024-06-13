@@ -41,7 +41,7 @@ export class GroupController {
         'application/json': {
           schema: getModelSchemaRef(Group, {
             title: 'NewGroup',
-            exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment"],
+            exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment", "organizationId"],
           }),
         },
       },
