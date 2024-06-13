@@ -1,15 +1,14 @@
-import {UserWithRelations} from '@loopback/authentication-jwt';
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
-import {Branch} from './branch.model';
-import {Customer} from './customer.model';
+import {Branch, BranchWithRelations} from './branch.model';
+import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
-import {User} from './user.model';
+import {User, UserWithRelations} from './user.model';
 
 @model({
     settings: {
@@ -224,8 +223,9 @@ export interface QuotationRelations {
     projectManagers: User[],
     designers: User[],
     products: ProductWithRelations[];
-    customer: Customer;
+    customer: CustomerWithRelations;
     referenceCustomer: UserWithRelations;
+    branch: BranchWithRelations
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

@@ -17,7 +17,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {CreateRequestBody} from '../RequestBody/quotation.request';
+import {CreateRequestBody, QuotationFindResponseSwagger, QuotationGteByIdResponse} from '../RequestBody/quotation.request';
 import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse} from '../interface';
 import {Quotation} from '../models';
 import {QuotationService} from '../services';
@@ -53,17 +53,7 @@ export class QuotationController {
     }
 
     @get('/quotations')
-    @response(200, {
-        description: 'Array of Quotation model instances',
-        content: {
-            'application/json': {
-                schema: {
-                    type: 'array',
-                    items: getModelSchemaRef(Quotation, {includeRelations: true}),
-                },
-            },
-        },
-    })
+    @response(200, QuotationFindResponseSwagger)
     async find(
         @param.filter(Quotation) filter?: Filter<Quotation>,
     ): Promise<QuotationFindResponse[]> {
@@ -72,14 +62,7 @@ export class QuotationController {
 
 
     @get('/quotations/{id}')
-    @response(200, {
-        description: 'Quotation model instance',
-        content: {
-            'application/json': {
-                schema: getModelSchemaRef(Quotation, {includeRelations: true}),
-            },
-        },
-    })
+    @response(200, QuotationGteByIdResponse)
     async findById(
         @param.path.number('id') id: number,
         @param.filter(Quotation, {exclude: 'where'}) filter?: FilterExcludingWhere<Quotation>

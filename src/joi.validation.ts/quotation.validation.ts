@@ -30,7 +30,7 @@ export const schemaCreateQuotition = Joi.object({
     isDraft: Joi.boolean().required(),
     customer: Joi.object({
         customerId: Joi.number().allow(null),
-        firstName: Joi.string().allow(null),
+        name: Joi.string().allow(null),
         lastName: Joi.string().allow(null),
         secondLastName: Joi.string().allow(null),
         address: Joi.object({
@@ -45,10 +45,10 @@ export const schemaCreateQuotition = Joi.object({
         }),
         addressDescription: Joi.string().allow(null),
         phone: Joi.string().allow(null),
-        isInvoice: Joi.boolean().allow(null),
+        invoice: Joi.boolean().allow(null),
         rfc: Joi.string().allow(null),
         businessName: Joi.string().allow(null),
-        taxRegime: Joi.string().allow(null),
+        regimen: Joi.string().allow(null),
         groupId: Joi.number().allow(null),
 
     }),

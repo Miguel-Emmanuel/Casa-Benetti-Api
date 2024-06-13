@@ -3,7 +3,7 @@ import {getJsonSchema} from '@loopback/rest';
 import {TypeRegimenE} from '../enums';
 import {Address} from './base/address.model';
 import {BaseEntity} from './base/base-entity.model';
-import {Group} from './group.model';
+import {Group, GroupWithRelations} from './group.model';
 import {Organization} from './organization.model';
 @model({
     settings: {
@@ -38,30 +38,32 @@ export class Customer extends BaseEntity {
     @property({
         type: 'string',
     })
-    name?: string;
+    name: string;
 
     //Apellido paterno
     @property({
         type: 'string',
     })
-    lastName?: string;
+    lastName: string;
 
     //Apellido materno
     @property({
         type: 'string',
     })
-    secondLastName?: string;
+    secondLastName: string;
 
     //Direccion
     @property({
         type: 'object',
-        jsonSchema: getJsonSchema(Address)
+        jsonSchema: getJsonSchema(Address),
+        required: false,
     })
     address?: Address;
 
     //Descripción
     @property({
         type: 'string',
+        required: false,
     })
     addressDescription?: string;
 
@@ -77,26 +79,25 @@ export class Customer extends BaseEntity {
             },
         }
     })
-    phone?: string;
+    phone: string;
 
     //Factura
     @property({
         type: 'boolean',
-        default: false,
     })
-    invoice?: boolean;
+    invoice: boolean;
 
     //RFC
     @property({
         type: 'string',
     })
-    rfc?: string;
+    rfc: string;
 
     // Razón Social
     @property({
         type: 'string',
     })
-    businessName?: string;
+    businessName: string;
 
     // Regimen
     @property({
@@ -105,7 +106,7 @@ export class Customer extends BaseEntity {
             enum: [...Object.values(TypeRegimenE)],
         },
     })
-    regimen?: string;
+    regimen: string;
 
     @belongsTo(() => Organization)
     organizationId: number;
@@ -120,6 +121,7 @@ export class Customer extends BaseEntity {
 
 export interface CustomerRelations {
     // describe navigational properties here
+    group: GroupWithRelations
 }
 
 export type CustomerWithRelations = Customer & CustomerRelations;

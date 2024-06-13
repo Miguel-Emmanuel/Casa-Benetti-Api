@@ -41,7 +41,7 @@ export class ProductController {
                         properties: {
                             product: getModelSchemaRef(Product, {
                                 title: 'NewProduct',
-                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment'],
+                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
                             }),
                             documents: {
                                 type: 'array',

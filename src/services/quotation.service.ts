@@ -86,8 +86,7 @@ export class QuotationService {
 
             return findCustomer.id;
         } else {
-            // const createCustomer = await this.customerRepository.create({...dataCustomer});
-            const createCustomer = await this.customerRepository.create({});
+            const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId});
             return createCustomer.id;
         }
 
@@ -207,7 +206,7 @@ export class QuotationService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['id',]
+                    fields: ['id', 'name']
                 }
             },
             {
@@ -215,7 +214,11 @@ export class QuotationService {
                 scope: {
                     fields: ['id', 'firstName']
                 }
-            }
+            },
+            {
+                relation: 'branch',
+
+            },
         ]
         if (filter?.include)
             filter.include = [
@@ -227,14 +230,14 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, total, status, updatedAt} = value;
-            // const { } = customer;
+            const {id, customer, projectManagers, total, status, updatedAt, branch} = value;
+            const {name} = customer;
             return {
                 id,
-                customerName: customer.id,
+                customerName: name,
                 pm: projectManagers?.length > 0 ? projectManagers[0].firstName : '',
                 total,
-                branchName: '',
+                branchName: branch?.name,
                 status,
                 updatedAt
             }
@@ -245,9 +248,6 @@ export class QuotationService {
         const filterInclude = [
             {
                 relation: 'customer',
-                scope: {
-                    fields: ['id',]
-                }
             },
             {
                 relation: 'products',
@@ -291,7 +291,7 @@ export class QuotationService {
             products.push({
                 SKU: iterator.SKU,
                 brandName: iterator?.brand?.brandName ?? '',
-                status: '',
+                status: iterator.status,
                 description: iterator.description,
                 image: iterator?.documents.length > 0 ? iterator?.documents[0].fileURL : '',
                 mainFinish: iterator.mainFinish,
@@ -321,17 +321,17 @@ export class QuotationService {
 
         const response: QuotationFindOneResponse = {
             customer: {
-                firstName: '',
-                lastName: '',
-                secondLastName: '',
-                address: '',
-                addressDescription: '',
-                phone: '',
-                invoice: true,
-                rfc: '',
-                businessName: '',
-                taxRegime: '',
-                group: '',
+                firstName: quotation.customer.name,
+                lastName: quotation.customer.lastName,
+                secondLastName: quotation.customer.secondLastName,
+                address: quotation.customer?.address,
+                addressDescription: quotation.customer?.addressDescription,
+                phone: quotation.customer.phone,
+                invoice: quotation.customer.invoice,
+                rfc: quotation.customer.rfc,
+                businessName: quotation.customer.businessName,
+                regimen: quotation.customer.regimen,
+                group: quotation?.customer?.group?.name,
             },
             products: products,
             quotation: {
@@ -347,8 +347,7 @@ export class QuotationService {
             commisions: {
                 architectName: quotation.architectName,
                 commissionPercentageArchitect: quotation.commissionPercentageArchitect,
-                // referencedCustomerName: quotation.referenceCustomerId,
-                referencedCustomerName: '',
+                referencedCustomerName: quotation?.referenceCustomer?.firstName,
                 projectManagers: projectManagers,
                 designers: designers
             }

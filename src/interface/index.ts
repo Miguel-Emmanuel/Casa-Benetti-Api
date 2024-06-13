@@ -1,4 +1,4 @@
-import {ExchangeRateE, StatusQuotationE, TypeSaleE} from '../enums';
+import {ExchangeRateE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address} from '../models';
 
 export interface ProjectManagers {
@@ -27,16 +27,16 @@ export interface Products {
 
 export interface Customer {
     customerId: number;
-    firstName: string;
+    name: string;
     lastName: string;
     secondLastName: string;
-    address: Address;
-    addressDescription: string;
+    address?: Address;
+    addressDescription?: string;
     phone: string;
-    isInvoice: string;
+    invoice: boolean;
     rfc: string;
     businessName: string;
-    taxRegime: string;
+    regimen: TypeRegimenE;
     groupId: number;
 }
 export interface CreateQuotation {
@@ -70,10 +70,10 @@ export interface CreateQuotation {
 
 export interface QuotationFindResponse {
     id: number;
-    customerName: number;
+    customerName: string;
     pm: string | undefined;
     total: number;
-    branchName: string;
+    branchName: string | undefined;
     status: StatusQuotationE;
     updatedAt: Date | undefined;
 }
@@ -109,14 +109,13 @@ export interface QuotationFindOneResponse {
         firstName: string;
         lastName: string;
         secondLastName: string;
-        // address: Address,
-        address: string,
-        addressDescription: string;
+        address?: Address,
+        addressDescription?: string;
         phone: string;
         invoice: boolean;
         rfc: string;
         businessName: string;
-        taxRegime: string;
+        regimen: string;
         group: string
     },
     products: ProductsById[],
