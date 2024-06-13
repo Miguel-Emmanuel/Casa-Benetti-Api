@@ -42,7 +42,7 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'boolean',
     })
-    percentageSeparate?: boolean;
+    percentageSeparate?: number;
 
     //Dias de apartado
     @property({

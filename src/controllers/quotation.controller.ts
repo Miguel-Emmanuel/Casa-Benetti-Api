@@ -35,7 +35,7 @@ export class QuotationController {
     async create(
         @requestBody(CreateRequestBody)
         data: CreateQuotation,
-    ): Promise<Quotation> {
+    ): Promise<any> {
         return this.quotationService.create(data);
     }
 

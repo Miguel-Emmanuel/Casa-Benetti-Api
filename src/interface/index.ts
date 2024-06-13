@@ -1,4 +1,4 @@
-import {TypeSaleE} from '../enums';
+import {ExchangeRateE, TypeSaleE} from '../enums';
 import {Address} from '../models';
 
 export interface CreateQuotation {
@@ -7,7 +7,7 @@ export interface CreateQuotation {
         clientId: number;
         firstName: string;
         lastName: string;
-        motherLastName: string;
+        secondLastName: string;
         address: Address;
         addressDescription: string;
         phone: string;
@@ -29,7 +29,7 @@ export interface CreateQuotation {
             commissionPercentageProjectManager: number;
         }[],
         isDesigner: boolean;
-        designer: {
+        designers: {
             userId: number;
             commissionPercentageDesigner: number;
         }[],
@@ -54,7 +54,7 @@ export interface CreateQuotation {
         total: number;
         percentageAdvance: number;
         advance: number;
-        exchangeRate: number;
+        exchangeRate: ExchangeRateE;
         balance: number;
     }
 }

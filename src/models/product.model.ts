@@ -3,6 +3,7 @@ import {ClassificationE, CurrencyE, LocationE, TypeArticleE, UOME} from '../enum
 import {BaseEntity} from './base/base-entity.model';
 import {Document} from './document.model';
 import {Organization} from './organization.model';
+import {Provider} from './provider.model';
 
 @model({
     settings: {
@@ -15,6 +16,12 @@ import {Organization} from './organization.model';
                 entity: 'Organization',
                 entityKey: 'id',
                 foreignKey: 'organizationid',
+            },
+            fk_provider_providerId: {
+                name: 'fk_provider_providerId',
+                entity: 'Provider',
+                entityKey: 'id',
+                foreignKey: 'providerid',
             },
         }
     }
@@ -125,6 +132,9 @@ export class Product extends BaseEntity {
         required: false,
     })
     isPurchasable: boolean;
+
+    @belongsTo(() => Provider)
+    providerId: number;
 
     @property({
         type: 'string',

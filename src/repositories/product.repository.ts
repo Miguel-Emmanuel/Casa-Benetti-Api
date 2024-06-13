@@ -3,11 +3,12 @@ import {BelongsToAccessor, HasManyRepositoryFactory, repository} from '@loopback
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Document, Organization, Product, ProductRelations} from '../models';
+import {Document, Organization, Product, ProductRelations, Provider} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {DocumentRepository} from './document.repository';
 import {OrganizationRepository} from './organization.repository';
 import {SoftCrudRepository} from './soft-delete-entity.repository.base';
+import {ProviderRepository} from './provider.repository';
 
 export class ProductRepository extends SoftCrudRepository<
   Product,
@@ -19,13 +20,17 @@ export class ProductRepository extends SoftCrudRepository<
 
   public readonly documents: HasManyRepositoryFactory<Document, typeof Product.prototype.id>;
 
+  public readonly provider: BelongsToAccessor<Provider, typeof Product.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
+    @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>,
   ) {
     super(Product, dataSource);
+    this.provider = this.createBelongsToAccessorFor('provider', providerRepositoryGetter,);
+    this.registerInclusionResolver('provider', this.provider.inclusionResolver);
     this.definePersistedModel(Product)
     this.modelClass.observe('before save', async (ctx: any) => {
       const hook = await this.operationHook();

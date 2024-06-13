@@ -13,7 +13,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     client: {
                         type: 'object',
                         properties: {
-                            clientId: {
+                            id: {
                                 type: 'number'
                             },
                             firstName: {
@@ -22,7 +22,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                             lastName: {
                                 type: 'string'
                             },
-                            motherLastName: {
+                            secondLastName: {
                                 type: 'string'
                             },
                             address: {
@@ -99,7 +99,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                             isDesigner: {
                                 type: 'boolean'
                             },
-                            designer: {
+                            designers: {
                                 type: 'array',
                                 items: {
                                     type: 'object',
@@ -182,7 +182,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 type: 'number'
                             },
                             exchangeRate: {
-                                type: 'number'
+                                type: 'string'
                             },
                             balance: {
                                 type: 'number'

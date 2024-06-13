@@ -55,7 +55,7 @@ export class Quotation extends Entity {
         type: 'boolean',
         required: true,
     })
-    isreferencedClient: boolean;
+    isReferencedClient: boolean;
 
     //Comision del cliente referenciado
     @property({
