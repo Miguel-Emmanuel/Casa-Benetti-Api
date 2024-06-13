@@ -1,8 +1,9 @@
 import {UserRepository} from '@loopback/authentication-jwt';
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
-import {StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, Products, ProjectManagers} from '../interface';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {AccessLevelRolE, StatusQuotationE} from '../enums';
+import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse} from '../interface';
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
@@ -28,24 +29,31 @@ export class QuotationService {
         public productRepository: ProductRepository,
         @repository(CustomerRepository)
         public customerRepository: CustomerRepository,
+        @inject(SecurityBindings.USER)
+        private user: UserProfile,
     ) { }
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft} = data;
-        await this.findUserById(quotation.referenceCustomerId);
+        const {isReferencedCustomer} = quotation;
+        if (isReferencedCustomer === true)
+            await this.findUserById(quotation.referenceCustomerId);
         const customerId = await this.createOrGetCustomer(customer);
         if (id === null) {
+            const branchId = this.user.branchId;
             await this.validateBodyQuotation(data);
             const bodyQuotation = {
                 ...quotation,
                 exchangeRateAmount: 15,
                 status: StatusQuotationE.ENPROCESO,
                 customerId,
-                isDraft
+                isDraft,
+                branchId
             }
             const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
             await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
+            return createQuotation;
         } else {
             const findQuotation = await this.findQuotationById(id);
             const bodyQuotation = {
@@ -58,7 +66,7 @@ export class QuotationService {
             await this.quotationRepository.updateById(id, bodyQuotation)
             await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
             await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
-
+            return this.findQuotationById(id);
         }
 
     }
@@ -78,8 +86,7 @@ export class QuotationService {
 
             return findCustomer.id;
         } else {
-            // const createCustomer = await this.customerRepository.create({...dataCustomer});
-            const createCustomer = await this.customerRepository.create({});
+            const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId});
             return createCustomer.id;
         }
 
@@ -99,7 +106,7 @@ export class QuotationService {
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product)
-                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
         }
     }
 
@@ -150,9 +157,9 @@ export class QuotationService {
             if (product) {
                 const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
                 if (findQuotationP)
-                    await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
                 else
-                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal});
+                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
             }
         }
     }
@@ -183,11 +190,169 @@ export class QuotationService {
     }
 
     async find(filter?: Filter<Quotation>,) {
-        return this.quotationRepository.find(filter);
+        console.log(this.user);
+        const accessLevel = this.user.accessLevel;
+        let where = {};
+        if (accessLevel === AccessLevelRolE.SUCURSAL) {
+            where = {branchId: this.user.branchId}
+        }
+
+        if (filter?.where) {
+            filter.where = {...filter.where, ...where}
+        } else {
+            filter = {...filter, where: {...where}};
+        }
+        const filterInclude = [
+            {
+                relation: 'customer',
+                scope: {
+                    fields: ['id', 'name']
+                }
+            },
+            {
+                relation: 'projectManagers',
+                scope: {
+                    fields: ['id', 'firstName']
+                }
+            },
+            {
+                relation: 'branch',
+
+            },
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...filterInclude
+            ]
+        else
+            filter = {
+                ...filter, include: [...filterInclude]
+            };
+        return (await this.quotationRepository.find(filter)).map(value => {
+            const {id, customer, projectManagers, total, status, updatedAt, branch} = value;
+            const {name} = customer;
+            return {
+                id,
+                customerName: name,
+                pm: projectManagers?.length > 0 ? projectManagers[0].firstName : '',
+                total,
+                branchName: branch?.name,
+                status,
+                updatedAt
+            }
+        });
     }
 
-    async findById(id: number, filter?: FilterExcludingWhere<Quotation>) {
-        return this.quotationRepository.findById(id, filter);
+    async findById(id: number, filter?: FilterExcludingWhere<Quotation>): Promise<QuotationFindOneResponse> {
+        const filterInclude = [
+            {
+                relation: 'customer',
+            },
+            {
+                relation: 'products',
+                scope: {
+                    include: ['quotationProducts', 'brand', 'documents']
+                }
+
+            },
+            {
+                relation: 'projectManagers',
+                scope: {
+                    fields: ['id', 'firstName'],
+                    include: ['quotationProjectManager']
+                }
+            },
+            {
+                relation: 'designers',
+                scope: {
+                    fields: ['id', 'firstName'],
+                    include: ['quotationDesigner']
+                }
+            },
+            {
+                relation: 'referenceCustomer'
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...filterInclude
+            ]
+        else
+            filter = {
+                ...filter, include: [...filterInclude]
+            };
+        const quotation = await this.quotationRepository.findById(id, filter);
+        const products: ProductsById[] = [];
+        const projectManagers: ProjectManagersById[] = [];
+        const designers: DesignersById[] = [];
+        for (const iterator of quotation?.products ?? []) {
+            products.push({
+                SKU: iterator.SKU,
+                brandName: iterator?.brand?.brandName ?? '',
+                status: iterator.status,
+                description: iterator.description,
+                image: iterator?.documents.length > 0 ? iterator?.documents[0].fileURL : '',
+                mainFinish: iterator.mainFinish,
+                sale: iterator.quotationProducts.typeSale ?? '',
+                quantity: iterator.quotationProducts.quantity,
+                percentageDiscountProduct: iterator.quotationProducts.percentageDiscountProduct,
+                discountProduct: iterator.quotationProducts.discountProduct,
+                percentageAdditionalDiscount: iterator.quotationProducts.percentageAdditionalDiscount,
+                additionalDiscount: iterator.quotationProducts.additionalDiscount,
+                subtotal: iterator.quotationProducts.subtotal,
+            })
+        }
+
+        for (const iterator of quotation?.projectManagers ?? []) {
+            projectManagers.push({
+                projectManagerName: iterator.firstName,
+                commissionPercentageProjectManager: iterator.quotationProjectManager.commissionPercentageProjectManager,
+            })
+        }
+
+        for (const iterator of quotation?.designers ?? []) {
+            designers.push({
+                designerName: iterator.firstName,
+                commissionPercentageDesigner: iterator.quotationDesigner.commissionPercentageDesigner,
+            })
+        }
+
+        const response: QuotationFindOneResponse = {
+            customer: {
+                firstName: quotation.customer.name,
+                lastName: quotation.customer.lastName,
+                secondLastName: quotation.customer.secondLastName,
+                address: quotation.customer?.address,
+                addressDescription: quotation.customer?.addressDescription,
+                phone: quotation.customer.phone,
+                invoice: quotation.customer.invoice,
+                rfc: quotation.customer.rfc,
+                businessName: quotation.customer.businessName,
+                regimen: quotation.customer.regimen,
+                group: quotation?.customer?.group?.name,
+            },
+            products: products,
+            quotation: {
+                subtotal: quotation.subtotal,
+                additionalDiscount: quotation.additionalDiscount,
+                percentageIva: quotation.percentageIva,
+                iva: quotation.iva,
+                total: quotation.total,
+                advance: quotation.advance,
+                exchangeRate: quotation.exchangeRate,
+                balance: quotation.balance,
+            },
+            commisions: {
+                architectName: quotation.architectName,
+                commissionPercentageArchitect: quotation.commissionPercentageArchitect,
+                referencedCustomerName: quotation?.referenceCustomer?.firstName,
+                projectManagers: projectManagers,
+                designers: designers
+            }
+        }
+        return response
     }
 
     async updateById(id: number, quotation: Quotation,) {

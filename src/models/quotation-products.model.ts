@@ -1,5 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {TypeSaleE} from '../enums';
+import {Product} from './product.model';
 
 @model({
     settings: {
@@ -35,10 +36,8 @@ export class QuotationProducts extends Entity {
     })
     quotationId?: number;
 
-    @property({
-        type: 'number',
-    })
-    productId?: number;
+    @belongsTo(() => Product)
+    productId: number;
 
     //Venta o prestamo
     @property({
@@ -68,7 +67,7 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'number',
     })
-    quantity?: number;
+    quantity: number;
 
     //Descuento porcentaje por producto
     @property({
@@ -77,12 +76,26 @@ export class QuotationProducts extends Entity {
     })
     percentageDiscountProduct: number;
 
-    //Descuento adicional
+    //Descuento por producto total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    discountProduct: number;
+
+    //Descuento adicional porcentaje
     @property({
         type: 'number',
         required: false,
     })
     percentageAdditionalDiscount: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+    })
+    additionalDiscount: number;
 
     //Subtotal con descuento
     @property({

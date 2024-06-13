@@ -4,7 +4,9 @@ import {TypeUserE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch} from './branch.model';
 import {Organization} from './organization.model';
-import {Role} from './role.model';
+import {QuotationDesigner} from './quotation-designer.model';
+import {QuotationProjectManager, QuotationProjectManagerWithRelations} from './quotation-project-manager.model';
+import {Role, RoleWithRelations} from './role.model';
 import {UserCredentials} from './user-credentials.model';
 import {UserData, UserDataWithRelations} from './user-data.model';
 
@@ -61,7 +63,7 @@ export class User extends BaseEntity {
   @property({
     type: 'string',
   })
-  firstName?: string;
+  firstName: string;
 
   @property({
     type: 'string',
@@ -141,6 +143,12 @@ export class User extends BaseEntity {
   @belongsTo(() => Branch)
   branchId: number;
 
+  @hasOne(() => QuotationProjectManager)
+  quotationProjectManager: QuotationProjectManager;
+
+  @hasOne(() => QuotationDesigner)
+  quotationDesigner: QuotationDesigner;
+
   constructor(
     data?: Partial<User>
   ) {
@@ -151,6 +159,8 @@ export class User extends BaseEntity {
 export interface UserRelations {
   userData: UserDataWithRelations
   userCredentials: UserCredentialsWithRelations
+  role: RoleWithRelations
+  quotationProjectManager: QuotationProjectManagerWithRelations
   // describe navigational properties here
 }
 

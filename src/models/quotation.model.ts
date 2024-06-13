@@ -1,11 +1,14 @@
-import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, StatusQuotationE} from '../enums';
-import {Customer} from './customer.model';
-import {Product} from './product.model';
+import {BaseEntity} from './base/base-entity.model';
+import {Branch, BranchWithRelations} from './branch.model';
+import {Customer, CustomerWithRelations} from './customer.model';
+import {Organization} from './organization.model';
+import {Product, ProductWithRelations} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
-import {User} from './user.model';
+import {User, UserWithRelations} from './user.model';
 
 @model({
     settings: {
@@ -25,10 +28,22 @@ import {User} from './user.model';
                 entityKey: 'id',
                 foreignKey: 'referencecustomerid',
             },
+            fk_organization_organizationId: {
+                name: 'fk_organization_organizationId',
+                entity: 'Organization',
+                entityKey: 'id',
+                foreignKey: 'organizationid',
+            },
+            fk_branch_branchId: {
+                name: 'fk_branch_branchId',
+                entity: 'Branch',
+                entityKey: 'id',
+                foreignKey: 'branchid',
+            },
         }
     }
 })
-export class Quotation extends Entity {
+export class Quotation extends BaseEntity {
     @property({
         type: 'number',
         id: true,
@@ -114,6 +129,12 @@ export class Quotation extends Entity {
         required: false,
     })
     percentageAdditionalDiscount: number;
+
+    @belongsTo(() => Organization)
+    organizationId: number;
+
+    @belongsTo(() => Branch)
+    branchId: number;
 
     //descuento adicional total
     @property({
@@ -201,7 +222,10 @@ export interface QuotationRelations {
     // describe navigational properties here
     projectManagers: User[],
     designers: User[],
-    products: Product[];
+    products: ProductWithRelations[];
+    customer: CustomerWithRelations;
+    referenceCustomer: UserWithRelations;
+    branch: BranchWithRelations
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

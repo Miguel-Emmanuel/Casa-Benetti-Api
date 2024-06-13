@@ -1,4 +1,4 @@
-import {RequestBodyObject} from '@loopback/rest';
+import {RequestBodyObject, ResponseModelOrSpec} from '@loopback/rest';
 import {ExchangeRateE} from '../enums';
 
 export const CreateRequestBody: Partial<RequestBodyObject> = {
@@ -21,7 +21,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 type: 'number',
                                 nullable: true
                             },
-                            firstName: {
+                            name: {
                                 type: 'string',
                                 nullable: true
                             },
@@ -78,7 +78,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 type: 'string',
                                 nullable: true
                             },
-                            isInvoice: {
+                            invoice: {
                                 type: 'boolean',
                                 nullable: true
                             },
@@ -87,6 +87,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 nullable: true
                             },
                             businessName: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            regimen: {
                                 type: 'string',
                                 nullable: true
                             },
@@ -152,7 +156,13 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 percentageDiscountProduct: {
                                     type: 'number'
                                 },
+                                discountProduct: {
+                                    type: 'number'
+                                },
                                 percentageAdditionalDiscount: {
+                                    type: 'number'
+                                },
+                                additionalDiscount: {
                                     type: 'number'
                                 },
                                 subtotal: {
@@ -166,6 +176,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                         properties: {
                             referenceCustomerId: {
                                 type: 'number',
+                                nullable: true
                             },
                             isArchitect: {
                                 type: 'boolean',
@@ -241,6 +252,249 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
 
                 }
             }
+        },
+    },
+}
+
+
+export const QuotationGteByIdResponse: ResponseModelOrSpec = {
+    description: 'Quotation model instance',
+    content: {
+        'application/json': {
+            schema: {
+                type: 'object',
+                properties: {
+                    customer: {
+                        type: 'object',
+                        properties: {
+                            firstName: {
+                                type: 'string'
+                            },
+                            lastName: {
+                                type: 'string'
+                            },
+                            secondLastName: {
+                                type: 'string'
+                            },
+                            address: {
+                                type: 'object',
+                                properties: {
+                                    state: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    city: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    street: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    suburb: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    zipCode: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    extNum: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    intNum: {
+                                        type: 'string',
+                                        nullable: true
+                                    },
+                                    country: {
+                                        type: 'string',
+                                        nullable: true
+                                    }
+                                }
+                            },
+                            addressDescription: {
+                                type: 'string'
+                            },
+                            phone: {
+                                type: 'string'
+                            },
+                            invoice: {
+                                type: 'boolean'
+                            },
+                            rfc: {
+                                type: 'string'
+                            },
+                            businessName: {
+                                type: 'string'
+                            },
+                            regimen: {
+                                type: 'string'
+                            },
+                            group: {
+                                type: 'string'
+                            },
+
+                        }
+                    },
+                    products: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                SKU: {
+                                    type: 'string'
+                                },
+                                brandName: {
+                                    type: 'string'
+                                },
+                                status: {
+                                    type: 'string'
+                                },
+                                description: {
+                                    type: 'string'
+                                },
+                                image: {
+                                    type: 'string'
+                                },
+                                mainFinish: {
+                                    type: 'string'
+                                },
+                                sale: {
+                                    type: 'string'
+                                },
+                                quantity: {
+                                    type: 'number'
+                                },
+                                percentageDiscountProduct: {
+                                    type: 'number'
+                                },
+                                discountProduct: {
+                                    type: 'number'
+                                },
+                                percentageAdditionalDiscount: {
+                                    type: 'number'
+                                },
+                                additionalDiscount: {
+                                    type: 'number'
+                                },
+                                subtotal: {
+                                    type: 'number'
+                                },
+                            }
+                        }
+                    },
+                    quotation: {
+                        type: 'object',
+                        properties: {
+                            subtotal: {
+                                type: 'number'
+                            },
+                            additionalDiscount: {
+                                type: 'number'
+                            },
+                            percentageIva: {
+                                type: 'number'
+                            },
+                            iva: {
+                                type: 'number'
+                            },
+                            total: {
+                                type: 'number'
+                            },
+                            advance: {
+                                type: 'number'
+                            },
+                            exchangeRate: {
+                                type: 'number'
+                            },
+                            balance: {
+                                type: 'number'
+                            },
+                        }
+                    },
+                    commisions: {
+                        type: 'object',
+                        properties: {
+                            architectName: {
+                                type: 'string'
+                            },
+                            commissionPercentageArchitect: {
+                                type: 'number'
+                            },
+                            referencedCustomerName: {
+                                type: 'number'
+                            },
+                            projectManagers: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        projectManagerName: {
+                                            type: 'number'
+                                        },
+                                        commissionPercentageProjectManager: {
+                                            type: 'number'
+                                        },
+                                    }
+                                }
+                            },
+                            designers: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        designerName: {
+                                            type: 'number'
+                                        },
+                                        commissionPercentageDesigner: {
+                                            type: 'number'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        },
+    },
+}
+
+
+export const QuotationFindResponseSwagger: ResponseModelOrSpec = {
+    description: 'Array of Quotation model instances',
+    content: {
+        'application/json': {
+            schema: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'number'
+                        },
+                        customerName: {
+                            type: 'string'
+                        },
+                        pm: {
+                            type: 'string'
+                        },
+                        total: {
+                            type: 'number'
+                        },
+                        branchName: {
+                            type: 'string'
+                        },
+                        status: {
+                            type: 'string'
+                        },
+                        updatedAt: {
+                            type: 'string'
+                        },
+                    }
+                },
+            },
         },
     },
 }
