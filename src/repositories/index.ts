@@ -21,3 +21,4 @@ export * from './warehouse.repository';
 export * from './brand.repository';
 export * from './provider-brand.repository';
 export * from './customer.repository';
+export * from './group.repository';

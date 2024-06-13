@@ -10,7 +10,8 @@ export enum LogModelName {
     WAREHOUSE = "Warehouse",
     PROVIDER = "Provider",
     BRAND = "Brand",
-    CUSTOMER = "Customer"
+    CUSTOMER = "Customer",
+    GROUP = "Group"
 }
 
 export enum LogModificationType {
