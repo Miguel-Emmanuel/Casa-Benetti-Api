@@ -1,5 +1,6 @@
-import {Entity, hasMany, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, StatusQuotationE} from '../enums';
+import {Customer} from './customer.model';
 import {Product} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
@@ -28,6 +29,10 @@ export class Quotation extends Entity {
         generated: true,
     })
     id?: number;
+
+    //Cliente
+    @belongsTo(() => Customer)
+    customerId: number;
 
     //Hay Arquitecto o despacho
     @property({
