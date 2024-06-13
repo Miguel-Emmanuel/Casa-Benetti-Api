@@ -298,7 +298,7 @@ export class QuotationService {
                 brandName: iterator?.brand?.brandName ?? '',
                 status: iterator.status,
                 description: iterator.description,
-                image: iterator?.documents.length > 0 ? iterator?.documents[0].fileURL : '',
+                image: iterator?.document ? iterator?.document?.fileURL : '',
                 mainFinish: iterator.mainFinish,
                 sale: iterator.quotationProducts.typeSale ?? '',
                 quantity: iterator.quotationProducts.quantity,

@@ -226,8 +226,8 @@ export class Product extends BaseEntity {
     @belongsTo(() => Organization)
     organizationId: number;
 
-    @hasMany(() => Document)
-    documents: Document[];
+    @hasOne(() => Document)
+    document: Document;
 
     @hasMany(() => Quotation, {through: {model: () => QuotationProducts}})
     quotations: Quotation[];

@@ -1,19 +1,19 @@
 import {Getter, inject} from '@loopback/core';
-import {BelongsToAccessor, HasManyRepositoryFactory, repository, HasManyThroughRepositoryFactory, HasOneRepositoryFactory} from '@loopback/repository';
+import {BelongsToAccessor, HasManyThroughRepositoryFactory, HasOneRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Brand, Document, Organization, Product, ProductRelations, Provider, Quotation, QuotationProducts, Classification, Line} from '../models';
+import {Brand, Classification, Line, Organization, Product, ProductRelations, Provider, Quotation, QuotationProducts, Document} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {BrandRepository} from './brand.repository';
-import {DocumentRepository} from './document.repository';
-import {OrganizationRepository} from './organization.repository';
-import {ProviderRepository} from './provider.repository';
-import {SoftCrudRepository} from './soft-delete-entity.repository.base';
-import {QuotationProductsRepository} from './quotation-products.repository';
-import {QuotationRepository} from './quotation.repository';
 import {ClassificationRepository} from './classification.repository';
 import {LineRepository} from './line.repository';
+import {OrganizationRepository} from './organization.repository';
+import {ProviderRepository} from './provider.repository';
+import {QuotationProductsRepository} from './quotation-products.repository';
+import {QuotationRepository} from './quotation.repository';
+import {SoftCrudRepository} from './soft-delete-entity.repository.base';
+import {DocumentRepository} from './document.repository';
 
 export class ProductRepository extends SoftCrudRepository<
   Product,
@@ -23,16 +23,15 @@ export class ProductRepository extends SoftCrudRepository<
 
   public readonly organization: BelongsToAccessor<Organization, typeof Product.prototype.id>;
 
-  public readonly documents: HasManyRepositoryFactory<Document, typeof Product.prototype.id>;
 
   public readonly provider: BelongsToAccessor<Provider, typeof Product.prototype.id>;
 
   public readonly brand: BelongsToAccessor<Brand, typeof Product.prototype.id>;
 
   public readonly quotations: HasManyThroughRepositoryFactory<Quotation, typeof Quotation.prototype.id,
-          QuotationProducts,
-          typeof Product.prototype.id
-        >;
+    QuotationProducts,
+    typeof Product.prototype.id
+  >;
 
   public readonly quotationProducts: HasOneRepositoryFactory<QuotationProducts, typeof Product.prototype.id>;
 
@@ -40,13 +39,17 @@ export class ProductRepository extends SoftCrudRepository<
 
   public readonly line: BelongsToAccessor<Line, typeof Product.prototype.id>;
 
+  public readonly document: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('LineRepository') protected lineRepositoryGetter: Getter<LineRepository>,
+    @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('LineRepository') protected lineRepositoryGetter: Getter<LineRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
   ) {
     super(Product, dataSource);
+    this.document = this.createHasOneRepositoryFactoryFor('document', documentRepositoryGetter);
+    this.registerInclusionResolver('document', this.document.inclusionResolver);
     this.line = this.createBelongsToAccessorFor('line', lineRepositoryGetter,);
     this.registerInclusionResolver('line', this.line.inclusionResolver);
     this.classification = this.createBelongsToAccessorFor('classification', classificationRepositoryGetter,);
@@ -64,8 +67,6 @@ export class ProductRepository extends SoftCrudRepository<
       const hook = await this.operationHook();
       await hook.beforeSave(this, ctx, LogModelName.PRODUCT);
     });
-    this.documents = this.createHasManyRepositoryFactoryFor('documents', documentRepositoryGetter,);
-    this.registerInclusionResolver('documents', this.documents.inclusionResolver);
     this.organization = this.createBelongsToAccessorFor('organization', organizationRepositoryGetter,);
     this.registerInclusionResolver('organization', this.organization.inclusionResolver);
   }

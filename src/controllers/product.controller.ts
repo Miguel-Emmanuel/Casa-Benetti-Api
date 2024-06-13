@@ -44,14 +44,12 @@ export class ProductController {
                                 exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
                             }),
                             documents: {
-                                type: 'array',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        fileURL: {type: 'string'},
-                                        name: {type: 'string'},
-                                        extension: {type: 'string'}
-                                    }
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
                                 }
                             }
                         }
@@ -59,7 +57,7 @@ export class ProductController {
                 },
             },
         })
-        data: {product: Omit<Product, 'id'>, documents: [Document]},
+        data: {product: Omit<Product, 'id'>, document: Document},
     ): Promise<Product> {
         return this.productService.create(data);
     }

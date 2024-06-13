@@ -25,16 +25,16 @@ export class ProductService {
         public lineRepository: LineRepository,
     ) { }
 
-    async create(data: {product: Omit<Product, 'id'>, documents: [Document]}) {
+    async create(data: {product: Omit<Product, 'id'>, document: Document}) {
         try {
-            const {product, documents} = data;
+            const {product, document} = data;
             const {brandId, providerId, classificationId, lineId} = product;
             await this.findByIdBrand(brandId);
             await this.findByIdProvider(providerId);
             await this.findByIdClassification(classificationId);
             await this.findByIdLine(lineId);
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
-            await this.createDocuments(response.id, documents)
+            await this.createDocuments(response.id, document)
             return response;
         } catch (error) {
             console.log(error)
@@ -42,11 +42,9 @@ export class ProductService {
         }
     }
 
-    async createDocuments(productId: number, documents: [Document]) {
-        if (documents) {
-            for (const document of documents) {
-                await this.productRepository.documents(productId).create(document);
-            }
+    async createDocuments(productId: number, document: Document) {
+        if (document) {
+            await this.productRepository.document(productId).create(document);
         }
     }
 
