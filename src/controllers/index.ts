@@ -13,3 +13,4 @@ export * from './warehouse.controller';
 export * from './brand.controller';
 export * from './quotation.controller';
 
+export * from './customer.controller';

@@ -9,7 +9,8 @@ export enum LogModelName {
     BRANCH = "Branch",
     WAREHOUSE = "Warehouse",
     PROVIDER = "Provider",
-    BRAND = "Brand"
+    BRAND = "Brand",
+    CUSTOMER = "Customer"
 }
 
 export enum LogModificationType {
@@ -94,4 +95,10 @@ export enum StatusQuotationE {
     ENREVISION = 'En revisión por Administración',
     CERRADA = 'Cerrada',
     RECHAZADA = 'Rechazada',
+}
+
+export enum TypeRegimenE {
+    PERSONA_FISICA = 'Persona Fisica',
+    PERSONA_MORAL = 'Persona Moral',
+    PERSONA_FISICA_EMPRESARIAL = 'Persona Fisica con actividad empresarial'
 }

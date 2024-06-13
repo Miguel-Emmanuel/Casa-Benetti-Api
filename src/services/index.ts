@@ -14,3 +14,4 @@ export * from './role.service';
 export * from './warehouse.service';
 
 export * from './brand.service';
+export * from './customer.service';
