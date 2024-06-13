@@ -6,6 +6,7 @@ import {Document} from './document.model';
 import {Organization} from './organization.model';
 import {Provider} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
+import {Quotation} from './quotation.model';
 
 @model({
     settings: {
@@ -208,8 +209,14 @@ export class Product extends BaseEntity {
     @hasMany(() => Document)
     documents: Document[];
 
+    @hasMany(() => Quotation, {through: {model: () => QuotationProducts}})
+    quotations: Quotation[];
+
     @hasOne(() => QuotationProducts)
     quotationProducts: QuotationProducts;
+
+    // @hasOne(() => QuotationProducts)
+    // quotationProducts: QuotationProducts;
     // @hasMany(() => QuotationProducts)
     // quotationProducts: QuotationProducts[];
 
@@ -230,8 +237,8 @@ export class Product extends BaseEntity {
 
 export interface ProductRelations {
     // describe navigational properties here
-    quotationProducts: QuotationProductsWithRelations
     brand: BrandWithRelations
+    quotationProducts: QuotationProductsWithRelations
 }
 
 export type ProductWithRelations = Product & ProductRelations;
