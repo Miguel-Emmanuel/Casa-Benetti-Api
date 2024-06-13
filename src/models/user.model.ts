@@ -2,6 +2,7 @@ import {UserCredentialsWithRelations} from '@loopback/authentication-jwt';
 import {belongsTo, hasOne, model, property} from '@loopback/repository';
 import {TypeUserE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
+import {Branch} from './branch.model';
 import {Organization} from './organization.model';
 import {Role} from './role.model';
 import {UserCredentials} from './user-credentials.model';
@@ -136,6 +137,9 @@ export class User extends BaseEntity {
 
   @belongsTo(() => User)
   immediateBossId: number;
+
+  @belongsTo(() => Branch)
+  branchId: number;
 
   constructor(
     data?: Partial<User>
