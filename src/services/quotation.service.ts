@@ -197,6 +197,11 @@ export class QuotationService {
             where = {branchId: this.user.branchId}
         }
 
+        if (accessLevel === AccessLevelRolE.PERSONAL) {
+            const quotationProjectManagers = (await this.quotationProjectManagerRepository.find({where: {userId: this.user.id}})).map(value => value.quotationId);
+            where = {id: {inq: [...quotationProjectManagers]}}
+        }
+
         if (filter?.where) {
             filter.where = {...filter.where, ...where}
         } else {
