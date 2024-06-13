@@ -1,6 +1,12 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'catalog_Customer' // Nombre de la tabla en PostgreSQL
+        },
+    }
+})
 export class Customer extends Entity {
     @property({
         type: 'number',
