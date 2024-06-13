@@ -1,4 +1,5 @@
 import * as Joi from "joi";
+import {ExchangeRateE} from '../enums';
 
 const projectManager = Joi.object({
     userId: Joi.number(),
@@ -25,10 +26,10 @@ const products = Joi.object({
 export const schemaCreateQuotition = Joi.object({
     id: Joi.number().allow(null),
     client: Joi.object({
-        clientId: Joi.number(),
+        clientId: Joi.number().allow(null),
         firstName: Joi.string(),
         lastName: Joi.string(),
-        motherLastName: Joi.string(),
+        secondLastName: Joi.string(),
         address: Joi.object({
             street: Joi.string().allow(''),
             extNum: Joi.string().allow(''),
@@ -55,9 +56,9 @@ export const schemaCreateQuotition = Joi.object({
         commissionPercentagereferencedClient: Joi.number(),
         referencedClientId: Joi.number(),
         isProjectManager: Joi.boolean().required(),
-        projectManager: Joi.array().items(projectManager),
+        projectManagers: Joi.array().items(projectManager),
         isDesigner: Joi.boolean().required(),
-        designer: Joi.array().items(designer),
+        designers: Joi.array().items(designer),
     }),
     products: Joi.array().items(products),
     quotation: Joi.object({
@@ -69,7 +70,9 @@ export const schemaCreateQuotition = Joi.object({
         total: Joi.number(),
         percentageAdvance: Joi.number(),
         advance: Joi.number(),
-        exchangeRate: Joi.number(),
+        exchangeRate: Joi.string().valid(...Object.values(ExchangeRateE)).messages({
+            'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+        }),
         balance: Joi.number(),
     }),
 })

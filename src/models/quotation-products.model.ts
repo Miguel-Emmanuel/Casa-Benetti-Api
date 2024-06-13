@@ -6,6 +6,20 @@ import {TypeSaleE} from '../enums';
         postgresql: {
             table: 'quotation_QuotationProducts' // Nombre de la tabla en PostgreSQL
         },
+        foreignKeys: {
+            fk_quotation_quotationId: {
+                name: 'fk_quotation_quotationId',
+                entity: 'Quotation',
+                entityKey: 'id',
+                foreignKey: 'quotationid',
+            },
+            fk_product_productId: {
+                name: 'fk_product_productId',
+                entity: 'Product',
+                entityKey: 'id',
+                foreignKey: 'productid',
+            },
+        }
     }
 })
 export class QuotationProducts extends Entity {

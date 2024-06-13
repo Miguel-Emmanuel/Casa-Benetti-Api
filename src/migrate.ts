@@ -26,12 +26,12 @@ export async function migrate(args: string[]) {
       'Document',
       'Quotation',
       'QuotationProjectManager',
-      'QuotationProducts',
       'QuotationDesigner',
       'Branch',
       'Warehouse',
       'Provider',
       'Product',
+      'QuotationProducts',
       'QuotationProjectManager',
       'Brand',
       'ProviderBrand'

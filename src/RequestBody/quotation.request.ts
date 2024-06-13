@@ -13,8 +13,9 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     client: {
                         type: 'object',
                         properties: {
-                            id: {
-                                type: 'number'
+                            clientId: {
+                                type: 'number',
+                                nullable: true
                             },
                             firstName: {
                                 type: 'string'

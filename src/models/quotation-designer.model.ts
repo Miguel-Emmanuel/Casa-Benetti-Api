@@ -5,6 +5,20 @@ import {Entity, model, property} from '@loopback/repository';
         postgresql: {
             table: 'quotation_QuotationDesigner' // Nombre de la tabla en PostgreSQL
         },
+        foreignKeys: {
+            fk_quotation_quotationId: {
+                name: 'fk_quotation_quotationId',
+                entity: 'Quotation',
+                entityKey: 'id',
+                foreignKey: 'quotationid',
+            },
+            fk_user_userId: {
+                name: 'fk_user_userId',
+                entity: 'User',
+                entityKey: 'id',
+                foreignKey: 'userid',
+            },
+        }
     }
 })
 export class QuotationDesigner extends Entity {
