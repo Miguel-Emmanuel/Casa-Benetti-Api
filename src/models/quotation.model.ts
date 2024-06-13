@@ -12,14 +12,20 @@ import {User} from './user.model';
         postgresql: {
             table: 'quotation_Quotation' // Nombre de la tabla en PostgreSQL
         },
-        // foreignKeys: {
-        //     fk_organization_organizationId: {
-        //         name: 'fk_organization_organizationId',
-        //         entity: 'Organization',
-        //         entityKey: 'id',
-        //         foreignKey: 'organizationid',
-        //     },
-        // }
+        foreignKeys: {
+            fk_customer_customerId: {
+                name: 'fk_customer_customerId',
+                entity: 'Customer',
+                entityKey: 'id',
+                foreignKey: 'customerid',
+            },
+            fk_user_referenceCustomerId: {
+                name: 'fk_user_referenceCustomerId',
+                entity: 'User',
+                entityKey: 'id',
+                foreignKey: 'referencecustomerid',
+            },
+        }
     }
 })
 export class Quotation extends Entity {
@@ -60,14 +66,17 @@ export class Quotation extends Entity {
         type: 'boolean',
         required: true,
     })
-    isReferencedClient: boolean;
+    isReferencedCustomer: boolean;
+
+    @belongsTo(() => User)
+    referenceCustomerId: number;
 
     //Comision del cliente referenciado
     @property({
         type: 'number',
         required: false,
     })
-    commissionPercentagereferencedClient: number;
+    commissionPercentagereferencedCustomer: number;
 
     //Se requiere project manager
     @property({

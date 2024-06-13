@@ -27,14 +27,14 @@ export class QuotationService {
         const {client, commissions, id, quotation, products} = data;
         if (id === null) {
             await this.validateBodyQuotation(data);
-            const {isArchitect, architectName, commissionPercentageArchitect, isReferencedClient, commissionPercentagereferencedClient, isProjectManager, isDesigner, projectManagers, designers} = commissions;
+            const {isArchitect, architectName, commissionPercentageArchitect, isReferencedCustomer, commissionPercentagereferencedCustomer, isProjectManager, isDesigner, projectManagers, designers} = commissions;
             const {subtotal, additionalDiscount, percentageIva, iva, total, percentageAdvance, advance, exchangeRate, balance, } = quotation;
             const bodyQuotation = {
                 isArchitect,
                 architectName,
                 commissionPercentageArchitect,
-                isReferencedClient,
-                commissionPercentagereferencedClient,
+                isReferencedCustomer,
+                commissionPercentagereferencedCustomer,
                 isProjectManager,
                 isDesigner,
                 subtotal,

@@ -71,10 +71,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                             commissionPercentageArchitect: {
                                 type: 'number'
                             },
-                            isReferencedClient: {
+                            isReferencedCustomer: {
                                 type: 'boolean'
                             },
-                            commissionPercentagereferencedClient: {
+                            commissionPercentagereferencedCustomer: {
                                 type: 'number'
                             },
                             referencedClientId: {

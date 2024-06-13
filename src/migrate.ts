@@ -24,6 +24,7 @@ export async function migrate(args: string[]) {
       'Module',
       'RoleModule',
       'Document',
+      'Customer',
       'Quotation',
       'QuotationProjectManager',
       'QuotationDesigner',

@@ -20,8 +20,8 @@ export interface CreateQuotation {
         isArchitect: boolean;
         architectName: string;
         commissionPercentageArchitect: number;
-        isReferencedClient: boolean;
-        commissionPercentagereferencedClient: number;
+        isReferencedCustomer: boolean;
+        commissionPercentagereferencedCustomer: number;
         referencedClientId: number;
         isProjectManager: boolean;
         projectManagers: {
