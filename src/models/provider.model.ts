@@ -1,7 +1,9 @@
-import {Model, belongsTo, model, property} from '@loopback/repository';
+import {Model, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {BaseEntity} from './base/base-entity.model';
+import {Brand} from './brand.model';
 import {Organization} from './organization.model';
+import {ProviderBrand} from './provider-brand.model';
 
 @model()
 class TaxData extends Model {
@@ -141,6 +143,9 @@ export class Provider extends BaseEntity {
 
   @belongsTo(() => Organization)
   organizationId?: number;
+
+  @hasMany(() => Brand, {through: {model: () => ProviderBrand}})
+  brands: Brand[];
 
   constructor(data?: Partial<Provider>) {
     super(data);

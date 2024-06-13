@@ -31,7 +31,9 @@ export async function migrate(args: string[]) {
       'QuotationDesigner',
       'Branch',
       'Warehouse',
-      'Provider'
+      'Provider',
+      'Brand',
+      'ProviderBrand'
     ],
   });
 
