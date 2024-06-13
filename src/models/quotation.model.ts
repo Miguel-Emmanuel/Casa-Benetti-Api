@@ -2,6 +2,7 @@ import {UserWithRelations} from '@loopback/authentication-jwt';
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
+import {Branch} from './branch.model';
 import {Customer} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
@@ -33,6 +34,12 @@ import {User} from './user.model';
                 entity: 'Organization',
                 entityKey: 'id',
                 foreignKey: 'organizationid',
+            },
+            fk_branch_branchId: {
+                name: 'fk_branch_branchId',
+                entity: 'Branch',
+                entityKey: 'id',
+                foreignKey: 'branchid',
             },
         }
     }
@@ -126,6 +133,9 @@ export class Quotation extends BaseEntity {
 
     @belongsTo(() => Organization)
     organizationId: number;
+
+    @belongsTo(() => Branch)
+    branchId: number;
 
     //descuento adicional total
     @property({

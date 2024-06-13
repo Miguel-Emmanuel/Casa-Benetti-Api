@@ -1,6 +1,6 @@
 import {inject, Getter} from '@loopback/core';
 import {DbDataSource} from '../datasources';
-import {Quotation, QuotationRelations, User, QuotationProjectManager, QuotationDesigner, Product, QuotationProducts, Customer, Organization} from '../models';
+import {Quotation, QuotationRelations, User, QuotationProjectManager, QuotationDesigner, Product, QuotationProducts, Customer, Organization, Branch} from '../models';
 import {SoftCrudRepository} from './soft-delete-entity.repository.base';
 import {repository, HasManyThroughRepositoryFactory, BelongsToAccessor} from '@loopback/repository';
 import {QuotationProjectManagerRepository} from './quotation-project-manager.repository';
@@ -10,6 +10,7 @@ import {QuotationProductsRepository} from './quotation-products.repository';
 import {ProductRepository} from './product.repository';
 import {CustomerRepository} from './customer.repository';
 import {OrganizationRepository} from './organization.repository';
+import {BranchRepository} from './branch.repository';
 
 export class QuotationRepository extends SoftCrudRepository<
   Quotation,
@@ -38,10 +39,14 @@ export class QuotationRepository extends SoftCrudRepository<
 
   public readonly organization: BelongsToAccessor<Organization, typeof Quotation.prototype.id>;
 
+  public readonly branch: BelongsToAccessor<Branch, typeof Quotation.prototype.id>;
+
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('QuotationProjectManagerRepository') protected quotationProjectManagerRepositoryGetter: Getter<QuotationProjectManagerRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>, @repository.getter('QuotationDesignerRepository') protected quotationDesignerRepositoryGetter: Getter<QuotationDesignerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>,
+    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('QuotationProjectManagerRepository') protected quotationProjectManagerRepositoryGetter: Getter<QuotationProjectManagerRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>, @repository.getter('QuotationDesignerRepository') protected quotationDesignerRepositoryGetter: Getter<QuotationDesignerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
   ) {
     super(Quotation, dataSource);
+    this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);
+    this.registerInclusionResolver('branch', this.branch.inclusionResolver);
     this.organization = this.createBelongsToAccessorFor('organization', organizationRepositoryGetter,);
     this.registerInclusionResolver('organization', this.organization.inclusionResolver);
     this.referenceCustomer = this.createBelongsToAccessorFor('referenceCustomer', userRepositoryGetter,);

@@ -2,7 +2,7 @@ import {UserRepository} from '@loopback/authentication-jwt';
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {StatusQuotationE} from '../enums';
+import {AccessLevelRolE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse} from '../interface';
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -40,13 +40,15 @@ export class QuotationService {
             await this.findUserById(quotation.referenceCustomerId);
         const customerId = await this.createOrGetCustomer(customer);
         if (id === null) {
+            const branchId = this.user.branchId;
             await this.validateBodyQuotation(data);
             const bodyQuotation = {
                 ...quotation,
                 exchangeRateAmount: 15,
                 status: StatusQuotationE.ENPROCESO,
                 customerId,
-                isDraft
+                isDraft,
+                branchId
             }
             const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
@@ -190,7 +192,17 @@ export class QuotationService {
 
     async find(filter?: Filter<Quotation>,) {
         console.log(this.user);
-        // const accessLevel = this.user.accessLevel;
+        const accessLevel = this.user.accessLevel;
+        let where = {};
+        if (accessLevel === AccessLevelRolE.SUCURSAL) {
+            where = {branchId: this.user.branchId}
+        }
+
+        if (filter?.where) {
+            filter.where = {...filter.where, ...where}
+        } else {
+            filter = {...filter, where: {...where}};
+        }
         const filterInclude = [
             {
                 relation: 'customer',
