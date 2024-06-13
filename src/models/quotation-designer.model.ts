@@ -42,6 +42,9 @@ export class QuotationDesigner extends Entity {
     @property({
         type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     commissionPercentageDesigner: number;
 
