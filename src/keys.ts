@@ -4,7 +4,7 @@ import {BindingKey} from '@loopback/core';
 import * as dotenv from 'dotenv';
 import {DbDataSource} from './datasources';
 import {User} from './models';
-import {BranchService, BrandService, CustomerService, GroupService, ProviderService, WarehouseService} from './services';
+import {BranchService, BrandService, CustomerService, ExpenseService, GroupService, ProviderService, WarehouseService} from './services';
 import {PasswordHasher} from './services/bcrypt.service';
 import {SendgridService} from './services/sendgrid.service';
 import {FileUploadHandler} from './types';
@@ -119,5 +119,11 @@ export namespace CustomerServiceBindings {
 export namespace GroupServiceBindings {
   export const GROUP_SERVICE = BindingKey.create<GroupService>(
     'group.service'
+  );
+}
+
+export namespace ExpenseServiceBindings {
+  export const EXPENSE_SERVICE = BindingKey.create<ExpenseService>(
+    'expense.service'
   );
 }
