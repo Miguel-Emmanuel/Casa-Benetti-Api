@@ -1,11 +1,12 @@
 import {UserCredentialsWithRelations} from '@loopback/authentication-jwt';
-import {belongsTo, hasOne, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {TypeUserE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch} from './branch.model';
 import {Organization} from './organization.model';
-import {QuotationDesigner} from './quotation-designer.model';
+import {QuotationDesigner, QuotationDesignerWithRelations} from './quotation-designer.model';
 import {QuotationProjectManager, QuotationProjectManagerWithRelations} from './quotation-project-manager.model';
+import {Quotation} from './quotation.model';
 import {Role, RoleWithRelations} from './role.model';
 import {UserCredentials} from './user-credentials.model';
 import {UserData, UserDataWithRelations} from './user-data.model';
@@ -143,11 +144,22 @@ export class User extends BaseEntity {
   @belongsTo(() => Branch)
   branchId: number;
 
+  @hasMany(() => Quotation, {through: {model: () => QuotationProjectManager}})
+  quotationProjectManager: Quotation[];
+
+  @hasMany(() => Quotation, {through: {model: () => QuotationDesigner}})
+  quotationDesigner: Quotation[];
+
   @hasOne(() => QuotationProjectManager)
-  quotationProjectManager: QuotationProjectManager;
+  quotationPM: QuotationProjectManager;
 
   @hasOne(() => QuotationDesigner)
-  quotationDesigner: QuotationDesigner;
+  quotationDe: QuotationDesigner;
+  // @hasOne(() => QuotationProjectManager)
+  // quotationProjectManager: QuotationProjectManager;
+
+  // @hasOne(() => QuotationDesigner)
+  // quotationDesigner: QuotationDesigner;
 
   constructor(
     data?: Partial<User>
@@ -160,7 +172,8 @@ export interface UserRelations {
   userData: UserDataWithRelations
   userCredentials: UserCredentialsWithRelations
   role: RoleWithRelations
-  quotationProjectManager: QuotationProjectManagerWithRelations
+  quotationPM: QuotationProjectManagerWithRelations
+  quotationDe: QuotationDesignerWithRelations
   // describe navigational properties here
 }
 

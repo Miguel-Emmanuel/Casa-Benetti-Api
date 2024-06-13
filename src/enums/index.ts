@@ -104,7 +104,7 @@ export enum StatusProduct {
 }
 
 export enum TypeRegimenE {
-    PERSONA_FISICA = 'Persona Fisica',
-    PERSONA_MORAL = 'Persona Moral',
-    PERSONA_FISICA_EMPRESARIAL = 'Persona Fisica con actividad empresarial'
+    PERSONA_FISICA = 'Persona física',
+    PERSONA_MORAL = 'Persona moral',
+    PERSONA_FISICA_EMPRESARIAL = 'Persona física con actividad empresarial'
 }

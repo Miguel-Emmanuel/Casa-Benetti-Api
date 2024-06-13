@@ -260,14 +260,14 @@ export class QuotationService {
                 relation: 'projectManagers',
                 scope: {
                     fields: ['id', 'firstName'],
-                    include: ['quotationProjectManager']
+                    include: ['quotationPM']
                 }
             },
             {
                 relation: 'designers',
                 scope: {
                     fields: ['id', 'firstName'],
-                    include: ['quotationDesigner']
+                    include: ['quotationDe']
                 }
             },
             {
@@ -308,14 +308,14 @@ export class QuotationService {
         for (const iterator of quotation?.projectManagers ?? []) {
             projectManagers.push({
                 projectManagerName: iterator.firstName,
-                commissionPercentageProjectManager: iterator.quotationProjectManager.commissionPercentageProjectManager,
+                commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
             })
         }
 
         for (const iterator of quotation?.designers ?? []) {
             designers.push({
                 designerName: iterator.firstName,
-                commissionPercentageDesigner: iterator.quotationDesigner.commissionPercentageDesigner,
+                commissionPercentageDesigner: iterator.quotationDe.commissionPercentageDesigner,
             })
         }
 
