@@ -1,6 +1,7 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, StatusQuotationE} from '../enums';
 import {Customer} from './customer.model';
+import {Organization} from './organization.model';
 import {Product} from './product.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
@@ -24,6 +25,12 @@ import {User} from './user.model';
                 entity: 'User',
                 entityKey: 'id',
                 foreignKey: 'referencecustomerid',
+            },
+            fk_organization_organizationId: {
+                name: 'fk_organization_organizationId',
+                entity: 'Organization',
+                entityKey: 'id',
+                foreignKey: 'organizationid',
             },
         }
     }
@@ -114,6 +121,9 @@ export class Quotation extends Entity {
         required: false,
     })
     percentageAdditionalDiscount: number;
+
+    @belongsTo(() => Organization)
+    organizationId: number;
 
     //descuento adicional total
     @property({
