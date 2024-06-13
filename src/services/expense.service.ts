@@ -19,7 +19,7 @@ export class ExpenseService {
 
   async create(expense: Expense) {
     try {
-      return this.expenseRepository.create({...expense,/* organizationId: this.user.organizationId*/});
+      return this.expenseRepository.create({...expense, organizationId: this.user.organizationId});
     } catch (error) {
       return this.responseService.internalServerError(
         error.message ? error.message : error

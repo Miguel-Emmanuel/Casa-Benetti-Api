@@ -1,11 +1,20 @@
-import {model, property} from '@loopback/repository';
+import {belongsTo, model, property} from '@loopback/repository';
 import {BaseEntity} from './base/base-entity.model';
+import {Organization} from './organization.model';
 
 @model({
   settings: {
     postgresql: {
       table: 'catalog_Expense' // Nombre de la tabla en PostgreSQL
     },
+    foreignKeys: {
+      fk_expense_organization: {
+        name: 'fk_expense_organization',
+        entity: 'Organization',
+        entityKey: 'id',
+        foreignKey: 'organizationid',
+      },
+    }
   }
 })
 export class Expense extends BaseEntity {
@@ -32,6 +41,8 @@ export class Expense extends BaseEntity {
   })
   description?: string;
 
+  @belongsTo(() => Organization)
+  organizationId: number;
 
   constructor(data?: Partial<Expense>) {
     super(data);

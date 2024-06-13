@@ -41,7 +41,7 @@ export class ExpenseController {
         'application/json': {
           schema: getModelSchemaRef(Expense, {
             title: 'NewExpense',
-            exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment"],
+            exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment", "organizationId"],
 
           }),
         },
