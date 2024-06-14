@@ -37,7 +37,7 @@ export class Group extends BaseEntity {
   @property({
     type: 'string',
   })
-  description: string;
+  description?: string;
 
   @hasMany(() => Customer)
   customers: Customer[];

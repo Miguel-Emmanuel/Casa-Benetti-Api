@@ -7,7 +7,7 @@ import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsB
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
-import {CustomerRepository, ProductRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {CustomerRepository, GroupRepository, ProductRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -29,6 +29,8 @@ export class QuotationService {
         public productRepository: ProductRepository,
         @repository(CustomerRepository)
         public customerRepository: CustomerRepository,
+        @repository(GroupRepository)
+        public groupRepository: GroupRepository,
         @inject(SecurityBindings.USER)
         private user: UserProfile,
     ) { }
@@ -39,16 +41,19 @@ export class QuotationService {
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
         const customerId = await this.createOrGetCustomer(customer);
+        const groupId = await this.createOrGetGroup(customer);
+        //Falta agregar validacion para saber cuando es borrador o no
+        await this.validateBodyQuotation(data);
         if (id === null) {
             const branchId = this.user.branchId;
-            await this.validateBodyQuotation(data);
             const bodyQuotation = {
                 ...quotation,
                 exchangeRateAmount: 15,
                 status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
                 customerId,
                 isDraft,
-                branchId
+                branchId,
+                groupId
             }
             const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
@@ -56,13 +61,13 @@ export class QuotationService {
             return createQuotation;
         } else {
             const findQuotation = await this.findQuotationById(id);
-            await this.validateBodyQuotation(data);
             const bodyQuotation = {
                 ...quotation,
                 exchangeRateAmount: 15,
                 status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
                 customerId,
-                isDraft
+                isDraft,
+                groupId
             }
             await this.quotationRepository.updateById(id, bodyQuotation)
             await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
@@ -90,6 +95,25 @@ export class QuotationService {
             const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId});
             return createCustomer.id;
         }
+
+    }
+
+
+    async createOrGetGroup(customer: Customer) {
+        const {groupId, groupName} = customer;
+        if (groupId) {
+            const findGroup = await this.groupRepository.findOne({where: {id: groupId}});
+            if (!findGroup)
+                throw this.responseService.badRequest('El grupo no existe.')
+
+            return findGroup.id;
+        } else {
+            if (groupName) {
+                const createGroup = await this.groupRepository.create({name: groupName, organizationId: this.user.organizationId});
+                return createGroup.id;
+            }
+        }
+        return null;
 
     }
 
