@@ -82,7 +82,7 @@ export class QuotationService {
     }
 
     async createOrGetCustomer(customer: Customer, groupId: number | undefined) {
-        const {customerId, ...dataCustomer} = customer;
+        const {customerId, groupName, ...dataCustomer} = customer;
         if (customerId) {
             const findCustomer = await this.customerRepository.findOne({where: {id: customerId}});
             if (!findCustomer)
@@ -317,6 +317,7 @@ export class QuotationService {
         const designers: DesignersById[] = [];
         for (const iterator of quotation?.products ?? []) {
             products.push({
+                ...iterator,
                 SKU: iterator.SKU,
                 brandName: iterator?.brand?.brandName ?? '',
                 status: iterator.status,
@@ -335,6 +336,7 @@ export class QuotationService {
 
         for (const iterator of quotation?.projectManagers ?? []) {
             projectManagers.push({
+                id: iterator.id,
                 projectManagerName: iterator.firstName,
                 commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
             })
@@ -342,6 +344,7 @@ export class QuotationService {
 
         for (const iterator of quotation?.designers ?? []) {
             designers.push({
+                id: iterator.id,
                 designerName: iterator.firstName,
                 commissionPercentageDesigner: iterator.quotationDe.commissionPercentageDesigner,
             })
@@ -349,6 +352,7 @@ export class QuotationService {
 
         const response: QuotationFindOneResponse = {
             customer: {
+                customerId: quotation.customerId,
                 firstName: quotation.customer.name,
                 lastName: quotation.customer.lastName,
                 secondLastName: quotation.customer.secondLastName,
@@ -360,6 +364,7 @@ export class QuotationService {
                 businessName: quotation.customer.businessName,
                 regimen: quotation.customer.regimen,
                 group: quotation?.customer?.group?.name,
+                groupId: quotation?.customer?.groupId
             },
             products: products,
             quotation: {

@@ -82,11 +82,13 @@ export interface QuotationFindResponse {
 }
 
 export interface ProjectManagersById {
+    id?: number;
     projectManagerName: string;
     commissionPercentageProjectManager: number;
 }
 
 export interface DesignersById {
+    id?: number;
     designerName: string;
     commissionPercentageDesigner: number;
 }
@@ -109,6 +111,7 @@ export interface ProductsById {
 }
 export interface QuotationFindOneResponse {
     customer: {
+        customerId?: number;
         firstName: string;
         lastName: string;
         secondLastName: string;
@@ -120,6 +123,7 @@ export interface QuotationFindOneResponse {
         businessName: string;
         regimen: string;
         group: string
+        groupId?: number;
     },
     products: ProductsById[],
     quotation: {
