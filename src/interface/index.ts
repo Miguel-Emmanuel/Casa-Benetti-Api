@@ -135,6 +135,13 @@ export interface QuotationFindOneResponse {
         advance: number;
         exchangeRate: ExchangeRateE;
         balance: number;
+        isArchitect: boolean;
+        architectName: string;
+        commissionPercentageArchitect: number;
+        isReferencedCustomer: boolean;
+        referenceCustomerId?: number;
+        commissionPercentagereferencedCustomer: number;
+
     },
     commisions: {
         architectName: string;
