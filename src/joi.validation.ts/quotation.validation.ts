@@ -76,6 +76,8 @@ export const schemaCreateQuotition = Joi.object({
         exchangeRate: Joi.string().valid(...Object.values(ExchangeRateE)).messages({
             'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
         }).allow(null),
+        advanceCustomer: Joi.number().allow(null),
+        conversionAdvance: Joi.number().allow(null),
         balance: Joi.number().allow(null),
     }),
 })

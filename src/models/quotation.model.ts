@@ -225,6 +225,26 @@ export class Quotation extends BaseEntity {
     })
     exchangeRateAmount: number;
 
+    //Anticipo cliente
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceCustomer: number;
+
+    //Anticipo Conversión
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    conversionAdvance: number;
+
     //Saldo
     @property({
         type: 'number',

@@ -65,6 +65,8 @@ export interface CreateQuotation {
         percentageAdvance: number;
         advance: number;
         exchangeRate: ExchangeRateE;
+        advanceCustomer: number;
+        conversionAdvance: number;
         balance: number;
     }
 }
