@@ -38,6 +38,7 @@ export interface Customer {
     businessName: string;
     regimen: TypeRegimenE;
     groupId: number;
+    groupName: string;
 }
 export interface CreateQuotation {
     id: number,

@@ -97,6 +97,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                             groupId: {
                                 type: 'number',
                                 nullable: true
+                            },
+                            groupName: {
+                                type: 'string',
+                                nullable: true
                             }
                         }
                     },

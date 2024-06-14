@@ -50,6 +50,7 @@ export const schemaCreateQuotition = Joi.object({
         businessName: Joi.string().allow(null),
         regimen: Joi.string().allow(null),
         groupId: Joi.number().allow(null),
+        groupName: Joi.string().allow(null),
 
     }),
     projectManagers: Joi.array().items(projectManager).optional(),
