@@ -59,7 +59,7 @@ export const schemaCreateQuotition = Joi.object({
     quotation: Joi.object({
         commissionPercentageArchitect: Joi.number().allow(null),
         isArchitect: Joi.boolean().allow(null),
-        architectName: Joi.string().allow(null),
+        architectName: Joi.string().allow(null).allow(""),
         referenceCustomerId: Joi.number().allow(null),
         isReferencedCustomer: Joi.boolean().allow(null),
         commissionPercentagereferencedCustomer: Joi.number().allow(null),
