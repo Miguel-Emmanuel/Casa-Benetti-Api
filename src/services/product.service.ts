@@ -3,7 +3,7 @@ import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/reposit
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {ResponseServiceBindings} from '../keys';
 import {Document, Product} from '../models';
-import {BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository} from '../repositories';
+import {BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -23,6 +23,8 @@ export class ProductService {
         public classificationRepository: ClassificationRepository,
         @repository(LineRepository)
         public lineRepository: LineRepository,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
     ) { }
 
     async create(data: {product: Omit<Product, 'id'>, document: Document}) {
@@ -82,11 +84,31 @@ export class ProductService {
         return this.productRepository.count(where);
     }
     async find(filter?: Filter<Product>,) {
-        return this.productRepository.find(filter);
+        const products = await this.productRepository.find(filter);
+        for (let index = 0; index < products.length; index++) {
+            const document = products[index].document;
+            if (document) {
+                const element: any = document;
+                const createdBy = await this.userRepository.findByIdOrDefault(element.createdBy);
+                const updatedBy = await this.userRepository.findByIdOrDefault(element.updatedBy);
+                element.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
+                element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
+            }
+        }
+        return products;
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {
-        return this.productRepository.findById(id, filter);
+        const product = await this.productRepository.findById(id, filter);
+        const document = product?.document;
+        if (document) {
+            const element: any = document;
+            const createdBy = await this.userRepository.findByIdOrDefault(element.createdBy);
+            const updatedBy = await this.userRepository.findByIdOrDefault(element.updatedBy);
+            element.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
+            element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
+        }
+        return product
     }
     async updateById(id: number, product: Product,) {
         const {brandId, providerId, classificationId, lineId} = product;
