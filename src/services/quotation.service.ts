@@ -40,8 +40,8 @@ export class QuotationService {
         const {isReferencedCustomer} = quotation;
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
-        const customerId = await this.createOrGetCustomer(customer);
         const groupId = await this.createOrGetGroup(customer);
+        const customerId = await this.createOrGetCustomer({...customer}, groupId);
         //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
         if (id === null) {
@@ -53,7 +53,6 @@ export class QuotationService {
                 customerId,
                 isDraft,
                 branchId,
-                groupId
             }
             const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
@@ -67,7 +66,6 @@ export class QuotationService {
                 status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
                 customerId,
                 isDraft,
-                groupId
             }
             await this.quotationRepository.updateById(id, bodyQuotation)
             await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
@@ -83,7 +81,7 @@ export class QuotationService {
         return user;
     }
 
-    async createOrGetCustomer(customer: Customer) {
+    async createOrGetCustomer(customer: Customer, groupId: number | undefined) {
         const {customerId, ...dataCustomer} = customer;
         if (customerId) {
             const findCustomer = await this.customerRepository.findOne({where: {id: customerId}});
@@ -92,7 +90,7 @@ export class QuotationService {
 
             return findCustomer.id;
         } else {
-            const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId});
+            const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId, groupId: groupId});
             return createCustomer.id;
         }
 
@@ -113,7 +111,7 @@ export class QuotationService {
                 return createGroup.id;
             }
         }
-        return null;
+        return undefined;
 
     }
 
@@ -282,7 +280,7 @@ export class QuotationService {
             {
                 relation: 'products',
                 scope: {
-                    include: ['quotationProducts', 'brand', 'documents']
+                    include: ['quotationProducts', 'brand', 'document']
                 }
 
             },
