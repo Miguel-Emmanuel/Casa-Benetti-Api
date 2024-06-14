@@ -247,6 +247,14 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 nullable: true,
                                 enum: [...Object.values(ExchangeRateE)]
                             },
+                            advanceCustomer: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            conversionAdvance: {
+                                type: 'number',
+                                nullable: true
+                            },
                             balance: {
                                 type: 'number',
                                 nullable: true
