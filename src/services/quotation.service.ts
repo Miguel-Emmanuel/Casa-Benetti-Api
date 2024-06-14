@@ -377,6 +377,13 @@ export class QuotationService {
                 advance: quotation.advance,
                 exchangeRate: quotation.exchangeRate,
                 balance: quotation.balance,
+                isArchitect: quotation.isArchitect,
+                architectName: quotation.architectName,
+                commissionPercentageArchitect: quotation.commissionPercentageArchitect,
+                isReferencedCustomer: quotation.isReferencedCustomer,
+                referenceCustomerId: quotation.referenceCustomerId,
+                commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
+
             },
             commisions: {
                 architectName: quotation.architectName,
