@@ -75,6 +75,7 @@ export class Product extends BaseEntity {
     @belongsTo(() => Line)
     lineId: number;
 
+    //Ubicacion
     @property({
         type: 'string',
         required: false,
@@ -84,6 +85,7 @@ export class Product extends BaseEntity {
     })
     location: LocationE;
 
+    //Tipo de articulo
     @property({
         type: 'string',
         required: false,
@@ -93,18 +95,21 @@ export class Product extends BaseEntity {
     })
     typeArticle: TypeArticleE;
 
+    //Nombre del producto
     @property({
         type: 'string',
         required: true,
     })
     name: string;
 
+    //Descripcion
     @property({
         type: 'string',
         required: false,
     })
     description: string;
 
+    //UOM
     @property({
         type: 'string',
         required: false,
@@ -114,6 +119,7 @@ export class Product extends BaseEntity {
     })
     UOM: UOME;
 
+    //Materia principal
     @property({
         type: 'string',
         required: false,
@@ -127,24 +133,28 @@ export class Product extends BaseEntity {
     })
     mainFinish: string;
 
+    //Material secundario
     @property({
         type: 'string',
         required: false,
     })
     secondaryMaterial: string;
 
+    //Acabado secundario
     @property({
         type: 'string',
         required: false,
     })
     secondaryFinishing: string;
 
+    //Pais de origen
     @property({
         type: 'string',
         required: false,
     })
     countryOrigin: string;
 
+    //Se puede comprar?
     @property({
         type: 'boolean',
         required: false,
@@ -154,18 +164,21 @@ export class Product extends BaseEntity {
     @belongsTo(() => Provider)
     providerId: number;
 
+    //Modelo/nombre origen
     @property({
         type: 'string',
         required: false,
     })
     model: string;
 
+    //Codigo de origen
     @property({
         type: 'string',
         required: false,
     })
     originCode: string;
 
+    //Moneda de compra
     @property({
         type: 'string',
         required: false,
@@ -175,12 +188,14 @@ export class Product extends BaseEntity {
     })
     currency: CurrencyE;
 
+    //Disponible para venta
     @property({
         type: 'boolean',
         required: false,
     })
     isSale: boolean;
 
+    //Factor
     @property({
         type: 'number',
         required: false,
@@ -190,6 +205,7 @@ export class Product extends BaseEntity {
     })
     factor: number;
 
+    //Precio
     @property({
         type: 'number',
         required: false,
@@ -199,6 +215,7 @@ export class Product extends BaseEntity {
     })
     price: number;
 
+    //Descuento maximo
     @property({
         type: 'number',
         required: false,
@@ -214,6 +231,7 @@ export class Product extends BaseEntity {
     })
     CATSAT: string;
 
+    //Fracción arancelaria
     @property({
         type: 'number',
         required: false,
@@ -243,6 +261,7 @@ export class Product extends BaseEntity {
     @belongsTo(() => Brand)
     brandId: number;
 
+    //Estatus del producto
     @property({
         type: 'string',
         required: false,
