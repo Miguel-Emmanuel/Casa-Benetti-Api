@@ -215,6 +215,16 @@ export class Product extends BaseEntity {
     })
     price: number;
 
+    //Precio de lista
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    listPrice: number;
+
     //Descuento maximo
     @property({
         type: 'number',
