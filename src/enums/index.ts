@@ -94,7 +94,8 @@ export enum ExchangeRateE {
 
 export enum StatusQuotationE {
     ENPROCESO = 'En proceso',
-    ENREVISION = 'En revisión por Administración',
+    ENREVISIONSM = 'En revision por SM',
+    ENREVISIONA = 'En revisión por Administración',
     CERRADA = 'Cerrada',
     RECHAZADA = 'Rechazada',
 }
