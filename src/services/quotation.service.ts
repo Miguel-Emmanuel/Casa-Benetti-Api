@@ -263,7 +263,7 @@ export class QuotationService {
             return {
                 id,
                 customerName: name,
-                pm: projectManagers?.length > 0 ? projectManagers[0].firstName : '',
+                pm: projectManagers?.length > 0 ? `${projectManagers[0].firstName} ${projectManagers[0].lastName}` : '',
                 pmId: projectManagers?.length > 0 ? projectManagers[0].id : '',
                 total,
                 branchName: branch?.name,
