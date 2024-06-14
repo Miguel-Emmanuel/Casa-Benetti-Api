@@ -43,7 +43,7 @@ export class ProductController {
                                 title: 'NewProduct',
                                 exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
                             }),
-                            documents: {
+                            document: {
                                 type: 'object',
                                 nullable: true,
                                 properties: {
