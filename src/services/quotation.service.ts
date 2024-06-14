@@ -45,7 +45,7 @@ export class QuotationService {
             const bodyQuotation = {
                 ...quotation,
                 exchangeRateAmount: 15,
-                status: StatusQuotationE.ENPROCESO,
+                status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
                 customerId,
                 isDraft,
                 branchId
@@ -56,10 +56,11 @@ export class QuotationService {
             return createQuotation;
         } else {
             const findQuotation = await this.findQuotationById(id);
+            await this.validateBodyQuotation(data);
             const bodyQuotation = {
                 ...quotation,
                 exchangeRateAmount: 15,
-                status: StatusQuotationE.ENPROCESO,
+                status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
                 customerId,
                 isDraft
             }
