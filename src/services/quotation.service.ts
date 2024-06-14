@@ -264,6 +264,7 @@ export class QuotationService {
                 id,
                 customerName: name,
                 pm: projectManagers?.length > 0 ? projectManagers[0].firstName : '',
+                pmId: projectManagers?.length > 0 ? projectManagers[0].id : '',
                 total,
                 branchName: branch?.name,
                 status,
