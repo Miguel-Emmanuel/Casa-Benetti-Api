@@ -158,6 +158,10 @@ export class Quotation extends BaseEntity {
     })
     additionalDiscount: number;
 
+    //Usuario que creo la cotizacion
+    @belongsTo(() => User, {name: 'projectManager'})
+    userId: number;
+
     //Iva porcentaje
     @property({
         type: 'number',
@@ -281,7 +285,8 @@ export interface QuotationRelations {
     products: ProductWithRelations[];
     customer: CustomerWithRelations;
     referenceCustomer: UserWithRelations;
-    branch: BranchWithRelations
+    branch: BranchWithRelations,
+    projectManager: UserWithRelations
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;
