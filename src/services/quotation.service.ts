@@ -77,8 +77,10 @@ export class QuotationService {
                 return this.findQuotationById(id);
             }
         } catch (error) {
-            await this.customerRepository.deleteById(customerId);
-            await this.groupRepository.deleteById(groupId);
+            if (customerId)
+                await this.customerRepository.deleteById(customerId);
+            if (groupId)
+                await this.groupRepository.deleteById(groupId);
             throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
