@@ -44,6 +44,8 @@ export class QuotationRepository extends SoftCrudRepository<
 
   public readonly branch: BelongsToAccessor<Branch, typeof Quotation.prototype.id>;
 
+  public readonly projectManager: BelongsToAccessor<User, typeof Quotation.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
@@ -51,6 +53,8 @@ export class QuotationRepository extends SoftCrudRepository<
     @repository.getter('QuotationProjectManagerRepository') protected quotationProjectManagerRepositoryGetter: Getter<QuotationProjectManagerRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>, @repository.getter('QuotationDesignerRepository') protected quotationDesignerRepositoryGetter: Getter<QuotationDesignerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
   ) {
     super(Quotation, dataSource);
+    this.projectManager = this.createBelongsToAccessorFor('projectManager', userRepositoryGetter,);
+    this.registerInclusionResolver('projectManager', this.projectManager.inclusionResolver);
     this.definePersistedModel(QuotationProducts)
     this.modelClass.observe('before save', async (ctx: any) => {
       const hook = await this.operationHook();

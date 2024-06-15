@@ -38,12 +38,13 @@ export class QuotationService {
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft} = data;
         const {isReferencedCustomer} = quotation;
+        //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
         const groupId = await this.createOrGetGroup(customer);
         const customerId = await this.createOrGetCustomer({...customer}, groupId);
-        //Falta agregar validacion para saber cuando es borrador o no
+        const userId = this.user.id;
         if (id === null) {
             const branchId = this.user.branchId;
             const bodyQuotation = {
@@ -53,6 +54,7 @@ export class QuotationService {
                 customerId,
                 isDraft,
                 branchId,
+                userId
             }
             const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
@@ -66,6 +68,7 @@ export class QuotationService {
                 status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
                 customerId,
                 isDraft,
+                userId
             }
             await this.quotationRepository.updateById(id, bodyQuotation)
             await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
@@ -245,7 +248,9 @@ export class QuotationService {
             },
             {
                 relation: 'branch',
-
+            },
+            {
+                relation: 'projectManager',
             },
         ]
         if (filter?.include)
@@ -258,13 +263,13 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, total, status, updatedAt, branch} = value;
+            const {id, customer, projectManagers, total, status, updatedAt, branch, projectManager} = value;
             const {name} = customer;
             return {
                 id,
                 customerName: name,
-                pm: projectManagers?.length > 0 ? `${projectManagers[0].firstName} ${projectManagers[0]?.lastName ?? ''}` : '',
-                pmId: projectManagers?.length > 0 ? projectManagers[0].id : '',
+                pm: projectManager ? `${projectManager?.firstName} ${projectManager?.lastName ?? ''}` : '',
+                pmId: projectManager ? projectManager?.id : '',
                 branchId: branch?.id,
                 total,
                 branchName: branch?.name,
