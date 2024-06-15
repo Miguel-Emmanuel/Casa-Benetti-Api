@@ -38,12 +38,12 @@ export class QuotationService {
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft} = data;
         const {isReferencedCustomer} = quotation;
+        await this.validateBodyQuotation(data);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
         const groupId = await this.createOrGetGroup(customer);
         const customerId = await this.createOrGetCustomer({...customer}, groupId);
         //Falta agregar validacion para saber cuando es borrador o no
-        await this.validateBodyQuotation(data);
         if (id === null) {
             const branchId = this.user.branchId;
             const bodyQuotation = {
