@@ -45,35 +45,41 @@ export class QuotationService {
         const groupId = await this.createOrGetGroup(customer);
         const customerId = await this.createOrGetCustomer({...customer}, groupId);
         const userId = this.user.id;
-        if (id === null) {
-            const branchId = this.user.branchId;
-            const bodyQuotation = {
-                ...quotation,
-                exchangeRateAmount: 15,
-                status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
-                customerId,
-                isDraft,
-                branchId,
-                userId
-            }
-            const createQuotation = await this.quotationRepository.create(bodyQuotation);
+        try {
+            if (id === null) {
+                const branchId = this.user.branchId;
+                const bodyQuotation = {
+                    ...quotation,
+                    exchangeRateAmount: 15,
+                    status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
+                    customerId,
+                    isDraft,
+                    branchId,
+                    userId
+                }
+                const createQuotation = await this.quotationRepository.create(bodyQuotation);
 
-            await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
-            return createQuotation;
-        } else {
-            const findQuotation = await this.findQuotationById(id);
-            const bodyQuotation = {
-                ...quotation,
-                exchangeRateAmount: 15,
-                status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
-                customerId,
-                isDraft,
-                userId
+                await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
+                return createQuotation;
+            } else {
+                const findQuotation = await this.findQuotationById(id);
+                const bodyQuotation = {
+                    ...quotation,
+                    exchangeRateAmount: 15,
+                    status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
+                    customerId,
+                    isDraft,
+                    userId
+                }
+                await this.quotationRepository.updateById(id, bodyQuotation)
+                await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
+                await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
+                return this.findQuotationById(id);
             }
-            await this.quotationRepository.updateById(id, bodyQuotation)
-            await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
-            await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
-            return this.findQuotationById(id);
+        } catch (error) {
+            await this.customerRepository.deleteById(customerId);
+            await this.groupRepository.deleteById(groupId);
+            throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
     }
