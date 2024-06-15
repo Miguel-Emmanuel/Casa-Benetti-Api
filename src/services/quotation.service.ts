@@ -389,6 +389,9 @@ export class QuotationService {
                 isReferencedCustomer: quotation.isReferencedCustomer,
                 referenceCustomerId: quotation.referenceCustomerId,
                 commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
+                percentageAdditionalDiscount: quotation?.percentageAdditionalDiscount,
+                advanceCustomer: quotation?.advanceCustomer,
+                conversionAdvance: quotation?.conversionAdvance,
 
             },
             commisions: {

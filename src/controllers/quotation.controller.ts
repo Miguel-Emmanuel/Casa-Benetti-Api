@@ -79,7 +79,7 @@ export class QuotationController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Quotation, {partial: true}),
+                    schema: getModelSchemaRef(Quotation, {partial: true, exclude: ['userId', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'status', 'organizationId']}),
                 },
             },
         })
