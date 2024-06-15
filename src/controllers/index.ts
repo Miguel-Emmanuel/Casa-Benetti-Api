@@ -13,8 +13,8 @@ export * from './warehouse.controller';
 export * from './brand.controller';
 export * from './quotation.controller';
 
-export * from './customer.controller';
-export * from './group.controller';
-export * from './expense.controller';
 export * from './classification.controller';
-export * from './quotation-user.controller';
+export * from './customer.controller';
+export * from './expense.controller';
+export * from './group.controller';
+
