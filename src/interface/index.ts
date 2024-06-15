@@ -141,6 +141,9 @@ export interface QuotationFindOneResponse {
         isReferencedCustomer: boolean;
         referenceCustomerId?: number;
         commissionPercentagereferencedCustomer: number;
+        percentageAdditionalDiscount: number;
+        advanceCustomer: number;
+        conversionAdvance: number;
 
     },
     commisions: {
