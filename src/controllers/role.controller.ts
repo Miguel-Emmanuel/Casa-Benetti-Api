@@ -4,6 +4,7 @@ import {Count, CountSchema, Filter, FilterExcludingWhere, repository, Where} fro
 import {del, get, getModelSchemaRef, param, patch, post, requestBody} from '@loopback/rest';
 import {ResponseServiceBindings, RoleBindings, UserServiceBindings} from '../keys';
 
+import {AccessLevelRolE} from '../enums';
 import {Role, RoleModule} from '../models';
 import {OrganizationRepository, RoleModuleRepository, RoleRepository, UserDataRepository, UserRepository} from '../repositories';
 import {MyUserService, ResponseService, RoleService} from '../services';
@@ -40,7 +41,7 @@ export class RoleController {
               properties: {
                 name: {type: 'string'},
                 description: {type: 'string'},
-                accessLevel: {type: 'number'},
+                accessLevel: {type: 'string'},
                 isActive: {type: 'boolean'},
                 roleModules: {
                   type: 'array',
@@ -71,7 +72,7 @@ export class RoleController {
             properties: {
               name: {type: 'string'},
               description: {type: 'string'},
-              accessLevel: {type: 'number'},
+              accessLevel: {type: 'string', enum: [...Object.values(AccessLevelRolE)], },
               isActive: {type: 'boolean'},
               roleModules: {
                 type: 'array',
@@ -205,7 +206,7 @@ export class RoleController {
             properties: {
               name: {type: 'string'},
               description: {type: 'string'},
-              accessLevel: {type: 'number'},
+              accessLevel: {type: 'string'},
               isActive: {type: 'boolean'},
               organizationId: {type: 'number'},
               roleModules: {

@@ -1,5 +1,5 @@
 import {TokenService, UserService} from '@loopback/authentication';
-import {TokenServiceBindings, UserRelations} from '@loopback/authentication-jwt';
+import {TokenServiceBindings} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {UserProfile, securityId} from '@loopback/security';
@@ -9,8 +9,8 @@ import {customAlphabet} from 'nanoid';
 import {LogModificationType} from '../enums';
 import {Credentials, PasswordHasherBindings, ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {UserData} from '../models';
-import {User} from '../models/user.model';
-import {OrganizationRepository, RoleModuleRepository, RoleRepository, UserDataRepository, UserRepository} from '../repositories';
+import {User, UserRelations} from '../models/user.model';
+import {BranchRepository, OrganizationRepository, RoleModuleRepository, RoleRepository, UserDataRepository, UserRepository} from '../repositories';
 import {BcryptHasher, ResponseService} from './';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -43,8 +43,10 @@ export class MyUserService implements UserService<User, Credentials> {
     public jwtService: TokenService,
     @repository(RoleModuleRepository)
     public roleModuleRepository: RoleModuleRepository,
+    @repository(BranchRepository)
+    public branchRepository: BranchRepository,
   ) { }
-  async verifyCredentials(credentials: Credentials): Promise<User> {
+  async verifyCredentials(credentials: Credentials): Promise<User & UserRelations> {
 
     const {email} = credentials;
     //Verificar parametros requeridos del body
@@ -56,7 +58,7 @@ export class MyUserService implements UserService<User, Credentials> {
     if (credentials.email !== undefined) {
       const foundUserEmail = await this.userRepository.findOne({
         where: {email: credentials.email},
-        include: [{relation: 'userCredentials'}],
+        include: [{relation: 'userCredentials'}, {relation: 'role'}],
       });
       foundUser = foundUserEmail;
     } else if (
@@ -65,7 +67,7 @@ export class MyUserService implements UserService<User, Credentials> {
     ) {
       const foundUserUsername = await this.userRepository.findOne({
         where: {username: credentials.username},
-        include: [{relation: 'userCredentials'}],
+        include: [{relation: 'userCredentials'}, {relation: 'role'}],
       });
       foundUser = foundUserUsername;
     }
@@ -86,7 +88,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
     return foundUser;
   }
-  convertToUserProfile(user: User, organizationId?: number): UserProfile {
+  convertToUserProfile(user: (User & UserRelations), organizationId?: number): UserProfile {
     let userName = '';
     if (user.firstName) {
       userName = user.firstName;
@@ -97,11 +99,14 @@ export class MyUserService implements UserService<User, Credentials> {
     if (userName === '' && user.username) {
       userName = user.username;
     }
+    const accessLevel = user?.role?.accessLevel ?? null;
     const userProfile: UserProfile = {
       [securityId]: `${user.id}`,
       email: user.email,
       name: userName,
       organizationId,
+      accessLevel,
+      branchId: user.branchId,
     };
 
     return userProfile;
@@ -109,7 +114,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
   async findUserByToken(token: string): Promise<(User & UserRelations | undefined)> {
     token = token.replace("Bearer ", "");
-    let userTokenData = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const userTokenData = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
     if (userTokenData) {
       const user = await this.userRepository.findOne({
         where: {id: userTokenData.id},
@@ -166,7 +171,11 @@ export class MyUserService implements UserService<User, Credentials> {
     const {user, userData} = body;
 
     if (!userData) return this.responseService.badRequest('¡Oh, no! Hubo un error al momento de crear los datos de un nuevo usuario, valide los datos y vuelva a intentarlo por favor');
-    const {email} = user;
+    const {email, branchId} = user;
+
+    const branch = await this.branchRepository.findOne({where: {id: branchId}})
+    if (!branch)
+      return this.responseService.badRequest('La sucursal no se ha encontrado.');
 
     const emailValidator = await this.userRepository.find({
       where: {email: user.email?.toLowerCase()}
@@ -181,11 +190,9 @@ export class MyUserService implements UserService<User, Credentials> {
       return this.responseService.badRequest('¡Oh, no! La organización no es válida o está desactivada, revisa por favor e intenta de nuevo.');
     }
 
-    if (user.isAdmin === false) {
-      const userRole = await this.roleRepository.findOne({where: {id: user.roleId, isActive: true}})
-      if (!userRole)
-        return this.responseService.badRequest('¡Oh, no! El rol no es válida o está desactivada, revisa por favor e intenta de nuevo.');
-    }
+    const userRole = await this.roleRepository.findOne({where: {id: user.roleId, isActive: true}})
+    if (!userRole)
+      return this.responseService.badRequest('¡Oh, no! El rol no es válida o está desactivada, revisa por favor e intenta de nuevo.');
 
 
 
@@ -193,9 +200,8 @@ export class MyUserService implements UserService<User, Credentials> {
     user.password = !user.password ? passwordGenerator(8) : user.password;
     const password = await this.hasher.hashPassword(user.password);
     const decryptedPassword = user.password;
-    const date = new Date();
     delete user.password;
-    const savedUser = await this.userRepository.create({...user, email: email?.toLowerCase(), organizationId});
+    const savedUser = await this.userRepository.create({...user, email: email?.toLowerCase(), organizationId, isActive: true});
 
     try {
       const savedUserData = await this.userDataRepository.create({...userData, userId: savedUser.id});
@@ -206,10 +212,11 @@ export class MyUserService implements UserService<User, Credentials> {
         to: email,
         templateId: SendgridTemplates.NEW_USER.id,
         dynamicTemplateData: {
-          subject: `¡Bienvenido!`,
+          subject: SendgridTemplates.NEW_USER.subject,
           name: `${savedUser.firstName} ${savedUser.lastName}`,
           username: email,
-          password: decryptedPassword
+          password: decryptedPassword,
+          url: process.env.URL_FRONTEND
         },
       };
 
@@ -361,9 +368,9 @@ export class MyUserService implements UserService<User, Credentials> {
     const {organizationId} = this.getTokenData(token);;
     await this.validateIfOrganizationIsActiveAndExist(organizationId);
     if (filter?.include)
-      filter.include = [...filter.include, {relation: 'userData', scope: {include: [{relation: 'documents', scope: {fields: ['id', 'fileURL', 'name', 'extension', 'userDataId', 'createdBy', 'updatedBy', 'createdAt']}}]}}]
+      filter.include = [...filter.include, {relation: 'userData'}]
     else
-      filter = {...filter, include: [{relation: 'userData', scope: {include: [{relation: 'documents', scope: {fields: ['id', 'fileURL', 'name', 'extension', 'userDataId', 'createdBy', 'updatedBy', 'createdAt']}}]}}]};
+      filter = {...filter, include: [{relation: 'userData'}]};
     const user: any = await this.userRepository.findOne({where: {id, organizationId}, ...filter});
     if (!user)
       throw this.responseService.notFound('El usuario no ha sido encontrado.')
@@ -372,15 +379,6 @@ export class MyUserService implements UserService<User, Credentials> {
     const updatedBy = await this.userRepository.findByIdOrDefault(user.updatedBy);
     user.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
     user.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
-    if (user?.userData?.documents) {
-      for (let index = 0; index < user.userData.documents.length; index++) {
-        const element = user.userData.documents[index];
-        const createdBy = await this.userRepository.findByIdOrDefault(element.createdBy);
-        const updatedBy = await this.userRepository.findByIdOrDefault(element.updatedBy);
-        element.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
-        element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
-      }
-    }
     return user;
   }
 
@@ -405,7 +403,11 @@ export class MyUserService implements UserService<User, Credentials> {
           scope: {
             fields: ['id', 'imageURL', 'userRoleId', 'organizationId'],
           }
-        }],
+        },
+        {
+          relation: 'role'
+        }
+      ],
 
     });
     if (user.isDeleted === true)
@@ -421,7 +423,7 @@ export class MyUserService implements UserService<User, Credentials> {
 
     const userRole = await this.roleRepository.findOne({
       where: {id: user.roleId},
-      fields: ['id', 'name', 'description', 'isActive'],
+      fields: ['id', 'name', 'description', 'isActive', 'accessLevel'],
     })
 
     const roleModules = await this.roleModuleRepository.find({
@@ -430,7 +432,7 @@ export class MyUserService implements UserService<User, Credentials> {
       fields: ['create', 'read', 'update', 'del', 'moduleId']
     })
 
-    let groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
+    const groupList = roleModules.reduce((previousValue: any, currentValue: any) => {
       const {module, ...current} = currentValue;
       if (!module)
         return previousValue;
@@ -439,8 +441,8 @@ export class MyUserService implements UserService<User, Credentials> {
       return previousValue;
     }, {});
 
-    let list = Object.keys(groupList);
-    let newList = list?.map(module => ({
+    const list = Object.keys(groupList);
+    const newList = list?.map(module => ({
       category: module,
       modules: groupList[module]
     }))

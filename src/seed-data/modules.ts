@@ -10,4 +10,9 @@ export const modulesSeed = [
     description: 'Catálogo Usuario',
     categoryName: ModuleCategories.CATALOGS
   },
+  {
+    name: 'Cotizaciones',
+    description: 'Cotizaciones',
+    categoryName: ModuleCategories.COTIZACIONES
+  },
 ];
