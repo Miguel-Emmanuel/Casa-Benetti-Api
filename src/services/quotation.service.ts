@@ -3,7 +3,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {AccessLevelRolE, StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse} from '../interface';
+import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI} from '../interface';
 import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
@@ -48,30 +48,12 @@ export class QuotationService {
         try {
             if (id === null) {
                 const branchId = this.user.branchId;
-                const bodyQuotation = {
-                    ...quotation,
-                    exchangeRateAmount: 15,
-                    status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
-                    customerId,
-                    isDraft,
-                    branchId,
-                    userId
-                }
-                const createQuotation = await this.quotationRepository.create(bodyQuotation);
-
+                const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId);
                 await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
                 return createQuotation;
             } else {
                 const findQuotation = await this.findQuotationById(id);
-                const bodyQuotation = {
-                    ...quotation,
-                    exchangeRateAmount: 15,
-                    status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
-                    customerId,
-                    isDraft,
-                    userId
-                }
-                await this.quotationRepository.updateById(id, bodyQuotation)
+                await this.updateQuotation(quotation, isDraft, customerId, userId, id);
                 await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
                 await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
                 return this.findQuotationById(id);
@@ -84,6 +66,31 @@ export class QuotationService {
             throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
+    }
+
+    async updateQuotation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, quotationId: number) {
+        const bodyQuotation = {
+            ...quotation,
+            exchangeRateAmount: 15,
+            status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
+            customerId,
+            isDraft,
+            userId
+        }
+        await this.quotationRepository.updateById(quotationId, bodyQuotation)
+    }
+
+    async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number) {
+        const bodyQuotation = {
+            ...quotation,
+            exchangeRateAmount: 15,
+            status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
+            customerId,
+            isDraft,
+            branchId,
+            userId
+        }
+        return this.quotationRepository.create(bodyQuotation);
     }
     async findUserById(id: number) {
         const user = await this.userRepository.findOne({where: {id}})

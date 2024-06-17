@@ -40,6 +40,29 @@ export interface Customer {
     groupId: number;
     groupName: string;
 }
+
+export interface QuotationI {
+    referenceCustomerId: number;
+    isDesigner: boolean;
+    isArchitect: boolean;
+    architectName: string;
+    commissionPercentageArchitect: number;
+    isReferencedCustomer: boolean;
+    commissionPercentagereferencedCustomer: number;
+    isProjectManager: boolean;
+    subtotal: number;
+    percentageAdditionalDiscount: number;
+    additionalDiscount: number;
+    percentageIva: number;
+    iva: number;
+    total: number;
+    percentageAdvance: number;
+    advance: number;
+    exchangeRate: ExchangeRateE;
+    advanceCustomer: number;
+    conversionAdvance: number;
+    balance: number;
+}
 export interface CreateQuotation {
     id: number,
     isDraft: boolean;
@@ -47,28 +70,7 @@ export interface CreateQuotation {
     projectManagers: ProjectManagers[],
     designers: Designers[],
     products: Products[],
-    quotation: {
-        referenceCustomerId: number;
-        isDesigner: boolean;
-        isArchitect: boolean;
-        architectName: string;
-        commissionPercentageArchitect: number;
-        isReferencedCustomer: boolean;
-        commissionPercentagereferencedCustomer: number;
-        isProjectManager: boolean;
-        subtotal: number;
-        percentageAdditionalDiscount: number;
-        additionalDiscount: number;
-        percentageIva: number;
-        iva: number;
-        total: number;
-        percentageAdvance: number;
-        advance: number;
-        exchangeRate: ExchangeRateE;
-        advanceCustomer: number;
-        conversionAdvance: number;
-        balance: number;
-    }
+    quotation: QuotationI
 }
 
 export interface QuotationFindResponse {
