@@ -157,3 +157,20 @@ export interface QuotationFindOneResponse {
 
     }
 }
+
+
+export interface AssembledProductsE {
+    description: string;
+    SKU: string;
+    document: {
+        fileURL: string;
+        name: string;
+        extension: string;
+    };
+    mainMaterial: string;
+    mainFinish: string;
+    secondaryMaterial: string;
+    secondaryFinishing: string;
+    quantity: number;
+    isActive: boolean;
+}
