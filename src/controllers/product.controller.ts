@@ -17,7 +17,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {Document, Product} from '../models';
+import {AssembledProducts, Document, Product} from '../models';
 import {ProductService} from '../services';
 
 @authenticate('jwt')
@@ -43,6 +43,27 @@ export class ProductController {
                                 title: 'NewProduct',
                                 exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
                             }),
+                            assembledProducts: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        assembledProduct: getModelSchemaRef(AssembledProducts, {
+                                            title: 'AssembledProducts',
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                        }),
+                                        document: {
+                                            type: 'object',
+                                            nullable: true,
+                                            properties: {
+                                                fileURL: {type: 'string'},
+                                                name: {type: 'string'},
+                                                extension: {type: 'string'}
+                                            }
+                                        }
+                                    }
+                                }
+                            },
                             document: {
                                 type: 'object',
                                 nullable: true,
@@ -57,7 +78,7 @@ export class ProductController {
                 },
             },
         })
-        data: {product: Omit<Product, 'id'>, document: Document},
+        data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]},
     ): Promise<Product> {
         return this.productService.create(data);
     }
@@ -124,6 +145,27 @@ export class ProductController {
                                 title: 'NewProduct',
                                 exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
                             }),
+                            assembledProducts: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        assembledProduct: getModelSchemaRef(AssembledProducts, {
+                                            title: 'AssembledProducts',
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                        }),
+                                        document: {
+                                            type: 'object',
+                                            nullable: true,
+                                            properties: {
+                                                fileURL: {type: 'string'},
+                                                name: {type: 'string'},
+                                                extension: {type: 'string'}
+                                            }
+                                        }
+                                    }
+                                }
+                            },
                             document: {
                                 type: 'object',
                                 nullable: true,

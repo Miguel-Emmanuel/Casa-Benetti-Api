@@ -3,8 +3,8 @@ import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/reposit
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaCreateProduct} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Document, Product} from '../models';
-import {BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
+import {AssembledProducts, Document, Product} from '../models';
+import {AssembledProductsRepository, BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -26,23 +26,40 @@ export class ProductService {
         public lineRepository: LineRepository,
         @repository(UserRepository)
         public userRepository: UserRepository,
+        @repository(AssembledProductsRepository)
+        public assembledProductsRepository: AssembledProductsRepository,
     ) { }
 
-    async create(data: {product: Omit<Product, 'id'>, document: Document}) {
+    async create(data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]},) {
         await this.validateBodyProduct(data);
         try {
-            const {product, document} = data;
+            const {product, document, assembledProducts} = data;
             const {brandId, providerId, classificationId, lineId} = product;
             await this.findByIdBrand(brandId);
             await this.findByIdProvider(providerId);
             await this.findByIdClassification(classificationId);
             await this.findByIdLine(lineId);
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
+            await this.createAssembledProducts(assembledProducts, response.id);
             await this.createDocument(response.id, document)
             return response;
         } catch (error) {
             console.log(error)
             throw this.responseService.badRequest(error.message ?? error)
+        }
+    }
+
+    async createAssembledProducts(assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], productId: number) {
+        for (const item of assembledProducts) {
+            const {assembledProduct, document} = item;
+            const assembledProductRes = await this.assembledProductsRepository.create({...assembledProduct, productId});
+            await this.createDocumentAssembledProduct(assembledProductRes.id, document)
+        }
+    }
+
+    async createDocumentAssembledProduct(assembledId: number, document: Document) {
+        if (document) {
+            await this.assembledProductsRepository.document(assembledId).create(document);
         }
     }
 
@@ -135,7 +152,7 @@ export class ProductService {
         await this.findByIdProvider(providerId);
         await this.findByIdClassification(classificationId);
         await this.findByIdLine(lineId);
-        await this.createDocument(id, document)
+        await this.updateDocument(id, document)
         await this.productRepository.updateById(id, product);
     }
 

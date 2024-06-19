@@ -1,6 +1,7 @@
 import {Entity, belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, LocationE, StatusProduct, TypeArticleE, UOME} from '../enums';
+import {AssembledProducts} from './assembled-products.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Classification} from './classification.model';
@@ -10,7 +11,6 @@ import {Organization} from './organization.model';
 import {Provider} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {Quotation} from './quotation.model';
-
 
 @model()
 class DocumentSchema extends Entity {
@@ -28,54 +28,6 @@ class DocumentSchema extends Entity {
         type: 'string',
     })
     extension: string;
-}
-@model()
-class AssembledProductsSchema extends Entity {
-    @property({
-        type: 'string',
-    })
-    SKU: string;
-
-    @property({
-        type: 'string',
-    })
-    description: string;
-
-    @property({
-        type: 'object',
-        jsonSchema: getJsonSchema(DocumentSchema)
-    })
-    document: DocumentSchema
-
-    @property({
-        type: 'string',
-    })
-    mainMaterial: string;
-
-    @property({
-        type: 'string',
-    })
-    mainFinish: string;
-
-    @property({
-        type: 'string',
-    })
-    secondaryMaterial: string;
-
-    @property({
-        type: 'string',
-    })
-    secondaryFinishing: string;
-
-    @property({
-        type: 'number',
-    })
-    quantity: number;
-
-    @property({
-        type: 'boolean',
-    })
-    isActive: boolean;
 }
 
 @model({
@@ -160,14 +112,17 @@ export class Product extends BaseEntity {
     })
     typeArticle: TypeArticleE;
 
-    //Productos ensamblado
-    @property({
-        type: 'array',
-        itemType: 'object',
-        jsonSchema: getJsonSchema(AssembledProductsSchema),
+    // //Productos ensamblado
+    // @property({
+    //     type: 'array',
+    //     itemType: 'object',
+    //     jsonSchema: getJsonSchema(AssembledProducts),
 
-    })
-    assembledProducts: AssembledProductsSchema[];
+    // })
+    // assembledProducts: AssembledProducts[];
+
+    @hasMany(() => AssembledProducts)
+    assembledProducts: AssembledProducts[];
 
     //Nombre del producto
     @property({

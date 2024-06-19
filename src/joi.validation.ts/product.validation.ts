@@ -28,7 +28,6 @@ export const schemaCreateProduct = Joi.object({
         typeArticle: Joi.string().valid(...Object.values(TypeArticleE)).allow(null).allow('').messages({
             'any.only': `El tipo de articulo debe ser igual a uno de los valores permitidos.`
         }),
-        assembledProducts: Joi.when('typeArticle', {is: TypeArticleE.PRODUCTO_ENSAMBLADO, then: Joi.array().items(schemaAssembledProducts)}).optional().allow(null),
         name: Joi.string().required(),
         description: Joi.string().allow('').allow(null),
         UOM: Joi.string().valid(...Object.values(UOME)).allow(null).allow('').messages({
@@ -75,6 +74,7 @@ export const schemaCreateProduct = Joi.object({
         tariffFraction: Joi.number().allow(0).allow(null),
         brandId: Joi.number().required(),
     }),
+    assembledProducts: Joi.when('product.typeArticle', {is: TypeArticleE.PRODUCTO_ENSAMBLADO, then: Joi.array().items(schemaAssembledProducts)}).optional().allow(null),
     document: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
