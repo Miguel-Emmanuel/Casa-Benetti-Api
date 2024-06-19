@@ -30,10 +30,10 @@ export class ProductService {
         public assembledProductsRepository: AssembledProductsRepository,
     ) { }
 
-    async create(data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]},) {
+    async create(data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
         await this.validateBodyProduct(data);
         try {
-            const {product, document, assembledProducts} = data;
+            const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
             const {brandId, providerId, classificationId, lineId} = product;
             await this.findByIdBrand(brandId);
             await this.findByIdProvider(providerId);
@@ -42,6 +42,10 @@ export class ProductService {
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
             await this.createAssembledProducts(assembledProducts, response.id);
             await this.createDocument(response.id, document)
+            await this.createDocumentMainMaterial(response.id, mainMaterialImage)
+            await this.createDocumentMainFinish(response.id, mainFinishImage);
+            await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImage);
+            await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImage);
             return response;
         } catch (error) {
             console.log(error)
@@ -80,6 +84,29 @@ export class ProductService {
     async createDocument(productId: number, document: Document) {
         if (document) {
             await this.productRepository.document(productId).create(document);
+        }
+    }
+    async createDocumentMainMaterial(productId: number, document: Document) {
+        if (document) {
+            await this.productRepository.mainMaterialImage(productId).create(document);
+        }
+    }
+
+    async createDocumentMainFinish(productId: number, document: Document) {
+        if (document) {
+            await this.productRepository.mainFinishImage(productId).create(document);
+        }
+    }
+
+    async createDocumentSecondaryMaterial(productId: number, document: Document) {
+        if (document) {
+            await this.productRepository.secondaryMaterialImage(productId).create(document);
+        }
+    }
+
+    async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
+        if (document) {
+            await this.productRepository.secondaryFinishingImage(productId).create(document);
         }
     }
 

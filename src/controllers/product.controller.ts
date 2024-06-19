@@ -72,13 +72,39 @@ export class ProductController {
                                     name: {type: 'string'},
                                     extension: {type: 'string'}
                                 }
-                            }
+                            },
+                            mainMaterialImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            mainFinishImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
                         }
                     },
                 },
             },
         })
-        data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]},
+        data: {
+            product: Omit<Product, 'id'>,
+            document: Document,
+            assembledProducts: {assembledProduct: AssembledProducts, document: Document}[],
+            mainMaterialImage: Document,
+            mainFinishImage: Document,
+            secondaryMaterialImage: Document,
+            secondaryFinishingImage: Document,
+        },
     ): Promise<Product> {
         return this.productService.create(data);
     }

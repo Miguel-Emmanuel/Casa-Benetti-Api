@@ -34,29 +34,9 @@ export const schemaCreateProduct = Joi.object({
             'any.only': `El UOM debe ser igual a uno de los valores permitidos.`
         }),
         mainMaterial: Joi.string().allow('').allow(null),
-        mainMaterialImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         mainFinish: Joi.string().allow('').allow(null),
-        mainFinishImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         secondaryMaterial: Joi.string().allow('').allow(null),
-        secondaryMaterialImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         secondaryFinishing: Joi.string().allow('').allow(null),
-        secondaryFinishingImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         countryOrigin: Joi.string().allow('').allow(null),
         isPurchasable: Joi.boolean().allow(null),
         providerId: Joi.number().required(),
@@ -79,5 +59,25 @@ export const schemaCreateProduct = Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
-    }).optional()
+    }).optional(),
+    mainMaterialImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
+    mainFinishImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
+    secondaryMaterialImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
+    secondaryFinishingImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
 })

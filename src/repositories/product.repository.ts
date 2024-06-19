@@ -44,6 +44,14 @@ export class ProductRepository extends SoftCrudRepository<
 
   public readonly assembledProducts: HasManyRepositoryFactory<AssembledProducts, typeof Product.prototype.id>;
 
+  public readonly mainMaterialImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
+
+  public readonly mainFinishImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
+
+  public readonly secondaryMaterialImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
+
+  public readonly secondaryFinishingImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
@@ -51,6 +59,14 @@ export class ProductRepository extends SoftCrudRepository<
     @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('LineRepository') protected lineRepositoryGetter: Getter<LineRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('AssembledProductsRepository') protected assembledProductsRepositoryGetter: Getter<AssembledProductsRepository>,
   ) {
     super(Product, dataSource);
+    this.secondaryFinishingImage = this.createHasOneRepositoryFactoryFor('secondaryFinishingImage', documentRepositoryGetter);
+    this.registerInclusionResolver('secondaryFinishingImage', this.secondaryFinishingImage.inclusionResolver);
+    this.secondaryMaterialImage = this.createHasOneRepositoryFactoryFor('secondaryMaterialImage', documentRepositoryGetter);
+    this.registerInclusionResolver('secondaryMaterialImage', this.secondaryMaterialImage.inclusionResolver);
+    this.mainFinishImage = this.createHasOneRepositoryFactoryFor('mainFinishImage', documentRepositoryGetter);
+    this.registerInclusionResolver('mainFinishImage', this.mainFinishImage.inclusionResolver);
+    this.mainMaterialImage = this.createHasOneRepositoryFactoryFor('mainMaterialImage', documentRepositoryGetter);
+    this.registerInclusionResolver('mainMaterialImage', this.mainMaterialImage.inclusionResolver);
     this.assembledProducts = this.createHasManyRepositoryFactoryFor('assembledProducts', assembledProductsRepositoryGetter,);
     this.registerInclusionResolver('assembledProducts', this.assembledProducts.inclusionResolver);
     this.document = this.createHasOneRepositoryFactoryFor('document', documentRepositoryGetter);
