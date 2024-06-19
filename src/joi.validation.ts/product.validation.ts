@@ -81,3 +81,8 @@ export const schemaCreateProduct = Joi.object({
         extension: Joi.string().required(),
     }).optional(),
 })
+
+
+export const schemaActivateDeactivate = Joi.object({
+    activateDeactivateComment: Joi.string().required()
+})
