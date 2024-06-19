@@ -17,7 +17,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {Document, Product} from '../models';
+import {AssembledProducts, Document, Product} from '../models';
 import {ProductService} from '../services';
 
 @authenticate('jwt')
@@ -43,6 +43,27 @@ export class ProductController {
                                 title: 'NewProduct',
                                 exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
                             }),
+                            assembledProducts: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        assembledProduct: getModelSchemaRef(AssembledProducts, {
+                                            title: 'AssembledProducts',
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                        }),
+                                        document: {
+                                            type: 'object',
+                                            nullable: true,
+                                            properties: {
+                                                fileURL: {type: 'string'},
+                                                name: {type: 'string'},
+                                                extension: {type: 'string'}
+                                            }
+                                        }
+                                    }
+                                }
+                            },
                             document: {
                                 type: 'object',
                                 nullable: true,
@@ -51,13 +72,57 @@ export class ProductController {
                                     name: {type: 'string'},
                                     extension: {type: 'string'}
                                 }
-                            }
+                            },
+                            mainMaterialImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            mainFinishImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            secondaryMaterialImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            secondaryFinishingImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
                         }
                     },
                 },
             },
         })
-        data: {product: Omit<Product, 'id'>, document: Document},
+        data: {
+            product: Omit<Product, 'id'>,
+            document: Document,
+            assembledProducts: {assembledProduct: AssembledProducts, document: Document}[],
+            mainMaterialImage: Document,
+            mainFinishImage: Document,
+            secondaryMaterialImage: Document,
+            secondaryFinishingImage: Document,
+        },
     ): Promise<Product> {
         return this.productService.create(data);
     }
@@ -117,13 +182,101 @@ export class ProductController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Product, {partial: true}),
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            product: getModelSchemaRef(Product, {
+                                title: 'NewProduct',
+                                exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
+                            }),
+                            assembledProducts: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        assembledProduct: getModelSchemaRef(AssembledProducts, {
+                                            title: 'AssembledProductsUpdate',
+                                            exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                        }),
+                                        document: {
+                                            type: 'object',
+                                            nullable: true,
+                                            properties: {
+                                                id: {type: 'number'},
+                                                fileURL: {type: 'string'},
+                                                name: {type: 'string'},
+                                                extension: {type: 'string'}
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            document: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    id: {type: 'number'},
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            mainMaterialImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    id: {type: 'number'},
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            mainFinishImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    id: {type: 'number'},
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            secondaryMaterialImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    id: {type: 'number'},
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                            secondaryFinishingImage: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    id: {type: 'number'},
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                        }
+                    },
                 },
             },
         })
-        product: Product,
+        data: {
+            product: Omit<Product, 'id'>,
+            document: Document,
+            assembledProducts: {assembledProduct: AssembledProducts, document: Document}[],
+            mainMaterialImage: Document,
+            mainFinishImage: Document,
+            secondaryMaterialImage: Document,
+            secondaryFinishingImage: Document,
+        },
     ): Promise<void> {
-        await this.productService.updateById(id, product);
+        await this.productService.updateById(id, data);
     }
 
 

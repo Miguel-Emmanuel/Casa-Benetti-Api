@@ -28,36 +28,15 @@ export const schemaCreateProduct = Joi.object({
         typeArticle: Joi.string().valid(...Object.values(TypeArticleE)).allow(null).allow('').messages({
             'any.only': `El tipo de articulo debe ser igual a uno de los valores permitidos.`
         }),
-        assembledProducts: Joi.when('typeArticle', {is: TypeArticleE.PRODUCTO_ENSAMBLADO, then: Joi.array().items(schemaAssembledProducts)}).optional().allow(null),
         name: Joi.string().required(),
         description: Joi.string().allow('').allow(null),
         UOM: Joi.string().valid(...Object.values(UOME)).allow(null).allow('').messages({
             'any.only': `El UOM debe ser igual a uno de los valores permitidos.`
         }),
         mainMaterial: Joi.string().allow('').allow(null),
-        mainMaterialImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         mainFinish: Joi.string().allow('').allow(null),
-        mainFinishImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         secondaryMaterial: Joi.string().allow('').allow(null),
-        secondaryMaterialImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         secondaryFinishing: Joi.string().allow('').allow(null),
-        secondaryFinishingImage: Joi.object({
-            fileURL: Joi.string().required(),
-            name: Joi.string().required(),
-            extension: Joi.string().required(),
-        }).optional(),
         countryOrigin: Joi.string().allow('').allow(null),
         isPurchasable: Joi.boolean().allow(null),
         providerId: Joi.number().required(),
@@ -75,9 +54,30 @@ export const schemaCreateProduct = Joi.object({
         tariffFraction: Joi.number().allow(0).allow(null),
         brandId: Joi.number().required(),
     }),
+    assembledProducts: Joi.when('product.typeArticle', {is: TypeArticleE.PRODUCTO_ENSAMBLADO, then: Joi.array().items(schemaAssembledProducts)}).optional().allow(null),
     document: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
-    }).optional()
+    }).optional(),
+    mainMaterialImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
+    mainFinishImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
+    secondaryMaterialImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
+    secondaryFinishingImage: Joi.object({
+        fileURL: Joi.string().required(),
+        name: Joi.string().required(),
+        extension: Joi.string().required(),
+    }).optional(),
 })
