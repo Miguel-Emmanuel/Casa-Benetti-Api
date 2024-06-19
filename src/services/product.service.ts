@@ -1,6 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import {schemaCreateProduct} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Document, Product} from '../models';
 import {BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
@@ -28,6 +29,7 @@ export class ProductService {
     ) { }
 
     async create(data: {product: Omit<Product, 'id'>, document: Document}) {
+        await this.validateBodyProduct(data);
         try {
             const {product, document} = data;
             const {brandId, providerId, classificationId, lineId} = product;
@@ -41,6 +43,20 @@ export class ProductService {
         } catch (error) {
             console.log(error)
             throw this.responseService.badRequest(error.message ?? error)
+        }
+    }
+
+    async validateBodyProduct(data: {product: Omit<Product, 'id'>, document: Document}) {
+        try {
+            await schemaCreateProduct.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
         }
     }
 
