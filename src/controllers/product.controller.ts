@@ -117,11 +117,28 @@ export class ProductController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Product, {partial: true}),
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            product: getModelSchemaRef(Product, {
+                                title: 'NewProduct',
+                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
+                            }),
+                            document: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            }
+                        }
+                    },
                 },
             },
         })
-        product: Product,
+        product: {product: Omit<Product, 'id'>, document: Document},
     ): Promise<void> {
         await this.productService.updateById(id, product);
     }

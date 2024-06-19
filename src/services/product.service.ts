@@ -38,7 +38,7 @@ export class ProductService {
             await this.findByIdClassification(classificationId);
             await this.findByIdLine(lineId);
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
-            await this.createDocuments(response.id, document)
+            await this.createDocument(response.id, document)
             return response;
         } catch (error) {
             console.log(error)
@@ -60,7 +60,7 @@ export class ProductService {
         }
     }
 
-    async createDocuments(productId: number, document: Document) {
+    async createDocument(productId: number, document: Document) {
         if (document) {
             await this.productRepository.document(productId).create(document);
         }
@@ -126,14 +126,23 @@ export class ProductService {
         }
         return product
     }
-    async updateById(id: number, product: Product,) {
+    async updateById(id: number, data: {product: Omit<Product, 'id'>, document: Document},) {
+        await this.validateBodyProduct(data);
+        const {product, document} = data;
         const {brandId, providerId, classificationId, lineId} = product;
         await this.findByIdProduct(id);
         await this.findByIdBrand(brandId);
         await this.findByIdProvider(providerId);
         await this.findByIdClassification(classificationId);
         await this.findByIdLine(lineId);
+        await this.createDocument(id, document)
         await this.productRepository.updateById(id, product);
+    }
+
+    async updateDocument(productId: number, document: Document) {
+        if (document) {
+            await this.productRepository.document(productId).patch(document);
+        }
     }
 
     async deleteById(id: number) {
