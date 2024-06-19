@@ -54,8 +54,8 @@ export class ProductService {
     }
 
     async createAssembledProducts(assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], productId: number) {
-        for (const item of assembledProducts) {
-            const {assembledProduct, document} = item;
+        for (let index = 0; index < assembledProducts?.length; index++) {
+            const {assembledProduct, document} = assembledProducts[index];
             const assembledProductRes = await this.assembledProductsRepository.create({...assembledProduct, productId});
             await this.createDocumentAssembledProduct(assembledProductRes.id, document)
         }
@@ -159,6 +159,63 @@ export class ProductService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {
+        const include = [
+            {
+                relation: 'mainMaterialImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+
+            },
+            {
+                relation: 'mainFinishImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+            },
+            {
+                relation: 'secondaryMaterialImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+            },
+            {
+                relation: 'secondaryFinishingImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+            },
+            {
+                relation: 'document',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy']
+                }
+            },
+            {
+                relation: 'assembledProducts',
+                scope: {
+                    include: [
+                        {
+                            relation: 'document',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension']
+                            }
+                        },
+                    ]
+                }
+            },
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         const product = await this.productRepository.findById(id, filter);
         const document = product?.document;
         if (document) {
@@ -189,8 +246,8 @@ export class ProductService {
     }
 
     async updateAssembledProducts(assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], productId: number) {
-        for (const item of assembledProducts) {
-            const {assembledProduct, document} = item;
+        for (let index = 0; index < assembledProducts?.length; index++) {
+            const {assembledProduct, document} = assembledProducts[index];
             if (assembledProduct && !assembledProduct?.id) {
                 const assembledProductRes = await this.assembledProductsRepository.create({...assembledProduct, productId});
                 await this.updateDocumentAssembledProduct(assembledProductRes?.id, document)

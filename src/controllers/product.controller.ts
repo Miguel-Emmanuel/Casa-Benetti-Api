@@ -187,7 +187,7 @@ export class ProductController {
                         properties: {
                             product: getModelSchemaRef(Product, {
                                 title: 'NewProduct',
-                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
+                                exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
                             }),
                             assembledProducts: {
                                 type: 'array',
@@ -195,13 +195,14 @@ export class ProductController {
                                     type: 'object',
                                     properties: {
                                         assembledProduct: getModelSchemaRef(AssembledProducts, {
-                                            title: 'AssembledProducts',
+                                            title: 'AssembledProductsUpdate',
                                             exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
                                         }),
                                         document: {
                                             type: 'object',
                                             nullable: true,
                                             properties: {
+                                                id: {type: 'number'},
                                                 fileURL: {type: 'string'},
                                                 name: {type: 'string'},
                                                 extension: {type: 'string'}
