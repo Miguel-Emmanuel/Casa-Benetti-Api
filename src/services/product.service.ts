@@ -82,30 +82,30 @@ export class ProductService {
     }
 
     async createDocument(productId: number, document: Document) {
-        if (document) {
+        if (document && !document?.id) {
             await this.productRepository.document(productId).create(document);
         }
     }
     async createDocumentMainMaterial(productId: number, document: Document) {
-        if (document) {
+        if (document && !document?.id) {
             await this.productRepository.mainMaterialImage(productId).create(document);
         }
     }
 
     async createDocumentMainFinish(productId: number, document: Document) {
-        if (document) {
+        if (document && !document?.id) {
             await this.productRepository.mainFinishImage(productId).create(document);
         }
     }
 
     async createDocumentSecondaryMaterial(productId: number, document: Document) {
-        if (document) {
+        if (document && !document?.id) {
             await this.productRepository.secondaryMaterialImage(productId).create(document);
         }
     }
 
     async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
-        if (document) {
+        if (document && !document?.id) {
             await this.productRepository.secondaryFinishingImage(productId).create(document);
         }
     }
@@ -170,22 +170,37 @@ export class ProductService {
         }
         return product
     }
-    async updateById(id: number, data: {product: Omit<Product, 'id'>, document: Document},) {
+    async updateById(id: number, data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
         await this.validateBodyProduct(data);
-        const {product, document} = data;
+        const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
         const {brandId, providerId, classificationId, lineId} = product;
         await this.findByIdProduct(id);
         await this.findByIdBrand(brandId);
         await this.findByIdProvider(providerId);
         await this.findByIdClassification(classificationId);
         await this.findByIdLine(lineId);
-        await this.updateDocument(id, document)
+        await this.createDocument(id, document)
+        await this.createDocumentMainMaterial(id, mainMaterialImage)
+        await this.createDocumentMainFinish(id, mainFinishImage);
+        await this.createDocumentSecondaryMaterial(id, secondaryMaterialImage);
+        await this.createDocumentSecondaryFinishingImage(id, secondaryFinishingImage);
+        await this.updateAssembledProducts(assembledProducts, id);
         await this.productRepository.updateById(id, product);
     }
 
-    async updateDocument(productId: number, document: Document) {
-        if (document) {
-            await this.productRepository.document(productId).patch(document);
+    async updateAssembledProducts(assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], productId: number) {
+        for (const item of assembledProducts) {
+            const {assembledProduct, document} = item;
+            if (assembledProduct && !assembledProduct?.id) {
+                const assembledProductRes = await this.assembledProductsRepository.create({...assembledProduct, productId});
+                await this.updateDocumentAssembledProduct(assembledProductRes?.id, document)
+            }
+        }
+    }
+
+    async updateDocumentAssembledProduct(assembledId: number, document: Document) {
+        if (!document?.id) {
+            await this.assembledProductsRepository.document(assembledId).create(document);
         }
     }
 
