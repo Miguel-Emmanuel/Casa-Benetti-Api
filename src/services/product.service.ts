@@ -145,6 +145,26 @@ export class ProductService {
         return this.productRepository.count(where);
     }
     async find(filter?: Filter<Product>,) {
+        const include = [
+            {
+                relation: 'document',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy']
+                }
+            },
+
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         const products = await this.productRepository.find(filter);
         for (let index = 0; index < products.length; index++) {
             const document = products[index].document;
