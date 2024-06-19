@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {schemaCreateProduct} from '../joi.validation.ts/product.validation';
+import {schemaActivateDeactivate, schemaCreateProduct} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AssembledProducts, Document, Product} from '../models';
 import {AssembledProductsRepository, BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
@@ -138,6 +138,7 @@ export class ProductService {
         const product = await this.productRepository.findOne({where: {id}});
         if (!product)
             throw this.responseService.notFound("El producto no se ha encontrado.")
+        return product
     }
 
     async count(where?: Where<Product>,) {
@@ -263,5 +264,26 @@ export class ProductService {
 
     async deleteById(id: number) {
         await this.productRepository.deleteById(id);
+    }
+
+    async activateDeactivate(id: number, body: {activateDeactivateComment: string},) {
+        const product = await this.findByIdProduct(id);
+        await this.validateBodyActivateDeactivate(body);
+        await this.productRepository.updateById(id, {isActive: !product?.isActive, activateDeactivateComment: body.activateDeactivateComment});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async validateBodyActivateDeactivate(body: {activateDeactivateComment: string},) {
+        try {
+            await schemaActivateDeactivate.validateAsync(body);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
     }
 }

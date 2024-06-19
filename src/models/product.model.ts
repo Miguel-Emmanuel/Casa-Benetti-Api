@@ -328,6 +328,17 @@ export class Product extends BaseEntity {
     })
     status: StatusProduct;
 
+    @property({
+        type: 'boolean',
+        default: true
+    })
+    isActive: boolean;
+
+    @property({
+        type: 'string',
+    })
+    activateDeactivateComment?: string;
+
     constructor(data?: Partial<Product>) {
         super(data);
     }

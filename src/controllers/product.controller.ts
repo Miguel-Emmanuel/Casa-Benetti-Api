@@ -41,7 +41,7 @@ export class ProductController {
                         properties: {
                             product: getModelSchemaRef(Product, {
                                 title: 'NewProduct',
-                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
+                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId', 'isActive', 'activateDeactivateComment'],
                             }),
                             assembledProducts: {
                                 type: 'array',
@@ -187,7 +187,7 @@ export class ProductController {
                         properties: {
                             product: getModelSchemaRef(Product, {
                                 title: 'NewProduct',
-                                exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId'],
+                                exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId', 'isActive', 'activateDeactivateComment'],
                             }),
                             assembledProducts: {
                                 type: 'array',
@@ -286,5 +286,38 @@ export class ProductController {
     })
     async deleteById(@param.path.number('id') id: number): Promise<void> {
         await this.productService.deleteById(id);
+    }
+
+    @patch('/products/activate-deactivate/{id}')
+    @response(200, {
+        description: 'AssembledProducts model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async activateDeactivate(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            activateDeactivateComment: {type: 'string'}
+                        }
+                    },
+                },
+            },
+        })
+        body: {activateDeactivateComment: string},
+    ): Promise<object> {
+        return this.productService.activateDeactivate(id, body);
     }
 }
