@@ -73,14 +73,14 @@ export class MyUserService implements UserService<User, Credentials> {
     }
 
     if (foundUser === undefined || foundUser === null) {
-      throw this.responseService.unauthorized("Lo sentimos, el email o contraseña no son correctos. Comprueba la información e intentalo de nuevo.")
+      throw this.responseService.unauthorized("El correo no está registrado en el sistema. Compruebe la información e inténtelo de nuevo.")
     }
     const passwordMatch = await this.hasher.comparePassword(
       credentials.password,
       foundUser.userCredentials.password
     );
     if (!passwordMatch) {
-      throw this.responseService.unauthorized("Lo sentimos, el email o contraseña no son correctos. Comprueba la información e intentalo de nuevo.")
+      throw this.responseService.unauthorized("Lo sentimos, el email o contraseña no son correctos. Comprueba la información e inténtalo de nuevo.")
     }
 
     if (!foundUser.isActive)
