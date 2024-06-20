@@ -37,7 +37,7 @@ export const schemaCreateQuotition = Joi.object({
             street: Joi.string().allow('').allow(null),
             extNum: Joi.string().allow('').allow(null),
             intNum: Joi.string().allow('').allow(null),
-            zipCode: Joi.string().allow('').allow(null),
+            zipCode: Joi.string().regex(/^[0-9]{5}$/).message('El código postal debe contener 5 dígitos').allow('').allow(null),
             suburb: Joi.string().allow('').allow(null),
             city: Joi.string().allow('').allow(null),
             state: Joi.string().allow('').allow(null),
