@@ -114,6 +114,17 @@ export class Customer extends BaseEntity {
     @belongsTo(() => Group)
     groupId?: number;
 
+    @property({
+        type: 'boolean',
+        default: true
+    })
+    isActive: boolean;
+
+    @property({
+        type: 'string',
+    })
+    activateDeactivateComment?: string;
+
     constructor(data?: Partial<Customer>) {
         super(data);
     }
