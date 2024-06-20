@@ -16,7 +16,7 @@ export class ResponseService {
   }
 
   ok(data?: any) {
-    return this.response.status(200).send({data: data} ?? {message: 'success'});
+    return this.response.status(200).send(data);
   }
 
   badRequest(message: string) {
