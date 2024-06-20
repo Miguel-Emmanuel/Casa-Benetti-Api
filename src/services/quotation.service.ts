@@ -428,4 +428,10 @@ export class QuotationService {
         await this.quotationRepository.deleteById(id);
     }
 
+    async changeStatusToReviewAdmin(id: number) {
+        await this.findQuotationById(id);
+        await this.quotationRepository.updateById(id, {status: StatusQuotationE.ENREVISIONADMINSITRACION});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
 }
