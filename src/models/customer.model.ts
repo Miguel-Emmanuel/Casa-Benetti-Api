@@ -112,7 +112,7 @@ export class Customer extends BaseEntity {
     organizationId: number;
 
     @belongsTo(() => Group)
-    groupId?: number;
+    groupId: number;
 
     @property({
         type: 'boolean',
