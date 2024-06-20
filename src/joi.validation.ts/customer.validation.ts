@@ -30,6 +30,7 @@ export const schemaCreateCustomer = Joi.object({
         'any.only': `El moneda de compra debe ser igual a uno de los valores permitidos.`
     }).allow(null).allow(''),
     groupId: Joi.number().allow(null),
+    groupName: Joi.string().allow(null).allow(''),
 })
 
 

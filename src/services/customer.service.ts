@@ -3,7 +3,7 @@ import {Filter, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaActivateDeactivateCustomer, schemaCreateCustomer} from '../joi.validation.ts/customer.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Customer} from '../models';
+import {Customer, CustomerGroup} from '../models';
 import {CustomerRepository, GroupRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -20,10 +20,32 @@ export class CustomerService {
         private user: UserProfile,
     ) { }
 
-    async create(customer: Customer) {
-        await this.validateBodyCustomer(customer);
-        await this.findByIdGroup(customer.groupId);
-        return this.customerRepository.create({...customer, organizationId: this.user.organizationId});
+    async create(customer: CustomerGroup) {
+        const {groupName, ...newCustomer} = customer;
+        const groupId = await this.getOrCreateGroup(customer);
+        try {
+            await this.validateBodyCustomer(customer);
+            return await this.customerRepository.create({...newCustomer, organizationId: this.user.organizationId, groupId});
+        } catch (error) {
+            if (groupName)
+                await this.groupRepository.deleteById(groupId);
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
+    }
+
+    async getOrCreateGroup(customer: CustomerGroup) {
+        let {groupId, groupName} = customer;
+        if (groupId) {
+            await this.findByIdGroup(customer.groupId);
+        } else {
+            const group = await this.createGroup(groupName);
+            groupId = group.id
+        }
+        return groupId;
+    }
+
+    async createGroup(groupName: string) {
+        return this.groupRepository.create({name: groupName})
     }
 
     async findByIdGroup(id: number) {

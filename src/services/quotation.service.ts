@@ -3,8 +3,8 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {AccessLevelRolE, StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI} from '../interface';
-import {schemaCreateQuotition} from '../joi.validation.ts/quotation.validation';
+import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
 import {CustomerRepository, GroupRepository, ProductRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
@@ -226,6 +226,20 @@ export class QuotationService {
         }
     }
 
+    async validateBodyQuotationUpdate(data: UpdateQuotation) {
+        try {
+            await schemaUpdateQuotition.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
     async count(where?: Where<Quotation>,) {
         return this.quotationRepository.count(where);
     }
@@ -420,12 +434,30 @@ export class QuotationService {
         return response
     }
 
-    async updateById(id: number, quotation: Quotation,) {
-        await this.quotationRepository.updateById(id, quotation);
+    async updateById(id: number, data: UpdateQuotation,) {
+        const {customer, projectManagers, designers, products, quotation, isDraft} = data;
+        const {isReferencedCustomer} = quotation;
+        await this.validateBodyQuotationUpdate(data);
+        if (isReferencedCustomer === true)
+            await this.findUserById(quotation.referenceCustomerId);
+        const groupId = await this.createOrGetGroup(customer);
+        const customerId = await this.createOrGetCustomer({...customer}, groupId);
+        const userId = this.user.id;
+        const findQuotation = await this.findQuotationById(id);
+        await this.updateQuotation(quotation, isDraft, customerId, userId, id);
+        await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
+        await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
+        return this.findQuotationById(id);
     }
 
     async deleteById(id: number) {
         await this.quotationRepository.deleteById(id);
+    }
+
+    async changeStatusToReviewAdmin(id: number) {
+        await this.findQuotationById(id);
+        await this.quotationRepository.updateById(id, {status: StatusQuotationE.ENREVISIONADMINSITRACION});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
 }

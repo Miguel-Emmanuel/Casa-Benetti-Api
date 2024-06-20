@@ -17,8 +17,8 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {CreateRequestBody, QuotationFindResponseSwagger, QuotationGteByIdResponse} from '../RequestBody/quotation.request';
-import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse} from '../interface';
+import {CreateRequestBody, QuotationFindResponseSwagger, QuotationGteByIdResponse, UpdateRequestBody} from '../RequestBody/quotation.request';
+import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse, UpdateQuotation} from '../interface';
 import {Quotation} from '../models';
 import {QuotationService} from '../services';
 
@@ -71,21 +71,16 @@ export class QuotationController {
     }
 
     @patch('/quotations/{id}')
-    @response(204, {
-        description: 'Quotation PATCH success',
+    @response(200, {
+        description: 'Quotation model instance',
+        content: {'application/json': {schema: getModelSchemaRef(Quotation)}},
     })
     async updateById(
         @param.path.number('id') id: number,
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(Quotation, {partial: true, exclude: ['userId', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'status', 'organizationId']}),
-                },
-            },
-        })
-        quotation: Quotation,
+        @requestBody(UpdateRequestBody)
+        data: UpdateQuotation,
     ): Promise<void> {
-        await this.quotationService.updateById(id, quotation);
+        await this.quotationService.updateById(id, data);
     }
 
     @del('/quotations/{id}')
@@ -94,5 +89,39 @@ export class QuotationController {
     })
     async deleteById(@param.path.number('id') id: number): Promise<void> {
         await this.quotationService.deleteById(id);
+    }
+
+
+    @patch('/quotations/status-revision-administracion/{id}')
+    @response(200, {
+        description: 'customer model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async activateDeactivate(
+        @param.path.number('id') id: number,
+        // @requestBody({
+        //     content: {
+        //         'application/json': {
+        //             schema: {
+        //                 type: 'object',
+        //                 properties: {
+        //                     activateDeactivateComment: {type: 'string'}
+        //                 }
+        //             },
+        //         },
+        //     },
+        // })
+        // body: {activateDeactivateComment: string},
+    ): Promise<object> {
+        return this.quotationService.changeStatusToReviewAdmin(id);
     }
 }

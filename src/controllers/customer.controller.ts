@@ -17,7 +17,7 @@ import {
     response
 } from '@loopback/rest';
 import {CustomerServiceBindings} from '../keys';
-import {Customer} from '../models';
+import {Customer, CustomerGroup} from '../models';
 import {CustomerRepository} from '../repositories';
 import {CustomerService} from '../services';
 
@@ -39,14 +39,14 @@ export class CustomerController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Customer, {
+                    schema: getModelSchemaRef(CustomerGroup, {
                         title: 'NewCustomer',
                         exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment", "organizationId", 'isActive', 'activateDeactivateComment'],
                     }),
                 },
             },
         })
-        customer: Omit<Customer, 'id'>,
+        customer: Omit<CustomerGroup, 'id'>,
     ): Promise<object> {
         return this.customerService.create(customer);
     }

@@ -73,6 +73,15 @@ export interface CreateQuotation {
     quotation: QuotationI
 }
 
+export interface UpdateQuotation {
+    isDraft: boolean;
+    customer: Customer,
+    projectManagers: ProjectManagers[],
+    designers: Designers[],
+    products: Products[],
+    quotation: QuotationI
+}
+
 export interface QuotationFindResponse {
     id: number;
     customerName: string;

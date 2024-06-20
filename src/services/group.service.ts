@@ -17,7 +17,7 @@ export class GroupService {
     private user: UserProfile,
   ) { }
 
-  async create(group: Group) {
+  async create(group: Omit<Group, 'id'>) {
     try {
       return this.groupRepository.create({...group, organizationId: this.user.organizationId});
     } catch (error) {
