@@ -111,7 +111,7 @@ export class Customer extends BaseEntity {
     @belongsTo(() => Organization)
     organizationId: number;
 
-    @belongsTo(() => Group)
+    @belongsTo(() => Group, {}, {jsonSchema: {nullable: true}})
     groupId: number;
 
     @property({
@@ -136,3 +136,16 @@ export interface CustomerRelations {
 }
 
 export type CustomerWithRelations = Customer & CustomerRelations;
+
+
+export class CustomerGroup extends Customer {
+    //Nombre del grupo
+    @property({
+        type: 'string',
+        jsonSchema: {
+            nullable: true
+        }
+    })
+    groupName: string;
+
+}
