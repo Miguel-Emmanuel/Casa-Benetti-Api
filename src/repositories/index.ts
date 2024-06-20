@@ -25,3 +25,4 @@ export * from './group.repository';
 export * from './expense.repository';
 export * from './classification.repository';
 export * from './line.repository';
+export * from './assembled-products.repository';

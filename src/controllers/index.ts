@@ -18,3 +18,4 @@ export * from './customer.controller';
 export * from './expense.controller';
 export * from './group.controller';
 
+export * from './assembled-products.controller';

@@ -1,9 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import {schemaActivateDeactivate, schemaCreateProduct} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Document, Product} from '../models';
-import {BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
+import {AssembledProducts, Document, Product} from '../models';
+import {AssembledProductsRepository, BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -25,18 +26,26 @@ export class ProductService {
         public lineRepository: LineRepository,
         @repository(UserRepository)
         public userRepository: UserRepository,
+        @repository(AssembledProductsRepository)
+        public assembledProductsRepository: AssembledProductsRepository,
     ) { }
 
-    async create(data: {product: Omit<Product, 'id'>, document: Document}) {
+    async create(data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
+        await this.validateBodyProduct(data);
         try {
-            const {product, document} = data;
+            const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
             const {brandId, providerId, classificationId, lineId} = product;
             await this.findByIdBrand(brandId);
             await this.findByIdProvider(providerId);
             await this.findByIdClassification(classificationId);
             await this.findByIdLine(lineId);
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
-            await this.createDocuments(response.id, document)
+            await this.createAssembledProducts(assembledProducts, response.id);
+            await this.createDocument(response.id, document)
+            await this.createDocumentMainMaterial(response.id, mainMaterialImage)
+            await this.createDocumentMainFinish(response.id, mainFinishImage);
+            await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImage);
+            await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImage);
             return response;
         } catch (error) {
             console.log(error)
@@ -44,9 +53,60 @@ export class ProductService {
         }
     }
 
-    async createDocuments(productId: number, document: Document) {
+    async createAssembledProducts(assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], productId: number) {
+        for (let index = 0; index < assembledProducts?.length; index++) {
+            const {assembledProduct, document} = assembledProducts[index];
+            const assembledProductRes = await this.assembledProductsRepository.create({...assembledProduct, productId});
+            await this.createDocumentAssembledProduct(assembledProductRes.id, document)
+        }
+    }
+
+    async createDocumentAssembledProduct(assembledId: number, document: Document) {
         if (document) {
+            await this.assembledProductsRepository.document(assembledId).create(document);
+        }
+    }
+
+    async validateBodyProduct(data: {product: Omit<Product, 'id'>, document: Document}) {
+        try {
+            await schemaCreateProduct.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async createDocument(productId: number, document: Document) {
+        if (document && !document?.id) {
             await this.productRepository.document(productId).create(document);
+        }
+    }
+    async createDocumentMainMaterial(productId: number, document: Document) {
+        if (document && !document?.id) {
+            await this.productRepository.mainMaterialImage(productId).create(document);
+        }
+    }
+
+    async createDocumentMainFinish(productId: number, document: Document) {
+        if (document && !document?.id) {
+            await this.productRepository.mainFinishImage(productId).create(document);
+        }
+    }
+
+    async createDocumentSecondaryMaterial(productId: number, document: Document) {
+        if (document && !document?.id) {
+            await this.productRepository.secondaryMaterialImage(productId).create(document);
+        }
+    }
+
+    async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
+        if (document && !document?.id) {
+            await this.productRepository.secondaryFinishingImage(productId).create(document);
         }
     }
 
@@ -78,12 +138,33 @@ export class ProductService {
         const product = await this.productRepository.findOne({where: {id}});
         if (!product)
             throw this.responseService.notFound("El producto no se ha encontrado.")
+        return product
     }
 
     async count(where?: Where<Product>,) {
         return this.productRepository.count(where);
     }
     async find(filter?: Filter<Product>,) {
+        const include = [
+            {
+                relation: 'document',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy']
+                }
+            },
+
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         const products = await this.productRepository.find(filter);
         for (let index = 0; index < products.length; index++) {
             const document = products[index].document;
@@ -99,6 +180,63 @@ export class ProductService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {
+        const include = [
+            {
+                relation: 'mainMaterialImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+
+            },
+            {
+                relation: 'mainFinishImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+            },
+            {
+                relation: 'secondaryMaterialImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+            },
+            {
+                relation: 'secondaryFinishingImage',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension']
+                }
+            },
+            {
+                relation: 'document',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy']
+                }
+            },
+            {
+                relation: 'assembledProducts',
+                scope: {
+                    include: [
+                        {
+                            relation: 'document',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension']
+                            }
+                        },
+                    ]
+                }
+            },
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         const product = await this.productRepository.findById(id, filter);
         const document = product?.document;
         if (document) {
@@ -110,17 +248,62 @@ export class ProductService {
         }
         return product
     }
-    async updateById(id: number, product: Product,) {
+    async updateById(id: number, data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
+        await this.validateBodyProduct(data);
+        const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
         const {brandId, providerId, classificationId, lineId} = product;
         await this.findByIdProduct(id);
         await this.findByIdBrand(brandId);
         await this.findByIdProvider(providerId);
         await this.findByIdClassification(classificationId);
         await this.findByIdLine(lineId);
+        await this.createDocument(id, document)
+        await this.createDocumentMainMaterial(id, mainMaterialImage)
+        await this.createDocumentMainFinish(id, mainFinishImage);
+        await this.createDocumentSecondaryMaterial(id, secondaryMaterialImage);
+        await this.createDocumentSecondaryFinishingImage(id, secondaryFinishingImage);
+        await this.updateAssembledProducts(assembledProducts, id);
         await this.productRepository.updateById(id, product);
+    }
+
+    async updateAssembledProducts(assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], productId: number) {
+        for (let index = 0; index < assembledProducts?.length; index++) {
+            const {assembledProduct, document} = assembledProducts[index];
+            if (assembledProduct && !assembledProduct?.id) {
+                const assembledProductRes = await this.assembledProductsRepository.create({...assembledProduct, productId});
+                await this.updateDocumentAssembledProduct(assembledProductRes?.id, document)
+            }
+        }
+    }
+
+    async updateDocumentAssembledProduct(assembledId: number, document: Document) {
+        if (!document?.id) {
+            await this.assembledProductsRepository.document(assembledId).create(document);
+        }
     }
 
     async deleteById(id: number) {
         await this.productRepository.deleteById(id);
+    }
+
+    async activateDeactivate(id: number, body: {activateDeactivateComment: string},) {
+        const product = await this.findByIdProduct(id);
+        await this.validateBodyActivateDeactivate(body);
+        await this.productRepository.updateById(id, {isActive: !product?.isActive, activateDeactivateComment: body.activateDeactivateComment});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async validateBodyActivateDeactivate(body: {activateDeactivateComment: string},) {
+        try {
+            await schemaActivateDeactivate.validateAsync(body);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
     }
 }
