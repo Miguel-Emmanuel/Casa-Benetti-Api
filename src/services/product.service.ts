@@ -264,6 +264,7 @@ export class ProductService {
         await this.createDocumentSecondaryFinishingImage(id, secondaryFinishingImage);
         await this.updateAssembledProducts(assembledProducts, id);
         await this.productRepository.updateById(id, product);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
     async updateAssembledProducts(assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], productId: number) {

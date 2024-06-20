@@ -41,7 +41,7 @@ export class CustomerController {
                 'application/json': {
                     schema: getModelSchemaRef(Customer, {
                         title: 'NewCustomer',
-                        exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment", "organizationId"],
+                        exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment", "organizationId", 'isActive', 'activateDeactivateComment'],
                     }),
                 },
             },
@@ -69,7 +69,7 @@ export class CustomerController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(Customer, {includeRelations: true}),
+                    items: getModelSchemaRef(Customer),
                 },
             },
         },
@@ -85,14 +85,14 @@ export class CustomerController {
         description: 'Customer model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Customer, {includeRelations: true}),
+                schema: getModelSchemaRef(Customer),
             },
         },
     })
     async findById(
         @param.path.number('id') id: number,
         @param.filter(Customer, {exclude: 'where'}) filter?: FilterExcludingWhere<Customer>
-    ): Promise<object> {
+    ): Promise<object | null> {
         return this.customerService.findById(id, filter);
     }
 
@@ -105,7 +105,7 @@ export class CustomerController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Customer, {partial: true}),
+                    schema: getModelSchemaRef(Customer, {partial: true, exclude: ["id", "isDeleted", "createdAt", "createdBy", "updatedBy", "updatedAt", "deleteComment", "organizationId", 'isActive', 'activateDeactivateComment'], }),
                 },
             },
         })
