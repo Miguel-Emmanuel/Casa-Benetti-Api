@@ -1,6 +1,7 @@
-import {Entity, hasMany, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateE, PaymentTypeProofE} from '../enums';
 import {Document} from './document.model';
+import {Quotation} from './quotation.model';
 
 @model({
     settings: {
@@ -59,11 +60,8 @@ export class ProofPaymentQuotation extends Entity {
     conversionAdvance: number;
 
     //Cotizacion
-    @property({
-        type: 'number',
-    })
-    quotationId?: number;
-
+    @belongsTo(() => Quotation)
+    quotationId: number;
 
     constructor(data?: Partial<ProofPaymentQuotation>) {
         super(data);
