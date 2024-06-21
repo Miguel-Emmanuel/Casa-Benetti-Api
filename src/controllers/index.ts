@@ -19,3 +19,4 @@ export * from './expense.controller';
 export * from './group.controller';
 
 export * from './assembled-products.controller';
+export * from './proof-payment-quotation.controller';

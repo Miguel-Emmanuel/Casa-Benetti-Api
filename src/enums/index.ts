@@ -111,3 +111,14 @@ export enum TypeRegimenE {
     PERSONA_MORAL = 'Persona moral',
     PERSONA_FISICA_EMPRESARIAL = 'Persona física con actividad empresarial'
 }
+
+
+export enum PaymentTypeProofE {
+    EFECTIVO = 'Efectivo',
+    TRANSFERENCIA = 'Transferencia',
+    DEPOSITO = 'Depósito',
+    CHEQUE = 'Cheque',
+    EFECTIVO_EXTERNO = 'Efectivo (Externo)',
+    TRANSFERENCIA_EXTERNA = 'Transferencia (Cuenta externa)',
+    SALDO_FAVOR = 'Saldo a favor',
+}

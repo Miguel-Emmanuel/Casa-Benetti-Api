@@ -26,3 +26,4 @@ export * from './expense.repository';
 export * from './classification.repository';
 export * from './line.repository';
 export * from './assembled-products.repository';
+export * from './proof-payment-quotation.repository';
