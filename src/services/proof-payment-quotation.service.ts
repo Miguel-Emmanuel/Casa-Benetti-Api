@@ -26,7 +26,7 @@ export class ProofPaymentQuotationService {
         await this.findQuotationById(quotationId);
         await this.validateBodyProofPayment(proofPaymentQuotation);
         const proofPaymentQuotationResponse = await this.proofPaymentQuotationRepository.create(bodyProofPayment)
-        await this.createDocuments(proofPaymentQuotationResponse.id, images)
+        await this.updateDocuments(proofPaymentQuotationResponse.id, images)
         return proofPaymentQuotationResponse;
     }
 
@@ -59,7 +59,7 @@ export class ProofPaymentQuotationService {
         const {quotationId} = proofPaymentQuotation;
         const {images, ...bodyProofPayment} = proofPaymentQuotation;
         await this.findProofPaymentById(id);
-        await this.findQuotationById(quotationId);
+        await this.findProofPaymentById(quotationId);
         await this.validateBodyProofPayment(proofPaymentQuotation);
         await this.updateDocuments(id, images)
         await this.proofPaymentQuotationRepository.updateById(id, bodyProofPayment);
@@ -87,7 +87,7 @@ export class ProofPaymentQuotationService {
     }
 
     async updateProofPayments(proofPaymentQuotationId: number, proofPaymentQuotation: ProofPaymentQuotationCreate) {
-        await this.findQuotationById(proofPaymentQuotationId);
+        await this.findProofPaymentById(proofPaymentQuotationId);
         const {images, ...bodyProofPayment} = proofPaymentQuotation;
         await this.updateDocuments(proofPaymentQuotation.id, images)
         return this.proofPaymentQuotationRepository.updateById(proofPaymentQuotationId, bodyProofPayment);
@@ -96,7 +96,7 @@ export class ProofPaymentQuotationService {
     async createDocuments(proofPaymentQuotationId: number, documents: Document[]) {
         for (let index = 0; index < documents?.length; index++) {
             const element = documents[index];
-            if (element) {
+            if (element?.id) {
                 await this.proofPaymentQuotationRepository.documents(proofPaymentQuotationId).create(element);
             }
         }
