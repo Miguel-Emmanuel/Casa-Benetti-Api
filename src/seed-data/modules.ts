@@ -15,4 +15,9 @@ export const modulesSeed = [
     description: 'Cotizaciones',
     categoryName: ModuleCategories.COTIZACIONES
   },
+  {
+    name: 'Productos',
+    description: 'Catálogo Productos',
+    categoryName: ModuleCategories.CATALOGS
+  },
 ];

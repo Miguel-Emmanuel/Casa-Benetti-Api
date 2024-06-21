@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaActivateDeactivate, schemaCreateProduct} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AssembledProducts, Document, Product} from '../models';
-import {AssembledProductsRepository, BrandRepository, ClassificationRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
+import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -28,6 +28,8 @@ export class ProductService {
         public userRepository: UserRepository,
         @repository(AssembledProductsRepository)
         public assembledProductsRepository: AssembledProductsRepository,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository,
     ) { }
 
     async create(data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
@@ -84,29 +86,39 @@ export class ProductService {
     async createDocument(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.document(productId).create(document);
+        } else {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
     async createDocumentMainMaterial(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.mainMaterialImage(productId).create(document);
+        } else {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
     async createDocumentMainFinish(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.mainFinishImage(productId).create(document);
+        } else {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
     async createDocumentSecondaryMaterial(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.secondaryMaterialImage(productId).create(document);
+        } else {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
     async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.secondaryFinishingImage(productId).create(document);
+        } else {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
@@ -280,6 +292,8 @@ export class ProductService {
     async updateDocumentAssembledProduct(assembledId: number, document: Document) {
         if (!document?.id) {
             await this.assembledProductsRepository.document(assembledId).create(document);
+        } else {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
