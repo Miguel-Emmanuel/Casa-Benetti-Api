@@ -56,6 +56,9 @@ export class UserController {
                                         avatar: {type: 'string'},
                                         isAdmin: {type: 'boolean', nullable: true},
                                         roleId: {type: 'number'},
+                                        isProjectManager: {type: 'boolean'},
+                                        isShowroomManager: {type: 'boolean'},
+                                        isDesigner: {type: 'boolean'},
                                     }
                                 },
                                 userData: {
@@ -92,6 +95,9 @@ export class UserController {
                                     immediateBossId: {type: 'number'},
                                     isMaster: {type: 'boolean'},
                                     typeUser: {type: 'string', enum: [...Object.values(TypeUserE)], },
+                                    isProjectManager: {type: 'boolean'},
+                                    isShowroomManager: {type: 'boolean'},
+                                    isDesigner: {type: 'boolean'},
                                 }
                             },
                             userData: {
@@ -162,6 +168,9 @@ export class UserController {
                                         avatar: {type: 'string'},
                                         isAdmin: {type: 'boolean', nullable: true},
                                         roleId: {type: 'number'},
+                                        isProjectManager: {type: 'boolean'},
+                                        isShowroomManager: {type: 'boolean'},
+                                        isDesigner: {type: 'boolean'},
                                     }
                                 },
                                 userData: {
@@ -196,6 +205,9 @@ export class UserController {
                                     avatar: {type: 'string'},
                                     isAdmin: {type: 'boolean', nullable: true},
                                     roleId: {type: 'number'},
+                                    isProjectManager: {type: 'boolean'},
+                                    isShowroomManager: {type: 'boolean'},
+                                    isDesigner: {type: 'boolean'},
                                 }
                             },
                             userData: {

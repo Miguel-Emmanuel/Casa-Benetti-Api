@@ -155,6 +155,28 @@ export class User extends BaseEntity {
 
   @hasOne(() => QuotationDesigner)
   quotationDe: QuotationDesigner;
+
+  //Es project manager
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  isProjectManager?: boolean;
+
+  //Es showroom manager
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  isShowroomManager?: boolean;
+
+  //Es proyectista
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  isDesigner?: boolean;
+
   // @hasOne(() => QuotationProjectManager)
   // quotationProjectManager: QuotationProjectManager;
 
