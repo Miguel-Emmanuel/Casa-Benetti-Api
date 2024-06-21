@@ -42,6 +42,8 @@ export interface Customer {
 }
 
 export interface QuotationI {
+    mainProjectManagerId: number;
+    percentageMainProjectManager: number;
     referenceCustomerId: number;
     isDesigner: boolean;
     isArchitect: boolean;

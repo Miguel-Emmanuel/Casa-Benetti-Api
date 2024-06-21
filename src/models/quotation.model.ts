@@ -273,6 +273,20 @@ export class Quotation extends BaseEntity {
     })
     isDraft: boolean;
 
+    //Porcentaje de comision project manager principal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageMainProjectManager: number;
+
+    //Project manager principal
+    @belongsTo(() => User)
+    mainProjectManagerId: number;
+
     constructor(data?: Partial<Quotation>) {
         super(data);
     }
