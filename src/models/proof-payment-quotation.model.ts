@@ -1,5 +1,7 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {getJsonSchema} from '@loopback/rest';
 import {ExchangeRateE, PaymentTypeProofE} from '../enums';
+import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Quotation} from './quotation.model';
 
@@ -16,7 +18,14 @@ export class ProofPaymentQuotation extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
+
+    //Fecha de creacion
+    @property({
+        type: 'date',
+        default: () => new Date(),
+    })
+    createdAt: Date;
 
     @hasMany(() => Document)
     documents: Document[];
@@ -73,3 +82,14 @@ export interface ProofPaymentQuotationRelations {
 }
 
 export type ProofPaymentQuotationWithRelations = ProofPaymentQuotation & ProofPaymentQuotationRelations;
+
+export class ProofPaymentQuotationCreate extends ProofPaymentQuotation {
+    @property({
+        type: 'array',
+        jsonSchema: {
+            type: 'array',
+            items: getJsonSchema(DocumentSchema)
+        }
+    })
+    images: DocumentSchema[];
+}
