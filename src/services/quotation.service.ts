@@ -37,9 +37,10 @@ export class QuotationService {
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft} = data;
-        const {isReferencedCustomer} = quotation;
+        const {isReferencedCustomer, mainProjectManagerId} = quotation;
         //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
+        await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
         const groupId = await this.createOrGetGroup(customer);
@@ -66,6 +67,11 @@ export class QuotationService {
             throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
+    }
+    async validateMainPMAndSecondary(mainProjectManagerId: number, projectManagers: ProjectManagers[]) {
+        const someProjectManager = projectManagers?.some(value => value.userId == mainProjectManagerId);
+        if (someProjectManager === true)
+            throw this.responseService.badRequest("El project manager principal se encuentra dentro de los project managers secundarios.");
     }
 
     async updateQuotation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, quotationId: number) {
