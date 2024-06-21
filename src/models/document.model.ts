@@ -72,6 +72,11 @@ export class Document extends BaseEntity {
   })
   secondaryFinishingId?: number;
 
+  @property({
+    type: 'number',
+  })
+  proofPaymentQuotationId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }

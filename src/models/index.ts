@@ -29,3 +29,4 @@ export * from './expense.model';
 export * from './classification.model';
 export * from './line.model';
 export * from './assembled-products.model';
+export * from './proof-payment-quotation.model';

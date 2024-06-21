@@ -5,6 +5,7 @@ import {Branch, BranchWithRelations} from './branch.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
+import {ProofPaymentQuotation} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
@@ -286,6 +287,10 @@ export class Quotation extends BaseEntity {
     //Project manager principal
     @belongsTo(() => User)
     mainProjectManagerId: number;
+
+    //Comprobante de anticipos
+    @hasMany(() => ProofPaymentQuotation)
+    proofPaymentQuotations: ProofPaymentQuotation[];
 
     constructor(data?: Partial<Quotation>) {
         super(data);
