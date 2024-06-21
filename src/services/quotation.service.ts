@@ -1,13 +1,14 @@
 import {UserRepository} from '@loopback/authentication-jwt';
-import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {AccessLevelRolE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Quotation} from '../models';
-import {CustomerRepository, GroupRepository, ProductRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {ProofPaymentQuotation, ProofPaymentQuotationCreate, Quotation} from '../models';
+import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -33,23 +34,30 @@ export class QuotationService {
         public groupRepository: GroupRepository,
         @inject(SecurityBindings.USER)
         private user: UserProfile,
+        @repository(ProofPaymentQuotationRepository)
+        public proofPaymentQuotationRepository: ProofPaymentQuotationRepository,
+        @service()
+        public proofPaymentQuotationService: ProofPaymentQuotationService,
     ) { }
 
     async create(data: CreateQuotation) {
-        const {id, customer, projectManagers, designers, products, quotation, isDraft} = data;
+        const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
         const {isReferencedCustomer, mainProjectManagerId} = quotation;
         //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
         await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
-        const groupId = await this.createOrGetGroup(customer);
-        const customerId = await this.createOrGetCustomer({...customer}, groupId);
-        const userId = this.user.id;
+        let groupId = null;
+        let customerId = null;
         try {
-            if (id === null) {
+            groupId = await this.createOrGetGroup(customer);
+            customerId = await this.createOrGetCustomer({...customer}, groupId);
+            const userId = this.user.id;
+            if (id === null || id == undefined) {
                 const branchId = this.user.branchId;
                 const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId);
+                await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
                 await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
                 return createQuotation;
             } else {
@@ -57,16 +65,31 @@ export class QuotationService {
                 await this.updateQuotation(quotation, isDraft, customerId, userId, id);
                 await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
                 await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
+                await this.updateProofPayments(proofPaymentQuotation, id);
                 return this.findQuotationById(id);
             }
         } catch (error) {
-            if (customerId)
-                await this.customerRepository.deleteById(customerId);
-            if (groupId)
-                await this.groupRepository.deleteById(groupId);
             throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
+    }
+
+    async createProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
+        for (let index = 0; index < proofPaymentQuotation?.length; index++) {
+            const element: any = proofPaymentQuotation[index];
+            await this.proofPaymentQuotationService.create({...element, quotationId: quotationId})
+        }
+    }
+
+    async updateProofPayments(proofPaymentQuotation: ProofPaymentQuotation[], quotationId: number) {
+        for (let index = 0; index < proofPaymentQuotation?.length; index++) {
+            const element: any = proofPaymentQuotation[index];
+            if (element?.id) {
+                await this.proofPaymentQuotationService.updateProofPayments(element?.id, {...element, quotationId: quotationId})
+            } else {
+                await this.proofPaymentQuotationService.create({...element, quotationId: quotationId})
+            }
+        }
     }
     async validateMainPMAndSecondary(mainProjectManagerId: number, projectManagers: ProjectManagers[]) {
         const someProjectManager = projectManagers?.some(value => value.userId == mainProjectManagerId);
@@ -109,11 +132,13 @@ export class QuotationService {
         const {customerId, groupName, ...dataCustomer} = customer;
         if (customerId) {
             const findCustomer = await this.customerRepository.findOne({where: {id: customerId}});
+            console.log(customerId)
             if (!findCustomer)
-                throw this.responseService.badRequest('El cliente id no existe.')
+                throw this.responseService.badRequest('El cliente id no exidddste.')
 
             return findCustomer.id;
         } else {
+            console.log
             const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId, groupId: groupId});
             return createCustomer.id;
         }
@@ -342,6 +367,19 @@ export class QuotationService {
             },
             {
                 relation: 'referenceCustomer'
+            },
+            {
+                relation: 'proofPaymentQuotations',
+                scope: {
+                    include: [
+                        {
+                            relation: 'documents',
+                            scope: {
+                                fields: ['id', 'fileURL', 'name', 'extension', 'proofPaymentQuotationId'],
+                            }
+                        }
+                    ]
+                }
             }
         ]
         if (filter?.include)
@@ -435,25 +473,37 @@ export class QuotationService {
                 referencedCustomerName: quotation?.referenceCustomer?.firstName,
                 projectManagers: projectManagers,
                 designers: designers
-            }
+            },
+            proofPaymentQuotations: quotation?.proofPaymentQuotations
         }
         return response
     }
 
     async updateById(id: number, data: UpdateQuotation,) {
-        const {customer, projectManagers, designers, products, quotation, isDraft} = data;
+        const {customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
         const {isReferencedCustomer} = quotation;
         await this.validateBodyQuotationUpdate(data);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
-        const groupId = await this.createOrGetGroup(customer);
-        const customerId = await this.createOrGetCustomer({...customer}, groupId);
-        const userId = this.user.id;
-        const findQuotation = await this.findQuotationById(id);
-        await this.updateQuotation(quotation, isDraft, customerId, userId, id);
-        await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
-        await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
-        return this.findQuotationById(id);
+        let groupId = null;
+        let customerId = null;
+        try {
+            groupId = await this.createOrGetGroup(customer);
+            customerId = await this.createOrGetCustomer({...customer}, groupId);
+            const userId = this.user.id;
+            const findQuotation = await this.findQuotationById(id);
+            await this.updateQuotation(quotation, isDraft, customerId, userId, id);
+            await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
+            await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
+            await this.updateProofPayments(proofPaymentQuotation, id);
+            return this.findQuotationById(id);
+        } catch (error) {
+            // if (customerId)
+            //     await this.customerRepository.deleteById(customerId);
+            // if (groupId)
+            //     await this.groupRepository.deleteById(groupId);
+            throw this.responseService.badRequest(error?.message ? error?.message : error);
+        }
     }
 
     async deleteById(id: number) {

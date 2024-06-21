@@ -38,12 +38,12 @@ export class ProofPaymentQuotationController {
                 'application/json': {
                     schema: getModelSchemaRef(ProofPaymentQuotationCreate, {
                         title: 'NewProofPaymentQuotation',
-                        exclude: ['id'],
+                        exclude: ['id', 'createdAt'],
                     }),
                 },
             },
         })
-        proofPaymentQuotation: Omit<ProofPaymentQuotationCreate, 'id'>,
+        proofPaymentQuotation: ProofPaymentQuotationCreate,
     ): Promise<ProofPaymentQuotation> {
         return this.proofPaymentQuotationService.create(proofPaymentQuotation);
     }
@@ -102,11 +102,11 @@ export class ProofPaymentQuotationController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(ProofPaymentQuotation, {partial: true}),
+                    schema: getModelSchemaRef(ProofPaymentQuotationCreate, {partial: true, exclude: ['createdAt']}),
                 },
             },
         })
-        proofPaymentQuotation: ProofPaymentQuotation,
+        proofPaymentQuotation: ProofPaymentQuotationCreate,
     ): Promise<void> {
         await this.proofPaymentQuotationService.updateById(id, proofPaymentQuotation);
     }

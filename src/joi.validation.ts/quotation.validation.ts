@@ -1,10 +1,48 @@
 import * as Joi from "joi";
-import {ExchangeRateE} from '../enums';
+import {ExchangeRateE, PaymentTypeProofE} from '../enums';
 
 const projectManager = Joi.object({
     userId: Joi.number(),
     commissionPercentageProjectManager: Joi.number(),
 })
+
+
+export const documents = Joi.object({
+    id: Joi.number(),
+    fileURL: Joi.string().required(),
+    name: Joi.string().required(),
+    extension: Joi.string().required(),
+})
+
+export const schemaProofPaymentQuotation = Joi.object({
+    paymentDate: Joi.string().required(),
+    paymentType: Joi.string().valid(...Object.values(PaymentTypeProofE)).messages({
+        'any.only': `El tipo de pago debe ser igual a uno de los valores permitidos.`
+    }),
+    exchangeRate: Joi.string().valid(...Object.values(ExchangeRateE)).messages({
+        'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+    }),
+    advanceCustomer: Joi.number().required(),
+    conversionAdvance: Joi.number().required(),
+    quotationId: Joi.number().required(),
+    images: Joi.array().items(documents).optional(),
+})
+
+export const schemaProofPaymentQuotationQ = Joi.object({
+    id: Joi.number().allow(null),
+    paymentDate: Joi.string().required(),
+    paymentType: Joi.string().valid(...Object.values(PaymentTypeProofE)).messages({
+        'any.only': `El tipo de pago debe ser igual a uno de los valores permitidos.`
+    }),
+    exchangeRate: Joi.string().valid(...Object.values(ExchangeRateE)).messages({
+        'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+    }),
+    advanceCustomer: Joi.number().required(),
+    conversionAdvance: Joi.number().required(),
+    quotationId: Joi.number().required(),
+    images: Joi.array().items(documents).optional(),
+})
+
 
 const designer = Joi.object({
     userId: Joi.number(),
@@ -82,6 +120,7 @@ export const schemaCreateQuotition = Joi.object({
         conversionAdvance: Joi.number().allow(null),
         balance: Joi.number().allow(null),
     }),
+    proofPaymentQuotation: Joi.array().items(schemaProofPaymentQuotationQ).optional(),
 })
 
 
@@ -141,4 +180,5 @@ export const schemaUpdateQuotition = Joi.object({
         conversionAdvance: Joi.number().allow(null),
         balance: Joi.number().allow(null),
     }),
+    proofPaymentQuotation: Joi.array().items(schemaProofPaymentQuotation).optional(),
 })

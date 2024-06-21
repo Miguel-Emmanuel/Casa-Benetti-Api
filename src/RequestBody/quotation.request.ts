@@ -1,5 +1,6 @@
-import {RequestBodyObject, ResponseModelOrSpec} from '@loopback/rest';
+import {RequestBodyObject, ResponseModelOrSpec, getModelSchemaRef} from '@loopback/rest';
 import {ExchangeRateE} from '../enums';
+import {ProofPaymentQuotationCreate} from '../models';
 
 export const CreateRequestBody: Partial<RequestBodyObject> = {
     content: {
@@ -266,8 +267,11 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 nullable: true
                             },
                         }
+                    },
+                    proofPaymentQuotation: {
+                        type: 'array',
+                        items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt']})
                     }
-
                 }
             }
         },
@@ -535,6 +539,10 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                 nullable: true
                             },
                         }
+                    },
+                    proofPaymentQuotation: {
+                        type: 'array',
+                        items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt']})
                     }
 
                 }

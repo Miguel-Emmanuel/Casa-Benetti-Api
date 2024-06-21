@@ -1,8 +1,9 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {schemaProofPaymentQuotation} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotation, ProofPaymentQuotationCreate} from '../models';
-import {ProofPaymentQuotationRepository, QuotationRepository} from '../repositories';
+import {DocumentRepository, ProofPaymentQuotationRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -14,13 +15,17 @@ export class ProofPaymentQuotationService {
         public quotationRepository: QuotationRepository,
         @inject(ResponseServiceBindings.RESPONSE_SERVICE)
         public responseService: ResponseService,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository,
     ) { }
 
 
-    async create(proofPaymentQuotation: Omit<ProofPaymentQuotationCreate, 'id'>,) {
-        const {quotationId, images} = proofPaymentQuotation;
+    async create(proofPaymentQuotation: ProofPaymentQuotationCreate) {
+        const {quotationId} = proofPaymentQuotation;
+        const {images, ...bodyProofPayment} = proofPaymentQuotation;
         await this.findQuotationById(quotationId);
-        const proofPaymentQuotationResponse = await this.proofPaymentQuotationRepository.create(proofPaymentQuotation);
+        await this.validateBodyProofPayment(proofPaymentQuotation);
+        const proofPaymentQuotationResponse = await this.proofPaymentQuotationRepository.create(bodyProofPayment)
         await this.createDocuments(proofPaymentQuotationResponse.id, images)
         return proofPaymentQuotationResponse;
     }
@@ -36,12 +41,35 @@ export class ProofPaymentQuotationService {
         return this.proofPaymentQuotationRepository.findById(id, filter);
     }
 
-    async updateById(id: number, proofPaymentQuotation: ProofPaymentQuotation,) {
-        await this.proofPaymentQuotationRepository.updateById(id, proofPaymentQuotation);
+    async validateBodyProofPayment(data: ProofPaymentQuotationCreate) {
+        try {
+            await schemaProofPaymentQuotation.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async updateById(id: number, proofPaymentQuotation: ProofPaymentQuotationCreate) {
+        const {quotationId} = proofPaymentQuotation;
+        const {images, ...bodyProofPayment} = proofPaymentQuotation;
+        await this.findProofPaymentById(id);
+        await this.findQuotationById(quotationId);
+        await this.validateBodyProofPayment(proofPaymentQuotation);
+        await this.updateDocuments(id, images)
+        await this.proofPaymentQuotationRepository.updateById(id, bodyProofPayment);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
     async deleteById(id: number) {
+        await this.findProofPaymentById(id);
         await this.proofPaymentQuotationRepository.deleteById(id);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
     async findQuotationById(id: number) {
@@ -51,10 +79,35 @@ export class ProofPaymentQuotationService {
         return quotation;
     }
 
+    async findProofPaymentById(id: number) {
+        const proofPayment = await this.proofPaymentQuotationRepository.findOne({where: {id}})
+        if (!proofPayment)
+            throw this.responseService.badRequest('El comprobante de pago no existe.');
+        return proofPayment;
+    }
+
+    async updateProofPayments(proofPaymentQuotationId: number, proofPaymentQuotation: ProofPaymentQuotationCreate) {
+        await this.findQuotationById(proofPaymentQuotationId);
+        const {images, ...bodyProofPayment} = proofPaymentQuotation;
+        await this.updateDocuments(proofPaymentQuotation.id, images)
+        return this.proofPaymentQuotationRepository.updateById(proofPaymentQuotationId, bodyProofPayment);
+    }
+
     async createDocuments(proofPaymentQuotationId: number, documents: Document[]) {
         for (let index = 0; index < documents?.length; index++) {
             const element = documents[index];
             if (element) {
+                await this.proofPaymentQuotationRepository.documents(proofPaymentQuotationId).create(element);
+            }
+        }
+    }
+
+    async updateDocuments(proofPaymentQuotationId: number, documents: Document[]) {
+        for (let index = 0; index < documents?.length; index++) {
+            const element = documents[index];
+            if (element && element?.id) {
+                await this.documentRepository.updateById(element?.id, element);
+            } else {
                 await this.proofPaymentQuotationRepository.documents(proofPaymentQuotationId).create(element);
             }
         }
