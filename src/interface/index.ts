@@ -186,6 +186,9 @@ export interface QuotationFindOneResponse {
         percentageAdditionalDiscount: number;
         advanceCustomer: number;
         conversionAdvance: number;
+        status: string;
+        mainProjectManagerId: number;
+        percentageMainProjectManager: number;
 
     },
     commisions: {
