@@ -465,6 +465,9 @@ export class QuotationService {
                 percentageAdditionalDiscount: quotation?.percentageAdditionalDiscount,
                 advanceCustomer: quotation?.advanceCustomer,
                 conversionAdvance: quotation?.conversionAdvance,
+                status: quotation.status,
+                mainProjectManagerId: quotation?.mainProjectManagerId,
+                percentageMainProjectManager: quotation?.percentageMainProjectManager,
 
             },
             commisions: {
