@@ -1,5 +1,5 @@
-import {ExchangeRateE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
-import {Address} from '../models';
+import {ExchangeRateE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {Address, Document, ProofPaymentQuotationCreate} from '../models';
 
 export interface ProjectManagers {
     userId: number;
@@ -65,6 +65,21 @@ export interface QuotationI {
     conversionAdvance: number;
     balance: number;
 }
+export interface Images {
+    fileURL: string;
+    name: string;
+    extension: string;
+}
+
+// export interface ProofPaymentQuotationE {
+//     paymentDate: string;
+//     paymentType: PaymentTypeProofE;
+//     exchangeRate: ExchangeRateE;
+//     advanceCustomer: number;
+//     conversionAdvance: number;
+//     quotationId: number;
+//     images: Images[]
+// }
 export interface CreateQuotation {
     id: number,
     isDraft: boolean;
@@ -73,6 +88,19 @@ export interface CreateQuotation {
     designers: Designers[],
     products: Products[],
     quotation: QuotationI
+    proofPaymentQuotation: ProofPaymentQuotationCreate[]
+}
+
+export interface BodyProofPayment {
+    id: number;
+    createdAt: Date;
+    documents: Document[];
+    paymentDate: Date;
+    paymentType: PaymentTypeProofE;
+    exchangeRate: ExchangeRateE;
+    advanceCustomer: number;
+    conversionAdvance: number;
+    quotationId: number;
 }
 
 export interface UpdateQuotation {
@@ -81,7 +109,8 @@ export interface UpdateQuotation {
     projectManagers: ProjectManagers[],
     designers: Designers[],
     products: Products[],
-    quotation: QuotationI
+    quotation: QuotationI,
+    proofPaymentQuotation: ProofPaymentQuotationCreate[]
 }
 
 export interface QuotationFindResponse {
@@ -166,7 +195,8 @@ export interface QuotationFindOneResponse {
         projectManagers: ProjectManagersById[],
         designers: DesignersById[]
 
-    }
+    },
+    proofPaymentQuotations: any[]
 }
 
 
