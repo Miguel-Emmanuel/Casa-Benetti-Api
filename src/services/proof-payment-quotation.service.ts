@@ -59,7 +59,7 @@ export class ProofPaymentQuotationService {
         const {quotationId} = proofPaymentQuotation;
         const {images, ...bodyProofPayment} = proofPaymentQuotation;
         await this.findProofPaymentById(id);
-        await this.findProofPaymentById(quotationId);
+        await this.findQuotationById(quotationId);
         await this.validateBodyProofPayment(proofPaymentQuotation);
         await this.updateDocuments(id, images)
         await this.proofPaymentQuotationRepository.updateById(id, bodyProofPayment);

@@ -6,7 +6,7 @@ import {AccessLevelRolE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
-import {ProofPaymentQuotation, ProofPaymentQuotationCreate, Quotation} from '../models';
+import {ProofPaymentQuotationCreate, Quotation} from '../models';
 import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -76,18 +76,20 @@ export class QuotationService {
 
     async createProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
         for (let index = 0; index < proofPaymentQuotation?.length; index++) {
-            const element: any = proofPaymentQuotation[index];
-            await this.proofPaymentQuotationService.create({...element, quotationId: quotationId})
+            const element = proofPaymentQuotation[index];
+            element.quotationId = quotationId;
+            await this.proofPaymentQuotationService.create(element)
         }
     }
 
-    async updateProofPayments(proofPaymentQuotation: ProofPaymentQuotation[], quotationId: number) {
+    async updateProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
         for (let index = 0; index < proofPaymentQuotation?.length; index++) {
-            const element: any = proofPaymentQuotation[index];
+            const element = proofPaymentQuotation[index];
+            element.quotationId = quotationId;
             if (element?.id) {
-                await this.proofPaymentQuotationService.updateProofPayments(element?.id, {...element, quotationId: quotationId})
+                await this.proofPaymentQuotationService.updateById(element?.id, element)
             } else {
-                await this.proofPaymentQuotationService.create({...element, quotationId: quotationId})
+                await this.proofPaymentQuotationService.create(element)
             }
         }
     }
