@@ -9,6 +9,7 @@ export const documents = Joi.object({
     extension: Joi.string().required(),
 })
 export const schemaProofPaymentQuotationInside = Joi.object({
+    id: Joi.number().allow(null),
     paymentDate: Joi.string().required(),
     paymentType: Joi.string().valid(...Object.values(PaymentTypeProofE)).messages({
         'any.only': `El tipo de pago debe ser igual a uno de los valores permitidos.`
