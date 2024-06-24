@@ -318,7 +318,7 @@ export class Product extends BaseEntity {
     // quotationProducts: QuotationProducts[];
 
     @belongsTo(() => Brand)
-    brandId: number;
+    brandId?: number;
 
     //Estatus del producto
     @property({
