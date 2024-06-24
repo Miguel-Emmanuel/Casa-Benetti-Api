@@ -270,7 +270,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     },
                     proofPaymentQuotation: {
                         type: 'array',
-                        items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt']})
+                        items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt', 'quotationId']})
                     }
                 }
             }
@@ -542,7 +542,7 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                     },
                     proofPaymentQuotation: {
                         type: 'array',
-                        items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt']})
+                        items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt', 'quotationId']})
                     }
 
                 }
