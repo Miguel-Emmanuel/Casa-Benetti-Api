@@ -116,7 +116,7 @@ export class QuotationController {
                         properties: {
                             isFractionate: {type: 'boolean'},
                             isRejected: {type: 'boolean'},
-                            comment: {type: 'boolean'},
+                            comment: {type: 'string'},
                         }
                     },
                 },
