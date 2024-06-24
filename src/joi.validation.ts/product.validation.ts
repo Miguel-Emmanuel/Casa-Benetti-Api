@@ -52,34 +52,34 @@ export const schemaCreateProduct = Joi.object({
         discount: Joi.number().allow(0).allow(null),
         CATSAT: Joi.string().allow('').allow(null),
         tariffFraction: Joi.number().allow(0).allow(null),
-        brandId: Joi.number().required(),
+        brandId: Joi.number().allow(null),
     }),
     assembledProducts: Joi.when('product.typeArticle', {is: TypeArticleE.PRODUCTO_ENSAMBLADO, then: Joi.array().items(schemaAssembledProducts)}).optional().allow(null),
     document: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
-    }).optional(),
+    }).optional().allow(null),
     mainMaterialImage: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
-    }).optional(),
+    }).optional().allow(null),
     mainFinishImage: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
-    }).optional(),
+    }).optional().allow(null),
     secondaryMaterialImage: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
-    }).optional(),
+    }).optional().allow(null),
     secondaryFinishingImage: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
-    }).optional(),
+    }).optional().allow(null),
 })
 
 

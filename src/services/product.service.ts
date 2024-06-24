@@ -122,7 +122,7 @@ export class ProductService {
         }
     }
 
-    async findByIdBrand(id: number) {
+    async findByIdBrand(id?: number) {
         const brand = await this.brandRepository.findOne({where: {id}});
         if (!brand)
             throw this.responseService.notFound("La marca no se ha encontrado.")
