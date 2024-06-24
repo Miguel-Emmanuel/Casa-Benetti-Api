@@ -1,4 +1,3 @@
-import {UserRepository} from '@loopback/authentication-jwt';
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
@@ -7,7 +6,7 @@ import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsB
 import {schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
-import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
 
@@ -69,6 +68,9 @@ export class QuotationService {
                 return this.findQuotationById(id);
             }
         } catch (error) {
+            if (customer?.name && customerId) {
+                await this.userRepository.deleteById(customerId);
+            }
             throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
@@ -136,7 +138,7 @@ export class QuotationService {
             const findCustomer = await this.customerRepository.findOne({where: {id: customerId}});
             console.log(customerId)
             if (!findCustomer)
-                throw this.responseService.badRequest('El cliente id no exidddste.')
+                throw this.responseService.badRequest('El cliente id no existe.')
 
             return findCustomer.id;
         } else {
