@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {ExchangeRateE, PaymentTypeProofE, ProofPaymentTypeE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ProofPaymentTypeE} from '../enums';
 
 const projectManager = Joi.object({
     userId: Joi.number(),
@@ -125,6 +125,9 @@ export const schemaCreateQuotition = Joi.object({
         advanceCustomer: Joi.number().allow(null),
         conversionAdvance: Joi.number().allow(null),
         balance: Joi.number().allow(null),
+        exchangeRateQuotation: Joi.string().valid(...Object.values(ExchangeRateQuotationE)).messages({
+            'any.only': `El tipo de cambio en la cotizacion debe ser igual a uno de los valores permitidos.`
+        }).allow(null),
     }),
     proofPaymentQuotation: Joi.array().items(schemaProofPaymentQuotationQ).optional(),
 })
@@ -185,6 +188,9 @@ export const schemaUpdateQuotition = Joi.object({
         advanceCustomer: Joi.number().allow(null),
         conversionAdvance: Joi.number().allow(null),
         balance: Joi.number().allow(null),
+        exchangeRateQuotation: Joi.string().valid(...Object.values(ExchangeRateQuotationE)).messages({
+            'any.only': `El tipo de cambio en la cotizacion debe ser igual a uno de los valores permitidos.`
+        }).allow(null),
     }),
     proofPaymentQuotation: Joi.array().items(schemaProofPaymentQuotation).optional(),
 })
