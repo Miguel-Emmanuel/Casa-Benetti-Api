@@ -199,7 +199,7 @@ export const schemaUpdateQuotition = Joi.object({
 
 export const schemaChangeStatusSM = Joi.object({
     isRejected: Joi.boolean().required(),
-    fractionate: Joi.when('isRejected', {is: false, then: Joi.boolean().required()}),
+    isFractionate: Joi.when('isRejected', {is: false, then: Joi.boolean().required()}),
     comment: Joi.when('isRejected', {is: true, then: Joi.string().required()}),
 
 })

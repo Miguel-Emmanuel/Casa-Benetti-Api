@@ -114,7 +114,7 @@ export class QuotationController {
                     schema: {
                         type: 'object',
                         properties: {
-                            fractionate: {type: 'boolean'},
+                            isFractionate: {type: 'boolean'},
                             isRejected: {type: 'boolean'},
                             comment: {type: 'boolean'},
                         }
@@ -122,7 +122,7 @@ export class QuotationController {
                 },
             },
         })
-        body: {fractionate: boolean, isRejected: boolean, comment: string},
+        body: {isFractionate: boolean, isRejected: boolean, comment: string},
     ): Promise<object> {
         return this.quotationService.changeStatusToReviewAdmin(id, body);
     }
