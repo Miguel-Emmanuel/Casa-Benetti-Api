@@ -1,5 +1,6 @@
 import {belongsTo, model, property} from '@loopback/repository';
 import {BaseEntity} from './base/base-entity.model';
+import {Customer} from './customer.model';
 import {Quotation} from './quotation.model';
 
 @model()
@@ -13,6 +14,9 @@ export class Project extends BaseEntity {
 
     @belongsTo(() => Quotation)
     quotationId: number;
+
+    @belongsTo(() => Customer)
+    customerId: number;
 
     constructor(data?: Partial<Project>) {
         super(data);
