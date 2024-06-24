@@ -1,6 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
-import {schemaProofPaymentQuotation} from '../joi.validation.ts/quotation.validation';
+import {schemaProofPaymentQuotationInside} from '../joi.validation.ts/proof-payment.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotation, ProofPaymentQuotationCreate} from '../models';
 import {DocumentRepository, ProofPaymentQuotationRepository, QuotationRepository} from '../repositories';
@@ -43,7 +43,7 @@ export class ProofPaymentQuotationService {
 
     async validateBodyProofPayment(data: ProofPaymentQuotationCreate) {
         try {
-            await schemaProofPaymentQuotation.validateAsync(data);
+            await schemaProofPaymentQuotationInside.validateAsync(data);
         }
         catch (err) {
             const {details} = err;
