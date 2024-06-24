@@ -114,13 +114,14 @@ export class QuotationController {
                     schema: {
                         type: 'object',
                         properties: {
-                            dividir: {type: 'boolean'}
+                            fractionate: {type: 'boolean'},
+                            isRejected: {type: 'boolean'}
                         }
                     },
                 },
             },
         })
-        body: {dividir: boolean},
+        body: {fractionate: boolean, isRejected: boolean},
     ): Promise<object> {
         return this.quotationService.changeStatusToReviewAdmin(id, body);
     }
