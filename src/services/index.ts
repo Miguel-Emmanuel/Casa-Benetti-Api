@@ -19,3 +19,4 @@ export * from './group.service';
 export * from './expense.service';
 export * from './classification.service';
 export * from './proof-payment-quotation.service';
+export * from './project.service';
