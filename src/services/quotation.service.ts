@@ -734,6 +734,10 @@ export class QuotationService {
         return Number(new BigNumber(price).multipliedBy(new BigNumber(value)).toFixed(2));
     }
 
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
+    }
+
     calculatePricesExchangeRate(quotation: Quotation) {
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
@@ -744,12 +748,12 @@ export class QuotationService {
 
             const bodyMXN = {
                 subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
-                percentageAdditionalDiscountMXN: this.bigNumberMultipliedBy(percentageAdditionalDiscountEUR, MXN),
+                percentageAdditionalDiscountMXN: this.roundToTwoDecimals(percentageAdditionalDiscountEUR),
                 additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
-                percentageIvaMXN: this.bigNumberMultipliedBy(percentageIvaEUR, MXN),
+                percentageIvaMXN: this.roundToTwoDecimals(percentageIvaEUR),
                 ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
                 totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
-                percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceEUR, MXN),
+                percentageAdvanceMXN: this.roundToTwoDecimals(percentageAdvanceEUR),
                 advanceMXN: this.bigNumberMultipliedBy(advanceEUR, MXN),
                 exchangeRateMXN: ExchangeRateE.MXN,
                 exchangeRateAmountMXN: 15,
@@ -760,12 +764,12 @@ export class QuotationService {
 
             const bodyUSD = {
                 subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
-                percentageAdditionalDiscountUSD: this.bigNumberMultipliedBy(percentageAdditionalDiscountEUR, USD),
+                percentageAdditionalDiscountUSD: this.roundToTwoDecimals(percentageAdditionalDiscountEUR),
                 additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
-                percentageIvaUSD: this.bigNumberMultipliedBy(percentageIvaEUR, USD),
+                percentageIvaUSD: this.roundToTwoDecimals(percentageIvaEUR),
                 ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
                 totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
-                percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceEUR, USD),
+                percentageAdvanceUSD: this.roundToTwoDecimals(percentageAdvanceEUR),
                 advanceUSD: this.bigNumberMultipliedBy(advanceEUR, USD),
                 exchangeRateUSD: ExchangeRateE.USD,
                 exchangeRateAmountUSD: 15,
@@ -785,12 +789,12 @@ export class QuotationService {
 
             const bodyEUR = {
                 subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
-                percentageAdditionalDiscountEUR: this.bigNumberMultipliedBy(percentageAdditionalDiscountMXN, EUR),
+                percentageAdditionalDiscountEUR: this.roundToTwoDecimals(percentageAdditionalDiscountMXN),
                 additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
-                percentageIvaEUR: this.bigNumberMultipliedBy(percentageIvaMXN, EUR),
+                percentageIvaEUR: this.roundToTwoDecimals(percentageIvaMXN),
                 ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
                 totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
-                percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceMXN, EUR),
+                percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
                 advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
                 exchangeRateEUR: ExchangeRateE.EUR,
                 exchangeRateAmountEUR: 15,
