@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import {AccessLevelRolE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
-import {schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
+import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
 import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
@@ -694,14 +694,14 @@ export class QuotationService {
         await this.quotationRepository.deleteById(id);
     }
 
-    async changeStatusToReviewAdmin(id: number, body: {fractionate: boolean, isRejected: boolean}) {
+    async changeStatusToReviewAdmin(id: number, body: {fractionate: boolean, isRejected: boolean, comment: string}) {
         const quotation = await this.findQuotationAndProductsById(id);
         await this.validateChangeStatusSM(body);
         if (quotation.status !== StatusQuotationE.ENREVISIONSM)
-            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en reviso por SM.`)
+            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por SM.`)
 
         let prices = {}, status = null;
-        const {fractionate, isRejected} = body;
+        const {fractionate, isRejected, comment} = body;
 
         if (isRejected === true)
             status = StatusQuotationE.RECHAZADA;
@@ -711,14 +711,46 @@ export class QuotationService {
                 prices = this.calculatePricesExchangeRate(quotation);
         }
 
-        await this.quotationRepository.updateById(id, {status, ...prices});
+        await this.quotationRepository.updateById(id, {status, comment, ...prices});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async changeStatusToClose(id: number, body: {isRejected: boolean, comment: string}) {
+        const quotation = await this.findQuotationAndProductsById(id);
+        await this.validateChangeStatusClose(body);
+        if (quotation.status !== StatusQuotationE.ENREVISIONADMINSITRACION)
+            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por administración.`)
+
+        let status = null;
+        const {isRejected, comment} = body;
+
+        if (isRejected === true)
+            status = StatusQuotationE.RECHAZADA;
+        else
+            status = StatusQuotationE.CERRADA;
+
+        await this.quotationRepository.updateById(id, {status, comment});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
 
-    async validateChangeStatusSM(body: {fractionate: boolean, isRejected: boolean}) {
+    async validateChangeStatusSM(body: {fractionate: boolean, isRejected: boolean, comment: string}) {
         try {
             await schemaChangeStatusSM.validateAsync(body);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateChangeStatusClose(body: {isRejected: boolean, comment: string}) {
+        try {
+            await schemaChangeStatusClose.validateAsync(body);
         }
         catch (err) {
             const {details} = err;
@@ -734,6 +766,10 @@ export class QuotationService {
         return Number(new BigNumber(price).multipliedBy(new BigNumber(value)).toFixed(2));
     }
 
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
+    }
+
     calculatePricesExchangeRate(quotation: Quotation) {
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
@@ -744,12 +780,12 @@ export class QuotationService {
 
             const bodyMXN = {
                 subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
-                percentageAdditionalDiscountMXN: this.bigNumberMultipliedBy(percentageAdditionalDiscountEUR, MXN),
+                percentageAdditionalDiscountMXN: this.roundToTwoDecimals(percentageAdditionalDiscountEUR),
                 additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
-                percentageIvaMXN: this.bigNumberMultipliedBy(percentageIvaEUR, MXN),
+                percentageIvaMXN: this.roundToTwoDecimals(percentageIvaEUR),
                 ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
                 totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
-                percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceEUR, MXN),
+                percentageAdvanceMXN: this.roundToTwoDecimals(percentageAdvanceEUR),
                 advanceMXN: this.bigNumberMultipliedBy(advanceEUR, MXN),
                 exchangeRateMXN: ExchangeRateE.MXN,
                 exchangeRateAmountMXN: 15,
@@ -760,12 +796,12 @@ export class QuotationService {
 
             const bodyUSD = {
                 subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
-                percentageAdditionalDiscountUSD: this.bigNumberMultipliedBy(percentageAdditionalDiscountEUR, USD),
+                percentageAdditionalDiscountUSD: this.roundToTwoDecimals(percentageAdditionalDiscountEUR),
                 additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
-                percentageIvaUSD: this.bigNumberMultipliedBy(percentageIvaEUR, USD),
+                percentageIvaUSD: this.roundToTwoDecimals(percentageIvaEUR),
                 ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
                 totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
-                percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceEUR, USD),
+                percentageAdvanceUSD: this.roundToTwoDecimals(percentageAdvanceEUR),
                 advanceUSD: this.bigNumberMultipliedBy(advanceEUR, USD),
                 exchangeRateUSD: ExchangeRateE.USD,
                 exchangeRateAmountUSD: 15,
@@ -785,12 +821,12 @@ export class QuotationService {
 
             const bodyEUR = {
                 subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
-                percentageAdditionalDiscountEUR: this.bigNumberMultipliedBy(percentageAdditionalDiscountMXN, EUR),
+                percentageAdditionalDiscountEUR: this.roundToTwoDecimals(percentageAdditionalDiscountMXN),
                 additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
-                percentageIvaEUR: this.bigNumberMultipliedBy(percentageIvaMXN, EUR),
+                percentageIvaEUR: this.roundToTwoDecimals(percentageIvaMXN),
                 ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
                 totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
-                percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceMXN, EUR),
+                percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
                 advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
                 exchangeRateEUR: ExchangeRateE.EUR,
                 exchangeRateAmountEUR: 15,
