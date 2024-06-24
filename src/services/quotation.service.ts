@@ -694,14 +694,14 @@ export class QuotationService {
         await this.quotationRepository.deleteById(id);
     }
 
-    async changeStatusToReviewAdmin(id: number, body: {fractionate: boolean, isRejected: boolean}) {
+    async changeStatusToReviewAdmin(id: number, body: {fractionate: boolean, isRejected: boolean, comment: string}) {
         const quotation = await this.findQuotationAndProductsById(id);
         await this.validateChangeStatusSM(body);
         if (quotation.status !== StatusQuotationE.ENREVISIONSM)
             throw this.responseService.badRequest(`La cotizacion aun no se encuentra en reviso por SM.`)
 
         let prices = {}, status = null;
-        const {fractionate, isRejected} = body;
+        const {fractionate, isRejected, comment} = body;
 
         if (isRejected === true)
             status = StatusQuotationE.RECHAZADA;
@@ -711,12 +711,12 @@ export class QuotationService {
                 prices = this.calculatePricesExchangeRate(quotation);
         }
 
-        await this.quotationRepository.updateById(id, {status, ...prices});
+        await this.quotationRepository.updateById(id, {status, comment, ...prices});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
 
-    async validateChangeStatusSM(body: {fractionate: boolean, isRejected: boolean}) {
+    async validateChangeStatusSM(body: {fractionate: boolean, isRejected: boolean, comment: string}) {
         try {
             await schemaChangeStatusSM.validateAsync(body);
         }

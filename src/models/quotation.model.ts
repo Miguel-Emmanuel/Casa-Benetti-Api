@@ -140,6 +140,13 @@ export class Quotation extends BaseEntity {
     })
     status: StatusQuotationE;
 
+    //Comentario para rechazada
+    @property({
+        type: 'string',
+        required: false,
+    })
+    comment: string;
+
     //Es borrador
     @property({
         type: 'boolean',
