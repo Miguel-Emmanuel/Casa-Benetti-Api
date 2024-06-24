@@ -86,14 +86,14 @@ export class ProductService {
     async createDocument(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.document(productId).create(document);
-        } else {
+        } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
     async createDocumentMainMaterial(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.mainMaterialImage(productId).create(document);
-        } else {
+        } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
@@ -101,7 +101,7 @@ export class ProductService {
     async createDocumentMainFinish(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.mainFinishImage(productId).create(document);
-        } else {
+        } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
@@ -109,7 +109,7 @@ export class ProductService {
     async createDocumentSecondaryMaterial(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.secondaryMaterialImage(productId).create(document);
-        } else {
+        } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
@@ -117,7 +117,7 @@ export class ProductService {
     async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.secondaryFinishingImage(productId).create(document);
-        } else {
+        } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
@@ -128,19 +128,19 @@ export class ProductService {
             throw this.responseService.notFound("La marca no se ha encontrado.")
     }
 
-    async findByIdProvider(id: number) {
+    async findByIdProvider(id?: number) {
         const provider = await this.providerRepository.findOne({where: {id}});
         if (!provider)
             throw this.responseService.notFound("El provedor no se ha encontrado.")
     }
 
-    async findByIdClassification(id: number) {
+    async findByIdClassification(id?: number) {
         const classification = await this.classificationRepository.findOne({where: {id}});
         if (!classification)
             throw this.responseService.notFound("La clasificacion no se ha encontrado.")
     }
 
-    async findByIdLine(id: number) {
+    async findByIdLine(id?: number) {
         const line = await this.lineRepository.findOne({where: {id}});
         if (!line)
             throw this.responseService.notFound("La linea no se ha encontrado.")

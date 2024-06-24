@@ -20,8 +20,8 @@ export const schemaAssembledProducts = Joi.object({
 export const schemaCreateProduct = Joi.object({
     product: Joi.object({
         SKU: Joi.string().required(),
-        classificationId: Joi.number().required(),
-        lineId: Joi.number().required(),
+        classificationId: Joi.number().allow(null),
+        lineId: Joi.number().allow(null),
         location: Joi.string().valid(...Object.values(LocationE)).allow(null).allow('').messages({
             'any.only': `El ubicación de articulo debe ser igual a uno de los valores permitidos.`
         }),
@@ -39,7 +39,7 @@ export const schemaCreateProduct = Joi.object({
         secondaryFinishing: Joi.string().allow('').allow(null),
         countryOrigin: Joi.string().allow('').allow(null),
         isPurchasable: Joi.boolean().allow(null),
-        providerId: Joi.number().required(),
+        providerId: Joi.number().allow(null),
         model: Joi.string().allow('').allow(null),
         originCode: Joi.string().allow('').allow(null),
         currency: Joi.string().valid(...Object.values(CurrencyE)).allow(null).allow('').messages({
