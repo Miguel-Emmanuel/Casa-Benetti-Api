@@ -108,20 +108,20 @@ export class QuotationController {
     })
     async activateDeactivate(
         @param.path.number('id') id: number,
-        // @requestBody({
-        //     content: {
-        //         'application/json': {
-        //             schema: {
-        //                 type: 'object',
-        //                 properties: {
-        //                     activateDeactivateComment: {type: 'string'}
-        //                 }
-        //             },
-        //         },
-        //     },
-        // })
-        // body: {activateDeactivateComment: string},
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            dividir: {type: 'boolean'}
+                        }
+                    },
+                },
+            },
+        })
+        body: {dividir: boolean},
     ): Promise<object> {
-        return this.quotationService.changeStatusToReviewAdmin(id);
+        return this.quotationService.changeStatusToReviewAdmin(id, body);
     }
 }

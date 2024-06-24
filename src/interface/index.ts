@@ -1,4 +1,4 @@
-import {ExchangeRateE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address, Document, ProofPaymentQuotationCreate} from '../models';
 
 export interface ProjectManagers {
@@ -64,6 +64,7 @@ export interface QuotationI {
     advanceCustomer: number;
     conversionAdvance: number;
     balance: number;
+    exchangeRateQuotation: ExchangeRateQuotationE;
 }
 export interface Images {
     fileURL: string;
@@ -117,7 +118,7 @@ export interface QuotationFindResponse {
     id: number;
     customerName: string;
     pm: string | undefined;
-    total: number;
+    total: number | null;
     branchName: string | undefined;
     status: StatusQuotationE;
     updatedAt: Date | undefined;
@@ -169,26 +170,26 @@ export interface QuotationFindOneResponse {
     },
     products: ProductsById[],
     quotation: {
-        subtotal: number;
-        additionalDiscount: number;
-        percentageIva: number;
-        iva: number;
-        total: number;
-        advance: number;
-        exchangeRate: ExchangeRateE;
-        balance: number;
+        subtotal: number | null;
+        additionalDiscount: number | null;
+        percentageIva: number | null;
+        iva: number | null;
+        total: number | null;
+        advance: number | null;
+        exchangeRate: ExchangeRateE | null;
+        balance: number | null;
         isArchitect: boolean;
         architectName: string;
-        commissionPercentageArchitect: number;
+        commissionPercentageArchitect: number | null;
         isReferencedCustomer: boolean;
-        referenceCustomerId?: number;
-        commissionPercentagereferencedCustomer: number;
-        percentageAdditionalDiscount: number;
-        advanceCustomer: number;
-        conversionAdvance: number;
+        referenceCustomerId?: number | null;
+        commissionPercentagereferencedCustomer: number | null;
+        percentageAdditionalDiscount: number | null;
+        advanceCustomer: number | null;
+        conversionAdvance: number | null;
         status: string;
-        mainProjectManagerId: number;
-        percentageMainProjectManager: number;
+        mainProjectManagerId: number | null;
+        percentageMainProjectManager: number | null;
 
     },
     commisions: {

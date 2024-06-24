@@ -185,7 +185,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    subtotal: number;
+    subtotalEUR: number;
 
     //Porcentaje descuento adicional
     @property({
@@ -195,7 +195,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    percentageAdditionalDiscount: number;
+    percentageAdditionalDiscountEUR: number;
 
     //descuento adicional total
     @property({
@@ -205,7 +205,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    additionalDiscount: number;
+    additionalDiscountEUR: number;
 
 
     //Iva porcentaje
@@ -216,7 +216,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    percentageIva: number;
+    percentageIvaEUR: number;
 
     //Iva total
     @property({
@@ -226,7 +226,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    iva: number;
+    ivaEUR: number;
 
     //Total
     @property({
@@ -236,7 +236,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    total: number;
+    totalEUR: number;
 
     //Porcentaje anticipo
     @property({
@@ -246,7 +246,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    percentageAdvance: number;
+    percentageAdvanceEUR: number;
 
     //Anticipo total
     @property({
@@ -256,14 +256,14 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    advance: number;
+    advanceEUR: number;
 
     //Tipo de cambio
     @property({
         type: 'string',
         required: false,
     })
-    exchangeRate: ExchangeRateE;
+    exchangeRateEUR: ExchangeRateE;
 
     //Tipo de cambio monto
     @property({
@@ -273,7 +273,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    exchangeRateAmount: number;
+    exchangeRateAmountEUR: number;
 
     //Anticipo cliente
     @property({
@@ -283,7 +283,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    advanceCustomer: number;
+    advanceCustomerEUR: number;
 
     //Anticipo Conversión
     @property({
@@ -293,7 +293,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    conversionAdvance: number;
+    conversionAdvanceEUR: number;
 
     //Saldo
     @property({
@@ -303,8 +303,267 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    balance: number;
+    balanceEUR: number;
 
+    //********************************MXN************************ */
+
+    //Subtotal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    subtotalMXN: number;
+
+    //Porcentaje descuento adicional
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageAdditionalDiscountMXN: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    additionalDiscountMXN: number;
+
+
+    //Iva porcentaje
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageIvaMXN: number;
+
+    //Iva total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    ivaMXN: number;
+
+    //Total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    totalMXN: number;
+
+    //Porcentaje anticipo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageAdvanceMXN: number;
+
+    //Anticipo total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceMXN: number;
+
+    //Tipo de cambio
+    @property({
+        type: 'string',
+        required: false,
+    })
+    exchangeRateMXN: ExchangeRateE;
+
+    //Tipo de cambio monto
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    exchangeRateAmountMXN: number;
+
+    //Anticipo cliente
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceCustomerMXN: number;
+
+    //Anticipo Conversión
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    conversionAdvanceMXN: number;
+
+    //Saldo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    balanceMXN: number;
+
+    //********************************USD************************ */
+
+    //Subtotal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    subtotalUSD: number;
+
+    //Porcentaje descuento adicional
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageAdditionalDiscountUSD: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    additionalDiscountUSD: number;
+
+
+    //Iva porcentaje
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageIvaUSD: number;
+
+    //Iva total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    ivaUSD: number;
+
+    //Total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    totalUSD: number;
+
+    //Porcentaje anticipo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageAdvanceUSD: number;
+
+    //Anticipo total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceUSD: number;
+
+    //Tipo de cambio
+    @property({
+        type: 'string',
+        required: false,
+    })
+    exchangeRateUSD: ExchangeRateE;
+
+    //Tipo de cambio monto
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    exchangeRateAmountUSD: number;
+
+    //Anticipo cliente
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceCustomerUSD: number;
+
+    //Anticipo Conversión
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    conversionAdvanceUSD: number;
+
+    //Saldo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    balanceUSD: number;
 
     constructor(data?: Partial<Quotation>) {
         super(data);

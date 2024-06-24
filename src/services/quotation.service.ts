@@ -1,9 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {AccessLevelRolE, StatusQuotationE} from '../enums';
+import BigNumber from 'bignumber.js';
+import {AccessLevelRolE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
-import {schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
+import {schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
 import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
@@ -102,9 +103,10 @@ export class QuotationService {
     }
 
     async updateQuotation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, quotationId: number) {
+        const data = this.convertExchangeRateQuotation(quotation);
         const bodyQuotation = {
-            ...quotation,
-            exchangeRateAmount: 15,
+            ...data,
+            // exchangeRateAmount: 15,
             status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
             customerId,
             isDraft,
@@ -114,9 +116,11 @@ export class QuotationService {
     }
 
     async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number) {
+        const data = this.convertExchangeRateQuotation(quotation);
+        console.log('createQuatation: ', data)
         const bodyQuotation = {
-            ...quotation,
-            exchangeRateAmount: 15,
+            ...data,
+            // exchangeRateAmount: 15,
             status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
             customerId,
             isDraft,
@@ -124,6 +128,70 @@ export class QuotationService {
             userId
         }
         return this.quotationRepository.create(bodyQuotation);
+    }
+
+    convertExchangeRateQuotation(quotation: QuotationI) {
+        const {exchangeRateQuotation, subtotal, percentageAdditionalDiscount, additionalDiscount, percentageIva, iva, total, percentageAdvance, advance, exchangeRate, advanceCustomer, conversionAdvance, balance, ...data} = quotation;
+        if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
+            const body = {
+                subtotalEUR: subtotal,
+                percentageAdditionalDiscountEUR: percentageAdditionalDiscount,
+                additionalDiscountEUR: additionalDiscount,
+                percentageIvaEUR: percentageIva,
+                ivaEUR: iva,
+                totalEUR: total,
+                percentageAdvanceEUR: percentageAdvance,
+                advanceEUR: advance,
+                exchangeRateEUR: exchangeRate,
+                exchangeRateAmountEUR: 15,
+                advanceCustomerEUR: advanceCustomer,
+                conversionAdvanceEUR: conversionAdvance,
+                balanceEUR: balance,
+                exchangeRateQuotation,
+                ...data
+            }
+            return body;
+        }
+        if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
+            const body = {
+                subtotalMXN: subtotal,
+                percentageAdditionalDiscountMXN: percentageAdditionalDiscount,
+                additionalDiscountMXN: additionalDiscount,
+                percentageIvaMXN: percentageIva,
+                ivaMXN: iva,
+                totalMXN: total,
+                percentageAdvanceMXN: percentageAdvance,
+                advanceMXN: advance,
+                exchangeRateMXN: exchangeRate,
+                exchangeRateAmountMXN: 15,
+                advanceCustomerMXN: advanceCustomer,
+                conversionAdvanceMXN: conversionAdvance,
+                balanceMXN: balance,
+                exchangeRateQuotation,
+                ...data
+            }
+            return body;
+        }
+        if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
+            const body = {
+                subtotalUSD: subtotal,
+                percentageAdditionalDiscountUSD: percentageAdditionalDiscount,
+                additionalDiscountUSD: additionalDiscount,
+                percentageIvaUSD: percentageIva,
+                ivaUSD: iva,
+                totalUSD: total,
+                percentageAdvanceUSD: percentageAdvance,
+                advanceUSD: advance,
+                exchangeRateUSD: exchangeRate,
+                exchangeRateAmountUSD: 15,
+                advanceCustomerUSD: advanceCustomer,
+                conversionAdvanceUSD: conversionAdvance,
+                balanceUSD: balance,
+                exchangeRateQuotation,
+                ...data
+            }
+            return body;
+        }
     }
     async findUserById(id: number) {
         const user = await this.userRepository.findOne({where: {id}})
@@ -247,6 +315,13 @@ export class QuotationService {
         return quotation;
     }
 
+    async findQuotationAndProductsById(id: number) {
+        const quotation = await this.quotationRepository.findOne({where: {id}, include: [{relation: 'products'}]})
+        if (!quotation)
+            throw this.responseService.badRequest('La cotizacion no existe.');
+        return quotation;
+    }
+
     async validateBodyQuotation(data: CreateQuotation) {
         try {
             await schemaCreateQuotition.validateAsync(data);
@@ -254,7 +329,7 @@ export class QuotationService {
         catch (err) {
             const {details} = err;
             const {context: {key}, message} = details[0];
-            if (message.includes('is not allowed to be empty'))
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
                 throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
 
             throw this.responseService.unprocessableEntity(message)
@@ -268,7 +343,7 @@ export class QuotationService {
         catch (err) {
             const {details} = err;
             const {context: {key}, message} = details[0];
-            if (message.includes('is not allowed to be empty'))
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
                 throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
 
             throw this.responseService.unprocessableEntity(message)
@@ -327,8 +402,9 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, total, status, updatedAt, branch, projectManager} = value;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, projectManager} = value;
             const {name} = customer;
+            const {total} = this.getPricesQuotation(value);
             return {
                 id,
                 customerName: name,
@@ -341,6 +417,84 @@ export class QuotationService {
                 updatedAt
             }
         });
+    }
+
+    getPricesQuotation(quotation: Quotation) {
+        const {exchangeRateQuotation, } = quotation;
+        if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
+            const {subtotalEUR, percentageAdditionalDiscountEUR, additionalDiscountEUR, percentageIvaEUR, ivaEUR, totalEUR, percentageAdvanceEUR,
+                advanceEUR, exchangeRateEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            const body = {
+                subtotal: subtotalEUR,
+                percentageAdditionalDiscount: percentageAdditionalDiscountEUR,
+                additionalDiscount: additionalDiscountEUR,
+                percentageIva: percentageIvaEUR,
+                iva: ivaEUR,
+                total: totalEUR,
+                percentageAdvance: percentageAdvanceEUR,
+                advance: advanceEUR,
+                exchangeRate: exchangeRateEUR,
+                exchangeRateAmountEUR: 15,
+                advanceCustomer: advanceCustomerEUR,
+                conversionAdvance: conversionAdvanceEUR,
+                balance: balanceEUR,
+            }
+            return body;
+        } else if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
+            const {subtotalUSD, percentageAdditionalDiscountUSD, additionalDiscountUSD, percentageIvaUSD, ivaUSD, totalUSD, percentageAdvanceUSD,
+                advanceUSD, exchangeRateUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
+            const body = {
+                subtotal: subtotalUSD,
+                percentageAdditionalDiscount: percentageAdditionalDiscountUSD,
+                additionalDiscount: additionalDiscountUSD,
+                percentageIva: percentageIvaUSD,
+                iva: ivaUSD,
+                total: totalUSD,
+                percentageAdvance: percentageAdvanceUSD,
+                advance: advanceUSD,
+                exchangeRate: exchangeRateUSD,
+                exchangeRateAmountUSD: 15,
+                advanceCustomer: advanceCustomerUSD,
+                conversionAdvance: conversionAdvanceUSD,
+                balance: balanceUSD,
+            }
+            return body;
+        } else if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
+            const {subtotalMXN, percentageAdditionalDiscountMXN, additionalDiscountMXN, percentageIvaMXN, ivaMXN, totalMXN, percentageAdvanceMXN,
+                advanceMXN, exchangeRateMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
+            const body = {
+                subtotal: subtotalMXN,
+                percentageAdditionalDiscount: percentageAdditionalDiscountMXN,
+                additionalDiscount: additionalDiscountMXN,
+                percentageIva: percentageIvaMXN,
+                iva: ivaMXN,
+                total: totalMXN,
+                percentageAdvance: percentageAdvanceMXN,
+                advance: advanceMXN,
+                exchangeRate: exchangeRateMXN,
+                exchangeRateAmountMXN: 15,
+                advanceCustomer: advanceCustomerMXN,
+                conversionAdvance: conversionAdvanceMXN,
+                balance: balanceMXN,
+            }
+            return body;
+        }
+        const body = {
+            subtotal: null,
+            percentageAdditionalDiscount: null,
+            additionalDiscount: null,
+            percentageIva: null,
+            iva: null,
+            total: null,
+            percentageAdvance: null,
+            advance: null,
+            exchangeRate: null,
+            exchangeRateAmountMXN: null,
+            advanceCustomer: null,
+            conversionAdvance: null,
+            balance: null,
+        }
+        return body;
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Quotation>): Promise<QuotationFindOneResponse> {
@@ -433,6 +587,7 @@ export class QuotationService {
                 commissionPercentageDesigner: iterator.quotationDe.commissionPercentageDesigner,
             })
         }
+        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
 
         const response: QuotationFindOneResponse = {
             customer: {
@@ -452,28 +607,50 @@ export class QuotationService {
             },
             products: products,
             quotation: {
-                subtotal: quotation.subtotal,
-                additionalDiscount: quotation.additionalDiscount,
-                percentageIva: quotation.percentageIva,
-                iva: quotation.iva,
-                total: quotation.total,
-                advance: quotation.advance,
-                exchangeRate: quotation.exchangeRate,
-                balance: quotation.balance,
+                subtotal: subtotal,
+                additionalDiscount: additionalDiscount,
+                percentageIva: percentageIva,
+                iva: iva,
+                total: total,
+                advance: advance,
+                exchangeRate: exchangeRate,
+                balance: balance,
                 isArchitect: quotation.isArchitect,
                 architectName: quotation.architectName,
                 commissionPercentageArchitect: quotation.commissionPercentageArchitect,
                 isReferencedCustomer: quotation.isReferencedCustomer,
                 referenceCustomerId: quotation.referenceCustomerId,
                 commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
-                percentageAdditionalDiscount: quotation?.percentageAdditionalDiscount,
-                advanceCustomer: quotation?.advanceCustomer,
-                conversionAdvance: quotation?.conversionAdvance,
+                percentageAdditionalDiscount: percentageAdditionalDiscount,
+                advanceCustomer: advanceCustomer,
+                conversionAdvance: conversionAdvance,
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
                 percentageMainProjectManager: quotation?.percentageMainProjectManager,
-
             },
+            // quotation: {
+            //     subtotal: quotation.subtotal,
+            //     additionalDiscount: quotation.additionalDiscount,
+            //     percentageIva: quotation.percentageIva,
+            //     iva: quotation.iva,
+            //     total: quotation.total,
+            //     advance: quotation.advance,
+            //     exchangeRate: quotation.exchangeRate,
+            //     balance: quotation.balance,
+            //     isArchitect: quotation.isArchitect,
+            //     architectName: quotation.architectName,
+            //     commissionPercentageArchitect: quotation.commissionPercentageArchitect,
+            //     isReferencedCustomer: quotation.isReferencedCustomer,
+            //     referenceCustomerId: quotation.referenceCustomerId,
+            //     commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
+            //     percentageAdditionalDiscount: quotation?.percentageAdditionalDiscount,
+            //     advanceCustomer: quotation?.advanceCustomer,
+            //     conversionAdvance: quotation?.conversionAdvance,
+            //     status: quotation.status,
+            //     mainProjectManagerId: quotation?.mainProjectManagerId,
+            //     percentageMainProjectManager: quotation?.percentageMainProjectManager,
+
+            // },
             commisions: {
                 architectName: quotation.architectName,
                 commissionPercentageArchitect: quotation.commissionPercentageArchitect,
@@ -517,10 +694,164 @@ export class QuotationService {
         await this.quotationRepository.deleteById(id);
     }
 
-    async changeStatusToReviewAdmin(id: number) {
-        await this.findQuotationById(id);
-        await this.quotationRepository.updateById(id, {status: StatusQuotationE.ENREVISIONADMINSITRACION});
+    async changeStatusToReviewAdmin(id: number, body: {dividir: boolean}) {
+        const quotation = await this.findQuotationAndProductsById(id);
+        await this.validateChangeStatusSM(body);
+        if (quotation.status !== StatusQuotationE.ENREVISIONSM)
+            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en reviso por SM.`)
+
+        let prices = {}
+        if (body?.dividir === true)
+            prices = this.calculatePricesExchangeRate(quotation);
+
+        await this.quotationRepository.updateById(id, {status: StatusQuotationE.ENREVISIONADMINSITRACION, ...prices});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+
+    async validateChangeStatusSM(body: {dividir: boolean}) {
+        try {
+            await schemaChangeStatusSM.validateAsync(body);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    bigNumberMultipliedBy(price: number, value: number): number {
+        return Number(new BigNumber(price).multipliedBy(new BigNumber(value)).toFixed(2));
+    }
+
+    calculatePricesExchangeRate(quotation: Quotation) {
+        const {exchangeRateQuotation} = quotation;
+        if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
+            const {subtotalEUR, percentageAdditionalDiscountEUR, additionalDiscountEUR, percentageIvaEUR, ivaEUR, totalEUR, percentageAdvanceEUR,
+                advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            const USD = 1.074;
+            const MXN = 19.28;
+
+            const bodyMXN = {
+                subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
+                percentageAdditionalDiscountMXN: this.bigNumberMultipliedBy(percentageAdditionalDiscountEUR, MXN),
+                additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
+                percentageIvaMXN: this.bigNumberMultipliedBy(percentageIvaEUR, MXN),
+                ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
+                totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
+                percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceEUR, MXN),
+                advanceMXN: this.bigNumberMultipliedBy(advanceEUR, MXN),
+                exchangeRateMXN: ExchangeRateE.MXN,
+                exchangeRateAmountMXN: 15,
+                advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerEUR, MXN),
+                conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceEUR, MXN),
+                balanceMXN: this.bigNumberMultipliedBy(balanceEUR, MXN),
+            }
+
+            const bodyUSD = {
+                subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
+                percentageAdditionalDiscountUSD: this.bigNumberMultipliedBy(percentageAdditionalDiscountEUR, USD),
+                additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
+                percentageIvaUSD: this.bigNumberMultipliedBy(percentageIvaEUR, USD),
+                ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
+                totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
+                percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceEUR, USD),
+                advanceUSD: this.bigNumberMultipliedBy(advanceEUR, USD),
+                exchangeRateUSD: ExchangeRateE.USD,
+                exchangeRateAmountUSD: 15,
+                advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerEUR, USD),
+                conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceEUR, USD),
+                balanceUSD: this.bigNumberMultipliedBy(balanceEUR, USD),
+            }
+            return {...bodyMXN, ...bodyUSD}
+
+        }
+
+        if (exchangeRateQuotation == ExchangeRateQuotationE.MXN) {
+            const {subtotalMXN, percentageAdditionalDiscountMXN, additionalDiscountMXN, percentageIvaMXN, ivaMXN, totalMXN, percentageAdvanceMXN,
+                advanceMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
+            const EUR = 0.05184;
+            const USD = 0.05566;
+
+            const bodyEUR = {
+                subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
+                percentageAdditionalDiscountEUR: this.bigNumberMultipliedBy(percentageAdditionalDiscountMXN, EUR),
+                additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
+                percentageIvaEUR: this.bigNumberMultipliedBy(percentageIvaMXN, EUR),
+                ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
+                totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
+                percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceMXN, EUR),
+                advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
+                exchangeRateEUR: ExchangeRateE.EUR,
+                exchangeRateAmountEUR: 15,
+                advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerMXN, EUR),
+                conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceMXN, EUR),
+                balanceEUR: this.bigNumberMultipliedBy(balanceMXN, EUR),
+            }
+
+            const bodyUSD = {
+                subtotalUSD: this.bigNumberMultipliedBy(subtotalMXN, USD),
+                percentageAdditionalDiscountUSD: this.bigNumberMultipliedBy(percentageAdditionalDiscountMXN, USD),
+                additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountMXN, USD),
+                percentageIvaUSD: this.bigNumberMultipliedBy(percentageIvaMXN, USD),
+                ivaUSD: this.bigNumberMultipliedBy(ivaMXN, USD),
+                totalUSD: this.bigNumberMultipliedBy(totalMXN, USD),
+                percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceMXN, USD),
+                advanceUSD: this.bigNumberMultipliedBy(advanceMXN, USD),
+                exchangeRateUSD: ExchangeRateE.USD,
+                exchangeRateAmountUSD: 15,
+                advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerMXN, USD),
+                conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceMXN, USD),
+                balanceUSD: this.bigNumberMultipliedBy(balanceMXN, USD),
+            }
+            return {...bodyEUR, ...bodyUSD}
+
+        }
+
+        if (exchangeRateQuotation == ExchangeRateQuotationE.USD) {
+            const {subtotalUSD, percentageAdditionalDiscountUSD, additionalDiscountUSD, percentageIvaUSD, ivaUSD, totalUSD, percentageAdvanceUSD,
+                advanceUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
+            const EUR = 0.9315;
+            const MXN = 17.95;
+
+            const bodyMXN = {
+                subtotalMXN: this.bigNumberMultipliedBy(subtotalUSD, MXN),
+                percentageAdditionalDiscountMXN: this.bigNumberMultipliedBy(percentageAdditionalDiscountUSD, MXN),
+                additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountUSD, MXN),
+                percentageIvaMXN: this.bigNumberMultipliedBy(percentageIvaUSD, MXN),
+                ivaMXN: this.bigNumberMultipliedBy(ivaUSD, MXN),
+                totalMXN: this.bigNumberMultipliedBy(totalUSD, MXN),
+                percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceUSD, MXN),
+                advanceMXN: this.bigNumberMultipliedBy(advanceUSD, MXN),
+                exchangeRateMXN: ExchangeRateE.MXN,
+                exchangeRateAmountMXN: 15,
+                advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerUSD, MXN),
+                conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceUSD, MXN),
+                balanceMXN: this.bigNumberMultipliedBy(balanceUSD, MXN),
+            }
+
+            const bodyEUR = {
+                subtotalEUR: this.bigNumberMultipliedBy(subtotalUSD, EUR),
+                percentageAdditionalDiscountEUR: this.bigNumberMultipliedBy(percentageAdditionalDiscountUSD, EUR),
+                additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountUSD, EUR),
+                percentageIvaEUR: this.bigNumberMultipliedBy(percentageIvaUSD, EUR),
+                ivaEUR: this.bigNumberMultipliedBy(ivaUSD, EUR),
+                totalEUR: this.bigNumberMultipliedBy(totalUSD, EUR),
+                percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceUSD, EUR),
+                advanceEUR: this.bigNumberMultipliedBy(advanceUSD, EUR),
+                exchangeRateEUR: ExchangeRateE.EUR,
+                exchangeRateAmountEUR: 15,
+                advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerUSD, EUR),
+                conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceUSD, EUR),
+                balanceEUR: this.bigNumberMultipliedBy(balanceUSD, EUR),
+            }
+
+            return {...bodyMXN, ...bodyEUR}
+        }
+        return {}
     }
 
 }

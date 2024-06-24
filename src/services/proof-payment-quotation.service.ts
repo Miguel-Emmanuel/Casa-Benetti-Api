@@ -48,7 +48,7 @@ export class ProofPaymentQuotationService {
         catch (err) {
             const {details} = err;
             const {context: {key}, message} = details[0];
-            if (message.includes('is not allowed to be empty'))
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
                 throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
 
             throw this.responseService.unprocessableEntity(message)
