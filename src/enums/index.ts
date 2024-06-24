@@ -94,6 +94,11 @@ export enum ExchangeRateE {
     NA = 'No aplica',
 }
 
+export enum ExchangeRateQuotationE {
+    EUR = 'EUR',
+    USD = 'USD',
+    MXN = 'MXN',
+}
 export enum ProofPaymentTypeE {
     EUR = 'EUR',
     USD = 'USD',

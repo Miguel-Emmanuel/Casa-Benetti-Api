@@ -1,5 +1,5 @@
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
-import {ExchangeRateE, StatusQuotationE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {Customer, CustomerWithRelations} from './customer.model';
@@ -166,7 +166,7 @@ export class Quotation extends BaseEntity {
     proofPaymentQuotations: ProofPaymentQuotation[];
 
 
-    //************************************************ */
+    //************************************************ COTIZACION EN EUROS *********************************** */
 
     //Subtotal
     @property({
@@ -295,6 +295,14 @@ export class Quotation extends BaseEntity {
         },
     })
     balance: number;
+
+    //Tipo de cambio de la cotizacion
+    @property({
+        type: 'string',
+        required: true,
+        default: ExchangeRateQuotationE.EUR
+    })
+    exchangeRateQuotation: ExchangeRateQuotationE;
 
 
     constructor(data?: Partial<Quotation>) {
