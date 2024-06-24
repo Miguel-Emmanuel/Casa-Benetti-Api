@@ -166,6 +166,15 @@ export class Quotation extends BaseEntity {
     proofPaymentQuotations: ProofPaymentQuotation[];
 
 
+    //Tipo de cambio de la cotizacion
+    @property({
+        type: 'string',
+        required: true,
+        default: ExchangeRateQuotationE.EUR
+    })
+    exchangeRateQuotation: ExchangeRateQuotationE;
+
+
     //************************************************ COTIZACION EN EUROS *********************************** */
 
     //Subtotal
@@ -295,14 +304,6 @@ export class Quotation extends BaseEntity {
         },
     })
     balance: number;
-
-    //Tipo de cambio de la cotizacion
-    @property({
-        type: 'string',
-        required: true,
-        default: ExchangeRateQuotationE.EUR
-    })
-    exchangeRateQuotation: ExchangeRateQuotationE;
 
 
     constructor(data?: Partial<Quotation>) {
