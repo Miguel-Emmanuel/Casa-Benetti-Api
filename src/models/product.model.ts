@@ -86,12 +86,11 @@ export class Product extends BaseEntity {
     //     }
     // })
     // line: ClassificationE;
-
     @belongsTo(() => Classification)
-    classificationId: number;
+    classificationId?: number;
 
     @belongsTo(() => Line)
-    lineId: number;
+    lineId?: number;
 
     //Ubicacion
     @property({
@@ -222,7 +221,7 @@ export class Product extends BaseEntity {
     isPurchasable: boolean;
 
     @belongsTo(() => Provider)
-    providerId: number;
+    providerId?: number;
 
     //Modelo/nombre origen
     @property({
