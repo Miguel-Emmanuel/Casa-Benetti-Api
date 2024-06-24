@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import {AccessLevelRolE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
-import {schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
+import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
 import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
@@ -698,7 +698,7 @@ export class QuotationService {
         const quotation = await this.findQuotationAndProductsById(id);
         await this.validateChangeStatusSM(body);
         if (quotation.status !== StatusQuotationE.ENREVISIONSM)
-            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en reviso por SM.`)
+            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por SM.`)
 
         let prices = {}, status = null;
         const {fractionate, isRejected, comment} = body;
@@ -715,10 +715,42 @@ export class QuotationService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
+    async changeStatusToClose(id: number, body: {isRejected: boolean, comment: string}) {
+        const quotation = await this.findQuotationAndProductsById(id);
+        await this.validateChangeStatusClose(body);
+        if (quotation.status !== StatusQuotationE.ENREVISIONADMINSITRACION)
+            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por administración.`)
+
+        let status = null;
+        const {isRejected, comment} = body;
+
+        if (isRejected === true)
+            status = StatusQuotationE.RECHAZADA;
+        else
+            status = StatusQuotationE.CERRADA;
+
+        await this.quotationRepository.updateById(id, {status, comment});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
 
     async validateChangeStatusSM(body: {fractionate: boolean, isRejected: boolean, comment: string}) {
         try {
             await schemaChangeStatusSM.validateAsync(body);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateChangeStatusClose(body: {isRejected: boolean, comment: string}) {
+        try {
+            await schemaChangeStatusClose.validateAsync(body);
         }
         catch (err) {
             const {details} = err;

@@ -126,4 +126,39 @@ export class QuotationController {
     ): Promise<object> {
         return this.quotationService.changeStatusToReviewAdmin(id, body);
     }
+
+
+    @patch('/quotations/status-cerrada/{id}')
+    @response(200, {
+        description: 'customer model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async changeStatusToClose(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            isRejected: {type: 'boolean'},
+                            comment: {type: 'string'},
+                        }
+                    },
+                },
+            },
+        })
+        body: {isRejected: boolean, comment: string},
+    ): Promise<object> {
+        return this.quotationService.changeStatusToClose(id, body);
+    }
 }

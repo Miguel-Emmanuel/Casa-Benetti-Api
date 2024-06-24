@@ -203,3 +203,8 @@ export const schemaChangeStatusSM = Joi.object({
     comment: Joi.when('isRejected', {is: true, then: Joi.string().required()}),
 
 })
+
+export const schemaChangeStatusClose = Joi.object({
+    isRejected: Joi.boolean().required(),
+    comment: Joi.when('isRejected', {is: true, then: Joi.string().required()}),
+})
