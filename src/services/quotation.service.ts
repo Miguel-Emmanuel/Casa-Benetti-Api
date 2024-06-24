@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {AccessLevelRolE, StatusQuotationE} from '../enums';
+import {AccessLevelRolE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -102,9 +102,10 @@ export class QuotationService {
     }
 
     async updateQuotation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, quotationId: number) {
+        const data = this.convertExchangeRateQuotation(quotation);
         const bodyQuotation = {
-            ...quotation,
-            exchangeRateAmount: 15,
+            ...data,
+            // exchangeRateAmount: 15,
             status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
             customerId,
             isDraft,
@@ -114,9 +115,11 @@ export class QuotationService {
     }
 
     async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number) {
+        const data = this.convertExchangeRateQuotation(quotation);
+        console.log('createQuatation: ', data)
         const bodyQuotation = {
-            ...quotation,
-            exchangeRateAmount: 15,
+            ...data,
+            // exchangeRateAmount: 15,
             status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
             customerId,
             isDraft,
@@ -124,6 +127,70 @@ export class QuotationService {
             userId
         }
         return this.quotationRepository.create(bodyQuotation);
+    }
+
+    convertExchangeRateQuotation(quotation: QuotationI) {
+        const {exchangeRateQuotation, subtotal, percentageAdditionalDiscount, additionalDiscount, percentageIva, iva, total, percentageAdvance, advance, exchangeRate, advanceCustomer, conversionAdvance, balance, ...data} = quotation;
+        if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
+            const body = {
+                subtotalEUR: subtotal,
+                percentageAdditionalDiscountEUR: percentageAdditionalDiscount,
+                additionalDiscountEUR: additionalDiscount,
+                percentageIvaEUR: percentageIva,
+                ivaEUR: iva,
+                totalEUR: total,
+                percentageAdvanceEUR: percentageAdvance,
+                advanceEUR: advance,
+                exchangeRateEUR: exchangeRate,
+                exchangeRateAmountEUR: 15,
+                advanceCustomerEUR: advanceCustomer,
+                conversionAdvanceEUR: conversionAdvance,
+                balanceEUR: balance,
+                exchangeRateQuotation,
+                ...data
+            }
+            return body;
+        }
+        if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
+            const body = {
+                subtotalMXN: subtotal,
+                percentageAdditionalDiscountMXN: percentageAdditionalDiscount,
+                additionalDiscountMXN: additionalDiscount,
+                percentageIvaMXN: percentageIva,
+                ivaMXN: iva,
+                totalMXN: total,
+                percentageAdvanceMXN: percentageAdvance,
+                advanceMXN: advance,
+                exchangeRateMXN: exchangeRate,
+                exchangeRateAmountMXN: 15,
+                advanceCustomerMXN: advanceCustomer,
+                conversionAdvanceMXN: conversionAdvance,
+                balanceMXN: balance,
+                exchangeRateQuotation,
+                ...data
+            }
+            return body;
+        }
+        if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
+            const body = {
+                subtotalUSD: subtotal,
+                percentageAdditionalDiscountUSD: percentageAdditionalDiscount,
+                additionalDiscountUSD: additionalDiscount,
+                percentageIvaUSD: percentageIva,
+                ivaUSD: iva,
+                totalUSD: total,
+                percentageAdvanceUSD: percentageAdvance,
+                advanceUSD: advance,
+                exchangeRateUSD: exchangeRate,
+                exchangeRateAmountUSD: 15,
+                advanceCustomerUSD: advanceCustomer,
+                conversionAdvanceUSD: conversionAdvance,
+                balanceUSD: balance,
+                exchangeRateQuotation,
+                ...data
+            }
+            return body;
+        }
     }
     async findUserById(id: number) {
         const user = await this.userRepository.findOne({where: {id}})
@@ -327,8 +394,9 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, total, status, updatedAt, branch, projectManager} = value;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, projectManager} = value;
             const {name} = customer;
+            const {total} = this.getPricesQuotation(value);
             return {
                 id,
                 customerName: name,
@@ -341,6 +409,84 @@ export class QuotationService {
                 updatedAt
             }
         });
+    }
+
+    getPricesQuotation(quotation: Quotation) {
+        const {exchangeRateQuotation, } = quotation;
+        if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
+            const {subtotalEUR, percentageAdditionalDiscountEUR, additionalDiscountEUR, percentageIvaEUR, ivaEUR, totalEUR, percentageAdvanceEUR,
+                advanceEUR, exchangeRateEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            const body = {
+                subtotal: subtotalEUR,
+                percentageAdditionalDiscount: percentageAdditionalDiscountEUR,
+                additionalDiscount: additionalDiscountEUR,
+                percentageIva: percentageIvaEUR,
+                iva: ivaEUR,
+                total: totalEUR,
+                percentageAdvance: percentageAdvanceEUR,
+                advance: advanceEUR,
+                exchangeRate: exchangeRateEUR,
+                exchangeRateAmountEUR: 15,
+                advanceCustomer: advanceCustomerEUR,
+                conversionAdvance: conversionAdvanceEUR,
+                balance: balanceEUR,
+            }
+            return body;
+        } else if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
+            const {subtotalUSD, percentageAdditionalDiscountUSD, additionalDiscountUSD, percentageIvaUSD, ivaUSD, totalUSD, percentageAdvanceUSD,
+                advanceUSD, exchangeRateUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
+            const body = {
+                subtotal: subtotalUSD,
+                percentageAdditionalDiscount: percentageAdditionalDiscountUSD,
+                additionalDiscount: additionalDiscountUSD,
+                percentageIva: percentageIvaUSD,
+                iva: ivaUSD,
+                total: totalUSD,
+                percentageAdvance: percentageAdvanceUSD,
+                advance: advanceUSD,
+                exchangeRate: exchangeRateUSD,
+                exchangeRateAmountUSD: 15,
+                advanceCustomer: advanceCustomerUSD,
+                conversionAdvance: conversionAdvanceUSD,
+                balance: balanceUSD,
+            }
+            return body;
+        } else if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
+            const {subtotalMXN, percentageAdditionalDiscountMXN, additionalDiscountMXN, percentageIvaMXN, ivaMXN, totalMXN, percentageAdvanceMXN,
+                advanceMXN, exchangeRateMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
+            const body = {
+                subtotal: subtotalMXN,
+                percentageAdditionalDiscount: percentageAdditionalDiscountMXN,
+                additionalDiscount: additionalDiscountMXN,
+                percentageIva: percentageIvaMXN,
+                iva: ivaMXN,
+                total: totalMXN,
+                percentageAdvance: percentageAdvanceMXN,
+                advance: advanceMXN,
+                exchangeRate: exchangeRateMXN,
+                exchangeRateAmountMXN: 15,
+                advanceCustomer: advanceCustomerMXN,
+                conversionAdvance: conversionAdvanceMXN,
+                balance: balanceMXN,
+            }
+            return body;
+        }
+        const body = {
+            subtotal: null,
+            percentageAdditionalDiscount: null,
+            additionalDiscount: null,
+            percentageIva: null,
+            iva: null,
+            total: null,
+            percentageAdvance: null,
+            advance: null,
+            exchangeRate: null,
+            exchangeRateAmountMXN: null,
+            advanceCustomer: null,
+            conversionAdvance: null,
+            balance: null,
+        }
+        return body;
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Quotation>): Promise<QuotationFindOneResponse> {
@@ -433,6 +579,7 @@ export class QuotationService {
                 commissionPercentageDesigner: iterator.quotationDe.commissionPercentageDesigner,
             })
         }
+        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
 
         const response: QuotationFindOneResponse = {
             customer: {
@@ -452,28 +599,50 @@ export class QuotationService {
             },
             products: products,
             quotation: {
-                subtotal: quotation.subtotal,
-                additionalDiscount: quotation.additionalDiscount,
-                percentageIva: quotation.percentageIva,
-                iva: quotation.iva,
-                total: quotation.total,
-                advance: quotation.advance,
-                exchangeRate: quotation.exchangeRate,
-                balance: quotation.balance,
+                subtotal: subtotal,
+                additionalDiscount: additionalDiscount,
+                percentageIva: percentageIva,
+                iva: iva,
+                total: total,
+                advance: advance,
+                exchangeRate: exchangeRate,
+                balance: balance,
                 isArchitect: quotation.isArchitect,
                 architectName: quotation.architectName,
                 commissionPercentageArchitect: quotation.commissionPercentageArchitect,
                 isReferencedCustomer: quotation.isReferencedCustomer,
                 referenceCustomerId: quotation.referenceCustomerId,
                 commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
-                percentageAdditionalDiscount: quotation?.percentageAdditionalDiscount,
-                advanceCustomer: quotation?.advanceCustomer,
-                conversionAdvance: quotation?.conversionAdvance,
+                percentageAdditionalDiscount: percentageAdditionalDiscount,
+                advanceCustomer: advanceCustomer,
+                conversionAdvance: conversionAdvance,
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
                 percentageMainProjectManager: quotation?.percentageMainProjectManager,
-
             },
+            // quotation: {
+            //     subtotal: quotation.subtotal,
+            //     additionalDiscount: quotation.additionalDiscount,
+            //     percentageIva: quotation.percentageIva,
+            //     iva: quotation.iva,
+            //     total: quotation.total,
+            //     advance: quotation.advance,
+            //     exchangeRate: quotation.exchangeRate,
+            //     balance: quotation.balance,
+            //     isArchitect: quotation.isArchitect,
+            //     architectName: quotation.architectName,
+            //     commissionPercentageArchitect: quotation.commissionPercentageArchitect,
+            //     isReferencedCustomer: quotation.isReferencedCustomer,
+            //     referenceCustomerId: quotation.referenceCustomerId,
+            //     commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
+            //     percentageAdditionalDiscount: quotation?.percentageAdditionalDiscount,
+            //     advanceCustomer: quotation?.advanceCustomer,
+            //     conversionAdvance: quotation?.conversionAdvance,
+            //     status: quotation.status,
+            //     mainProjectManagerId: quotation?.mainProjectManagerId,
+            //     percentageMainProjectManager: quotation?.percentageMainProjectManager,
+
+            // },
             commisions: {
                 architectName: quotation.architectName,
                 commissionPercentageArchitect: quotation.commissionPercentageArchitect,
