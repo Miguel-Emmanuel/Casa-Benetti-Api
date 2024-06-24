@@ -355,16 +355,15 @@ export class QuotationService {
     }
 
     async find(filter?: Filter<Quotation>,) {
-        console.log(this.user);
         const accessLevel = this.user.accessLevel;
-        let where = {};
+        let where: any = {status: {neq: StatusQuotationE.CERRADA}};
         if (accessLevel === AccessLevelRolE.SUCURSAL) {
-            where = {branchId: this.user.branchId}
+            where = {...where, branchId: this.user.branchId}
         }
 
         if (accessLevel === AccessLevelRolE.PERSONAL) {
             const quotationProjectManagers = (await this.quotationProjectManagerRepository.find({where: {userId: this.user.id}})).map(value => value.quotationId);
-            where = {id: {inq: [...quotationProjectManagers]}}
+            where = {...where, id: {inq: [...quotationProjectManagers]}}
         }
 
         if (filter?.where) {
