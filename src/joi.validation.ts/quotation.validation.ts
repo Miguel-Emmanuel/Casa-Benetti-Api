@@ -195,3 +195,8 @@ export const schemaUpdateQuotition = Joi.object({
     }),
     proofPaymentQuotation: Joi.array().items(schemaProofPaymentQuotation).optional(),
 })
+
+
+export const schemaChangeStatusSM = Joi.object({
+    dividir: Joi.boolean().required()
+})
