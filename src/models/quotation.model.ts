@@ -123,6 +123,51 @@ export class Quotation extends BaseEntity {
     @hasMany(() => Product, {through: {model: () => QuotationProducts}})
     products: Product[];
 
+    @belongsTo(() => Organization)
+    organizationId: number;
+
+    @belongsTo(() => Branch)
+    branchId: number;
+
+    //Usuario que creo la cotizacion
+    @belongsTo(() => User, {name: 'projectManager'})
+    userId: number;
+
+    //Estatus de la cotizacion
+    @property({
+        type: 'string',
+        required: false,
+    })
+    status: StatusQuotationE;
+
+    //Es borrador
+    @property({
+        type: 'boolean',
+        required: false,
+    })
+    isDraft: boolean;
+
+    //Porcentaje de comision project manager principal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageMainProjectManager: number;
+
+    //Project manager principal
+    @belongsTo(() => User)
+    mainProjectManagerId: number;
+
+    //Comprobante de anticipos
+    @hasMany(() => ProofPaymentQuotation)
+    proofPaymentQuotations: ProofPaymentQuotation[];
+
+
+    //************************************************ */
+
     //Subtotal
     @property({
         type: 'number',
@@ -143,12 +188,6 @@ export class Quotation extends BaseEntity {
     })
     percentageAdditionalDiscount: number;
 
-    @belongsTo(() => Organization)
-    organizationId: number;
-
-    @belongsTo(() => Branch)
-    branchId: number;
-
     //descuento adicional total
     @property({
         type: 'number',
@@ -159,9 +198,6 @@ export class Quotation extends BaseEntity {
     })
     additionalDiscount: number;
 
-    //Usuario que creo la cotizacion
-    @belongsTo(() => User, {name: 'projectManager'})
-    userId: number;
 
     //Iva porcentaje
     @property({
@@ -260,37 +296,6 @@ export class Quotation extends BaseEntity {
     })
     balance: number;
 
-    //Estatus de la cotizacion
-    @property({
-        type: 'string',
-        required: false,
-    })
-    status: StatusQuotationE;
-
-    //Es borrador
-    @property({
-        type: 'boolean',
-        required: false,
-    })
-    isDraft: boolean;
-
-    //Porcentaje de comision project manager principal
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageMainProjectManager: number;
-
-    //Project manager principal
-    @belongsTo(() => User)
-    mainProjectManagerId: number;
-
-    //Comprobante de anticipos
-    @hasMany(() => ProofPaymentQuotation)
-    proofPaymentQuotations: ProofPaymentQuotation[];
 
     constructor(data?: Partial<Quotation>) {
         super(data);
