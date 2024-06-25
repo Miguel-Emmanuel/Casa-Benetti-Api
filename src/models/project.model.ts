@@ -3,7 +3,21 @@ import {ProjectStatusE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Quotation} from './quotation.model';
 
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'project_Project' // Nombre de la tabla en PostgreSQL
+        },
+        foreignKeys: {
+            fk_quotation_quotationId: {
+                name: 'fk_quotation_quotationId',
+                entity: 'Quotation',
+                entityKey: 'id',
+                foreignKey: 'quotationid',
+            },
+        }
+    }
+})
 export class Project extends BaseEntity {
     @property({
         type: 'number',
