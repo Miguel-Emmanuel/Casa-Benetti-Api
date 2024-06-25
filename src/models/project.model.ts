@@ -1,5 +1,6 @@
-import {belongsTo, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ProjectStatusE} from '../enums';
+import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Quotation} from './quotation.model';
 
@@ -36,6 +37,9 @@ export class Project extends BaseEntity {
         default: ProjectStatusE.NUEVO
     })
     status: ProjectStatusE;
+
+    @hasMany(() => AdvancePaymentRecord)
+    advancePaymentRecords: AdvancePaymentRecord[];
 
     constructor(data?: Partial<Project>) {
         super(data);

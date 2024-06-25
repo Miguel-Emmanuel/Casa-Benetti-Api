@@ -1,5 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {AdvancePaymentStatusE, ExchangeRateE, PaymentTypeProofE} from '../enums';
+import {Project} from './project.model';
 
 //Registro del pago correspondiente a cada anticipo especificado
 @model({
@@ -113,6 +114,9 @@ export class AdvancePaymentRecord extends Entity {
         default: AdvancePaymentStatusE.PENDIENTE
     })
     status: AdvancePaymentStatusE;
+
+    @belongsTo(() => Project)
+    projectId: number;
 
 
     constructor(data?: Partial<AdvancePaymentRecord>) {
