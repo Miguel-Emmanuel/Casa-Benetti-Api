@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Project} from './project.model';
+import {User} from './user.model';
 
 //Registro del pago correspondiente a cada comisión especificada
 @model({
@@ -29,6 +31,31 @@ export class CommissionPaymentRecord extends Entity {
     })
     userName?: string;
 
+    @belongsTo(() => User)
+    userId: number;
+
+    @belongsTo(() => Project)
+    projectId: number;
+
+    //Porcentaje de comision
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    commissionPercentage: number;
+
+    //Monto de comision
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    commissionAmount: number;
 
     constructor(data?: Partial<CommissionPaymentRecord>) {
         super(data);
