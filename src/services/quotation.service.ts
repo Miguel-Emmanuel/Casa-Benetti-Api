@@ -46,6 +46,9 @@ export class QuotationService {
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
         const {isReferencedCustomer, mainProjectManagerId} = quotation;
+        const branchId = this.user.branchId;
+        if (!branchId)
+            throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
         //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
         await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
@@ -59,7 +62,6 @@ export class QuotationService {
             customerId = await this.createOrGetCustomer({...customer}, groupId);
             const userId = this.user.id;
             if (id === null || id == undefined) {
-                const branchId = this.user.branchId;
                 const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
                 await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
                 await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
