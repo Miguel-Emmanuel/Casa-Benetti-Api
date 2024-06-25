@@ -224,7 +224,18 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    percentageIvaEUR: number;
+    percentageIva: number;
+
+
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaEUR: number;
 
     //Iva total
     @property({
@@ -346,15 +357,15 @@ export class Quotation extends BaseEntity {
     additionalDiscountMXN: number;
 
 
-    //Iva porcentaje
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageIvaMXN: number;
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaMXN: number;
 
     //Iva total
     @property({
@@ -476,15 +487,15 @@ export class Quotation extends BaseEntity {
     additionalDiscountUSD: number;
 
 
-    //Iva porcentaje
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageIvaUSD: number;
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaUSD: number;
 
     //Iva total
     @property({

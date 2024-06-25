@@ -1,5 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {AdvancePaymentStatusE, ExchangeRateE, PaymentTypeProofE} from '../enums';
+import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 import {Project} from './project.model';
 
 //Registro del pago correspondiente a cada anticipo especificado
@@ -16,7 +16,7 @@ export class AdvancePaymentRecord extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     //Fecha de creacion
     @property({
@@ -75,7 +75,7 @@ export class AdvancePaymentRecord extends Entity {
     @property({
         type: 'string',
     })
-    currencyApply: ExchangeRateE;
+    currencyApply: ExchangeRateQuotationE;
 
     //Importe pagado
     @property({

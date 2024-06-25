@@ -1,6 +1,8 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
+import {ExchangeRateQuotationE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
+import {Quotation} from '../models';
 import {AdvancePaymentRecordRepository, ProjectRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -19,29 +21,57 @@ export class ProjectService {
 
     async create(body: {quotationId: number}) {
         const project = await this.projectRepository.create(body);
-
+        const {quotationId} = body;
+        await this.createAdvancePaymentRecord(quotationId, project.id)
         return project;
     }
 
-    async createAdvancePaymentRecord(quotationId: number) {
+    async createAdvancePaymentRecord(quotationId: number, projectId: number) {
         const quotation = await this.findQuotationById(quotationId);
-        const {proofPaymentQuotations, exchangeRateQuotation, percentageIvaEUR} = quotation;
+        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
             const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, conversionAdvance} = proofPaymentQuotations[index];
+            const conversionAmountPaid = advanceCustomer / exchangeRateAmount;
             const body = {
                 paymentDate,
                 paymentMethod: paymentType,
                 amountPaid: advanceCustomer,
                 paymentCurrency: exchangeRate,
                 parity: exchangeRateAmount,
-                percentageIva: percentageIvaEUR,
+                percentageIva: percentageIva,
                 currencyApply: exchangeRateQuotation,
-                conversionAmountPaid: conversionAdvance,
-                subtotalAmountPaid: 40,
-                paymentPercentage: 20,
+                conversionAmountPaid,
+                subtotalAmountPaid: (conversionAmountPaid / ((percentageIva / 100) + 1)),
+                paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
+                projectId
 
             }
+            await this.advancePaymentRecordRepository.create(body);
+        }
+    }
 
+    calculatePercentage(exchangeRateQuotation: ExchangeRateQuotationE, quotation: Quotation, conversionAmountPaid: number) {
+        switch (exchangeRateQuotation) {
+            case ExchangeRateQuotationE.EUR:
+                const subtotalEUR = quotation.totalEUR - conversionAmountPaid;
+                const differenceEUR = subtotalEUR / quotation.totalEUR
+                return differenceEUR * 100;
+                break;
+            case ExchangeRateQuotationE.MXN:
+                const subtotalMXN = quotation.totalMXN - conversionAmountPaid;
+                const differenceMXN = subtotalMXN / quotation.totalMXN
+                return differenceMXN * 100;
+
+                break;
+            case ExchangeRateQuotationE.USD:
+                const subtotalUSD = quotation.totalUSD - conversionAmountPaid;
+                const differenceUSD = subtotalUSD / quotation.totalUSD
+                return differenceUSD * 100;
+
+                break;
+
+            default:
+                break;
         }
     }
 

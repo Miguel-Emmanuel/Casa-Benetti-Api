@@ -25,7 +25,7 @@ export class Project extends BaseEntity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     @belongsTo(() => Quotation)
     quotationId: number;

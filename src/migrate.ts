@@ -42,7 +42,8 @@ export async function migrate(args: string[]) {
       'Line',
       'AssembledProducts',
       'ProofPaymentQuotation',
-      'Project'
+      'Project',
+      'AdvancePaymentRecord'
     ],
   });
 
