@@ -37,7 +37,6 @@ export class ProjectService {
 
     async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number) {
         const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
-        console.log('isArchitect: ', isArchitect)
         //Arquitecto
         if (isArchitect === true) {
             const {architectName, commissionPercentageArchitect} = quotation;
