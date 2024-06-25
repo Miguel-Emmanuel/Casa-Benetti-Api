@@ -36,7 +36,7 @@ export class ProjectService {
     }
 
     async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number) {
-        const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner} = quotation;
+        const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
         console.log('isArchitect: ', isArchitect)
         //Arquitecto
         if (isArchitect === true) {
@@ -81,6 +81,20 @@ export class ProjectService {
                 }
                 await this.commissionPaymentRecordRepository.create(body);
             }
+        }
+
+        //Showroom manager
+        if (showroomManagerId) {
+            const commissionPercentage = 16;
+            const body = {
+                userId: showroomManagerId,
+                projectId,
+                commissionPercentage: commissionPercentage,
+                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentage),
+                projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                type: AdvancePaymentTypeE.SHOWROOM_MANAGER
+            }
+            await this.commissionPaymentRecordRepository.create(body);
         }
 
         //Proyectistas
