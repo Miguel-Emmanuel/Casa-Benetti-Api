@@ -1,5 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {CommissionPaymentStatus} from '../enums';
+import {AdvancePaymentTypeE, CommissionPaymentStatus} from '../enums';
 import {Project} from './project.model';
 import {User} from './user.model';
 
@@ -33,7 +33,7 @@ export class CommissionPaymentRecord extends Entity {
     userName?: string;
 
     @belongsTo(() => User)
-    userId: number;
+    userId?: number;
 
     @belongsTo(() => Project)
     projectId: number;
@@ -75,6 +75,13 @@ export class CommissionPaymentRecord extends Entity {
         default: CommissionPaymentStatus.PENDIENTE
     })
     status: CommissionPaymentStatus;
+
+    //Persona de la comision
+    @property({
+        type: 'string',
+    })
+    type: AdvancePaymentTypeE;
+
 
     constructor(data?: Partial<CommissionPaymentRecord>) {
         super(data);
