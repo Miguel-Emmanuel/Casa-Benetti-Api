@@ -5,6 +5,7 @@ import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Quotation} from './quotation.model';
 
+//Comprobante de anticipo de la cotizacion
 @model({
     settings: {
         postgresql: {
@@ -58,6 +59,15 @@ export class ProofPaymentQuotation extends Entity {
     })
     exchangeRate: ExchangeRateE;
 
+    //Tipo de cambio monto (valor de la moneda que se selecciono)
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    exchangeRateAmount: number;
+
     //Anticipo cliente
     @property({
         type: 'number',
@@ -70,7 +80,6 @@ export class ProofPaymentQuotation extends Entity {
     //Anticipo Conversión
     @property({
         type: 'number',
-        required: false,
         postgresql: {
             dataType: 'double precision',
         },

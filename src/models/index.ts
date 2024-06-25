@@ -31,3 +31,4 @@ export * from './line.model';
 export * from './assembled-products.model';
 export * from './proof-payment-quotation.model';
 export * from './project.model';
+export * from './advance-payment-record.model';

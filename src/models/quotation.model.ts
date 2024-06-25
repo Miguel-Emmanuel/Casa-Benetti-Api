@@ -6,7 +6,7 @@ import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
-import {ProofPaymentQuotation} from './proof-payment-quotation.model';
+import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
@@ -224,7 +224,18 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    percentageIvaEUR: number;
+    percentageIva: number;
+
+
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaEUR: number;
 
     //Iva total
     @property({
@@ -346,15 +357,15 @@ export class Quotation extends BaseEntity {
     additionalDiscountMXN: number;
 
 
-    //Iva porcentaje
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageIvaMXN: number;
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaMXN: number;
 
     //Iva total
     @property({
@@ -476,15 +487,15 @@ export class Quotation extends BaseEntity {
     additionalDiscountUSD: number;
 
 
-    //Iva porcentaje
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageIvaUSD: number;
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaUSD: number;
 
     //Iva total
     @property({
@@ -599,6 +610,7 @@ export interface QuotationRelations {
     referenceCustomer: UserWithRelations;
     branch: BranchWithRelations,
     projectManager: UserWithRelations
+    proofPaymentQuotations: ProofPaymentQuotationWithRelations[]
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

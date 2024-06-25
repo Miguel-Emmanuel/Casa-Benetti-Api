@@ -140,7 +140,7 @@ export class QuotationService {
                 subtotalEUR: subtotal,
                 percentageAdditionalDiscountEUR: percentageAdditionalDiscount,
                 additionalDiscountEUR: additionalDiscount,
-                percentageIvaEUR: percentageIva,
+                percentageIva: percentageIva,
                 ivaEUR: iva,
                 totalEUR: total,
                 percentageAdvanceEUR: percentageAdvance,
@@ -160,7 +160,7 @@ export class QuotationService {
                 subtotalMXN: subtotal,
                 percentageAdditionalDiscountMXN: percentageAdditionalDiscount,
                 additionalDiscountMXN: additionalDiscount,
-                percentageIvaMXN: percentageIva,
+                percentageIva: percentageIva,
                 ivaMXN: iva,
                 totalMXN: total,
                 percentageAdvanceMXN: percentageAdvance,
@@ -180,7 +180,7 @@ export class QuotationService {
                 subtotalUSD: subtotal,
                 percentageAdditionalDiscountUSD: percentageAdditionalDiscount,
                 additionalDiscountUSD: additionalDiscount,
-                percentageIvaUSD: percentageIva,
+                percentageIva: percentageIva,
                 ivaUSD: iva,
                 totalUSD: total,
                 percentageAdvanceUSD: percentageAdvance,
@@ -424,13 +424,13 @@ export class QuotationService {
     getPricesQuotation(quotation: Quotation) {
         const {exchangeRateQuotation, } = quotation;
         if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
-            const {subtotalEUR, percentageAdditionalDiscountEUR, additionalDiscountEUR, percentageIvaEUR, ivaEUR, totalEUR, percentageAdvanceEUR,
+            const {subtotalEUR, percentageAdditionalDiscountEUR, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
                 advanceEUR, exchangeRateEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
             const body = {
                 subtotal: subtotalEUR,
                 percentageAdditionalDiscount: percentageAdditionalDiscountEUR,
                 additionalDiscount: additionalDiscountEUR,
-                percentageIva: percentageIvaEUR,
+                percentageIva: percentageIva,
                 iva: ivaEUR,
                 total: totalEUR,
                 percentageAdvance: percentageAdvanceEUR,
@@ -443,13 +443,13 @@ export class QuotationService {
             }
             return body;
         } else if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
-            const {subtotalUSD, percentageAdditionalDiscountUSD, additionalDiscountUSD, percentageIvaUSD, ivaUSD, totalUSD, percentageAdvanceUSD,
+            const {subtotalUSD, percentageAdditionalDiscountUSD, additionalDiscountUSD, percentageIva, ivaUSD, totalUSD, percentageAdvanceUSD,
                 advanceUSD, exchangeRateUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
             const body = {
                 subtotal: subtotalUSD,
                 percentageAdditionalDiscount: percentageAdditionalDiscountUSD,
                 additionalDiscount: additionalDiscountUSD,
-                percentageIva: percentageIvaUSD,
+                percentageIva: percentageIva,
                 iva: ivaUSD,
                 total: totalUSD,
                 percentageAdvance: percentageAdvanceUSD,
@@ -462,13 +462,13 @@ export class QuotationService {
             }
             return body;
         } else if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
-            const {subtotalMXN, percentageAdditionalDiscountMXN, additionalDiscountMXN, percentageIvaMXN, ivaMXN, totalMXN, percentageAdvanceMXN,
+            const {subtotalMXN, percentageAdditionalDiscountMXN, additionalDiscountMXN, percentageIva, ivaMXN, totalMXN, percentageAdvanceMXN,
                 advanceMXN, exchangeRateMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
             const body = {
                 subtotal: subtotalMXN,
                 percentageAdditionalDiscount: percentageAdditionalDiscountMXN,
                 additionalDiscount: additionalDiscountMXN,
-                percentageIva: percentageIvaMXN,
+                percentageIva: percentageIva,
                 iva: ivaMXN,
                 total: totalMXN,
                 percentageAdvance: percentageAdvanceMXN,
@@ -777,7 +777,7 @@ export class QuotationService {
     calculatePricesExchangeRate(quotation: Quotation) {
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
-            const {subtotalEUR, percentageAdditionalDiscountEUR, additionalDiscountEUR, percentageIvaEUR, ivaEUR, totalEUR, percentageAdvanceEUR,
+            const {subtotalEUR, percentageAdditionalDiscountEUR, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
                 advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
             const USD = 1.074;
             const MXN = 19.28;
@@ -786,7 +786,7 @@ export class QuotationService {
                 subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
                 percentageAdditionalDiscountMXN: this.roundToTwoDecimals(percentageAdditionalDiscountEUR),
                 additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
-                percentageIvaMXN: this.roundToTwoDecimals(percentageIvaEUR),
+                percentageIva: this.roundToTwoDecimals(percentageIva),
                 ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
                 totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
                 percentageAdvanceMXN: this.roundToTwoDecimals(percentageAdvanceEUR),
@@ -802,7 +802,7 @@ export class QuotationService {
                 subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
                 percentageAdditionalDiscountUSD: this.roundToTwoDecimals(percentageAdditionalDiscountEUR),
                 additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
-                percentageIvaUSD: this.roundToTwoDecimals(percentageIvaEUR),
+                percentageIva: this.roundToTwoDecimals(percentageIva),
                 ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
                 totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
                 percentageAdvanceUSD: this.roundToTwoDecimals(percentageAdvanceEUR),
@@ -818,7 +818,7 @@ export class QuotationService {
         }
 
         if (exchangeRateQuotation == ExchangeRateQuotationE.MXN) {
-            const {subtotalMXN, percentageAdditionalDiscountMXN, additionalDiscountMXN, percentageIvaMXN, ivaMXN, totalMXN, percentageAdvanceMXN,
+            const {subtotalMXN, percentageAdditionalDiscountMXN, additionalDiscountMXN, percentageIva, ivaMXN, totalMXN, percentageAdvanceMXN,
                 advanceMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
             const EUR = 0.05184;
             const USD = 0.05566;
@@ -827,7 +827,7 @@ export class QuotationService {
                 subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
                 percentageAdditionalDiscountEUR: this.roundToTwoDecimals(percentageAdditionalDiscountMXN),
                 additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
-                percentageIvaEUR: this.roundToTwoDecimals(percentageIvaMXN),
+                percentageIva: this.roundToTwoDecimals(percentageIva),
                 ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
                 totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
                 percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
@@ -843,7 +843,7 @@ export class QuotationService {
                 subtotalUSD: this.bigNumberMultipliedBy(subtotalMXN, USD),
                 percentageAdditionalDiscountUSD: this.bigNumberMultipliedBy(percentageAdditionalDiscountMXN, USD),
                 additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountMXN, USD),
-                percentageIvaUSD: this.bigNumberMultipliedBy(percentageIvaMXN, USD),
+                percentageIva: this.bigNumberMultipliedBy(percentageIva, USD),
                 ivaUSD: this.bigNumberMultipliedBy(ivaMXN, USD),
                 totalUSD: this.bigNumberMultipliedBy(totalMXN, USD),
                 percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceMXN, USD),
@@ -859,7 +859,7 @@ export class QuotationService {
         }
 
         if (exchangeRateQuotation == ExchangeRateQuotationE.USD) {
-            const {subtotalUSD, percentageAdditionalDiscountUSD, additionalDiscountUSD, percentageIvaUSD, ivaUSD, totalUSD, percentageAdvanceUSD,
+            const {subtotalUSD, percentageAdditionalDiscountUSD, additionalDiscountUSD, percentageIva, ivaUSD, totalUSD, percentageAdvanceUSD,
                 advanceUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
             const EUR = 0.9315;
             const MXN = 17.95;
@@ -868,7 +868,7 @@ export class QuotationService {
                 subtotalMXN: this.bigNumberMultipliedBy(subtotalUSD, MXN),
                 percentageAdditionalDiscountMXN: this.bigNumberMultipliedBy(percentageAdditionalDiscountUSD, MXN),
                 additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountUSD, MXN),
-                percentageIvaMXN: this.bigNumberMultipliedBy(percentageIvaUSD, MXN),
+                percentageIva: this.bigNumberMultipliedBy(percentageIva, MXN),
                 ivaMXN: this.bigNumberMultipliedBy(ivaUSD, MXN),
                 totalMXN: this.bigNumberMultipliedBy(totalUSD, MXN),
                 percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceUSD, MXN),
@@ -884,7 +884,7 @@ export class QuotationService {
                 subtotalEUR: this.bigNumberMultipliedBy(subtotalUSD, EUR),
                 percentageAdditionalDiscountEUR: this.bigNumberMultipliedBy(percentageAdditionalDiscountUSD, EUR),
                 additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountUSD, EUR),
-                percentageIvaEUR: this.bigNumberMultipliedBy(percentageIvaUSD, EUR),
+                percentageIva: this.bigNumberMultipliedBy(percentageIva, EUR),
                 ivaEUR: this.bigNumberMultipliedBy(ivaUSD, EUR),
                 totalEUR: this.bigNumberMultipliedBy(totalUSD, EUR),
                 percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceUSD, EUR),

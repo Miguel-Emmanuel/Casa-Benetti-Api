@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {ExchangeRateE} from '../enums';
 import {schemaProofPaymentQuotationInside} from '../joi.validation.ts/proof-payment.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotation, ProofPaymentQuotationCreate} from '../models';
@@ -25,9 +26,32 @@ export class ProofPaymentQuotationService {
         const {images, ...bodyProofPayment} = proofPaymentQuotation;
         await this.findQuotationById(quotationId);
         await this.validateBodyProofPayment(proofPaymentQuotation);
-        const proofPaymentQuotationResponse = await this.proofPaymentQuotationRepository.create(bodyProofPayment)
+        const exchangeRateAmount = this.calculateExchangeRateAmount(bodyProofPayment.exchangeRate);
+        const conversionAdvance = this.calculateConversionAdvance(exchangeRateAmount, bodyProofPayment.advanceCustomer);
+        const proofPaymentQuotationResponse = await this.proofPaymentQuotationRepository.create({...bodyProofPayment, exchangeRateAmount, conversionAdvance})
         await this.updateDocuments(proofPaymentQuotationResponse.id, images)
         return proofPaymentQuotationResponse;
+    }
+
+    calculateExchangeRateAmount(exchangeRate: ExchangeRateE) {
+        switch (exchangeRate) {
+            case ExchangeRateE.EUR:
+                return 1.0;
+                break;
+            case ExchangeRateE.MXN:
+                return 2.0;
+                break;
+            case ExchangeRateE.USD:
+                return 3.0;
+                break;
+            default:
+                return 0;
+                break;
+        }
+    }
+
+    calculateConversionAdvance(exchangeRateAmount: number, advanceCustomer: number) {
+        return exchangeRateAmount === 0 ? advanceCustomer : (advanceCustomer * exchangeRateAmount);
     }
 
     async count(where?: Where<ProofPaymentQuotation>,) {
