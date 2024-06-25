@@ -15,6 +15,7 @@ export enum LogModelName {
     EXPENSE = "Expense",
     QUOTATION = "Quotation",
     ASSEMPLEDPRODUCTS = "AssembledProducts",
+    PROJECT = "Project",
 }
 
 export enum LogModificationType {
@@ -28,7 +29,8 @@ export enum LogModificationType {
 
 export enum ModuleCategories {
     CATALOGS = 'Catálogos',
-    COTIZACIONES = 'Cotizaciones'
+    COTIZACIONES = 'Cotizaciones',
+    PROYECTOS = 'Proyectos',
 }
 
 export enum TypeUserE {

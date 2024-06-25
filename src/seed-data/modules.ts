@@ -20,4 +20,14 @@ export const modulesSeed = [
     description: 'Catálogo Productos',
     categoryName: ModuleCategories.CATALOGS
   },
+  {
+    name: 'Clientes',
+    description: 'Catálogo Clientes',
+    categoryName: ModuleCategories.CATALOGS
+  },
+  {
+    name: 'Proyectos',
+    description: 'Catálogo Proyectos',
+    categoryName: ModuleCategories.PROYECTOS
+  },
 ];
