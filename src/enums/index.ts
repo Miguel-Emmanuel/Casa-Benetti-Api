@@ -113,6 +113,12 @@ export enum StatusQuotationE {
     RECHAZADA = 'Rechazada',
 }
 
+export enum ProjectStatusE {
+    NUEVO = 'Nuevo',
+    ENTREGA_PARCIAL = 'Entrega parcial',
+    ENTREGA_TOTAL = 'Entrega total',
+}
+
 export enum StatusProduct {
     PEDIDO = 'Pedido'
 }
