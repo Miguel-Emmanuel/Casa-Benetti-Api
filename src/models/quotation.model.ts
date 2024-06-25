@@ -578,6 +578,13 @@ export class Quotation extends BaseEntity {
     @hasOne(() => Project)
     project: Project;
 
+
+    //Fecha de cierre de la cotizacion
+    @property({
+        type: 'date',
+    })
+    closingDate?: Date;
+
     constructor(data?: Partial<Quotation>) {
         super(data);
     }

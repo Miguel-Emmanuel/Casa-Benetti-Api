@@ -728,7 +728,7 @@ export class QuotationService {
         else
             status = StatusQuotationE.CERRADA;
 
-        await this.quotationRepository.updateById(id, {status, comment});
+        await this.quotationRepository.updateById(id, {status, comment, closingDate: isRejected === true ? undefined : new Date()});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
