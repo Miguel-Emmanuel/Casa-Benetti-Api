@@ -2,6 +2,7 @@ import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ProjectStatusE} from '../enums';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
+import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Quotation} from './quotation.model';
 
 @model({
@@ -37,6 +38,9 @@ export class Project extends BaseEntity {
         default: ProjectStatusE.NUEVO
     })
     status: ProjectStatusE;
+
+    @hasMany(() => CommissionPaymentRecord)
+    commissionPaymentRecords: CommissionPaymentRecord[];
 
     @hasMany(() => AdvancePaymentRecord)
     advancePaymentRecords: AdvancePaymentRecord[];

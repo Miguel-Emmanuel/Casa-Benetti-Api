@@ -53,13 +53,14 @@ export class QuotationService {
             await this.findUserById(quotation.referenceCustomerId);
         let groupId = null;
         let customerId = null;
+        const showroomManagerId = await this.getSM(mainProjectManagerId);
         try {
             groupId = await this.createOrGetGroup(customer);
             customerId = await this.createOrGetCustomer({...customer}, groupId);
             const userId = this.user.id;
             if (id === null || id == undefined) {
                 const branchId = this.user.branchId;
-                const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId);
+                const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
                 await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
                 await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
                 return createQuotation;
@@ -86,6 +87,17 @@ export class QuotationService {
             element.quotationId = quotationId;
             await this.proofPaymentQuotationService.create(element)
         }
+    }
+
+    async getSM(mainProjectManagerId: number) {
+        const user = await this.userRepository.findOne({where: {id: mainProjectManagerId}});
+        if (!user)
+            throw this.responseService.badRequest("El PM principal no existe.");
+
+        const sm = await this.userRepository.findOne({where: {branchId: user.branchId, isShowroomManager: true}});
+        if (!sm || !sm?.id)
+            throw this.responseService.badRequest("Aun no se encuentra un Showroom manager en tu equipo.");
+        return sm.id;
     }
 
     async updateProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
@@ -118,7 +130,7 @@ export class QuotationService {
         await this.quotationRepository.updateById(quotationId, bodyQuotation)
     }
 
-    async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number) {
+    async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number, showroomManagerId: number) {
         const data = this.convertExchangeRateQuotation(quotation);
         console.log('createQuatation: ', data)
         const bodyQuotation = {
@@ -128,7 +140,8 @@ export class QuotationService {
             customerId,
             isDraft,
             branchId,
-            userId
+            userId,
+            showroomManagerId
         }
         return this.quotationRepository.create(bodyQuotation);
     }

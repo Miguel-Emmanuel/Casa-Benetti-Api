@@ -1,10 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {ExchangeRateQuotationE} from '../enums';
+import {AdvancePaymentTypeE, ExchangeRateQuotationE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
-import {AdvancePaymentRecordRepository, ProjectRepository, QuotationRepository} from '../repositories';
+import {AdvancePaymentRecordRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -16,19 +16,143 @@ export class ProjectService {
         public advancePaymentRecordRepository: AdvancePaymentRecordRepository,
         @repository(QuotationRepository)
         public quotationRepository: QuotationRepository,
+        @repository(CommissionPaymentRecordRepository)
+        public commissionPaymentRecordRepository: CommissionPaymentRecordRepository,
         @inject(ResponseServiceBindings.RESPONSE_SERVICE)
         public responseService: ResponseService,
+        @repository(QuotationProjectManagerRepository)
+        public quotationProjectManagerRepository: QuotationProjectManagerRepository,
+        @repository(QuotationDesignerRepository)
+        public quotationDesignerRepository: QuotationDesignerRepository
     ) { }
 
     async create(body: {quotationId: number}) {
         const project = await this.projectRepository.create(body);
         const {quotationId} = body;
-        await this.createAdvancePaymentRecord(quotationId, project.id)
+        const quotation = await this.findQuotationById(quotationId);
+        await this.createAdvancePaymentRecord(quotation, project.id)
+        await this.createCommissionPaymentRecord(quotation, project.id, quotationId)
         return project;
     }
 
-    async createAdvancePaymentRecord(quotationId: number, projectId: number) {
-        const quotation = await this.findQuotationById(quotationId);
+    async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number) {
+        const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
+        //Arquitecto
+        if (isArchitect === true) {
+            const {architectName, commissionPercentageArchitect} = quotation;
+            const body = {
+                userName: architectName,
+                projectId,
+                commissionPercentage: commissionPercentageArchitect,
+                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageArchitect),
+                projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                type: AdvancePaymentTypeE.ARQUITECTO
+            }
+            await this.commissionPaymentRecordRepository.create(body);
+        }
+
+        //Cliente referenciado
+        if (isReferencedCustomer === true) {
+            const {referenceCustomerId, commissionPercentagereferencedCustomer} = quotation;
+            const body = {
+                userId: referenceCustomerId,
+                projectId,
+                commissionPercentage: commissionPercentagereferencedCustomer,
+                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentagereferencedCustomer),
+                projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO
+            }
+            await this.commissionPaymentRecordRepository.create(body);
+        }
+
+        //Project managers
+        if (isProjectManager === true) {
+            const quotationProjectManagers = await this.quotationProjectManagerRepository.find({where: {quotationId}});
+            for (const iterator of quotationProjectManagers) {
+                const {commissionPercentageProjectManager, userId} = iterator;
+                const body = {
+                    userId: userId,
+                    projectId,
+                    commissionPercentage: commissionPercentageProjectManager,
+                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageProjectManager),
+                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                    type: AdvancePaymentTypeE.PROJECT_MANAGER
+                }
+                await this.commissionPaymentRecordRepository.create(body);
+            }
+        }
+
+        //Showroom manager
+        if (showroomManagerId) {
+            const commissionPercentage = 16;
+            const body = {
+                userId: showroomManagerId,
+                projectId,
+                commissionPercentage: commissionPercentage,
+                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentage),
+                projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                type: AdvancePaymentTypeE.SHOWROOM_MANAGER
+            }
+            await this.commissionPaymentRecordRepository.create(body);
+        }
+
+        //Proyectistas
+        if (isDesigner === true) {
+            const QuotationDesigners = await this.quotationDesignerRepository.find({where: {quotationId}});
+            for (const iterator of QuotationDesigners) {
+                const {commissionPercentageDesigner, userId} = iterator;
+                const body = {
+                    userId: userId,
+                    projectId,
+                    commissionPercentage: commissionPercentageDesigner,
+                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageDesigner),
+                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                    type: AdvancePaymentTypeE.PROYECTISTA
+                }
+                await this.commissionPaymentRecordRepository.create(body);
+            }
+        }
+
+    }
+
+    getTotalQuotation(exchangeRateQuotation: ExchangeRateQuotationE, quotation: Quotation) {
+        switch (exchangeRateQuotation) {
+            case ExchangeRateQuotationE.EUR:
+                return quotation.totalEUR;
+                break;
+            case ExchangeRateQuotationE.MXN:
+                return quotation.totalMXN;
+
+                break;
+            case ExchangeRateQuotationE.USD:
+                return quotation.totalUSD;
+                break;
+        }
+    }
+
+    calculateCommissionAmount(exchangeRateQuotation: ExchangeRateQuotationE, quotation: Quotation, commissionPercentage: number) {
+        switch (exchangeRateQuotation) {
+            case ExchangeRateQuotationE.EUR:
+                const commisionEUR = this.bigNumberDividedBy(commissionPercentage, 100);
+                return this.bigNumberMultipliedBy(quotation.totalEUR, commisionEUR)
+                break;
+            case ExchangeRateQuotationE.MXN:
+                const commisionMXN = this.bigNumberDividedBy(commissionPercentage, 100);
+                return this.bigNumberMultipliedBy(quotation.totalMXN, commisionMXN)
+
+                break;
+            case ExchangeRateQuotationE.USD:
+                const commisionUSD = this.bigNumberDividedBy(commissionPercentage, 100);
+                return this.bigNumberMultipliedBy(quotation.totalUSD, commisionUSD)
+
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    async createAdvancePaymentRecord(quotation: Quotation, projectId: number) {
         const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
             const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, conversionAdvance} = proofPaymentQuotations[index];
