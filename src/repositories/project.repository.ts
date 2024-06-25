@@ -3,12 +3,13 @@ import {BelongsToAccessor, repository, HasManyRepositoryFactory} from '@loopback
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Project, ProjectRelations, Quotation, AdvancePaymentRecord, CommissionPaymentRecord} from '../models';
+import {Project, ProjectRelations, Quotation, AdvancePaymentRecord, CommissionPaymentRecord, Branch} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {QuotationRepository} from './quotation.repository';
 import {SoftCrudRepository} from './soft-delete-entity.repository.base';
 import {AdvancePaymentRecordRepository} from './advance-payment-record.repository';
 import {CommissionPaymentRecordRepository} from './commission-payment-record.repository';
+import {BranchRepository} from './branch.repository';
 
 export class ProjectRepository extends SoftCrudRepository<
   Project,
@@ -22,13 +23,17 @@ export class ProjectRepository extends SoftCrudRepository<
 
   public readonly commissionPaymentRecords: HasManyRepositoryFactory<CommissionPaymentRecord, typeof Project.prototype.id>;
 
+  public readonly branch: BelongsToAccessor<Branch, typeof Project.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>,
+    @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
   ) {
     super(Project, dataSource);
+    this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);
+    this.registerInclusionResolver('branch', this.branch.inclusionResolver);
     this.commissionPaymentRecords = this.createHasManyRepositoryFactoryFor('commissionPaymentRecords', commissionPaymentRecordRepositoryGetter,);
     this.registerInclusionResolver('commissionPaymentRecords', this.commissionPaymentRecords.inclusionResolver);
     this.advancePaymentRecords = this.createHasManyRepositoryFactoryFor('advancePaymentRecords', advancePaymentRecordRepositoryGetter,);

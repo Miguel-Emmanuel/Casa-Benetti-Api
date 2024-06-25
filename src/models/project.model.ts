@@ -2,6 +2,7 @@ import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ProjectStatusE} from '../enums';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
+import {Branch, BranchWithRelations} from './branch.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Quotation} from './quotation.model';
 
@@ -28,13 +29,21 @@ export class Project extends BaseEntity {
     })
     id: number;
 
+    //ID del proyecto
+    @property({
+        type: 'string',
+    })
+    projectId: string;
+
     @belongsTo(() => Quotation)
     quotationId: number;
+
+    @belongsTo(() => Branch)
+    branchId: number;
 
     //Estatus del proyecto
     @property({
         type: 'string',
-        required: false,
         default: ProjectStatusE.NUEVO
     })
     status: ProjectStatusE;
@@ -52,6 +61,7 @@ export class Project extends BaseEntity {
 
 export interface ProjectRelations {
     // describe navigational properties here
+    branch: BranchWithRelations,
 }
 
 export type ProjectWithRelations = Project & ProjectRelations;

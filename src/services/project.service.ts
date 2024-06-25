@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js';
 import {AdvancePaymentTypeE, ExchangeRateQuotationE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
-import {AdvancePaymentRecordRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -23,15 +23,30 @@ export class ProjectService {
         @repository(QuotationProjectManagerRepository)
         public quotationProjectManagerRepository: QuotationProjectManagerRepository,
         @repository(QuotationDesignerRepository)
-        public quotationDesignerRepository: QuotationDesignerRepository
+        public quotationDesignerRepository: QuotationDesignerRepository,
+        @repository(BranchRepository)
+        public branchRepository: BranchRepository
     ) { }
 
     async create(body: {quotationId: number}) {
-        const project = await this.projectRepository.create(body);
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
+        const project = await this.createProject({quotationId, branchId: quotation.branchId});
         await this.createAdvancePaymentRecord(quotation, project.id)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId)
+        return project;
+    }
+
+    async createProject(body: {quotationId: number, branchId: number}) {
+        const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
+        const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
+        let projectId = null;
+        if (previousProject) {
+            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0)}`;
+        } else {
+            projectId = `${1}${branch?.name?.charAt(0)}`;
+        }
+        const project = await this.projectRepository.create({...body, projectId});
         return project;
     }
 
