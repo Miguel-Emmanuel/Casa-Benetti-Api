@@ -54,6 +54,8 @@ export class QuotationRepository extends SoftCrudRepository<
 
   public readonly project: HasOneRepositoryFactory<Project, typeof Quotation.prototype.id>;
 
+  public readonly showroomManager: BelongsToAccessor<User, typeof Quotation.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
@@ -61,6 +63,8 @@ export class QuotationRepository extends SoftCrudRepository<
     @repository.getter('QuotationProjectManagerRepository') protected quotationProjectManagerRepositoryGetter: Getter<QuotationProjectManagerRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>, @repository.getter('QuotationDesignerRepository') protected quotationDesignerRepositoryGetter: Getter<QuotationDesignerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('ProofPaymentQuotationRepository') protected proofPaymentQuotationRepositoryGetter: Getter<ProofPaymentQuotationRepository>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>,
   ) {
     super(Quotation, dataSource);
+    this.showroomManager = this.createBelongsToAccessorFor('showroomManager', userRepositoryGetter,);
+    this.registerInclusionResolver('showroomManager', this.showroomManager.inclusionResolver);
     this.project = this.createHasOneRepositoryFactoryFor('project', projectRepositoryGetter);
     this.registerInclusionResolver('project', this.project.inclusionResolver);
     this.proofPaymentQuotations = this.createHasManyRepositoryFactoryFor('proofPaymentQuotations', proofPaymentQuotationRepositoryGetter,);

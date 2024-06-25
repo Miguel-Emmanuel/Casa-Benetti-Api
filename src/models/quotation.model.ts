@@ -182,6 +182,9 @@ export class Quotation extends BaseEntity {
     })
     exchangeRateQuotation: ExchangeRateQuotationE;
 
+    //Showroom manager
+    @belongsTo(() => User)
+    showroomManagerId: number;
 
     //************************************************ COTIZACION EN EUROS *********************************** */
 

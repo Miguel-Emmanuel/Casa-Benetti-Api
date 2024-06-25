@@ -125,6 +125,18 @@ export enum AdvancePaymentStatusE {
     PENDIENTE = 'Pendiente',
 }
 
+export enum AdvancePaymentTypeE {
+    ARQUITECTO = 'Arquitecto',
+    CLIENTE_REFERENCIADO = 'Cliente referenciado',
+    PROJECT_MANAGER = 'Project manager',
+    SHOWROOM_MANAGER = 'Showroom manager',
+    PROYECTISTA = 'Proyectista',
+}
+
+export enum CommissionPaymentStatus {
+    PENDIENTE = 'Pendiente',
+}
+
 
 export enum StatusProduct {
     PEDIDO = 'Pedido'
