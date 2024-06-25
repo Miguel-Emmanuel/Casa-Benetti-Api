@@ -125,6 +125,10 @@ export enum AdvancePaymentStatusE {
     PENDIENTE = 'Pendiente',
 }
 
+export enum CommissionPaymentStatus {
+    PENDIENTE = 'Pendiente',
+}
+
 
 export enum StatusProduct {
     PEDIDO = 'Pedido'

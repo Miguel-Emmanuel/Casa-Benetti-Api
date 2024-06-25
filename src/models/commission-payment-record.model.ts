@@ -1,4 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {CommissionPaymentStatus} from '../enums';
 import {Project} from './project.model';
 import {User} from './user.model';
 
@@ -56,6 +57,24 @@ export class CommissionPaymentRecord extends Entity {
         },
     })
     commissionAmount: number;
+
+    //Total del proyecto
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    projectTotal: number;
+
+    //Estatus del pago
+    @property({
+        type: 'string',
+        required: false,
+        default: CommissionPaymentStatus.PENDIENTE
+    })
+    status: CommissionPaymentStatus;
 
     constructor(data?: Partial<CommissionPaymentRecord>) {
         super(data);
