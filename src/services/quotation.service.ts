@@ -8,6 +8,7 @@ import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, sc
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
 import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
 
@@ -38,6 +39,8 @@ export class QuotationService {
         public proofPaymentQuotationRepository: ProofPaymentQuotationRepository,
         @service()
         public proofPaymentQuotationService: ProofPaymentQuotationService,
+        @service()
+        public projectService: ProjectService
     ) { }
 
     async create(data: CreateQuotation) {
@@ -725,8 +728,10 @@ export class QuotationService {
 
         if (isRejected === true)
             status = StatusQuotationE.RECHAZADA;
-        else
+        else {
             status = StatusQuotationE.CERRADA;
+            await this.projectService.create({quotationId: id});
+        }
 
         await this.quotationRepository.updateById(id, {status, comment, closingDate: isRejected === true ? undefined : new Date()});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
