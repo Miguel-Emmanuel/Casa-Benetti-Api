@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
+import BigNumber from 'bignumber.js';
 import {ExchangeRateQuotationE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
@@ -31,7 +32,7 @@ export class ProjectService {
         const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
             const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, conversionAdvance} = proofPaymentQuotations[index];
-            const conversionAmountPaid = advanceCustomer / exchangeRateAmount;
+            const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
             const body = {
                 paymentDate,
                 paymentMethod: paymentType,
@@ -41,7 +42,7 @@ export class ProjectService {
                 percentageIva: percentageIva,
                 currencyApply: exchangeRateQuotation,
                 conversionAmountPaid,
-                subtotalAmountPaid: (conversionAmountPaid / ((percentageIva / 100) + 1)),
+                subtotalAmountPaid: this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)),
                 paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
                 projectId
 
@@ -50,23 +51,32 @@ export class ProjectService {
         }
     }
 
+    bigNumberDividedBy(price: number, value: number): number {
+        return Number(new BigNumber(price).dividedBy(new BigNumber(value)));
+    }
+
+    bigNumberMultipliedBy(price: number, value: number): number {
+        return Number(new BigNumber(price).multipliedBy(new BigNumber(value)));
+    }
+
+
     calculatePercentage(exchangeRateQuotation: ExchangeRateQuotationE, quotation: Quotation, conversionAmountPaid: number) {
         switch (exchangeRateQuotation) {
             case ExchangeRateQuotationE.EUR:
                 const subtotalEUR = quotation.totalEUR - conversionAmountPaid;
-                const differenceEUR = subtotalEUR / quotation.totalEUR
-                return differenceEUR * 100;
+                const differenceEUR = this.bigNumberDividedBy(subtotalEUR, quotation.totalEUR)
+                return this.bigNumberMultipliedBy(differenceEUR, 100);
                 break;
             case ExchangeRateQuotationE.MXN:
                 const subtotalMXN = quotation.totalMXN - conversionAmountPaid;
-                const differenceMXN = subtotalMXN / quotation.totalMXN
-                return differenceMXN * 100;
+                const differenceMXN = this.bigNumberDividedBy(subtotalMXN, quotation.totalMXN)
+                return this.bigNumberMultipliedBy(differenceMXN, 100);
 
                 break;
             case ExchangeRateQuotationE.USD:
                 const subtotalUSD = quotation.totalUSD - conversionAmountPaid;
-                const differenceUSD = subtotalUSD / quotation.totalUSD
-                return differenceUSD * 100;
+                const differenceUSD = this.bigNumberDividedBy(subtotalUSD, quotation.totalUSD)
+                return this.bigNumberMultipliedBy(differenceUSD, 100);
 
                 break;
 
