@@ -1,10 +1,11 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
+import {Project} from './project.model';
 import {ProofPaymentQuotation} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
@@ -571,6 +572,18 @@ export class Quotation extends BaseEntity {
         },
     })
     balanceUSD: number;
+
+    //********************************* */
+
+    @hasOne(() => Project)
+    project: Project;
+
+
+    //Fecha de cierre de la cotizacion
+    @property({
+        type: 'date',
+    })
+    closingDate?: Date;
 
     constructor(data?: Partial<Quotation>) {
         super(data);
