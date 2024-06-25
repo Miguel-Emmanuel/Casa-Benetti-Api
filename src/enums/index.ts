@@ -121,6 +121,11 @@ export enum ProjectStatusE {
     ENTREGA_TOTAL = 'Entrega total',
 }
 
+export enum AdvancePaymentStatusE {
+    PENDIENTE = 'Pendiente',
+}
+
+
 export enum StatusProduct {
     PEDIDO = 'Pedido'
 }

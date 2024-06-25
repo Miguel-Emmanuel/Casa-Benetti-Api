@@ -1,16 +1,31 @@
-import {belongsTo, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ProjectStatusE} from '../enums';
+import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Quotation} from './quotation.model';
 
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'project_Project' // Nombre de la tabla en PostgreSQL
+        },
+        foreignKeys: {
+            fk_quotation_quotationId: {
+                name: 'fk_quotation_quotationId',
+                entity: 'Quotation',
+                entityKey: 'id',
+                foreignKey: 'quotationid',
+            },
+        }
+    }
+})
 export class Project extends BaseEntity {
     @property({
         type: 'number',
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     @belongsTo(() => Quotation)
     quotationId: number;
@@ -22,6 +37,9 @@ export class Project extends BaseEntity {
         default: ProjectStatusE.NUEVO
     })
     status: ProjectStatusE;
+
+    @hasMany(() => AdvancePaymentRecord)
+    advancePaymentRecords: AdvancePaymentRecord[];
 
     constructor(data?: Partial<Project>) {
         super(data);
