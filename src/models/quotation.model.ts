@@ -6,7 +6,7 @@ import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
-import {ProofPaymentQuotation} from './proof-payment-quotation.model';
+import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
@@ -599,6 +599,7 @@ export interface QuotationRelations {
     referenceCustomer: UserWithRelations;
     branch: BranchWithRelations,
     projectManager: UserWithRelations
+    proofPaymentQuotations: ProofPaymentQuotationWithRelations[]
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;
