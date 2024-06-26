@@ -713,6 +713,7 @@ export class QuotationService {
 
     async changeStatusToReviewAdmin(id: number, body: {isFractionate: boolean, isRejected: boolean, comment: string}) {
         const quotation = await this.findQuotationAndProductsById(id);
+        await this.validateIfExistCustomer(quotation);
         await this.validateChangeStatusSM(body);
         if (quotation.status !== StatusQuotationE.ENREVISIONSM)
             throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por SM.`)
@@ -730,6 +731,11 @@ export class QuotationService {
 
         await this.quotationRepository.updateById(id, {status, comment, ...prices});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async validateIfExistCustomer(quotation: Quotation) {
+        if (!quotation?.customerId)
+            throw this.responseService.badRequest("La cotizacion debe tener un cliente asignado.");
     }
 
     async changeStatusToClose(id: number, body: {isRejected: boolean, comment: string}) {
