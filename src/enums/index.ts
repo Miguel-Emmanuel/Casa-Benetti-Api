@@ -89,6 +89,11 @@ export enum TypeSaleE {
 }
 
 
+export enum QuotationProductStatusE {
+    PEDIDO = 'Pedido',
+}
+
+
 export enum ExchangeRateE {
     EUR = 'EUR',
     USD = 'USD',
