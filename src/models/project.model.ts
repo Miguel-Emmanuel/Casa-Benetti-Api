@@ -4,7 +4,8 @@ import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
-import {Quotation} from './quotation.model';
+import {Customer, CustomerWithRelations} from './customer.model';
+import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
     settings: {
@@ -48,6 +49,9 @@ export class Project extends BaseEntity {
     })
     status: ProjectStatusE;
 
+    @belongsTo(() => Customer)
+    customerId: number;
+
     @hasMany(() => CommissionPaymentRecord)
     commissionPaymentRecords: CommissionPaymentRecord[];
 
@@ -62,6 +66,8 @@ export class Project extends BaseEntity {
 export interface ProjectRelations {
     // describe navigational properties here
     branch: BranchWithRelations,
+    customer: CustomerWithRelations;
+    quotation: QuotationWithRelations
 }
 
 export type ProjectWithRelations = Project & ProjectRelations;

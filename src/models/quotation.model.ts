@@ -614,6 +614,7 @@ export interface QuotationRelations {
     branch: BranchWithRelations,
     projectManager: UserWithRelations
     proofPaymentQuotations: ProofPaymentQuotationWithRelations[]
+    mainProjectManager: UserWithRelations
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

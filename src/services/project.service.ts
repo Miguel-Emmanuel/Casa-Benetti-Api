@@ -1,12 +1,13 @@
-import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {repository} from '@loopback/repository';
+import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
+import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
-import {AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
-import {Quotation} from '../models';
+import {Project, Quotation} from '../models';
 import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
-
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProjectService {
     constructor(
@@ -27,20 +28,125 @@ export class ProjectService {
         @repository(BranchRepository)
         public branchRepository: BranchRepository,
         @repository(QuotationProductsRepository)
-        public quotationProductsRepository: QuotationProductsRepository
+        public quotationProductsRepository: QuotationProductsRepository,
+        @service()
+        public pdfService: PdfService,
+        @inject(SecurityBindings.USER)
+        private user: UserProfile,
     ) { }
 
     async create(body: {quotationId: number}) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId});
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId});
         await this.changeStatusProductsToPedido(quotationId);
         await this.createAdvancePaymentRecord(quotation, project.id)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId)
         return project;
     }
 
-    async createProject(body: {quotationId: number, branchId: number}) {
+    async count(where?: Where<Project>,) {
+        return this.projectRepository.count(where);
+    }
+
+    async find(filter?: Filter<Project>,) {
+        const accessLevel = this.user.accessLevel;
+        let where: any = {};
+        if (accessLevel === AccessLevelRolE.SUCURSAL) {
+            where = {...where, branchId: this.user.branchId}
+        }
+
+        if (accessLevel === AccessLevelRolE.PERSONAL) {
+            const quotations = (await this.quotationRepository.find({where: {mainProjectManagerId: this.user.id}})).map(value => value.id);
+            where = {...where, quotationId: {inq: [...quotations]}}
+        }
+
+        if (filter?.where) {
+            filter.where = {...filter.where, ...where}
+        } else {
+            filter = {...filter, where: {...where}};
+        }
+
+        const include = [
+            {
+                relation: 'quotation',
+                scope: {
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate'],
+                    include: [
+                        {
+                            relation: 'mainProjectManager',
+                            scope: {
+                                fields: ['id', 'firstName', 'lastName']
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                relation: 'customer',
+                scope: {
+                    fields: ['id', 'name'],
+                }
+            },
+            {
+                relation: 'branch',
+                scope: {
+                    fields: ['id', 'name'],
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include,
+                ]
+            };
+        const projects = await this.projectRepository.find(filter);
+        return projects.map(value => {
+            const {id, projectId, customer, branch, quotation, status} = value;
+            const {mainProjectManager, exchangeRateQuotation, closingDate} = quotation;
+            return {
+                id,
+                projectId,
+                customerName: customer?.name,
+                projectManager: mainProjectManager?.lastName,
+                branch: branch?.name,
+                total: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                status,
+                closingDate
+
+            }
+        })
+    }
+
+    async findById(id: number, filter?: FilterExcludingWhere<Project>) {
+        return this.projectRepository.findById(id, filter);
+    }
+
+    async updateById(id: number, project: Project,) {
+        await this.projectRepository.updateById(id, project);
+    }
+
+    async createPdf() {
+        try {
+            const properties = [
+                {
+                    name: 'name',
+                    value: 'Ñoki'
+                }
+            ]
+            await this.pdfService.createPDFWithTemplateHtml('src/templates/html_test.html', properties, {format: 'A4', path: './.sandbox/hola.pdf'});
+        } catch (error) {
+            console.log('error: ', error)
+        }
+    }
+
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;

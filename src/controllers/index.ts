@@ -19,5 +19,7 @@ export * from './expense.controller';
 export * from './group.controller';
 
 export * from './assembled-products.controller';
+export * from './project.controller';
 export * from './proof-payment-quotation.controller';
 export * from './quotation-user.controller';
+
