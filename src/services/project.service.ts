@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
-import {AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
 import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
@@ -50,22 +50,22 @@ export class ProjectService {
     }
 
     async find(filter?: Filter<Project>,) {
-        // const accessLevel = this.user.accessLevel;
-        // let where: any = {};
-        // if (accessLevel === AccessLevelRolE.SUCURSAL) {
-        //     where = {...where, branchId: this.user.branchId}
-        // }
+        const accessLevel = this.user.accessLevel;
+        let where: any = {};
+        if (accessLevel === AccessLevelRolE.SUCURSAL) {
+            where = {...where, branchId: this.user.branchId}
+        }
 
-        // if (accessLevel === AccessLevelRolE.PERSONAL) {
-        //     const quotationProjectManagers = (await this.quotationProjectManagerRepository.find({where: {userId: this.user.id}})).map(value => value.quotationId);
-        //     where = {...where, id: {inq: [...quotationProjectManagers]}}
-        // }
+        if (accessLevel === AccessLevelRolE.PERSONAL) {
+            const quotations = (await this.quotationRepository.find({where: {mainProjectManagerId: this.user.id}})).map(value => value.id);
+            where = {...where, quotationId: {inq: [...quotations]}}
+        }
 
-        // if (filter?.where) {
-        //     filter.where = {...filter.where, ...where}
-        // } else {
-        //     filter = {...filter, where: {...where}};
-        // }
+        if (filter?.where) {
+            filter.where = {...filter.where, ...where}
+        } else {
+            filter = {...filter, where: {...where}};
+        }
 
         const include = [
             {
