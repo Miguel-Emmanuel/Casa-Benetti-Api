@@ -1,12 +1,13 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
+import fs from "fs/promises";
+import HtmlToPdf from 'html-pdf-node';
 import {AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Quotation} from '../models';
 import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
-
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProjectService {
     constructor(
@@ -38,6 +39,21 @@ export class ProjectService {
         await this.createAdvancePaymentRecord(quotation, project.id)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId)
         return project;
+    }
+
+    async createPdf() {
+        try {
+            let html = await fs.readFile("src/templates/html_test.html", "utf-8");
+            html = html.replace('{{name}}', 'Waldolopez');
+            let options = {
+                format: 'A4',
+                path: './.sandbox/hola.pdf'
+            };
+            let file = {content: html};
+            HtmlToPdf.generatePdf(file, options)
+        } catch (error) {
+            console.log('error: ', error)
+        }
     }
 
     async createProject(body: {quotationId: number, branchId: number}) {
