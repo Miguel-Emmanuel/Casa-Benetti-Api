@@ -37,15 +37,16 @@ export class ProjectService {
         private user: UserProfile,
     ) { }
 
-    async create(body: {quotationId: number}) {
+    async create(body: {quotationId: number}, transaction: any) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId});
-        await this.changeStatusProductsToPedido(quotationId);
-        await this.createAdvancePaymentRecord(quotation, project.id)
-        await this.createCommissionPaymentRecord(quotation, project.id, quotationId)
-        await this.createPdfToCustomer(quotationId, project.id);
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, transaction);
+        await this.changeStatusProductsToPedido(quotationId, transaction);
+        await this.createAdvancePaymentRecord(quotation, project.id, transaction)
+        await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
+        await this.createPdfToCustomer(quotationId, project.id, transaction);
         return project;
+
     }
 
     async count(where?: Where<Project>,) {
@@ -135,9 +136,11 @@ export class ProjectService {
         await this.projectRepository.updateById(id, project);
     }
 
-    async createPdfToCustomer(quotationId: number, projectId: number) {
+    async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+
         let productsTemplate = [];
         for (const product of products) {
             const {brand, status, description, document, mainFinish, mainFinishImage, quotationProducts} = product;
@@ -145,14 +148,15 @@ export class ProjectService {
                 brandName: brand?.brandName,
                 status,
                 description,
-                image: document?.fileURL,
+                image: document?.fileURL ?? defaultImage,
                 mainFinish,
-                mainFinishImage: mainFinishImage?.fileURL,
+                mainFinishImage: mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 percentage: quotationProducts?.percentageDiscountProduct,
                 subtotal: quotationProducts?.subtotal
             })
         }
+        console.log(productsTemplate)
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
@@ -178,8 +182,9 @@ export class ProjectService {
             }
             const nameFile = `cotizacion_cliente_${quotationId}_${dayjs().format()}.pdf`
             await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_cliente.html', properties, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
-            await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
+            await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
+            await transaction.rollback()
             console.log('error: ', error)
         }
     }
@@ -262,7 +267,7 @@ export class ProjectService {
         return body;
     }
 
-    async createProject(body: {quotationId: number, branchId: number, customerId?: number}) {
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, transaction: any) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
@@ -271,15 +276,15 @@ export class ProjectService {
         } else {
             projectId = `${1}${branch?.name?.charAt(0)}`;
         }
-        const project = await this.projectRepository.create({...body, projectId});
+        const project = await this.projectRepository.create({...body, projectId}, {transaction});
         return project;
     }
 
-    async changeStatusProductsToPedido(quotationId: number) {
-        await this.quotationProductsRepository.updateAll({status: QuotationProductStatusE.PEDIDO}, {quotationId})
+    async changeStatusProductsToPedido(quotationId: number, transaction: any) {
+        await this.quotationProductsRepository.updateAll({status: QuotationProductStatusE.PEDIDO}, {quotationId}, {transaction})
     }
 
-    async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number) {
+    async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number, transaction: any) {
         const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
         //Arquitecto
         if (isArchitect === true) {
@@ -292,7 +297,7 @@ export class ProjectService {
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.ARQUITECTO
             }
-            await this.commissionPaymentRecordRepository.create(body);
+            await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Cliente referenciado
@@ -306,7 +311,7 @@ export class ProjectService {
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO
             }
-            await this.commissionPaymentRecordRepository.create(body);
+            await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Project managers
@@ -322,7 +327,7 @@ export class ProjectService {
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                     type: AdvancePaymentTypeE.PROJECT_MANAGER
                 }
-                await this.commissionPaymentRecordRepository.create(body);
+                await this.commissionPaymentRecordRepository.create(body, {transaction});
             }
         }
 
@@ -337,7 +342,7 @@ export class ProjectService {
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.SHOWROOM_MANAGER
             }
-            await this.commissionPaymentRecordRepository.create(body);
+            await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Proyectistas
@@ -353,7 +358,7 @@ export class ProjectService {
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                     type: AdvancePaymentTypeE.PROYECTISTA
                 }
-                await this.commissionPaymentRecordRepository.create(body);
+                await this.commissionPaymentRecordRepository.create(body, {transaction});
             }
         }
 
@@ -396,7 +401,7 @@ export class ProjectService {
         }
     }
 
-    async createAdvancePaymentRecord(quotation: Quotation, projectId: number) {
+    async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
         const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
             const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, conversionAdvance} = proofPaymentQuotations[index];
@@ -415,7 +420,7 @@ export class ProjectService {
                 projectId
 
             }
-            await this.advancePaymentRecordRepository.create(body);
+            await this.advancePaymentRecordRepository.create(body, {transaction});
         }
     }
 

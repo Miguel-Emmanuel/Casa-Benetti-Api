@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
-import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import {AccessLevelRolE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
@@ -739,23 +739,30 @@ export class QuotationService {
     }
 
     async changeStatusToClose(id: number, body: {isRejected: boolean, comment: string}) {
-        const quotation = await this.findQuotationAndProductsById(id);
-        await this.validateChangeStatusClose(body);
-        if (quotation.status !== StatusQuotationE.ENREVISIONADMINSITRACION)
-            throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por administración.`)
+        const transaction = await this.quotationRepository.dataSource.beginTransaction(IsolationLevel.SERIALIZABLE);
+        try {
+            const quotation = await this.findQuotationAndProductsById(id);
+            await this.validateChangeStatusClose(body);
+            if (quotation.status !== StatusQuotationE.ENREVISIONADMINSITRACION)
+                throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por administración.`)
 
-        let status = null;
-        const {isRejected, comment} = body;
+            let status = null;
+            const {isRejected, comment} = body;
 
-        if (isRejected === true)
-            status = StatusQuotationE.RECHAZADA;
-        else {
-            status = StatusQuotationE.CERRADA;
-            await this.projectService.create({quotationId: id});
+            if (isRejected === true)
+                status = StatusQuotationE.RECHAZADA;
+            else {
+                status = StatusQuotationE.CERRADA;
+                await this.projectService.create({quotationId: id}, transaction);
+            }
+
+            await this.quotationRepository.updateById(id, {status, comment, closingDate: isRejected === true ? undefined : new Date()}, {transaction});
+            await transaction.commit()
+            return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+        } catch (error) {
+            await transaction.rollback();
+            throw this.responseService.badRequest(error?.message ?? error)
         }
-
-        await this.quotationRepository.updateById(id, {status, comment, closingDate: isRejected === true ? undefined : new Date()});
-        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
 
