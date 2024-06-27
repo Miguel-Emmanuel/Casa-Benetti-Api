@@ -31,6 +31,8 @@ export class ProjectRepository extends SoftCrudRepository<
 
   public readonly clientQuoteFile: HasOneRepositoryFactory<Document, typeof Project.prototype.id>;
 
+  public readonly providerFile: HasOneRepositoryFactory<Document, typeof Project.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
@@ -38,6 +40,8 @@ export class ProjectRepository extends SoftCrudRepository<
     @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
   ) {
     super(Project, dataSource);
+    this.providerFile = this.createHasOneRepositoryFactoryFor('providerFile', documentRepositoryGetter);
+    this.registerInclusionResolver('providerFile', this.providerFile.inclusionResolver);
     this.clientQuoteFile = this.createHasOneRepositoryFactoryFor('clientQuoteFile', documentRepositoryGetter);
     this.registerInclusionResolver('clientQuoteFile', this.clientQuoteFile.inclusionResolver);
     this.customer = this.createBelongsToAccessorFor('customer', customerRepositoryGetter,);

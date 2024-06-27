@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE, TypeArticleE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
 import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
@@ -45,6 +45,7 @@ export class ProjectService {
         await this.createAdvancePaymentRecord(quotation, project.id, transaction)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
         await this.createPdfToCustomer(quotationId, project.id, transaction);
+        await this.createPdfToProvider(quotationId, project.id, transaction);
         return project;
 
     }
@@ -257,6 +258,47 @@ export class ProjectService {
             const nameFile = `cotizacion_cliente_${quotationId}_${dayjs().format()}.pdf`
             await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_cliente.html', properties, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
+        } catch (error) {
+            await transaction.rollback()
+            console.log('error: ', error)
+        }
+    }
+
+    async createPdfToProvider(quotationId: number, projectId: number, transaction: any) {
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
+        const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+
+        let prodcutsArray = [];
+        for (const product of products) {
+            const {brand, status, description, document, mainFinish, mainFinishImage, quotationProducts, typeArticle, assembledProducts, originCode} = product;
+            prodcutsArray.push({
+                brandName: brand?.brandName,
+                status,
+                description,
+                image: document?.fileURL ?? defaultImage,
+                mainFinish,
+                mainFinishImage: mainFinishImage?.fileURL ?? defaultImage,
+                quantity: quotationProducts?.quantity,
+                typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
+                originCode,
+                assembledProducts: assembledProducts
+            })
+        }
+        const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
+        try {
+            const properties: any = {
+                "logo": logo,
+                "customerName": `${customer?.name} ${customer?.lastName}`,
+                "quotationId": quotationId,
+                "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+                "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "products": prodcutsArray,
+            }
+            const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format()}.pdf`
+            await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_proveedor.html', properties, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
+            await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
             await transaction.rollback()
             console.log('error: ', error)
