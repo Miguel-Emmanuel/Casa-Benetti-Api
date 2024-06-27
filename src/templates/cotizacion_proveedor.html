@@ -1,0 +1,282 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cotización</title>
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .column {
+            flex-basis: calc(33.33% - 10px);
+            background-color: #ffffff;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+        }
+
+
+        .column-1 {
+            flex-basis: 20%;
+            /* Tamaño de la columna 1 */
+        }
+
+        .column-2 {
+            flex-basis: 60%;
+            background-color: #ffffff;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        .column-3 {
+            flex-basis: 20%;
+            flex-direction: column;
+            font-size: 6px;
+        }
+
+        .title {
+            color: red;
+            font-size: 10px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 6px;
+        }
+
+        .property {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .property-name {
+            font-weight: bold;
+        }
+
+        .property-value {}
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            /* Espacio entre la tabla y las filas */
+        }
+
+        table th,
+        table td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: center;
+            border: none;
+            font-size: 6px;
+
+        }
+
+        table th {
+            background-color: #BEB5C6;
+            color: black;
+            font-weight: bold;
+            font-size: 6px;
+
+        }
+
+        .contenedor {
+            display: flex;
+            justify-content: center;
+        }
+
+        .seccion1 {
+            flex-basis: 40%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+        }
+
+        .seccion1 .header {
+            font-size: 6px;
+            border: 1px solid black;
+            display: flex;
+            background-color: #BEB5C6;
+            height: min-content;
+            width: 200px;
+        }
+
+        .seccion1 .body {
+            height: min-content;
+            width: 200px;
+            border: 1px solid black;
+            border-top: none;
+
+        }
+
+        .seccion2 {
+            font-size: 6px;
+            flex-basis: 60%;
+            justify-content: end;
+            display: flex;
+            flex-direction: column;
+            align-items: end;
+        }
+
+        .grid-container {
+            width: 60%;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        .grid-item {
+            border: 1px solid black;
+            border-top: none;
+            border-left: none;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="row">
+        <div class="column column-1" style="justify-content: end;">
+            <img src="{{{logo}}}" width="100px" />
+        </div>
+        <div class="column column-2">
+            <p class="title">COTIZACION</p>
+            <p>Pabellón Bosques, Local 153. Prolongación Bosques de Reforma 1813, Lomas de Vista Hermosa. Of. 2167 5008
+                - 2167 5301.</p>
+            <p>Monte Everest 635, Piso 1. Lomas de Chapultepec, Miguel Hidalgo. 11000. Tel: 5035 7988</p>
+            <p>Av. Paseo de los Virreyes 45, Local P4, Puerta de Hierro, 45116, Zapopan, Jalisco</p>
+        </div>
+        <div class="column column-3">
+            <div class="property">
+                <div class="property-name">Cliente:</div>
+                <div class="property-value">{{customerName}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Cotización:</div>
+                <div class="property-value">{{quotationId}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Project Manager::</div>
+                <div class="property-value">{{projectManager}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Fecha:</div>
+                <div class="property-value">{{createdAt}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Referencia:</div>
+                <div class="property-value">{{referenceCustomer}}</div>
+            </div>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    {{#if typeArticle}}
+                    <th>MARCA</th>
+                    <th>DESCRIPCIÓN</th>
+                    <th>CODIGOS</th>
+                    <th>MEDIDAS</th>
+                    <th>IMAGEN</th>
+                    <th>ACABADOS</th>
+                    <th>CANTIDAD</th>
+                    {{else}}
+                    <th>MARCA</th>
+                    <th>STATUS</th>
+                    <th>DESCRIPCIÓN</th>
+                    <th>IMAGEN</th>
+                    <th>ACABADOS</th>
+                    <th>CANTIDAD</th>
+                    <th>DESCUENTO</th>
+                    <th>SUBTOTAL CON DESCUENTO</th>
+                    {{/if}}
+                </tr>
+            </thead>
+            <tbody>
+                {{#each products}}
+                {{#if typeArticle}}
+                <tr style="background-color: #FFF3CC;">
+                    <td>{{this.brandName}}</td>
+                    <td>{{this.description}}</td>
+                    <td>CODIGOS</td>
+                    <td>
+                    </td>
+                    <td>
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.image}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.mainFinishImage}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td></td>
+                </tr>
+                {{#each assembledProducts}}
+                <tr style="background-color: #FFF3CC;">
+                    <td>{{../this.brandName}}</td>
+                    <td>{{this.description}}</td>
+                    <td>CODIGOS</td>
+                    <td>
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.document.fileURL}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                    </td>
+                    <td>{{this.mainFinish}}</td>
+                    <td>{{this.quantity}}</td>
+                </tr>
+                {{/each}}
+
+                {{else}}
+                <tr>
+                    <td>{{this.brandName}}</td>
+                    <td>{{this.status}}</td>
+                    <td>{{this.description}}</td>
+                    <td>
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.image}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                        {{this.mainFinish}}
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.mainFinishImage}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>{{this.quantity}}</td>
+                    <td>{{this.percentage}}</td>
+                    <td>{{this.subtotal}}</td>
+                </tr>
+                {{/if}}
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
