@@ -87,7 +87,7 @@ export class ProjectController {
     async findById(
         @param.path.number('id') id: number,
         @param.filter(Project, {exclude: 'where'}) filter?: FilterExcludingWhere<Project>
-    ): Promise<Project> {
+    ): Promise<Object> {
         return this.projectService.findById(id, filter);
     }
 
