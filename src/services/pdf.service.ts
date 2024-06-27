@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import fs from "fs/promises";
+import Handlebars from 'handlebars';
 import HtmlToPdf, {Options} from 'html-pdf-node';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -8,13 +9,12 @@ export class PdfService {
 
     ) { }
 
-    async createPDFWithTemplateHtml(pathTemplate: string, properties: {name: string, value: string}[], options: Options) {
+    async createPDFWithTemplateHtml(pathTemplate: string, properties: any, options: Options) {
         try {
             let html = await fs.readFile(pathTemplate, "utf-8");
-            for (const iterator of properties) {
-                html = html.replace(`{{${iterator.name}}}`, iterator.value);
-            }
-            let file = {content: html};
+            var template = Handlebars.compile(html);
+            var result = template(properties);
+            let file = {content: result};
             return this.generatePdf(file, options);
         } catch (error) {
             console.log('error: ', error)

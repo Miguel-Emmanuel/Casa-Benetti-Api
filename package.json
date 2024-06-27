@@ -67,6 +67,7 @@
     "bignumber.js": "^9.1.2",
     "dayjs": "^1.11.11",
     "dotenv": "^16.4.5",
+    "handlebars": "^4.7.8",
     "html-pdf-node": "^1.0.8",
     "joi": "^17.9.2",
     "loopback-connector-postgresql": "^7.1.1",
