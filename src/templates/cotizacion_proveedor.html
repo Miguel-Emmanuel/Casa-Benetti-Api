@@ -194,7 +194,6 @@
         <table>
             <thead>
                 <tr>
-                    {{#if typeArticle}}
                     <th>MARCA</th>
                     <th>DESCRIPCIÓN</th>
                     <th>CODIGOS</th>
@@ -202,21 +201,11 @@
                     <th>IMAGEN</th>
                     <th>ACABADOS</th>
                     <th>CANTIDAD</th>
-                    {{else}}
-                    <th>MARCA</th>
-                    <th>STATUS</th>
-                    <th>DESCRIPCIÓN</th>
-                    <th>IMAGEN</th>
-                    <th>ACABADOS</th>
-                    <th>CANTIDAD</th>
-                    <th>DESCUENTO</th>
-                    <th>SUBTOTAL CON DESCUENTO</th>
-                    {{/if}}
                 </tr>
             </thead>
             <tbody>
                 {{#each products}}
-                {{#if typeArticle}}
+                {{#if this.typeArticle}}
                 <tr style="background-color: #FFF3CC;">
                     <td>{{this.brandName}}</td>
                     <td>{{this.description}}</td>
@@ -224,19 +213,19 @@
                     <td>
                     </td>
                     <td>
-                        <div class="column column-1" style="justify-content: end;">
+                        <div class="column column-1" style="justify-content: center;background-color: #FFF3CC;">
                             <img src="{{{this.image}}}" width="50px" />
                         </div>
                     </td>
                     <td>
-                        <div class="column column-1" style="justify-content: end;">
+                        <div class="column column-1" style="justify-content: center;background-color: #FFF3CC;">
                             <img src="{{{this.mainFinishImage}}}" width="50px" />
                         </div>
                     </td>
                     <td></td>
                 </tr>
-                {{#each assembledProducts}}
-                <tr style="background-color: #FFF3CC;">
+                {{#each this.assembledProducts}}
+                <tr style="">
                     <td>{{../this.brandName}}</td>
                     <td>{{this.description}}</td>
                     <td>CODIGOS</td>
@@ -253,7 +242,7 @@
                 {{/each}}
 
                 {{else}}
-                <tr>
+                <tr style="background-color: red;">
                     <td>{{this.brandName}}</td>
                     <td>{{this.status}}</td>
                     <td>{{this.description}}</td>
