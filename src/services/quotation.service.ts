@@ -405,7 +405,7 @@ export class QuotationService {
                 relation: 'branch',
             },
             {
-                relation: 'projectManager',
+                relation: 'mainProjectManager',
             },
         ]
         if (filter?.include)
@@ -418,14 +418,14 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, projectManager} = value;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId} = value;
             const {name} = customer;
             const {total} = this.getPricesQuotation(value);
             return {
                 id,
                 customerName: name,
-                pm: projectManager ? `${projectManager?.firstName} ${projectManager?.lastName ?? ''}` : '',
-                pmId: projectManager ? projectManager?.id : '',
+                pm: mainProjectManager ? `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}` : '',
+                pmId: mainProjectManagerId,
                 branchId: branch?.id,
                 total,
                 branchName: branch?.name,

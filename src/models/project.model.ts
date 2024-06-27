@@ -56,6 +56,9 @@ export class Project extends BaseEntity {
     @hasOne(() => Document, {keyTo: 'clientQuoteFileId'})
     clientQuoteFile: Document;
 
+    @hasOne(() => Document, {keyTo: 'providerFileId'})
+    providerFile: Document;
+
     @hasMany(() => CommissionPaymentRecord)
     commissionPaymentRecords: CommissionPaymentRecord[];
 
