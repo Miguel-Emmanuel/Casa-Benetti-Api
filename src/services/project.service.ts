@@ -90,7 +90,7 @@ export class ProjectService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['id', 'name'],
+                    fields: ['id', 'name', 'lastName'],
                 }
             },
             {
@@ -118,8 +118,8 @@ export class ProjectService {
             return {
                 id,
                 projectId,
-                customerName: `${customer?.name} ${customer?.lastName}`,
-                projectManager: mainProjectManager?.lastName,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''}`,
+                projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                 branch: branch?.name,
                 total: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 status,
@@ -300,6 +300,40 @@ export class ProjectService {
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format()}.pdf`
             await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_proveedor.html', properties, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
+        } catch (error) {
+            await transaction.rollback()
+            console.log('error: ', error)
+        }
+    }
+
+
+    async createPdfToAdvance(quotationId: number, projectId: number, transaction: any) {
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'proofPaymentQuotation'}]});
+        const {customer, mainProjectManager, referenceCustomer, proofPaymentQuotations} = quotation;
+
+        const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
+        try {
+            const propertiesGeneral: any = {
+                "logo": logo,
+                "customerName": `${customer?.name} ${customer?.lastName}`,
+                "quotationId": quotationId,
+                "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+                "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+            }
+
+            for (let index = 0; index < proofPaymentQuotations?.length; index++) {
+                const {proofPaymentType} = proofPaymentQuotations[index];
+                const propertiesAdvance: any = {
+                    ...propertiesGeneral
+                }
+
+                const nameFile = `recibo_anticipo_${proofPaymentType}_${quotationId}_${dayjs().format()}.pdf`
+                await this.pdfService.createPDFWithTemplateHtml('src/templates/recibo_anticipo.html', propertiesAdvance, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
+                await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
+
+            }
+
         } catch (error) {
             await transaction.rollback()
             console.log('error: ', error)
