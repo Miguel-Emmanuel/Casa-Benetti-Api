@@ -90,7 +90,7 @@ export class ProjectService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['id', 'name'],
+                    fields: ['id', 'name', 'lastName'],
                 }
             },
             {
