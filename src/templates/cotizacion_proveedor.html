@@ -191,6 +191,7 @@
         </div>
     </div>
     <div class="table-container">
+        <!-- Tabla para productos con ensanblados -->
         <table>
             <thead>
                 <tr>
@@ -204,7 +205,7 @@
                 </tr>
             </thead>
             <tbody>
-                {{#each products}}
+                {{#each productosEnsamblados}}
                 {{#if this.typeArticle}}
                 <tr style="background-color: #FFF3CC;">
                     <td>{{this.brandName}}</td>
@@ -262,6 +263,42 @@
                     <td>{{this.subtotal}}</td>
                 </tr>
                 {{/if}}
+                {{/each}}
+            </tbody>
+        </table>
+
+        <!-- Tabla para productos sin productosEnsamblados -->
+        <table>
+            <thead>
+                <tr>
+                    <th>MARCA</th>
+                    <th>STATUS</th>
+                    <th>DESCRIPCIÓN</th>
+                    <th>IMAGEN</th>
+                    <th>ACABADOS</th>
+                    <th>CANTIDAD</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {{#each productosSinEnsamblado}}
+                <tr>
+                    <td>{{this.brandName}}</td>
+                    <td>{{this.status}}</td>
+                    <td>{{this.description}}</td>
+                    <td>
+                        <div class="column column-1" style="justify-content: center;">
+                            <img src="{{{this.image}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                        {{this.mainFinish}}
+                        <div class="column column-1" style="justify-content: center;">
+                            <img src="{{{this.mainFinishImage}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>{{this.quantity}}</td>
+                </tr>
                 {{/each}}
             </tbody>
         </table>
