@@ -196,8 +196,9 @@
             <thead>
                 <tr>
                     <th>MARCA</th>
+                    <th>CODIGO</th>
+                    <th>STATUS</th>
                     <th>DESCRIPCIÓN</th>
-                    <th>CODIGOS</th>
                     <th>MEDIDAS</th>
                     <th>IMAGEN</th>
                     <th>ACABADOS</th>
@@ -205,21 +206,23 @@
                 </tr>
             </thead>
             <tbody>
-                {{#each productosEnsamblados}}
+                {{#each products}}
                 {{#if this.typeArticle}}
-                <tr style="background-color: #FFF3CC;">
+                <tr style="background-color: #FFFBEE;">
                     <td>{{this.brandName}}</td>
+                    <td>{{this.originCode}}</td>
+                    <td></td>
                     <td>{{this.description}}</td>
-                    <td>CODIGOS</td>
                     <td>
+                        No existe campo de medidas en ensamblado
                     </td>
                     <td>
-                        <div class="column column-1" style="justify-content: center;background-color: #FFF3CC;">
+                        <div class="column column-1" style="justify-content: center;background-color: #FFFBEE;">
                             <img src="{{{this.image}}}" width="50px" />
                         </div>
                     </td>
                     <td>
-                        <div class="column column-1" style="justify-content: center;background-color: #FFF3CC;">
+                        <div class="column column-1" style="justify-content: center;background-color: #FFFBEE;">
                             <img src="{{{this.mainFinishImage}}}" width="50px" />
                         </div>
                     </td>
@@ -227,9 +230,10 @@
                 </tr>
                 {{#each this.assembledProducts}}
                 <tr style="">
-                    <td>{{../this.brandName}}</td>
+                    <td style="background-color: #FFF4EE;">{{../this.brandName}}</td>
+                    <td></td>
+                    <td></td>
                     <td>{{this.description}}</td>
-                    <td>{{../this.originCode}}</td>
                     <td>
                         <div class="column column-1" style="justify-content: end;">
                             <img src="{{{this.document.fileURL}}}" width="50px" />
@@ -243,62 +247,26 @@
                 {{/each}}
 
                 {{else}}
-                <tr style="background-color: red;">
+                <tr>
                     <td>{{this.brandName}}</td>
+                    <td>{{this.originCode}}</td>
                     <td>{{this.status}}</td>
                     <td>{{this.description}}</td>
+                    <td></td>
                     <td>
-                        <div class="column column-1" style="justify-content: end;">
+                        <div class=" column column-1" style="justify-content: center;">
                             <img src="{{{this.image}}}" width="50px" />
                         </div>
                     </td>
                     <td>
                         {{this.mainFinish}}
-                        <div class="column column-1" style="justify-content: end;">
+                        <div class="column column-1" style="justify-content: center;">
                             <img src="{{{this.mainFinishImage}}}" width="50px" />
                         </div>
                     </td>
                     <td>{{this.quantity}}</td>
-                    <td>{{this.percentage}}</td>
-                    <td>{{this.subtotal}}</td>
                 </tr>
                 {{/if}}
-                {{/each}}
-            </tbody>
-        </table>
-
-        <!-- Tabla para productos sin productosEnsamblados -->
-        <table>
-            <thead>
-                <tr>
-                    <th>MARCA</th>
-                    <th>STATUS</th>
-                    <th>DESCRIPCIÓN</th>
-                    <th>IMAGEN</th>
-                    <th>ACABADOS</th>
-                    <th>CANTIDAD</th>
-                </tr>
-            </thead>
-            <tbody>
-
-                {{#each productosSinEnsamblado}}
-                <tr>
-                    <td>{{this.brandName}}</td>
-                    <td>{{this.status}}</td>
-                    <td>{{this.description}}</td>
-                    <td>
-                        <div class="column column-1" style="justify-content: center;">
-                            <img src="{{{this.image}}}" width="50px" />
-                        </div>
-                    </td>
-                    <td>
-                        {{this.mainFinish}}
-                        <div class="column column-1" style="justify-content: center;">
-                            <img src="{{{this.mainFinishImage}}}" width="50px" />
-                        </div>
-                    </td>
-                    <td>{{this.quantity}}</td>
-                </tr>
                 {{/each}}
             </tbody>
         </table>
