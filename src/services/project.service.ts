@@ -44,7 +44,7 @@ export class ProjectService {
         await this.changeStatusProductsToPedido(quotationId);
         await this.createAdvancePaymentRecord(quotation, project.id)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId)
-        await this.createPdfToCustomer(quotationId);
+        await this.createPdfToCustomer(quotationId, project.id);
         return project;
     }
 
@@ -135,7 +135,7 @@ export class ProjectService {
         await this.projectRepository.updateById(id, project);
     }
 
-    async createPdfToCustomer(quotationId: number) {
+    async createPdfToCustomer(quotationId: number, projectId: number) {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         let productsTemplate = [];
@@ -176,7 +176,9 @@ export class ProjectService {
                 balance
 
             }
-            await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_cliente.html', properties, {format: 'A4', path: './.sandbox/cotizacion_cliente.pdf', printBackground: true});
+            const nameFile = `cotizacion_cliente_${quotationId}_${dayjs().format()}.pdf`
+            await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_cliente.html', properties, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
+            await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
         } catch (error) {
             console.log('error: ', error)
         }
