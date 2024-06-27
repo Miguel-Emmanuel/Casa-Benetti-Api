@@ -643,6 +643,7 @@ export class QuotationService {
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
                 percentageMainProjectManager: quotation?.percentageMainProjectManager,
+                rejectedComment: quotation?.comment,
             },
             // quotation: {
             //     subtotal: quotation.subtotal,
