@@ -190,6 +190,7 @@ export interface QuotationFindOneResponse {
         status: string;
         mainProjectManagerId: number | null;
         percentageMainProjectManager: number | null;
+        rejectedComment?: string;
 
     },
     commisions: {

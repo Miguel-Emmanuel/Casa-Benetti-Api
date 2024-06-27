@@ -1,9 +1,9 @@
 import {Getter, inject} from '@loopback/core';
-import {BelongsToAccessor, repository, HasManyRepositoryFactory} from '@loopback/repository';
+import {BelongsToAccessor, repository, HasManyRepositoryFactory, HasOneRepositoryFactory} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Project, ProjectRelations, Quotation, AdvancePaymentRecord, CommissionPaymentRecord, Branch, Customer} from '../models';
+import {Project, ProjectRelations, Quotation, AdvancePaymentRecord, CommissionPaymentRecord, Branch, Customer, Document} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {QuotationRepository} from './quotation.repository';
 import {SoftCrudRepository} from './soft-delete-entity.repository.base';
@@ -11,6 +11,7 @@ import {AdvancePaymentRecordRepository} from './advance-payment-record.repositor
 import {CommissionPaymentRecordRepository} from './commission-payment-record.repository';
 import {BranchRepository} from './branch.repository';
 import {CustomerRepository} from './customer.repository';
+import {DocumentRepository} from './document.repository';
 
 export class ProjectRepository extends SoftCrudRepository<
   Project,
@@ -28,13 +29,17 @@ export class ProjectRepository extends SoftCrudRepository<
 
   public readonly customer: BelongsToAccessor<Customer, typeof Project.prototype.id>;
 
+  public readonly clientQuoteFile: HasOneRepositoryFactory<Document, typeof Project.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>,
+    @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
   ) {
     super(Project, dataSource);
+    this.clientQuoteFile = this.createHasOneRepositoryFactoryFor('clientQuoteFile', documentRepositoryGetter);
+    this.registerInclusionResolver('clientQuoteFile', this.clientQuoteFile.inclusionResolver);
     this.customer = this.createBelongsToAccessorFor('customer', customerRepositoryGetter,);
     this.registerInclusionResolver('customer', this.customer.inclusionResolver);
     this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);

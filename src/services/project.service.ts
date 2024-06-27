@@ -2,6 +2,8 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
+import dayjs from 'dayjs';
+import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
@@ -35,14 +37,16 @@ export class ProjectService {
         private user: UserProfile,
     ) { }
 
-    async create(body: {quotationId: number}) {
+    async create(body: {quotationId: number}, transaction: any) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId});
-        await this.changeStatusProductsToPedido(quotationId);
-        await this.createAdvancePaymentRecord(quotation, project.id)
-        await this.createCommissionPaymentRecord(quotation, project.id, quotationId)
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, transaction);
+        await this.changeStatusProductsToPedido(quotationId, transaction);
+        await this.createAdvancePaymentRecord(quotation, project.id, transaction)
+        await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
+        await this.createPdfToCustomer(quotationId, project.id, transaction);
         return project;
+
     }
 
     async count(where?: Where<Project>,) {
@@ -132,21 +136,138 @@ export class ProjectService {
         await this.projectRepository.updateById(id, project);
     }
 
-    async createPdf() {
+    async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
+        const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+
+        let productsTemplate = [];
+        for (const product of products) {
+            const {brand, status, description, document, mainFinish, mainFinishImage, quotationProducts} = product;
+            productsTemplate.push({
+                brandName: brand?.brandName,
+                status,
+                description,
+                image: document?.fileURL ?? defaultImage,
+                mainFinish,
+                mainFinishImage: mainFinishImage?.fileURL ?? defaultImage,
+                quantity: quotationProducts?.quantity,
+                percentage: quotationProducts?.percentageDiscountProduct,
+                subtotal: quotationProducts?.subtotal
+            })
+        }
+        console.log(productsTemplate)
+        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
+        const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
-            const properties = [
-                {
-                    name: 'name',
-                    value: 'Ñoki'
-                }
-            ]
-            await this.pdfService.createPDFWithTemplateHtml('src/templates/html_test.html', properties, {format: 'A4', path: './.sandbox/hola.pdf'});
+            const properties: any = {
+                "logo": logo,
+                "customerName": `${customer?.name} ${customer?.lastName}`,
+                "quotationId": quotationId,
+                "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+                "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "products": productsTemplate,
+                subtotal,
+                percentageAdditionalDiscount,
+                additionalDiscount,
+                percentageIva,
+                iva,
+                total,
+                advance,
+                advanceCustomer,
+                conversionAdvance,
+                balance
+
+            }
+            const nameFile = `cotizacion_cliente_${quotationId}_${dayjs().format()}.pdf`
+            await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_cliente.html', properties, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
+            await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
+            await transaction.rollback()
             console.log('error: ', error)
         }
     }
 
-    async createProject(body: {quotationId: number, branchId: number, customerId?: number}) {
+    getPricesQuotation(quotation: Quotation) {
+        const {exchangeRateQuotation, } = quotation;
+        if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
+            const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
+                advanceEUR, exchangeRateEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            const body = {
+                subtotal: subtotalEUR,
+                percentageAdditionalDiscount: percentageAdditionalDiscount,
+                additionalDiscount: additionalDiscountEUR,
+                percentageIva: percentageIva,
+                iva: ivaEUR,
+                total: totalEUR,
+                percentageAdvance: percentageAdvanceEUR,
+                advance: advanceEUR,
+                exchangeRate: exchangeRateEUR,
+                exchangeRateAmountEUR: 15,
+                advanceCustomer: advanceCustomerEUR,
+                conversionAdvance: conversionAdvanceEUR,
+                balance: balanceEUR,
+            }
+            return body;
+        } else if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
+            const {subtotalUSD, percentageAdditionalDiscount, additionalDiscountUSD, percentageIva, ivaUSD, totalUSD, percentageAdvanceUSD,
+                advanceUSD, exchangeRateUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
+            const body = {
+                subtotal: subtotalUSD,
+                percentageAdditionalDiscount: percentageAdditionalDiscount,
+                additionalDiscount: additionalDiscountUSD,
+                percentageIva: percentageIva,
+                iva: ivaUSD,
+                total: totalUSD,
+                percentageAdvance: percentageAdvanceUSD,
+                advance: advanceUSD,
+                exchangeRate: exchangeRateUSD,
+                exchangeRateAmountUSD: 15,
+                advanceCustomer: advanceCustomerUSD,
+                conversionAdvance: conversionAdvanceUSD,
+                balance: balanceUSD,
+            }
+            return body;
+        } else if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
+            const {subtotalMXN, percentageAdditionalDiscount, additionalDiscountMXN, percentageIva, ivaMXN, totalMXN, percentageAdvanceMXN,
+                advanceMXN, exchangeRateMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
+            const body = {
+                subtotal: subtotalMXN,
+                percentageAdditionalDiscount: percentageAdditionalDiscount,
+                additionalDiscount: additionalDiscountMXN,
+                percentageIva: percentageIva,
+                iva: ivaMXN,
+                total: totalMXN,
+                percentageAdvance: percentageAdvanceMXN,
+                advance: advanceMXN,
+                exchangeRate: exchangeRateMXN,
+                exchangeRateAmountMXN: 15,
+                advanceCustomer: advanceCustomerMXN,
+                conversionAdvance: conversionAdvanceMXN,
+                balance: balanceMXN,
+            }
+            return body;
+        }
+        const body = {
+            subtotal: null,
+            percentageAdditionalDiscount: null,
+            additionalDiscount: null,
+            percentageIva: null,
+            iva: null,
+            total: null,
+            percentageAdvance: null,
+            advance: null,
+            exchangeRate: null,
+            exchangeRateAmountMXN: null,
+            advanceCustomer: null,
+            conversionAdvance: null,
+            balance: null,
+        }
+        return body;
+    }
+
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, transaction: any) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
@@ -155,15 +276,15 @@ export class ProjectService {
         } else {
             projectId = `${1}${branch?.name?.charAt(0)}`;
         }
-        const project = await this.projectRepository.create({...body, projectId});
+        const project = await this.projectRepository.create({...body, projectId}, {transaction});
         return project;
     }
 
-    async changeStatusProductsToPedido(quotationId: number) {
-        await this.quotationProductsRepository.updateAll({status: QuotationProductStatusE.PEDIDO}, {quotationId})
+    async changeStatusProductsToPedido(quotationId: number, transaction: any) {
+        await this.quotationProductsRepository.updateAll({status: QuotationProductStatusE.PEDIDO}, {quotationId}, {transaction})
     }
 
-    async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number) {
+    async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number, transaction: any) {
         const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
         //Arquitecto
         if (isArchitect === true) {
@@ -176,7 +297,7 @@ export class ProjectService {
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.ARQUITECTO
             }
-            await this.commissionPaymentRecordRepository.create(body);
+            await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Cliente referenciado
@@ -190,7 +311,7 @@ export class ProjectService {
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO
             }
-            await this.commissionPaymentRecordRepository.create(body);
+            await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Project managers
@@ -206,7 +327,7 @@ export class ProjectService {
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                     type: AdvancePaymentTypeE.PROJECT_MANAGER
                 }
-                await this.commissionPaymentRecordRepository.create(body);
+                await this.commissionPaymentRecordRepository.create(body, {transaction});
             }
         }
 
@@ -221,7 +342,7 @@ export class ProjectService {
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.SHOWROOM_MANAGER
             }
-            await this.commissionPaymentRecordRepository.create(body);
+            await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Proyectistas
@@ -237,7 +358,7 @@ export class ProjectService {
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                     type: AdvancePaymentTypeE.PROYECTISTA
                 }
-                await this.commissionPaymentRecordRepository.create(body);
+                await this.commissionPaymentRecordRepository.create(body, {transaction});
             }
         }
 
@@ -280,7 +401,7 @@ export class ProjectService {
         }
     }
 
-    async createAdvancePaymentRecord(quotation: Quotation, projectId: number) {
+    async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
         const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
             const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, conversionAdvance} = proofPaymentQuotations[index];
@@ -299,7 +420,7 @@ export class ProjectService {
                 projectId
 
             }
-            await this.advancePaymentRecordRepository.create(body);
+            await this.advancePaymentRecordRepository.create(body, {transaction});
         }
     }
 
