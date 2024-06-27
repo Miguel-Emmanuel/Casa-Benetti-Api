@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
-import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
@@ -117,7 +117,7 @@ export class ProjectService {
             return {
                 id,
                 projectId,
-                customerName: customer?.name,
+                customerName: `${customer?.name} ${customer?.lastName}`,
                 projectManager: mainProjectManager?.lastName,
                 branch: branch?.name,
                 total: this.getTotalQuotation(exchangeRateQuotation, quotation),
@@ -129,7 +129,82 @@ export class ProjectService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Project>) {
-        return this.projectRepository.findById(id, filter);
+        const include: InclusionFilter[] = [
+            {
+                relation: 'quotation',
+                scope: {
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate'],
+                    include: [
+                        {
+                            relation: 'mainProjectManager',
+                            scope: {
+                                fields: ['id', 'firstName', 'lastName']
+                            }
+                        },
+                        {
+                            relation: 'products',
+                            scope: {
+                                include: ['brand', 'document', 'mainFinishImage', 'quotationProducts', 'provider', 'secondaryFinishingImage']
+                            }
+                        },
+                    ]
+                }
+            },
+            {
+                relation: 'customer',
+                scope: {
+                    fields: ['id', 'name'],
+                }
+            },
+            {
+                relation: 'advancePaymentRecords',
+
+            },
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include,
+                ]
+            };
+        const project = await this.projectRepository.findById(id, filter);
+        const {customer, quotation, advancePaymentRecords} = project;
+        const {closingDate, products} = quotation;
+        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
+        const productsArray = [];
+        for (const iterator of products ?? []) {
+            productsArray.push({
+                image: iterator?.document ? iterator?.document?.fileURL : '',
+                brandName: iterator?.brand?.brandName ?? '',
+                description: iterator?.description,
+                price: iterator?.price,
+                listPrice: iterator?.listPrice,
+                factor: iterator?.factor,
+                quantity: iterator?.quotationProducts?.quantity,
+                provider: iterator?.provider?.name,
+                status: iterator?.status,
+                mainFinish: iterator?.mainFinish,
+                mainFinishImage: iterator?.mainFinishImage?.fileURL,
+                secondaryFinishing: iterator?.secondaryFinishing,
+                secondaryFinishingImage: iterator?.secondaryFinishingImage?.fileURL,
+            })
+        }
+        return {
+            id,
+            customerName: `${customer?.name} ${customer?.lastName}`,
+            closingDate,
+            total,
+            totalPay: (total ?? 0) - (balance ?? 0),
+            balance,
+            products: productsArray,
+            advancePaymentRecords
+        }
+        return project;
     }
 
     async updateById(id: number, project: Project,) {
@@ -156,7 +231,6 @@ export class ProjectService {
                 subtotal: quotationProducts?.subtotal
             })
         }
-        console.log(productsTemplate)
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {

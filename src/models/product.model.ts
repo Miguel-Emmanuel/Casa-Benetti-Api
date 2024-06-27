@@ -7,7 +7,7 @@ import {Classification} from './classification.model';
 import {Document} from './document.model';
 import {Line} from './line.model';
 import {Organization} from './organization.model';
-import {Provider} from './provider.model';
+import {Provider, ProviderWithRelations} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {Quotation} from './quotation.model';
 
@@ -347,6 +347,7 @@ export interface ProductRelations {
     // describe navigational properties here
     brand: BrandWithRelations
     quotationProducts: QuotationProductsWithRelations
+    provider: ProviderWithRelations
 }
 
 export type ProductWithRelations = Product & ProductRelations;
