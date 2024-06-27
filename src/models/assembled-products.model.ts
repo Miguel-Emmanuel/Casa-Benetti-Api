@@ -32,6 +32,7 @@ export class AssembledProducts extends BaseEntity {
     })
     mainMaterial: string;
 
+    //Acabado principal
     @property({
         type: 'string',
     })

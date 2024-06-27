@@ -2,19 +2,21 @@ import * as Joi from "joi";
 import {CurrencyE, LocationE, TypeArticleE, UOME} from '../enums';
 
 export const schemaAssembledProducts = Joi.object({
-    description: Joi.string().required(),
-    SKU: Joi.string().required(),
+    assembledProduct: Joi.object({
+        description: Joi.string().required(),
+        SKU: Joi.string().required(),
+        mainMaterial: Joi.string().required(),
+        mainFinish: Joi.string().required(),
+        secondaryMaterial: Joi.string().required(),
+        secondaryFinishing: Joi.string().required(),
+        quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
+        isActive: Joi.boolean().required(),
+    }),
     document: Joi.object({
         fileURL: Joi.string().required(),
         name: Joi.string().required(),
         extension: Joi.string().required(),
     }).required(),
-    mainMaterial: Joi.string().required(),
-    mainFinish: Joi.string().required(),
-    secondaryMaterial: Joi.string().required(),
-    secondaryFinishing: Joi.string().required(),
-    quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
-    isActive: Joi.boolean().required(),
 })
 
 export const schemaCreateProduct = Joi.object({
