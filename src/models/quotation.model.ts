@@ -141,7 +141,7 @@ export class Quotation extends BaseEntity {
     })
     status: StatusQuotationE;
 
-    //Comentario para rechazada
+    //Comentario para rechazada - rejected comment
     @property({
         type: 'string',
         required: false,
@@ -199,6 +199,17 @@ export class Quotation extends BaseEntity {
     subtotalEUR: number;
 
     //Porcentaje descuento adicional
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageAdditionalDiscountEUR: number;
+
+
+    //Porcentaje descuento adicional
     @property({
         type: 'number',
         required: false,
@@ -206,7 +217,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    percentageAdditionalDiscountEUR: number;
+    percentageAdditionalDiscount: number;
 
     //descuento adicional total
     @property({
@@ -340,14 +351,14 @@ export class Quotation extends BaseEntity {
     subtotalMXN: number;
 
     //Porcentaje descuento adicional
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageAdditionalDiscountMXN: number;
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageAdditionalDiscountMXN: number;
 
     //descuento adicional total
     @property({
@@ -470,14 +481,14 @@ export class Quotation extends BaseEntity {
     subtotalUSD: number;
 
     //Porcentaje descuento adicional
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageAdditionalDiscountUSD: number;
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageAdditionalDiscountUSD: number;
 
     //descuento adicional total
     @property({

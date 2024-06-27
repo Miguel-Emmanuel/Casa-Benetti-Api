@@ -1,10 +1,11 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {ProjectStatusE} from '../enums';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Customer, CustomerWithRelations} from './customer.model';
+import {Document} from './document.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -51,6 +52,9 @@ export class Project extends BaseEntity {
 
     @belongsTo(() => Customer)
     customerId: number;
+
+    @hasOne(() => Document, {keyTo: 'clientQuoteFileId'})
+    clientQuoteFile: Document;
 
     @hasMany(() => CommissionPaymentRecord)
     commissionPaymentRecords: CommissionPaymentRecord[];
