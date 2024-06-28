@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {schemaActivateDeactivate, schemaCreateProduct} from '../joi.validation.ts/product.validation';
+import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AssembledProducts, Document, Product} from '../models';
 import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
@@ -306,6 +306,27 @@ export class ProductService {
         await this.validateBodyActivateDeactivate(body);
         await this.productRepository.updateById(id, {isActive: !product?.isActive, activateDeactivateComment: body.activateDeactivateComment});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async updateProforma(id: number, body: {price: number}) {
+        await this.findByIdProduct(id);
+        await this.validateBodyProforma(body);
+        await this.productRepository.updateById(id, {listPrice: body.price});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async validateBodyProforma(body: {price: number}) {
+        try {
+            await schemaUpdateProforma.validateAsync(body);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
     }
 
     async validateBodyActivateDeactivate(body: {activateDeactivateComment: string},) {
