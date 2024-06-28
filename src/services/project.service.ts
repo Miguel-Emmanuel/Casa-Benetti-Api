@@ -193,6 +193,7 @@ export class ProjectService {
         const productsArray = [];
         for (const iterator of products ?? []) {
             productsArray.push({
+                id: iterator?.id,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 brandName: iterator?.brand?.brandName ?? '',
                 description: iterator?.description,
