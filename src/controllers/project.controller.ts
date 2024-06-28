@@ -161,6 +161,23 @@ export class ProjectController {
                                     },
                                 }
                             }
+                        },
+                        documents: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    fileURL: {
+                                        type: 'string'
+                                    },
+                                    name: {
+                                        type: 'string'
+                                    },
+                                    createdAt: {
+                                        type: 'string', format: 'date-time'
+                                    },
+                                }
+                            }
                         }
                     }
                 }
@@ -171,6 +188,49 @@ export class ProjectController {
         @param.path.number('id') id: number,
     ): Promise<Object> {
         return this.projectService.getDocuments(id);
+    }
+
+    @patch('/projects/documents/{id}')
+    @response(201, {
+        description: 'customer model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async uploadDocuments(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            document: {
+                                type: 'array',
+                                items: {
+                                    properties: {
+                                        id: {type: 'number'},
+                                        fileURL: {type: 'string'},
+                                        name: {type: 'string'},
+                                        extension: {type: 'string'}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {document: {fileURL: string, name: string, extension: string, id?: number}[]},
+    ): Promise<void> {
+        await this.projectService.uploadDocuments(id, data);
     }
 
     // @del('/projects/{id}')

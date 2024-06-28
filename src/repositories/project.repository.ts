@@ -35,6 +35,8 @@ export class ProjectRepository extends SoftCrudRepository<
 
   public readonly advanceFile: HasManyRepositoryFactory<Document, typeof Project.prototype.id>;
 
+  public readonly documents: HasManyRepositoryFactory<Document, typeof Project.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
@@ -42,6 +44,8 @@ export class ProjectRepository extends SoftCrudRepository<
     @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
   ) {
     super(Project, dataSource);
+    this.documents = this.createHasManyRepositoryFactoryFor('documents', documentRepositoryGetter,);
+    this.registerInclusionResolver('documents', this.documents.inclusionResolver);
     this.advanceFile = this.createHasManyRepositoryFactoryFor('advanceFile', documentRepositoryGetter,);
     this.registerInclusionResolver('advanceFile', this.advanceFile.inclusionResolver);
     this.providerFile = this.createHasOneRepositoryFactoryFor('providerFile', documentRepositoryGetter);
