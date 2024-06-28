@@ -159,12 +159,20 @@ export class ProjectService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['id', 'name'],
+                    fields: ['id', 'name', 'lastName'],
                 }
             },
             {
                 relation: 'advancePaymentRecords',
-
+            },
+            {
+                relation: 'clientQuoteFile',
+            },
+            {
+                relation: 'providerFile',
+            },
+            {
+                relation: 'advanceFile',
             },
         ]
         if (filter?.include)
@@ -179,7 +187,7 @@ export class ProjectService {
                 ]
             };
         const project = await this.projectRepository.findById(id, filter);
-        const {customer, quotation, advancePaymentRecords} = project;
+        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile} = project;
         const {closingDate, products, exchangeRateQuotation} = quotation;
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const productsArray = [];
@@ -209,7 +217,12 @@ export class ProjectService {
             balance,
             products: productsArray,
             advancePaymentRecords,
-            exchangeRateQuotation
+            exchangeRateQuotation,
+            documents: {
+                clientQuoteFile: clientQuoteFile?.fileURL,
+                providerFile: providerFile?.fileURL,
+                advanceFile: advanceFile?.map(value => value.fileURL),
+            }
         }
         return project;
     }
