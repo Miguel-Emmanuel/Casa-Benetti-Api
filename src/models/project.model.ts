@@ -62,6 +62,9 @@ export class Project extends BaseEntity {
     @hasMany(() => Document, {keyTo: 'advanceFileId'})
     advanceFile: Document[];
 
+    @hasMany(() => Document)
+    documents: Document[];
+
     //Registro del pago correspondiente a cada comisión
     @hasMany(() => CommissionPaymentRecord)
     commissionPaymentRecords: CommissionPaymentRecord[];

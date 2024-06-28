@@ -22,3 +22,4 @@ export * from './proof-payment-quotation.service';
 export * from './project.service';
 export * from './pdf.service';
 export * from './letter-number.service';
+export * from './documents.service';

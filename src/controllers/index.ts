@@ -23,3 +23,4 @@ export * from './project.controller';
 export * from './proof-payment-quotation.controller';
 export * from './quotation-user.controller';
 
+export * from './documents.controller';
