@@ -88,3 +88,8 @@ export const schemaCreateProduct = Joi.object({
 export const schemaActivateDeactivate = Joi.object({
     activateDeactivateComment: Joi.string().required()
 })
+
+
+export const schemaUpdateProforma = Joi.object({
+    price: Joi.number().required()
+})
