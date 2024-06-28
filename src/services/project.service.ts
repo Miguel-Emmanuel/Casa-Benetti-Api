@@ -346,7 +346,7 @@ export class ProjectService {
 
             }
             const nameFile = `cotizacion_cliente_${quotationId}_${dayjs().format()}.pdf`
-            await this.pdfService.createPDFWithTemplateHtml('src/templates/cotizacion_cliente.html', properties, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
+            await this.pdfService.createPDFWithTemplateHtml(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A4', path: `${process.cwd()}/.sandbox/${nameFile}`, printBackground: true});
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
             await transaction.rollback()
