@@ -87,6 +87,11 @@ export class Document extends BaseEntity {
   })
   providerFileId?: number;
 
+  @property({
+    type: 'number',
+  })
+  advanceFileId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }
