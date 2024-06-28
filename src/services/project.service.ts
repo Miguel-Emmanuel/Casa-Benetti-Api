@@ -234,7 +234,37 @@ export class ProjectService {
                 advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}})
             }
         }
-        return project;
+    }
+
+    async getDocuments(id: number) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'clientQuoteFile',
+            },
+            {
+                relation: 'providerFile',
+            },
+            {
+                relation: 'advanceFile',
+            },
+        ]
+        const project = await this.projectRepository.findById(id, {include: [...include]});
+        const {clientQuoteFile, providerFile, advanceFile} = project;
+        return {
+            id,
+            clientQuoteFile: {
+                fileURL: clientQuoteFile?.fileURL,
+                name: clientQuoteFile?.name,
+                createdAt: clientQuoteFile?.createdAt,
+            },
+            providerFile:
+            {
+                fileURL: providerFile?.fileURL,
+                name: providerFile?.name,
+                createdAt: providerFile?.createdAt,
+            },
+            advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}})
+        }
     }
 
     async updateById(id: number, project: Project,) {

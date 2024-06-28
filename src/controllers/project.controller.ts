@@ -109,6 +109,70 @@ export class ProjectController {
         await this.projectService.updateById(id, project);
     }
 
+    @get('/projects/documents/{id}')
+    @response(200, {
+        description: 'Project model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        clientQuoteFile: {
+                            type: 'object',
+                            properties: {
+                                fileURL: {
+                                    type: 'string'
+                                },
+                                name: {
+                                    type: 'string'
+                                },
+                                createdAt: {
+                                    type: 'string', format: 'date-time'
+                                },
+                            }
+                        },
+                        providerFile: {
+                            type: 'object',
+                            properties: {
+                                fileURL: {
+                                    type: 'string'
+                                },
+                                name: {
+                                    type: 'string'
+                                },
+                                createdAt: {
+                                    type: 'string', format: 'date-time'
+                                },
+                            }
+                        },
+                        advanceFile: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    fileURL: {
+                                        type: 'string'
+                                    },
+                                    name: {
+                                        type: 'string'
+                                    },
+                                    createdAt: {
+                                        type: 'string', format: 'date-time'
+                                    },
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        },
+    })
+    async getDocuments(
+        @param.path.number('id') id: number,
+    ): Promise<Object> {
+        return this.projectService.getDocuments(id);
+    }
+
     // @del('/projects/{id}')
     // @response(204, {
     //     description: 'Project DELETE success',
