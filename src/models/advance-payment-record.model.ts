@@ -18,6 +18,11 @@ export class AdvancePaymentRecord extends Entity {
     })
     id: number;
 
+    @property({
+        type: 'number',
+    })
+    consecutiveId: number;
+
     //Fecha de creacion
     @property({
         type: 'date',
@@ -96,6 +101,16 @@ export class AdvancePaymentRecord extends Entity {
         },
     })
     subtotalAmountPaid: number;
+
+    //Total venta (total de la cotizacion)
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    total: number;
 
     //Porcentaje de pago
     @property({

@@ -214,7 +214,7 @@ export class ProjectService {
             customerName: `${customer?.name} ${customer?.lastName}`,
             closingDate,
             total,
-            totalPay: (total ?? 0) - (balance ?? 0),
+            totalPay: advanceCustomer,
             balance,
             products: productsArray,
             advancePaymentRecords,
@@ -589,10 +589,12 @@ export class ProjectService {
 
     async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
         const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
+        const {total} = this.getPricesQuotation(quotation);
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
-            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, conversionAdvance} = proofPaymentQuotations[index];
+            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id} = proofPaymentQuotations[index];
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
             const body = {
+                consecutiveId: (index + 1),
                 paymentDate,
                 paymentMethod: paymentType,
                 amountPaid: advanceCustomer,
@@ -602,6 +604,7 @@ export class ProjectService {
                 currencyApply: exchangeRateQuotation,
                 conversionAmountPaid,
                 subtotalAmountPaid: this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)),
+                total: total ?? 0,
                 paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
                 projectId
 
