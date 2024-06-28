@@ -342,7 +342,7 @@ export class ProjectService {
 
                 const nameFile = `recibo_anticipo_${proofPaymentType}_${quotationId}_${dayjs().format()}.pdf`
                 await this.pdfService.createPDFWithTemplateHtml('src/templates/recibo_anticipo.html', propertiesAdvance, {format: 'A4', path: `./.sandbox/${nameFile}`, printBackground: true});
-                await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
+                await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
 
             }
 
