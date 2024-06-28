@@ -7,7 +7,7 @@ import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE, TypeArticleE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
-import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
@@ -37,7 +37,9 @@ export class ProjectService {
         @inject(SecurityBindings.USER)
         private user: UserProfile,
         @service()
-        public letterNumberService: LetterNumberService
+        public letterNumberService: LetterNumberService,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository,
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -174,6 +176,9 @@ export class ProjectService {
             {
                 relation: 'advanceFile',
             },
+            {
+                relation: 'documents',
+            },
         ]
         if (filter?.include)
             filter.include = [
@@ -187,7 +192,7 @@ export class ProjectService {
                 ]
             };
         const project = await this.projectRepository.findById(id, filter);
-        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile} = project;
+        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents} = project;
         const {closingDate, products, exchangeRateQuotation} = quotation;
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const productsArray = [];
@@ -219,7 +224,7 @@ export class ProjectService {
             products: productsArray,
             advancePaymentRecords,
             exchangeRateQuotation,
-            documents: {
+            files: {
                 clientQuoteFile: {
                     fileURL: clientQuoteFile?.fileURL,
                     name: clientQuoteFile?.name,
@@ -231,7 +236,8 @@ export class ProjectService {
                     name: providerFile?.name,
                     createdAt: providerFile?.createdAt,
                 },
-                advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}})
+                advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}}),
+                documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id}}),
             }
         }
     }
@@ -247,9 +253,12 @@ export class ProjectService {
             {
                 relation: 'advanceFile',
             },
+            {
+                relation: 'documents',
+            },
         ]
         const project = await this.projectRepository.findById(id, {include: [...include]});
-        const {clientQuoteFile, providerFile, advanceFile} = project;
+        const {clientQuoteFile, providerFile, advanceFile, documents} = project;
         return {
             id,
             clientQuoteFile: {
@@ -263,13 +272,35 @@ export class ProjectService {
                 name: providerFile?.name,
                 createdAt: providerFile?.createdAt,
             },
-            advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}})
+            advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}}),
+            documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id}}),
         }
     }
 
     async updateById(id: number, project: Project,) {
         await this.projectRepository.updateById(id, project);
     }
+
+    async uploadDocuments(id: number, data: {document: {fileURL: string, name: string, extension: string, id?: number}[]},) {
+        await this.findByIdProject(id);
+        const {document} = data
+        for (let index = 0; index < document?.length; index++) {
+            const element = document[index];
+            if (element && !element?.id) {
+                await this.projectRepository.documents(id).create(element);
+            } else if (document) {
+                await this.documentRepository.updateById(element.id, {...element});
+            }
+        }
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async findByIdProject(id?: number) {
+        const project = await this.projectRepository.findOne({where: {id}});
+        if (!project)
+            throw this.responseService.notFound("El proyecto no se ha encontrado.")
+    }
+
 
     async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
