@@ -219,9 +219,18 @@ export class ProjectService {
             advancePaymentRecords,
             exchangeRateQuotation,
             documents: {
-                clientQuoteFile: clientQuoteFile?.fileURL,
-                providerFile: providerFile?.fileURL,
-                advanceFile: advanceFile?.map(value => value.fileURL),
+                clientQuoteFile: {
+                    fileURL: clientQuoteFile?.fileURL,
+                    name: clientQuoteFile?.name,
+                    createdAt: clientQuoteFile?.createdAt,
+                },
+                providerFile:
+                {
+                    fileURL: providerFile?.fileURL,
+                    name: providerFile?.name,
+                    createdAt: providerFile?.createdAt,
+                },
+                advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}})
             }
         }
         return project;
