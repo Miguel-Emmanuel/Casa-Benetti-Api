@@ -15,7 +15,7 @@ export class PdfService {
             var template = Handlebars.compile(html);
             var result = template(properties);
             let file = {content: result};
-            return this.generatePdf(file, options);
+            return await this.generatePdf(file, options);
         } catch (error) {
             console.log('error: ', error)
         }
