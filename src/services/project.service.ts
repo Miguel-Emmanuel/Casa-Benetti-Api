@@ -8,6 +8,7 @@ import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationP
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
 import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
 @injectable({scope: BindingScope.TRANSIENT})
@@ -35,6 +36,8 @@ export class ProjectService {
         public pdfService: PdfService,
         @inject(SecurityBindings.USER)
         private user: UserProfile,
+        @service()
+        public letterNumberService: LetterNumberService
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -46,6 +49,7 @@ export class ProjectService {
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
         await this.createPdfToCustomer(quotationId, project.id, transaction);
         await this.createPdfToProvider(quotationId, project.id, transaction);
+        await this.createPdfToAdvance(quotationId, project.id, transaction);
         return project;
 
     }
@@ -135,7 +139,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balance'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balance',],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -176,7 +180,7 @@ export class ProjectService {
             };
         const project = await this.projectRepository.findById(id, filter);
         const {customer, quotation, advancePaymentRecords} = project;
-        const {closingDate, products} = quotation;
+        const {closingDate, products, exchangeRateQuotation} = quotation;
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const productsArray = [];
         for (const iterator of products ?? []) {
@@ -204,7 +208,8 @@ export class ProjectService {
             totalPay: (total ?? 0) - (balance ?? 0),
             balance,
             products: productsArray,
-            advancePaymentRecords
+            advancePaymentRecords,
+            exchangeRateQuotation
         }
         return project;
     }
@@ -308,9 +313,8 @@ export class ProjectService {
 
 
     async createPdfToAdvance(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'proofPaymentQuotation'}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'proofPaymentQuotations'}]});
         const {customer, mainProjectManager, referenceCustomer, proofPaymentQuotations} = quotation;
-
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
             const propertiesGeneral: any = {
@@ -321,11 +325,19 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
             }
-
             for (let index = 0; index < proofPaymentQuotations?.length; index++) {
-                const {proofPaymentType} = proofPaymentQuotations[index];
+                const {proofPaymentType, advanceCustomer, conversionAdvance, paymentType, exchangeRateAmount, paymentDate} = proofPaymentQuotations[index];
+                const letterNumber = this.letterNumberService.convertNumberToWords(advanceCustomer)
+                console.log(letterNumber)
                 const propertiesAdvance: any = {
-                    ...propertiesGeneral
+                    ...propertiesGeneral,
+                    advanceCustomer,
+                    conversionAdvance,
+                    proofPaymentType,
+                    paymentType,
+                    exchangeRateAmount,
+                    paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
+                    letterNumber
                 }
 
                 const nameFile = `recibo_anticipo_${proofPaymentType}_${quotationId}_${dayjs().format()}.pdf`
