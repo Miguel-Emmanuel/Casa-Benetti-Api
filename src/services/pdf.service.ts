@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import fs from "fs/promises";
 import Handlebars from 'handlebars';
-import HtmlToPdf, {CreateOptions} from 'html-pdf';
+import HtmlToPdf, {Options} from 'html-pdf-node';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class PdfService {
@@ -9,30 +9,25 @@ export class PdfService {
 
     ) { }
 
-    async createPDFWithTemplateHtml(pathTemplate: string, properties: any, options: CreateOptions, path: string) {
+    async createPDFWithTemplateHtml(pathTemplate: string, properties: any, options: Options) {
         try {
             let html = await fs.readFile(pathTemplate, "utf-8");
             var template = Handlebars.compile(html);
             var result = template(properties);
-            return await this.generatePdf(result, options, path);
+            let file = {content: result};
+            return this.generatePdf(file, options);
         } catch (error) {
             console.log('error: ', error)
         }
     }
 
-    private async generatePdf(result: string, options: CreateOptions, path: string) {
+    private async generatePdf(file: {content: string}, options: Options) {
         return new Promise((resolve, reject) => {
-            HtmlToPdf.create(result, options).toFile(path, function (err, res) {
-                if (err) return reject(err);
-                return resolve(res);
-            });
+            HtmlToPdf.generatePdf(file, options, (error, buffer) => {
+                if (error) return reject(error);
+                return resolve(buffer);
+            })
         })
-        // return new Promise((resolve, reject) => {
-        //     HtmlToPdf.generatePdf(file, options, (error, buffer) => {
-        //         if (error) return reject(error);
-        //         return resolve(buffer);
-        //     })
-        // })
     }
 
 }
