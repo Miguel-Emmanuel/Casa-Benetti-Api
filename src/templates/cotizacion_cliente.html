@@ -141,8 +141,7 @@
         }
 
         .seccion1 {
-            -ms-flex-preferred-size: 40%;
-            flex-basis: 40%;
+            width: 40%;
             display: -webkit-box;
             display: -ms-flexbox;
             display: flex;
@@ -181,8 +180,7 @@
 
         .seccion2 {
             font-size: 6px;
-            -ms-flex-preferred-size: 60%;
-            flex-basis: 60%;
+            width: 60%;
             -webkit-box-pack: end;
             -ms-flex-pack: end;
             justify-content: end;
@@ -199,9 +197,10 @@
         }
 
         .grid-container {
-            width: 60%;
-            display: -ms-grid;
-            display: grid;
+            width: 50%;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
             -ms-grid-columns: 1fr 2fr 1fr;
             grid-template-columns: 1fr 2fr 1fr;
             border: 1px solid black;
@@ -209,6 +208,7 @@
         }
 
         .grid-item {
+            width: 33.33%;
             border: 1px solid black;
             border-top: none;
             border-left: none;
@@ -330,21 +330,30 @@
                 <div class="grid-item" style="background-color: #BEB5C6;">SUBTOTAL</div>
                 <div class="grid-item"></div>
                 <div class="grid-item">{{subtotal}}€</div>
+            </div>
+            <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">DESCUENTO ADICIONAL</div>
                 <div class="grid-item">{{percentageAdditionalDiscount}}%</div>
                 <div class="grid-item">{{additionalDiscount}}€</div>
+            </div>
+            <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">IVA</div>
                 <div class="grid-item">{{percentageIva}}%</div>
                 <div class="grid-item">{{iva}}€</div>
+            </div>
+            <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">TOTAL</div>
                 <div class="grid-item"></div>
                 <div class="grid-item">{{total}}€</div>
             </div>
+
             </br>
             <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">ANTICIPO</div>
                 <div class="grid-item">EUROS</div>
                 <div class="grid-item">{{advance}}%</div>
+            </div>
+            <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">T.C. USD</div>
                 <div class="grid-item">{{conversionAdvance}}</div>
                 <div class="grid-item">{{advanceCustomer}}</div>
@@ -358,17 +367,27 @@
         </section>
     </div>
     </br>
-    <div style="display: flex; justify-content: center;font-size: 6px; background-color: #BEB5C6;">
+    <div
+        style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex; -webkit-box-pack: center; -ms-flex-pack: center; justify-content: center;font-size: 6px; background-color: #BEB5C6;">
         CONDICIONES COMERCIALES
     </div>
-    <div style="display: flex; flex-direction: column;font-size: 6px">
-        <div style="display: flex; align-items: center;">
+    <div
+        style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -ms-flex-direction: column; flex-direction: column;font-size: 6px">
+        <div style="display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <strong>Vigencia de la Cotización:&nbsp;</strong>
             <p style="color: red;">15 días&nbsp;</p>
             <p>naturales a partir de esta fecha. Mercancia con descuento de temporada hasta agotar existencias</p>
         </div>
 
-        <div style="display: flex; align-items: center;">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <strong>Precio en Euros:&nbsp;</strong>
             <p>Todos nuestros productos son europeos y pagan&nbsp;</p>
             <p style="color: red;">IVA.&nbsp;</p>
@@ -381,7 +400,9 @@
                 verbales o cancelaciones.</p>
         </div>
 
-        <div style="display: flex; align-items: center; ">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
             <p>
                 <strong>Condiciones del Pago:&nbsp;</strong>
                 <span style="color: red;">60% de Anticipo </span>al momento de la confirmación del Pedido y <span
@@ -401,7 +422,9 @@
             </p>
         </div>
 
-        <div style="display: flex; align-items: center; ">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
             <p>
                 <strong>Firma de aceptación:&nbsp;</strong>
                 Una vez definidos los acabados, el <span style="color: red;">cliente</span> y el <span
@@ -411,7 +434,9 @@
                 costo extra y cambiarán el tiempo de entrega.
             </p>
         </div>
-        <div style="display: flex; align-items: center; ">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
             <p>
                 <strong>Documentación:&nbsp;</strong>
                 Guias mecánicas, Fichas técnicas, Sistemas de iluminación, se entregarán <span
@@ -422,7 +447,9 @@
                 mecánica entregada por Benetticasa.
             </p>
         </div>
-        <div style="display: flex; align-items: center; ">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
             <p>
                 <strong>Garantías:&nbsp;</strong>
                 Todos los productos en esta cotización están fabricados con los más altos estándares de calidad y
@@ -440,7 +467,9 @@
             </p>
         </div>
 
-        <div style="display: flex; align-items: center; ">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
             <p>
                 <strong>Servicios:&nbsp;</strong>
                 El porcentaje de servicios que se menciona en el resumen económico, considera: el producto con <span
@@ -457,7 +486,9 @@
             </p>
         </div>
 
-        <div style="display: flex; align-items: center;">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <p>
                 <strong>Tiempo de entrega:&nbsp;</strong>
                 Se mide a partir del pago del anticipo y la firma de aprobación por parte de el cliente o encargado de
@@ -481,14 +512,18 @@
             </p>
         </div>
 
-        <div style="display: flex; align-items: center;">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <p>
                 <strong>Lugar de Entrega:&nbsp;</strong>
                 CDMX y el area metropolitana. Si es fuera de la CDMX, se cotiza aparte.
             </p>
         </div>
 
-        <div style="display: flex; align-items: center;">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <p>
                 <strong>Entrega:&nbsp;</strong>
                 Estos precios NO INCLUYEN ENTREGAS FORÁNEAS, por lo que el costo del flete, viáticos, seguros e
@@ -509,7 +544,9 @@
             </p>
         </div>
 
-        <div style="display: flex; align-items: center;">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <p>
                 <strong>Almacenaje:&nbsp;</strong>
                 La mercancía adquirida cuenta con 60 dias de almacenaje luego de llegar a la bodega benetticasa. Luego
@@ -518,7 +555,9 @@
             </p>
         </div>
 
-        <div style="display: flex; align-items: center;">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <p>
                 <strong>Vistas:&nbsp;</strong>
                 Las vistas deben salir de tienda o bodega con cotización firmada por el director. El cliente se
@@ -528,7 +567,9 @@
                 flete y la instalación en caso de no quedarse con ningun producto entregado.
             </p>
         </div>
-        <div style="display: flex; align-items: center;">
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
             <p>
                 Para mayor detalle, consultar la página web: https://www.benetticasa.com/condiciones-de-venta/
             </p>
