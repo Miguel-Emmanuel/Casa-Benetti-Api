@@ -130,6 +130,10 @@ export enum AdvancePaymentStatusE {
     PENDIENTE = 'Pendiente',
 }
 
+export enum TypeAdvancePaymentRecordE {
+    ANTICIPO_PRODUCTO = 'Anticipo producto',
+}
+
 export enum AdvancePaymentTypeE {
     ARQUITECTO = 'Arquitecto',
     CLIENTE_REFERENCIADO = 'Cliente referenciado',
