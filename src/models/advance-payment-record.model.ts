@@ -9,6 +9,20 @@ import {Project} from './project.model';
         postgresql: {
             table: 'project_AdvancePaymentRecord' // Nombre de la tabla en PostgreSQL
         },
+        foreignKeys: {
+            fk_accountsReceivable_accountsReceivableId: {
+                name: 'fk_accountsReceivable_accountsReceivableId',
+                entity: 'AccountsReceivable',
+                entityKey: 'id',
+                foreignKey: 'accountsreceivableid',
+            },
+            fk_project_proyectId: {
+                name: 'fk_project_proyectId',
+                entity: 'Project',
+                entityKey: 'id',
+                foreignKey: 'projectid',
+            },
+        }
     }
 })
 export class AdvancePaymentRecord extends Entity {

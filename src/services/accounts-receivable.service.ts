@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, injectable} from '@loopback/core';
-import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {AccountsReceivable} from '../models';
 import {AccountsReceivableRepository} from '../repositories';
 
@@ -18,6 +18,23 @@ export class AccountsReceivableService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<AccountsReceivable>) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'advancePaymentRecords',
+            },
+
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         return this.accountsReceivableRepository.findById(id, filter);
     }
 

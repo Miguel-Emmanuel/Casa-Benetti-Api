@@ -11,8 +11,8 @@ import {Quotation} from './quotation.model';
             table: 'project_AccountsReceivable' // Nombre de la tabla en PostgreSQL
         },
         foreignKeys: {
-            fk_project_proyectId: {
-                name: 'fk_project_proyectId',
+            fk_project_projectId: {
+                name: 'fk_project_projectId',
                 entity: 'Project',
                 entityKey: 'id',
                 foreignKey: 'projectid',

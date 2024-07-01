@@ -64,7 +64,7 @@ export class AccountsReceivableController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(AccountsReceivable, {includeRelations: true}),
+                    items: getModelSchemaRef(AccountsReceivable),
                 },
             },
         },
@@ -80,7 +80,7 @@ export class AccountsReceivableController {
         description: 'AccountsReceivable model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(AccountsReceivable, {includeRelations: true}),
+                schema: getModelSchemaRef(AccountsReceivable,),
             },
         },
     })
