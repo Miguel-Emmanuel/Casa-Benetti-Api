@@ -5,7 +5,33 @@ import {Project} from './project.model';
 import {Quotation} from './quotation.model';
 
 //Cuentas por cobrar (Tabla padre de cobros)
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'project_AccountsReceivable' // Nombre de la tabla en PostgreSQL
+        },
+        foreignKeys: {
+            fk_project_proyectId: {
+                name: 'fk_project_proyectId',
+                entity: 'Project',
+                entityKey: 'id',
+                foreignKey: 'projectid',
+            },
+            fk_project_customerId: {
+                name: 'fk_project_customerId',
+                entity: 'Customer',
+                entityKey: 'id',
+                foreignKey: 'customerid',
+            },
+            fk_quotation_quotationId: {
+                name: 'fk_quotation_quotationId',
+                entity: 'Quotation',
+                entityKey: 'id',
+                foreignKey: 'quotationid',
+            },
+        }
+    }
+})
 export class AccountsReceivable extends Entity {
     @property({
         type: 'number',
