@@ -229,15 +229,17 @@ export class ProjectService {
                     fileURL: clientQuoteFile?.fileURL,
                     name: clientQuoteFile?.name,
                     createdAt: clientQuoteFile?.createdAt,
+                    extension: clientQuoteFile?.extension,
                 },
                 providerFile:
                 {
                     fileURL: providerFile?.fileURL,
                     name: providerFile?.name,
                     createdAt: providerFile?.createdAt,
+                    extension: providerFile?.extension,
                 },
-                advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}}),
-                documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id}}),
+                advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
+                documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
             }
         }
     }
@@ -265,15 +267,17 @@ export class ProjectService {
                 fileURL: clientQuoteFile?.fileURL,
                 name: clientQuoteFile?.name,
                 createdAt: clientQuoteFile?.createdAt,
+                extension: clientQuoteFile?.extension,
             },
             providerFile:
             {
                 fileURL: providerFile?.fileURL,
                 name: providerFile?.name,
                 createdAt: providerFile?.createdAt,
+                extension: providerFile?.extension,
             },
-            advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt}}),
-            documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id}}),
+            advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
+            documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension, }}),
         }
     }
 

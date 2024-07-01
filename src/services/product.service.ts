@@ -161,9 +161,16 @@ export class ProductService {
             {
                 relation: 'document',
                 scope: {
-                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy']
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
                 }
             },
+            {
+                relation: 'brand',
+                scope: {
+                    fields: ['brandName', 'id',]
+                }
+            }
+
 
         ]
         if (filter?.include)
@@ -196,32 +203,32 @@ export class ProductService {
             {
                 relation: 'mainMaterialImage',
                 scope: {
-                    fields: ['fileURL', 'name', 'extension']
+                    fields: ['fileURL', 'name', 'extension', 'id']
                 }
 
             },
             {
                 relation: 'mainFinishImage',
                 scope: {
-                    fields: ['fileURL', 'name', 'extension']
+                    fields: ['fileURL', 'name', 'extension', 'id']
                 }
             },
             {
                 relation: 'secondaryMaterialImage',
                 scope: {
-                    fields: ['fileURL', 'name', 'extension']
+                    fields: ['fileURL', 'name', 'extension', 'id']
                 }
             },
             {
                 relation: 'secondaryFinishingImage',
                 scope: {
-                    fields: ['fileURL', 'name', 'extension']
+                    fields: ['fileURL', 'name', 'extension', 'id']
                 }
             },
             {
                 relation: 'document',
                 scope: {
-                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy']
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
                 }
             },
             {
@@ -231,7 +238,7 @@ export class ProductService {
                         {
                             relation: 'document',
                             scope: {
-                                fields: ['fileURL', 'name', 'extension']
+                                fields: ['fileURL', 'name', 'extension', 'id']
                             }
                         },
                     ]
