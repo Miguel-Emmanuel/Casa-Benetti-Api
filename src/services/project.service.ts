@@ -7,7 +7,7 @@ import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
-import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
@@ -40,6 +40,8 @@ export class ProjectService {
         public letterNumberService: LetterNumberService,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(AccountsReceivableRepository)
+        public accountsReceivableRepository: AccountsReceivableRepository,
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -653,8 +655,9 @@ export class ProjectService {
     }
 
     async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
-        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
+        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id} = quotation;
         const {total} = this.getPricesQuotation(quotation);
+        const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0});
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
             const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id} = proofPaymentQuotations[index];
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
@@ -669,11 +672,10 @@ export class ProjectService {
                 currencyApply: exchangeRateQuotation,
                 conversionAmountPaid,
                 subtotalAmountPaid: this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)),
-                total: total ?? 0,
                 paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
                 projectId,
-                type: TypeAdvancePaymentRecordE.ANTICIPO_PRODUCTO
-
+                type: TypeAdvancePaymentRecordE.ANTICIPO_PRODUCTO,
+                accountsReceivable
             }
             await this.advancePaymentRecordRepository.create(body, {transaction});
         }
