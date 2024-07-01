@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <title>Cotización</title>
     <style type="text/css">
+        @page {
+            size: 21cm 29.7cm;
+            margin-right: 2cm;
+            margin-left: 2cm;
+            margin-top: 2cm;
+            margin-bottom: 2cm;
+        }
+
+
         body {
             font-family: Arial, sans-serif;
             background-color: #ffffff;
@@ -12,39 +21,56 @@
         }
 
         .row {
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
             justify-content: space-between;
         }
 
         .column {
-            flex-basis: calc(33.33% - 10px);
             background-color: #ffffff;
             padding: 20px;
+            -webkit-box-sizing: border-box;
             box-sizing: border-box;
             margin-right: 10px;
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
             justify-content: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
 
         }
 
 
         .column-1 {
-            flex-basis: 20%;
+            width: 15%;
             /* Tamaño de la columna 1 */
         }
 
         .column-2 {
-            flex-basis: 60%;
+            width: 60%;
             background-color: #ffffff;
             padding: 20px;
+            -webkit-box-sizing: border-box;
             box-sizing: border-box;
             text-align: center;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
             flex-direction: column;
         }
 
         .column-3 {
-            flex-basis: 20%;
+            width: 25%;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
             flex-direction: column;
             font-size: 6px;
         }
@@ -60,8 +86,14 @@
         }
 
         .property {
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
             margin-bottom: 10px;
             text-align: left;
@@ -100,14 +132,26 @@
         }
 
         .contenedor {
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: spa;
+            -ms-flex-pack: center;
             justify-content: center;
         }
 
         .seccion1 {
+            -ms-flex-preferred-size: 40%;
             flex-basis: 40%;
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
             flex-direction: column;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
 
         }
@@ -115,13 +159,19 @@
         .seccion1 .header {
             font-size: 6px;
             border: 1px solid black;
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
             background-color: #BEB5C6;
+            height: -webkit-min-content;
+            height: -moz-min-content;
             height: min-content;
             width: 200px;
         }
 
         .seccion1 .body {
+            height: -webkit-min-content;
+            height: -moz-min-content;
             height: min-content;
             width: 200px;
             border: 1px solid black;
@@ -131,16 +181,28 @@
 
         .seccion2 {
             font-size: 6px;
+            -ms-flex-preferred-size: 60%;
             flex-basis: 60%;
+            -webkit-box-pack: end;
+            -ms-flex-pack: end;
             justify-content: end;
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
             flex-direction: column;
+            -webkit-box-align: end;
+            -ms-flex-align: end;
             align-items: end;
         }
 
         .grid-container {
             width: 60%;
+            display: -ms-grid;
             display: grid;
+            -ms-grid-columns: 1fr 2fr 1fr;
             grid-template-columns: 1fr 2fr 1fr;
             border: 1px solid black;
             border-collapse: collapse;
@@ -158,7 +220,7 @@
 <body>
     <div class="row">
         <div class="column column-1" style="justify-content: end;">
-            <img src="{{{logo}}}" width="100px" />
+            <img src="{{{logo}}}" style="width: 80px;" />
         </div>
         <div class="column column-2">
             <p class="title">COTIZACION</p>
