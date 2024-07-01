@@ -1,5 +1,6 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
+import {AccountsReceivable} from './accounts-receivable.model';
 import {Project} from './project.model';
 
 //Registro del pago anticipado (cobro)
@@ -75,6 +76,10 @@ export class AdvancePaymentRecord extends Entity {
         },
     })
     percentageIva: number;
+
+    //Relacion hacia cuentas por cobrar
+    @belongsTo(() => AccountsReceivable)
+    accountsReceivableId: number;
 
     //Moneda a aplicar
     @property({

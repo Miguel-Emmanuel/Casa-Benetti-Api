@@ -1,4 +1,5 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {Customer} from './customer.model';
 import {Project} from './project.model';
 
@@ -26,6 +27,9 @@ export class AccountsReceivable extends Entity {
     //Cliente id
     @belongsTo(() => Customer)
     customerId: number;
+
+    @hasMany(() => AdvancePaymentRecord)
+    advancePaymentRecords: AdvancePaymentRecord[];
 
     //Total venta (total de la cotizacion)
     @property({
