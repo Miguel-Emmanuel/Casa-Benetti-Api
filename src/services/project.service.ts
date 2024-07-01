@@ -659,7 +659,7 @@ export class ProjectService {
         const {total} = this.getPricesQuotation(quotation);
         const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0}, {transaction});
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
-            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id} = proofPaymentQuotations[index];
+            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id, documents} = proofPaymentQuotations[index];
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
             const body = {
                 consecutiveId: (index + 1),
@@ -677,7 +677,11 @@ export class ProjectService {
                 type: TypeAdvancePaymentRecordE.ANTICIPO_PRODUCTO,
                 accountsReceivableId: accountsReceivable?.id
             }
-            await this.advancePaymentRecordRepository.create(body, {transaction});
+            const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
+            for (let index = 0; index < documents.length; index++) {
+                const {fileURL, name, extension} = documents[index];
+                await this.advancePaymentRecordRepository.documents(advancePaymentRecord.id).create({fileURL, name, extension})
+            }
         }
     }
 
@@ -716,7 +720,14 @@ export class ProjectService {
     }
 
     async findQuotationById(id: number) {
-        const quotation = await this.quotationRepository.findOne({where: {id}, include: [{relation: 'proofPaymentQuotations'}]});
+        const quotation = await this.quotationRepository.findOne({
+            where: {id}, include: [{
+                relation: 'proofPaymentQuotations',
+                scope: {
+                    include: ['documents']
+                }
+            }]
+        });
         if (!quotation)
             throw this.responseService.badRequest('La cotizacion no existe.');
         return quotation
