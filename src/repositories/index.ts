@@ -30,3 +30,4 @@ export * from './proof-payment-quotation.repository';
 export * from './project.repository';
 export * from './advance-payment-record.repository';
 export * from './commission-payment-record.repository';
+export * from './accounts-receivable.repository';

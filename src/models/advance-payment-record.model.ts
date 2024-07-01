@@ -1,8 +1,8 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
+import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
 import {Project} from './project.model';
 
-//Registro del pago correspondiente a cada anticipo especificado
+//Registro del pago anticipado (cobro)
 @model({
     settings: {
         postgresql: {
@@ -102,16 +102,6 @@ export class AdvancePaymentRecord extends Entity {
     })
     subtotalAmountPaid: number;
 
-    //Total venta (total de la cotizacion)
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    total: number;
-
     //Porcentaje de pago
     @property({
         type: 'number',
@@ -129,6 +119,13 @@ export class AdvancePaymentRecord extends Entity {
         default: AdvancePaymentStatusE.PENDIENTE
     })
     status: AdvancePaymentStatusE;
+
+    //Tipo de cobro
+    @property({
+        type: 'string',
+        required: false,
+    })
+    type: TypeAdvancePaymentRecordE;
 
     @belongsTo(() => Project)
     projectId: number;
