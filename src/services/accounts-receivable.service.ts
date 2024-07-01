@@ -1,7 +1,9 @@
-import { /* inject, */ BindingScope, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {AccessLevelRolE} from '../enums';
 import {AccountsReceivable} from '../models';
-import {AccountsReceivableRepository, UserRepository} from '../repositories';
+import {AccountsReceivableRepository, QuotationRepository, UserRepository} from '../repositories';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AccountsReceivableService {
@@ -10,12 +12,31 @@ export class AccountsReceivableService {
         public accountsReceivableRepository: AccountsReceivableRepository,
         @repository(UserRepository)
         public userRepository: UserRepository,
+        @inject(SecurityBindings.USER)
+        private user: UserProfile,
+        @repository(QuotationRepository)
+        public quotationRepository: QuotationRepository,
     ) { }
 
     async count(where?: Where<AccountsReceivable>,) {
         return this.accountsReceivableRepository.count(where);
     }
     async find(filter?: Filter<AccountsReceivable>,) {
+        const accessLevel = this.user.accessLevel;
+        let where: any = {};
+        if (accessLevel === AccessLevelRolE.SUCURSAL) {
+            where = {...where, branchId: this.user.branchId}
+        }
+
+        if (accessLevel === AccessLevelRolE.PERSONAL) {
+            const quotations = (await this.quotationRepository.find({where: {mainProjectManagerId: this.user.id}})).map(value => value.id);
+            where = {...where, quotationId: {inq: [...quotations]}}
+        }
+        if (filter?.where) {
+            filter.where = {...filter.where, ...where}
+        } else {
+            filter = {...filter, where: {...where}};
+        }
         return this.accountsReceivableRepository.find(filter);
     }
 
