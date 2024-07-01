@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Customer} from './customer.model';
+import {Project} from './project.model';
 
 //Cuentas por cobrar (Tabla padre de cobros)
 @model()
@@ -18,15 +20,11 @@ export class AccountsReceivable extends Entity {
     createdAt: Date;
 
     //Proyecto id
-    @property({
-        type: 'number',
-    })
+    @belongsTo(() => Project)
     projectId: number;
 
     //Cliente id
-    @property({
-        type: 'number',
-    })
+    @belongsTo(() => Customer)
     customerId: number;
 
     //Total venta (total de la cotizacion)
