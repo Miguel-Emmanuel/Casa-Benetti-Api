@@ -12,40 +12,57 @@
         }
 
         .row {
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
             justify-content: space-between;
         }
 
         .column {
-            flex-basis: calc(33.33% - 10px);
             background-color: #ffffff;
             padding: 20px;
+            -webkit-box-sizing: border-box;
             box-sizing: border-box;
             margin-right: 10px;
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
             justify-content: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
 
         }
 
 
         .column-1 {
-            flex-basis: 20%;
+            width: 15%;
             /* Tamaño de la columna 1 */
         }
 
         .column-2 {
-            flex-basis: 60%;
+            width: 60%;
             background-color: #ffffff;
             padding: 20px;
             font-size: 6px;
+            -webkit-box-sizing: border-box;
             box-sizing: border-box;
             text-align: center;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
             flex-direction: column;
         }
 
         .column-3 {
-            flex-basis: 20%;
+            width: 25%;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
             flex-direction: column;
             font-size: 6px;
         }
@@ -58,8 +75,14 @@
 
 
         .property {
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
             justify-content: space-between;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
             margin-bottom: 10px;
             text-align: left;
@@ -87,17 +110,25 @@
         }
 
         .table-container {
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
             align-items: center;
             font-size: 10px;
         }
 
         .text {
+            -webkit-box-flex: 1;
+            -ms-flex: 1;
             flex: 1;
             margin-right: 20px;
         }
 
         .table-container2 {
+            display: -webkit-box;
+            display: -ms-flexbox;
             display: flex;
             font-size: 10px;
         }
@@ -114,7 +145,7 @@
 <body>
     <div class="row">
         <div class="column column-1" style="justify-content: end;">
-            <img src="{{{logo}}}" width="100px" />
+            <img src="{{{logo}}}" width="80px" />
         </div>
         <div class="column column-2">
             <p class="title">RECIBO DE PAGO CLIENTE</p>
@@ -146,9 +177,12 @@
             </div>
         </div>
     </div>
-    <div style="display: flex; width: 100%; background-color: #BFB5C6;height: 10px;"></div>
+    <div style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex; width: 100%; background-color: #BFB5C6;height: 10px;"></div>
     <div class="table-container">
-        <div style="width: 25%; display: flex; align-items: end;flex-direction: column;" class="text">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
             <p></p>
             <p style="margin-bottom: 0;">Cantidad:</p>
             <p style="margin-top: 0;">Forma de pago:</p>
@@ -165,12 +199,14 @@
                 <td colspan="2">{{paymentType}}</td>
             </tr>
         </table>
-        <div style="width: 25%; display: flex; align-items: end;flex-direction: column;" class="text">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
         </div>
     </div>
     <br>
     <div class="table-container2">
-        <div style="width: 25%; display: flex; align-items: end;flex-direction: column;" class="text">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
             <p style="margin-top: 0;">Concepto:</p>
             <p></p>
             <p></p>
@@ -180,11 +216,14 @@
                 <td colspan="2">Pago cliente</td>
             </tr>
         </table>
-        <div style="width: 25%; display: flex; align-items: end;flex-direction: column;" class="text">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
         </div>
     </div>
     <br>
-    <div style="display: flex;">
+    <div style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;">
         <table style="width: 20%; justify-content: end;">
             <tr>
                 <td style="background-color: #BFB5C6;" rowspan="2">T.C.</td>
@@ -195,22 +234,26 @@
             </tr>
         </table>
         <div
-            style="width: 50%; display: flex; justify-content: end; align-items: center;  flex-direction: column; margin-left: 50px;">
+            style="width: 50%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-pack: end; -ms-flex-pack: end; justify-content: end; -webkit-box-align: center; -ms-flex-align: center; align-items: center;  -webkit-box-orient: vertical;  -webkit-box-direction: normal;  -ms-flex-direction: column;  flex-direction: column; margin-left: 50px;">
             <hr class="linea-firma">
             <div style="font-size: 10px;">Fecha, nombre y firma de quien recibe</div>
         </div>
-        <div style="width: 25%; display: flex; align-items: end;flex-direction: column;" class="text">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
         </div>
     </div>
     <br>
-    <div style="display: flex;">
+    <div style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;">
         <div style="width: 20%; justify-content: end;">
         </div>
         <div
-            style="width: 50%; display: flex; justify-content: end; align-items: center;  flex-direction: column; margin-left: 50px;">
+            style="width: 50%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-pack: end; -ms-flex-pack: end; justify-content: end; -webkit-box-align: center; -ms-flex-align: center; align-items: center;  -webkit-box-orient: vertical;  -webkit-box-direction: normal;  -ms-flex-direction: column;  flex-direction: column; margin-left: 50px;">
             <div style="font-size: 10px;"><strong>Recibido en efectivo por Daniel Michan el 09/05/2024</strong></div>
         </div>
-        <div style="width: 25%; display: flex; align-items: end;flex-direction: column;" class="text">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;  "
+            class="text">
         </div>
     </div>
 </body>

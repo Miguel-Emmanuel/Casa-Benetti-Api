@@ -97,6 +97,11 @@ export class Document extends BaseEntity {
   })
   projectId?: number;
 
+  @property({
+    type: 'number',
+  })
+  advancePaymentRecordId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }

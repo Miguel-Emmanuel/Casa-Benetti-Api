@@ -1,13 +1,29 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
+import {AccountsReceivable} from './accounts-receivable.model';
+import {Document} from './document.model';
 import {Project} from './project.model';
 
-//Registro del pago correspondiente a cada anticipo especificado
+//Registro del pago anticipado (cobro)
 @model({
     settings: {
         postgresql: {
             table: 'project_AdvancePaymentRecord' // Nombre de la tabla en PostgreSQL
         },
+        foreignKeys: {
+            fk_accountsReceivable_accountsReceivableId: {
+                name: 'fk_accountsReceivable_accountsReceivableId',
+                entity: 'AccountsReceivable',
+                entityKey: 'id',
+                foreignKey: 'accountsreceivableid',
+            },
+            fk_project_proyectId: {
+                name: 'fk_project_proyectId',
+                entity: 'Project',
+                entityKey: 'id',
+                foreignKey: 'projectid',
+            },
+        }
     }
 })
 export class AdvancePaymentRecord extends Entity {
@@ -76,6 +92,13 @@ export class AdvancePaymentRecord extends Entity {
     })
     percentageIva: number;
 
+    @hasMany(() => Document)
+    documents: Document[];
+
+    //Relacion hacia cuentas por cobrar
+    @belongsTo(() => AccountsReceivable)
+    accountsReceivableId: number;
+
     //Moneda a aplicar
     @property({
         type: 'string',
@@ -102,16 +125,6 @@ export class AdvancePaymentRecord extends Entity {
     })
     subtotalAmountPaid: number;
 
-    //Total venta (total de la cotizacion)
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    total: number;
-
     //Porcentaje de pago
     @property({
         type: 'number',
@@ -129,6 +142,13 @@ export class AdvancePaymentRecord extends Entity {
         default: AdvancePaymentStatusE.PENDIENTE
     })
     status: AdvancePaymentStatusE;
+
+    //Tipo de cobro
+    @property({
+        type: 'string',
+        required: false,
+    })
+    type: TypeAdvancePaymentRecordE;
 
     @belongsTo(() => Project)
     projectId: number;

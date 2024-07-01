@@ -33,3 +33,4 @@ export * from './proof-payment-quotation.model';
 export * from './project.model';
 export * from './advance-payment-record.model';
 export * from './commission-payment-record.model';
+export * from './accounts-receivable.model';

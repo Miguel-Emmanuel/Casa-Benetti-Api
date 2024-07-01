@@ -24,3 +24,4 @@ export * from './proof-payment-quotation.controller';
 export * from './quotation-user.controller';
 
 export * from './documents.controller';
+export * from './accounts-receivable.controller';

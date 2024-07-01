@@ -4,10 +4,10 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
-import {AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
@@ -40,6 +40,8 @@ export class ProjectService {
         public letterNumberService: LetterNumberService,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(AccountsReceivableRepository)
+        public accountsReceivableRepository: AccountsReceivableRepository,
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -653,10 +655,11 @@ export class ProjectService {
     }
 
     async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
-        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, } = quotation;
+        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id} = quotation;
         const {total} = this.getPricesQuotation(quotation);
+        const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0}, {transaction});
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
-            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id} = proofPaymentQuotations[index];
+            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id, documents} = proofPaymentQuotations[index];
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
             const body = {
                 consecutiveId: (index + 1),
@@ -669,12 +672,16 @@ export class ProjectService {
                 currencyApply: exchangeRateQuotation,
                 conversionAmountPaid,
                 subtotalAmountPaid: this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)),
-                total: total ?? 0,
                 paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
-                projectId
-
+                projectId,
+                type: TypeAdvancePaymentRecordE.ANTICIPO_PRODUCTO,
+                accountsReceivableId: accountsReceivable?.id
             }
-            await this.advancePaymentRecordRepository.create(body, {transaction});
+            const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
+            for (let index = 0; index < documents.length; index++) {
+                const {fileURL, name, extension} = documents[index];
+                await this.advancePaymentRecordRepository.documents(advancePaymentRecord.id).create({fileURL, name, extension})
+            }
         }
     }
 
@@ -713,7 +720,14 @@ export class ProjectService {
     }
 
     async findQuotationById(id: number) {
-        const quotation = await this.quotationRepository.findOne({where: {id}, include: [{relation: 'proofPaymentQuotations'}]});
+        const quotation = await this.quotationRepository.findOne({
+            where: {id}, include: [{
+                relation: 'proofPaymentQuotations',
+                scope: {
+                    include: ['documents']
+                }
+            }]
+        });
         if (!quotation)
             throw this.responseService.badRequest('La cotizacion no existe.');
         return quotation
