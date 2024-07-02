@@ -102,6 +102,7 @@ export class AccountsReceivableService {
                 balance,
                 advancePaymentRecords
             }
+
             console.log(properties)
             // const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
             // const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
