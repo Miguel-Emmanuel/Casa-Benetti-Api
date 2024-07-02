@@ -1,6 +1,8 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {getJsonSchema} from '@loopback/rest';
 import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
 import {AccountsReceivable} from './accounts-receivable.model';
+import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Project} from './project.model';
 
@@ -164,3 +166,16 @@ export interface AdvancePaymentRecordRelations {
 }
 
 export type AdvancePaymentRecordWithRelations = AdvancePaymentRecord & AdvancePaymentRecordRelations;
+
+
+
+export class AdvancePaymentRecordCreate extends AdvancePaymentRecord {
+    @property({
+        type: 'array',
+        jsonSchema: {
+            type: 'array',
+            items: getJsonSchema(DocumentSchema)
+        }
+    })
+    vouchers?: DocumentSchema[];
+}

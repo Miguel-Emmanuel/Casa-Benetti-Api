@@ -1,6 +1,11 @@
 import * as Joi from "joi";
 import {ExchangeRateE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
-
+export const documents = Joi.object({
+    id: Joi.number(),
+    fileURL: Joi.string().required(),
+    name: Joi.string().required(),
+    extension: Joi.string().required(),
+})
 export const schameCreateAdvancePayment = Joi.object({
     paymentDate: Joi.date().required(),
     paymentMethod: Joi.string().valid(...Object.values(PaymentTypeProofE)).messages({
@@ -20,5 +25,6 @@ export const schameCreateAdvancePayment = Joi.object({
     type: Joi.string().valid(...Object.values(TypeAdvancePaymentRecordE)).messages({
         'any.only': `El tipo de cobro debe ser igual a uno de los valores permitidos.`
     }).required(),
+    vouchers: Joi.array().items(documents).optional(),
 
 })

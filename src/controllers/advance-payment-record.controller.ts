@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     Count,
@@ -16,9 +17,9 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {AdvancePaymentRecord} from '../models';
+import {AdvancePaymentRecord, AdvancePaymentRecordCreate} from '../models';
 import {AdvancePaymentRecordService} from '../services';
-
+@authenticate('jwt')
 export class AdvancePaymentRecordController {
     constructor(
         @service()
@@ -34,14 +35,14 @@ export class AdvancePaymentRecordController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(AdvancePaymentRecord, {
+                    schema: getModelSchemaRef(AdvancePaymentRecordCreate, {
                         title: 'NewAdvancePaymentRecord',
                         exclude: ['id', 'consecutiveId', 'projectId', 'createdAt', 'status'],
                     }),
                 },
             },
         })
-        advancePaymentRecord: Omit<AdvancePaymentRecord, 'id'>,
+        advancePaymentRecord: Omit<AdvancePaymentRecordCreate, 'id'>,
     ): Promise<AdvancePaymentRecord> {
         return this.advancePaymentRecordService.create(advancePaymentRecord);
     }
@@ -100,11 +101,11 @@ export class AdvancePaymentRecordController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(AdvancePaymentRecord, {partial: true, exclude: ['id', 'consecutiveId', 'projectId', 'createdAt', 'status'], }),
+                    schema: getModelSchemaRef(AdvancePaymentRecordCreate, {partial: true, exclude: ['id', 'consecutiveId', 'projectId', 'createdAt', 'status'], }),
                 },
             },
         })
-        advancePaymentRecord: AdvancePaymentRecord,
+        advancePaymentRecord: AdvancePaymentRecordCreate,
     ): Promise<void> {
         await this.advancePaymentRecordService.updateById(id, advancePaymentRecord);
     }

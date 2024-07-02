@@ -2,8 +2,9 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
 import {schameCreateAdvancePayment} from '../joi.validation.ts/advance-payment-record.validation';
 import {ResponseServiceBindings} from '../keys';
-import {AdvancePaymentRecord} from '../models';
-import {AccountsReceivableRepository, AdvancePaymentRecordRepository} from '../repositories';
+import {AdvancePaymentRecord, AdvancePaymentRecordCreate} from '../models';
+import {DocumentSchema} from '../models/base/document.model';
+import {AccountsReceivableRepository, AdvancePaymentRecordRepository, DocumentRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -15,19 +16,36 @@ export class AdvancePaymentRecordService {
         public accountsReceivableRepository: AccountsReceivableRepository,
         @inject(ResponseServiceBindings.RESPONSE_SERVICE)
         public responseService: ResponseService,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository,
     ) { }
 
 
-    async create(advancePaymentRecord: Omit<AdvancePaymentRecord, 'id'>,) {
+    async create(advancePaymentRecord: Omit<AdvancePaymentRecordCreate, 'id'>,) {
         await this.validateBodyAdvancePayment(advancePaymentRecord);
-        const {accountsReceivableId} = advancePaymentRecord;
+        const {accountsReceivableId, vouchers} = advancePaymentRecord;
         const accountsReceivable = await this.findAccountReceivable(accountsReceivableId);
         const {advancePaymentRecords} = accountsReceivable;
         let consecutiveId = 1;
-        if (advancePaymentRecords?.length > 0) {
+        if (advancePaymentRecords?.length > 0)
             consecutiveId = advancePaymentRecords[0].consecutiveId + 1
-        }
-        return this.advancePaymentRecordRepository.create({...advancePaymentRecord, consecutiveId});
+
+        delete advancePaymentRecord?.vouchers;
+        const advancePaymentRecordRes = await this.advancePaymentRecordRepository.create({...advancePaymentRecord, consecutiveId});
+        await this.createDocuments(advancePaymentRecordRes.id, vouchers);
+        return advancePaymentRecordRes;
+    }
+
+    async createDocuments(advancePaymentRecordId: number, documents?: DocumentSchema[]) {
+        if (documents)
+            for (let index = 0; index < documents?.length; index++) {
+                const {fileURL, name, extension, id} = documents[index];
+                if (id)
+                    await this.documentRepository.updateById(id, {...documents[index]});
+                else
+                    await this.advancePaymentRecordRepository.documents(advancePaymentRecordId).create({fileURL, name, extension})
+
+            }
     }
 
     async count(where?: Where<AdvancePaymentRecord>,) {
@@ -41,16 +59,18 @@ export class AdvancePaymentRecordService {
         return this.advancePaymentRecordRepository.findById(id, filter);
     }
 
-    async updateById(id: number, advancePaymentRecord: AdvancePaymentRecord,) {
+    async updateById(id: number, advancePaymentRecord: AdvancePaymentRecordCreate,) {
         await this.findAdvancePayment(id);
         await this.validateBodyAdvancePayment(advancePaymentRecord);
-        const {accountsReceivableId} = advancePaymentRecord;
+        const {accountsReceivableId, vouchers} = advancePaymentRecord;
         const accountsReceivable = await this.findAccountReceivable(accountsReceivableId);
         const {advancePaymentRecords} = accountsReceivable;
         let consecutiveId = 1;
         if (advancePaymentRecords?.length > 0) {
             consecutiveId = advancePaymentRecords[0].consecutiveId + 1
         }
+        delete advancePaymentRecord?.vouchers;
+        await this.createDocuments(id, vouchers);
         await this.advancePaymentRecordRepository.updateById(id, {...advancePaymentRecord, consecutiveId});
     }
 
@@ -72,7 +92,7 @@ export class AdvancePaymentRecordService {
         return accountsReceivable;
     }
 
-    async validateBodyAdvancePayment(advancePaymentRecord: Omit<AdvancePaymentRecord, 'id'>,) {
+    async validateBodyAdvancePayment(advancePaymentRecord: Omit<AdvancePaymentRecordCreate, 'id'>,) {
         try {
             await schameCreateAdvancePayment.validateAsync(advancePaymentRecord);
         }
