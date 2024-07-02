@@ -44,6 +44,33 @@ export class AccountsReceivableService {
         } else {
             filter = {...filter, where: {...where}};
         }
+
+        const include: InclusionFilter[] = [
+            {
+                relation: 'customer',
+                scope: {
+                    fields: ['name', 'lastName', 'secondLastName']
+                }
+            },
+            {
+                relation: 'quotation',
+                scope: {
+                    fields: ['closingDate']
+                }
+            },
+
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         return this.accountsReceivableRepository.find(filter);
     }
 
@@ -70,9 +97,21 @@ export class AccountsReceivableService {
                     include: [{
                         relation: 'documents',
                         scope: {
-                            fields: ['id', 'createdAt', 'createdBy', 'fileURL', 'name', 'extension', 'advancePaymentRecordId', 'updatedBy', 'updatedAt']
+                            fields: ['createdAt', 'createdBy', 'fileURL', 'name', 'extension', 'advancePaymentRecordId', 'updatedBy', 'updatedAt']
                         }
                     }]
+                }
+            },
+            {
+                relation: 'customer',
+                scope: {
+                    fields: ['name', 'lastName', 'secondLastName']
+                }
+            },
+            {
+                relation: 'quotation',
+                scope: {
+                    fields: ['closingDate']
                 }
             },
 
