@@ -54,7 +54,7 @@ export class AccountsReceivableService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['name', 'lastName', 'secondLastName']
+                    fields: ['name', 'lastName', 'secondLastName', 'groupId']
                 }
             },
             {
@@ -152,7 +152,7 @@ export class AccountsReceivableService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['name', 'lastName', 'secondLastName']
+                    fields: ['name', 'lastName', 'secondLastName', 'groupId']
                 }
             },
             {
