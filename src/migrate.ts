@@ -43,9 +43,9 @@ export async function migrate(args: string[]) {
       'AssembledProducts',
       'ProofPaymentQuotation',
       'Project',
+      'AccountsReceivable',
       'AdvancePaymentRecord',
       'CommissionPaymentRecord',
-      'AccountsReceivable'
     ],
   });
 
