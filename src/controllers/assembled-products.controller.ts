@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {
     repository
 } from '@loopback/repository';
@@ -8,6 +9,7 @@ import {
 } from '@loopback/rest';
 import {AssembledProductsRepository} from '../repositories';
 
+@authenticate('jwt')
 export class AssembledProductsController {
     constructor(
         @repository(AssembledProductsRepository)

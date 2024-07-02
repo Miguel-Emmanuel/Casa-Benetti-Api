@@ -134,7 +134,6 @@ export class QuotationService {
 
     async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number, showroomManagerId: number) {
         const data = this.convertExchangeRateQuotation(quotation);
-        console.log('createQuatation: ', data)
         const bodyQuotation = {
             ...data,
             // exchangeRateAmount: 15,

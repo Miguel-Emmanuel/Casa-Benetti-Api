@@ -24,3 +24,4 @@ export * from './pdf.service';
 export * from './letter-number.service';
 export * from './documents.service';
 export * from './accounts-receivable.service';
+export * from './advance-payment-record.service';

@@ -418,7 +418,6 @@ export class ProjectService {
             for (let index = 0; index < proofPaymentQuotations?.length; index++) {
                 const {proofPaymentType, advanceCustomer, conversionAdvance, paymentType, exchangeRateAmount, paymentDate} = proofPaymentQuotations[index];
                 const letterNumber = this.letterNumberService.convertNumberToWords(advanceCustomer)
-                console.log(letterNumber)
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
                     advanceCustomer,
