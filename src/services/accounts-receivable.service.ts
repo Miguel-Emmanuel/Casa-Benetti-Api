@@ -1,9 +1,12 @@
-import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
+import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import dayjs from 'dayjs';
 import {AccessLevelRolE} from '../enums';
 import {AccountsReceivable} from '../models';
 import {AccountsReceivableRepository, QuotationRepository, UserRepository} from '../repositories';
+import {PdfService} from './pdf.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AccountsReceivableService {
@@ -16,6 +19,10 @@ export class AccountsReceivableService {
         private user: UserProfile,
         @repository(QuotationRepository)
         public quotationRepository: QuotationRepository,
+        @service()
+        public pdfService: PdfService,
+        @inject(RestBindings.Http.RESPONSE)
+        private response: Response
     ) { }
 
     async count(where?: Where<AccountsReceivable>,) {
@@ -38,6 +45,21 @@ export class AccountsReceivableService {
             filter = {...filter, where: {...where}};
         }
         return this.accountsReceivableRepository.find(filter);
+    }
+
+    async getAccountStatement(id: number) {
+        try {
+            const properties: any = {
+
+            }
+            const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
+            const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A4'});
+            this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
+            this.response.setHeader('Content-Type', 'application/pdf');
+            return this.response.status(200).send(buffer)
+        } catch (error) {
+
+        }
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<AccountsReceivable>) {
