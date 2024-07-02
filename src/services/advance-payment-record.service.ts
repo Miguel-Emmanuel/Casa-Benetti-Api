@@ -1,10 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {schameCreateAdvancePayment} from '../joi.validation.ts/advance-payment-record.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AdvancePaymentRecord, AdvancePaymentRecordCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
-import {AccountsReceivableRepository, AdvancePaymentRecordRepository, DocumentRepository} from '../repositories';
+import {AccountsReceivableRepository, AdvancePaymentRecordRepository, DocumentRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -18,6 +18,8 @@ export class AdvancePaymentRecordService {
         public responseService: ResponseService,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
     ) { }
 
 
@@ -56,7 +58,40 @@ export class AdvancePaymentRecordService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<AdvancePaymentRecord>) {
-        return this.advancePaymentRecordRepository.findById(id, filter);
+        await this.findAdvancePayment(id);
+        const include: InclusionFilter[] = [
+            {
+                relation: 'documents',
+                scope: {
+                    fields: ['id', 'createdAt', 'createdBy', 'fileURL', 'name', 'extension', 'advancePaymentRecordId', 'updatedBy', 'updatedAt']
+                }
+            },
+
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include,
+                ]
+            };
+        const advancePaymentRecord = await this.advancePaymentRecordRepository.findById(id, filter);
+
+        for (let index = 0; index < advancePaymentRecord?.documents?.length; index++) {
+            const document = advancePaymentRecord?.documents[index];
+            if (document) {
+                const element: any = document;
+                const createdBy = await this.userRepository.findByIdOrDefault(element.createdBy);
+                const updatedBy = await this.userRepository.findByIdOrDefault(element.updatedBy);
+                element.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
+                element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
+            }
+        }
+        return advancePaymentRecord
     }
 
     async updateById(id: number, advancePaymentRecord: AdvancePaymentRecordCreate,) {
