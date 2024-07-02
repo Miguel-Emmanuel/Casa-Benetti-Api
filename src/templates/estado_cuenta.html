@@ -1,0 +1,326 @@
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Estado de Cuenta</title>
+  <style type="text/css">
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      font-size: 12px;
+      padding: 30 100px;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+
+    .container {
+      width: 80%;
+      margin: auto;
+    }
+
+    .logo-container {
+      font-weight: bold;
+    }
+
+    .logo1 {
+      font-size: 60px;
+    }
+
+    .logo2 {
+      margin-top: -15px;
+      font-size: 45px;
+      margin-left: 91px;
+    }
+
+    .header,
+    .footer {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      -webkit-box-align: center;
+      -ms-flex-align: center;
+      align-items: center;
+    }
+
+    .header img,
+    .footer img {
+      height: 50px;
+    }
+
+    .date {
+      margin-right: 150px;
+      margin-top: 10px;
+      font-size: 10px;
+    }
+
+    .title {
+      text-align: center;
+      margin: 5px auto;
+      font-weight: bold;
+      font-size: 30px;
+      border: 2px solid #7030a0;
+      max-width: 500px;
+      margin-bottom: 10px;
+      padding: 5px 0px;
+    }
+
+    .header-table {
+      border: 2px solid #7030a0;
+      height: 20px;
+      font-size: 14px;
+    }
+
+    .separate-table {
+      border-left: 2px solid #7030a0;
+    }
+
+    .aling-left {
+      text-align: left;
+    }
+
+    .aling-right {
+      text-align: right;
+    }
+
+    .aling-center {
+      text-align: center;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 3px 8px;
+      font-size: 12px;
+    }
+
+    span {
+      display: block;
+      margin-top: 5px;
+      max-width: 75%;
+    }
+
+    .text-container {
+      margin-top: 20px;
+    }
+
+    .table-title {
+      margin-top: 50px;
+      width: calc(100%-1px);
+      border: 2px solid #7030a0;
+      border-bottom: 0;
+      padding-top: 0;
+      margin-bottom: -11px;
+      padding-bottom: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .statusOfGenerateOrder {
+      max-width: 40%;
+      margin-top: 100px;
+    }
+
+    .observations {
+      max-width: 40%;
+      margin-top: 10px;
+      margin-left: 60%;
+    }
+
+    .footer {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      margin-top: 20px;
+      width: 100%;
+      -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+    }
+
+    .footer-item {
+      width: 300px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-container">
+        <span class="logo1">benetti</span>
+        <span class="logo2">casa</span>
+      </div>
+      <div class="date">
+        <p>martes, 11 de junio de 2024</p>
+      </div>
+    </div>
+    <div class="title">ESTADO DE CUENTA</div>
+    <table style="border: 2px solid #7030a0; width: 100%">
+      <thead>
+        <tr>
+          <th class="header-table" colspan="2">DATOS GENERALES</th>
+          <th class="header-table" colspan="3">RESUMEN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Proyecto:</td>
+          <td>1111B-EUR | Outdoor</td>
+          <td class="separate-table">Valor del proyecto:</td>
+          <td>€</td>
+          <td class="aling-right">39,539</td>
+        </tr>
+        <tr>
+          <td>Cliente:</td>
+          <td>Marian Rubin</td>
+          <td class="separate-table">Valor actualizado:</td>
+          <td>€</td>
+          <td class="aling-right">39,539</td>
+        </tr>
+        <tr>
+          <td>Project Manager:</td>
+          <td>Ilana Kellersztein</td>
+          <td class="separate-table">Pagos realizados:</td>
+          <td>€</td>
+          <td class="aling-right">32,455</td>
+        </tr>
+        <tr>
+          <td>Showroom:</td>
+          <td>Bosques</td>
+          <td class="separate-table">Porcentaje pagado:</td>
+          <td></td>
+          <td class="aling-right">82%</td>
+        </tr>
+        <tr>
+          <td>Fecha de cierre:</td>
+          <td>13 de noviembre de 2023</td>
+          <td class="separate-table">Saldo a pagar:</td>
+          <td>€</td>
+          <td class="aling-right">7,084</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="text-container">
+      <span>Estimado cliente, reciba un cordial saludo.</span>
+      <span>
+        A continuación detallamos el estatus de su proyecto con nosotros y
+        aprovechamos para agradecer su preferencia. Quedamos atentos a
+        cualquier precisión por medio de su Project Manager
+      </span>
+    </div>
+    <div class="table-title">
+      <p class="aling-center">DETALLE</p>
+    </div>
+    <table style="border: 2px solid #7030a0; width: 100%">
+      <thead>
+        <tr>
+          <th class="header-table" colspan="1">Proyecto</th>
+          <th class="header-table" colspan="1">Fechas de pago</th>
+          <th class="header-table" colspan="1">Método de pago</th>
+          <th class="header-table" colspan="1">Moneda de pago</th>
+          <th class="header-table" colspan="1">Monto pagado</th>
+          <th class="header-table" colspan="1">Tipo de cambio</th>
+          <th class="header-table" colspan="1">Impuesto</th>
+          <th class="header-table" colspan="1">Importe pagado S/Imp</th>
+          <th class="header-table" colspan="1">Importe pagado</th>
+          <th class="header-table" colspan="1">Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="aling-center">1111B-EUR</td>
+          <td class="aling-center">13/11/2023</td>
+          <td class="aling-center">EFECTIVO</td>
+          <td class="aling-center">MXN</td>
+          <td class="aling-center">$ 458,500</td>
+          <td class="aling-center">19.14</td>
+          <td class="aling-center">16%</td>
+          <td class="aling-center">€ 20,651</td>
+          <td class="aling-center">€ 23,955</td>
+          <td class="aling-center">€ 15,584</td>
+        </tr>
+        <tr>
+          <td class="aling-center">1111B-EUR</td>
+          <td class="aling-center">13/11/2023</td>
+          <td class="aling-center">EFECTIVO</td>
+          <td class="aling-center">MXN</td>
+          <td class="aling-center">$ 458,500</td>
+          <td class="aling-center">19.14</td>
+          <td class="aling-center">16%</td>
+          <td class="aling-center">€ 20,651</td>
+          <td class="aling-center">€ 23,955</td>
+          <td class="aling-center">€ 15,584</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="statusOfGenerateOrder">
+      <div class="table-title">
+        <p class="aling-center">ESTADO DE LAS ORDENES GENERADAS</p>
+      </div>
+      <table style="border: 2px solid #7030a0; width: 100%">
+        <thead>
+          <tr>
+            <th class="header-table" colspan="1">Proyecto</th>
+            <th class="header-table" colspan="1">MARCA</th>
+            <th class="header-table" colspan="1">ESTATUS</th>
+            <th class="header-table" colspan="1">NUMERO DE ORDENES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="aling-left">1111B</td>
+            <td class="aling-left">CATTELAN</td>
+            <td class="aling-left">BODEGA</td>
+            <td class="aling-left" style="padding-left: 120">1</td>
+          </tr>
+          <tr>
+            <td class="aling-left">1111B</td>
+            <td class="aling-left">POLIFORM</td>
+            <td class="aling-left">BODEGA</td>
+            <td class="aling-left" style="padding-left: 120">1</td>
+          </tr>
+          <tr>
+            <td class="aling-left">1111B</td>
+            <td class="aling-left">MANUTTI</td>
+            <td class="aling-left">BODEGA</td>
+            <td class="aling-left" style="padding-left: 120">1</td>
+          </tr>
+          <tr>
+            <td class="aling-left">1111B</td>
+            <td class="aling-left">DI PAOLO TRAD</td>
+            <td class="aling-left">BODEGA</td>
+            <td class="aling-left" style="padding-left: 120">1</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="observations">
+      <div class="table-title">
+        <p class="aling-center">OBSERVACIONES</p>
+      </div>
+      <div style="border: 2px solid #7030a0; height: 100px"></div>
+    </div>
+    <div class="footer">
+      <div class="footer-item">
+        <span>MONTE EVEREST 635, 1ER PISO</span>
+        <span>LOMAS DE CHAPULTEPEC, CDMX</span>
+        <span>TEL. 55 5553 7988 / 55 8434 8023</span>
+      </div>
+      <div class="footer-item">
+        <span>WWW.BENETTICASA.COM</span>
+      </div>
+      <div class="footer-item">
+        <span>PABELLÓN BOSQUES L.153-154</span>
+        <span>CDMX</span>
+        <span>TEL.2167-5008 / 2167</span>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

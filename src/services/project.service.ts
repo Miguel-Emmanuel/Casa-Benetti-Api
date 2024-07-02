@@ -352,7 +352,7 @@ export class ProjectService {
 
             }
             const nameFile = `cotizacion_cliente_${quotationId}_${dayjs().format()}.pdf`
-            await this.pdfService.createPDFWithTemplateHtml(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A4'}, `${process.cwd()}/.sandbox/${nameFile}`);
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A4'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
             await transaction.rollback()
@@ -393,7 +393,7 @@ export class ProjectService {
                 "products": prodcutsArray,
             }
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format()}.pdf`
-            await this.pdfService.createPDFWithTemplateHtml(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A4'}, `${process.cwd()}/.sandbox/${nameFile}`);
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A4'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
             await transaction.rollback()
@@ -430,7 +430,7 @@ export class ProjectService {
                 }
 
                 const nameFile = `recibo_anticipo_${proofPaymentType}_${quotationId}_${dayjs().format()}.pdf`
-                await this.pdfService.createPDFWithTemplateHtml(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A4'}, `${process.cwd()}/.sandbox/${nameFile}`);
+                await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A4'}, `${process.cwd()}/.sandbox/${nameFile}`);
                 await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
 
             }
