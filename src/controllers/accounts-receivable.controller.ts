@@ -91,6 +91,21 @@ export class AccountsReceivableController {
         return this.accountsReceivableService.findById(id, filter);
     }
 
+    @get('/accounts-receivables/account-statement/{id}')
+    @response(200, {
+        description: 'AccountsReceivable model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(AccountsReceivable,),
+            },
+        },
+    })
+    async getAccountStatement(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.accountsReceivableService.getAccountStatement(id);
+    }
+
     @patch('/accounts-receivables/{id}')
     @response(204, {
         description: 'AccountsReceivable PATCH success',
