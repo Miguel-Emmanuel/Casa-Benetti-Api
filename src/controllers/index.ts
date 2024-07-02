@@ -25,3 +25,4 @@ export * from './quotation-user.controller';
 
 export * from './documents.controller';
 export * from './accounts-receivable.controller';
+export * from './advance-payment-record.controller';
