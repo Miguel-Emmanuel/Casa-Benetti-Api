@@ -31,6 +31,7 @@ export enum ModuleCategories {
     CATALOGS = 'Catálogos',
     COTIZACIONES = 'Cotizaciones',
     PROYECTOS = 'Proyectos',
+    CUENTAS_POR_COBRAR = 'Cuentas por cobrar',
 }
 
 export enum TypeUserE {

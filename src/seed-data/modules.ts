@@ -30,4 +30,9 @@ export const modulesSeed = [
     description: 'Catálogo Proyectos',
     categoryName: ModuleCategories.PROYECTOS
   },
+  {
+    name: 'Cuentas por cobrar',
+    description: 'Cuentas por cobrar',
+    categoryName: ModuleCategories.CUENTAS_POR_COBRAR
+  },
 ];
