@@ -104,11 +104,11 @@ export class AccountsReceivableService {
             }
 
             console.log(properties)
-            // const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
-            // const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
-            // this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
-            // this.response.setHeader('Content-Type', 'application/pdf');
-            // return this.response.status(200).send(buffer)
+            const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
+            const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
+            this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
+            this.response.setHeader('Content-Type', 'application/pdf');
+            return this.response.status(200).send(buffer)
         } catch (error) {
 
         }
