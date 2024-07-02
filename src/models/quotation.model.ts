@@ -626,6 +626,7 @@ export interface QuotationRelations {
     projectManager: UserWithRelations
     proofPaymentQuotations: ProofPaymentQuotationWithRelations[]
     mainProjectManager: UserWithRelations
+    showroomManager: UserWithRelations
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;

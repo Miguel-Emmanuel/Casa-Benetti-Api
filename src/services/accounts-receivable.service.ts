@@ -2,6 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import dayjs from 'dayjs';
 import {AccessLevelRolE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountsReceivable} from '../models';
@@ -84,15 +85,26 @@ export class AccountsReceivableService {
         const accountsReceivable = await this.findAccountReceivable(id);
         const project = await this.findProjectById(accountsReceivable.projectId);
         console.log(project)
-        const {projectId, customer} = project;
-        const {name, lastName, secondLastName} = customer
+        const {projectId, customer, quotation} = project;
+        const {showroomManager, mainProjectManager, closingDate} = quotation;
+        const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords} = accountsReceivable;
         try {
             const properties: any = {
                 projectId,
-                customer: `${name} ${lastName ?? ''} ${secondLastName ?? ''}`
+                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
+                closingDate: dayjs(closingDate).format('DD/MM/YYYY'),
+                totalSale,
+                updatedTotal,
+                totalPaid,
+                totalPercentage: 0,
+                balance,
+                advancePaymentRecords
             }
+            console.log(properties)
             // const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
-            // const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A4'});
+            // const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
             // this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
             // this.response.setHeader('Content-Type', 'application/pdf');
             // return this.response.status(200).send(buffer)
@@ -114,6 +126,12 @@ export class AccountsReceivableService {
                                 scope: {
                                     fields: ['id', 'firstName', 'lastName']
                                 }
+                            },
+                            {
+                                relation: 'mainProjectManager',
+                                scope: {
+                                    fields: ['id', 'firstName', 'lastName']
+                                }
                             }
                         ]
                     }
@@ -128,9 +146,8 @@ export class AccountsReceivableService {
         });
         return project;
     }
-
     async findAccountReceivable(id: number) {
-        const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {id}});
+        const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {id}, include: ['advancePaymentRecords']});
         if (!accountsReceivable)
             throw this.responseService.badRequest('La cuenta por cobrar no existe.');
         return accountsReceivable
