@@ -2,11 +2,12 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import dayjs from 'dayjs';
 import {AccessLevelRolE} from '../enums';
+import {ResponseServiceBindings} from '../keys';
 import {AccountsReceivable} from '../models';
-import {AccountsReceivableRepository, QuotationRepository, UserRepository} from '../repositories';
+import {AccountsReceivableRepository, ProjectRepository, QuotationRepository, UserRepository} from '../repositories';
 import {PdfService} from './pdf.service';
+import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AccountsReceivableService {
@@ -22,7 +23,11 @@ export class AccountsReceivableService {
         @service()
         public pdfService: PdfService,
         @inject(RestBindings.Http.RESPONSE)
-        private response: Response
+        private response: Response,
+        @inject(ResponseServiceBindings.RESPONSE_SERVICE)
+        public responseService: ResponseService,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository,
     ) { }
 
     async count(where?: Where<AccountsReceivable>,) {
@@ -49,7 +54,7 @@ export class AccountsReceivableService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['name', 'lastName', 'secondLastName']
+                    fields: ['name', 'lastName', 'secondLastName', 'groupId']
                 }
             },
             {
@@ -75,18 +80,60 @@ export class AccountsReceivableService {
     }
 
     async getAccountStatement(id: number) {
+
+        const accountsReceivable = await this.findAccountReceivable(id);
+        const project = await this.findProjectById(accountsReceivable.projectId);
+        console.log(project)
+        const {projectId, customer} = project;
+        const {name, lastName, secondLastName} = customer
         try {
             const properties: any = {
-
+                projectId,
+                customer: `${name} ${lastName ?? ''} ${secondLastName ?? ''}`
             }
-            const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
-            const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A4'});
-            this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
-            this.response.setHeader('Content-Type', 'application/pdf');
-            return this.response.status(200).send(buffer)
+            // const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
+            // const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A4'});
+            // this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
+            // this.response.setHeader('Content-Type', 'application/pdf');
+            // return this.response.status(200).send(buffer)
         } catch (error) {
 
         }
+    }
+
+    async findProjectById(id: number) {
+        const project = await this.projectRepository.findById(id, {
+            include: [
+                {
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD'],
+                        include: [
+                            {
+                                relation: 'showroomManager',
+                                scope: {
+                                    fields: ['id', 'firstName', 'lastName']
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'customer',
+                    scope: {
+                        fields: ['name', 'lastName', 'secondLastName']
+                    }
+                }
+            ]
+        });
+        return project;
+    }
+
+    async findAccountReceivable(id: number) {
+        const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {id}});
+        if (!accountsReceivable)
+            throw this.responseService.badRequest('La cuenta por cobrar no existe.');
+        return accountsReceivable
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<AccountsReceivable>) {
@@ -105,7 +152,7 @@ export class AccountsReceivableService {
             {
                 relation: 'customer',
                 scope: {
-                    fields: ['name', 'lastName', 'secondLastName']
+                    fields: ['name', 'lastName', 'secondLastName', 'groupId']
                 }
             },
             {
