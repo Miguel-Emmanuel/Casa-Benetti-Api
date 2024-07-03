@@ -26,5 +26,5 @@ export const schameCreateAdvancePayment = Joi.object({
         'any.only': `El tipo de cobro debe ser igual a uno de los valores permitidos.`
     }).required(),
     vouchers: Joi.array().items(documents).optional(),
-
+    salesDeviation: Joi.number().required(),
 })
