@@ -90,6 +90,7 @@ export class AccountsReceivableService {
         const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords} = accountsReceivable;
         try {
             const properties: any = {
+                today: dayjs().format('DD/MM/YYYY'),
                 projectId,
                 customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
@@ -100,7 +101,15 @@ export class AccountsReceivableService {
                 totalPaid,
                 totalPercentage: 0,
                 balance,
-                advancePaymentRecords
+                advancePaymentRecords: advancePaymentRecords.map(value => {
+                    return {
+                        ...value,
+                        paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
+                        amountPaid: value.subtotalAmountPaid.toFixed(2),
+                        subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
+                        conversionAmountPaid: value.subtotalAmountPaid.toFixed(2),
+                    }
+                })
             }
 
             console.log(properties)
@@ -120,7 +129,7 @@ export class AccountsReceivableService {
                 {
                     relation: 'quotation',
                     scope: {
-                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD'],
+                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD', 'mainProjectManagerId'],
                         include: [
                             {
                                 relation: 'showroomManager',

@@ -151,7 +151,7 @@
                 <span class="logo2">casa</span>
             </div>
             <div class="date">
-                <p>martes, 11 de junio de 2024</p>
+                <p>{{today}}</p>
             </div>
         </div>
         <div class="title">ESTADO DE CUENTA</div>
@@ -165,38 +165,38 @@
             <tbody>
                 <tr>
                     <td class="text-10">Proyecto:</td>
-                    <td class="text-10">1111B-EUR | Outdoor</td>
+                    <td class="text-10">{{projectId}}</td>
                     <td class="separate-table">Valor del proyecto:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">39,539</td>
+                    <td class="aling-right">{{totalSale}}</td>
                 </tr>
                 <tr>
                     <td class="text-10">Cliente:</td>
-                    <td class="text-10">Marian Rubin</td>
+                    <td class="text-10">{{customer}}</td>
                     <td class="separate-table">Valor actualizado:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">39,539</td>
+                    <td class="aling-right">{{updatedTotal}}</td>
                 </tr>
                 <tr>
                     <td class="text-10">Project Manager:</td>
-                    <td class="text-10">Ilana Kellersztein</td>
+                    <td class="text-10">{{projectManager}}</td>
                     <td class="separate-table">Pagos realizados:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">32,455</td>
+                    <td class="aling-right">{{totalPaid}}</td>
                 </tr>
                 <tr>
                     <td class="text-10">Showroom:</td>
-                    <td class="text-10">Bosques</td>
+                    <td class="text-10">{{showroomManager}}</td>
                     <td class="separate-table">Porcentaje pagado:</td>
                     <td></td>
-                    <td class="aling-right">82%</td>
+                    <td class="aling-right">{{totalPercentage}}%</td>
                 </tr>
                 <tr>
                     <td class="text-10">Fecha de cierre:</td>
-                    <td class="text-10">13 de noviembre de 2023</td>
+                    <td class="text-10">{{closingDate}}</td>
                     <td class="separate-table">Saldo a pagar:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">7,084</td>
+                    <td class="aling-right">{{balance}}</td>
                 </tr>
             </tbody>
         </table>
@@ -227,30 +227,21 @@
                 </tr>
             </thead>
             <tbody>
+                {{#each advancePaymentRecords}}
                 <tr>
-                    <td class="aling-center">1111B-EUR</td>
-                    <td class="aling-center">13/11/2023</td>
-                    <td class="aling-center">EFECTIVO</td>
-                    <td class="aling-center">MXN</td>
-                    <td class="aling-center">$ 458,500</td>
-                    <td class="aling-center">19.14</td>
-                    <td class="aling-center">16%</td>
-                    <td class="aling-center">€ 20,651</td>
-                    <td class="aling-center">€ 23,955</td>
+                    <td class="aling-center">{{projectId}}</td>
+                    <td class="aling-center">{{this.paymentDate}}</td>
+                    <td class="aling-center">{{this.paymentMethod}}</td>
+                    <td class="aling-center">{{this.paymentCurrency}}</td>
+                    <td class="aling-center">${{this.amountPaid}}</td>
+                    <td class="aling-center">{{this.parity}}</td>
+                    <td class="aling-center">{{this.percentageIva}}%</td>
+                    <td class="aling-center">€{{this.subtotalAmountPaid}}</td>
+                    <td class="aling-center">€{{this.conversionAmountPaid}}</td>
                     <td class="aling-center">€ 15,584</td>
                 </tr>
-                <tr>
-                    <td class="aling-center">1111B-EUR</td>
-                    <td class="aling-center">13/11/2023</td>
-                    <td class="aling-center">EFECTIVO</td>
-                    <td class="aling-center">MXN</td>
-                    <td class="aling-center">$ 458,500</td>
-                    <td class="aling-center">19.14</td>
-                    <td class="aling-center">16%</td>
-                    <td class="aling-center">€ 20,651</td>
-                    <td class="aling-center">€ 23,955</td>
-                    <td class="aling-center">€ 15,584</td>
-                </tr>
+                {{/each}}
+
             </tbody>
         </table>
 
