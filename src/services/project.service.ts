@@ -688,6 +688,7 @@ export class ProjectService {
         const {advanceCustomer, exchangeRate, exchangeRateAmount} = this.getPricesQuotation(quotation);
         if (advanceCustomer && advanceCustomer > 0) {
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
+            const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
             const body = {
                 consecutiveId: proofPaymentQuotations?.length ? proofPaymentQuotations?.length + 1 : 1,
                 paymentDate: createdAt,
@@ -698,7 +699,8 @@ export class ProjectService {
                 percentageIva: percentageIva,
                 currencyApply: exchangeRateQuotation,
                 conversionAmountPaid,
-                subtotalAmountPaid: this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)),
+                salesDeviation: ((conversionAmountPaid / (1 + (iva ?? 0))) - subtotalAmountPaid),
+                subtotalAmountPaid,
                 paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
                 projectId,
                 type: TypeAdvancePaymentRecordE.ANTICIPO_CLIENTE,
