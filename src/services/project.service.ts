@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateQuotationE, PaymentTypeProofE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
 import {AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
@@ -445,7 +445,7 @@ export class ProjectService {
         const {exchangeRateQuotation, } = quotation;
         if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
             const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
-                advanceEUR, exchangeRateEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+                advanceEUR, exchangeRateEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR, exchangeRateAmountEUR} = quotation
             const body = {
                 subtotal: subtotalEUR,
                 percentageAdditionalDiscount: percentageAdditionalDiscount,
@@ -456,7 +456,7 @@ export class ProjectService {
                 percentageAdvance: percentageAdvanceEUR,
                 advance: advanceEUR,
                 exchangeRate: exchangeRateEUR,
-                exchangeRateAmountEUR: 15,
+                exchangeRateAmount: exchangeRateAmountEUR,
                 advanceCustomer: advanceCustomerEUR,
                 conversionAdvance: conversionAdvanceEUR,
                 balance: balanceEUR,
@@ -464,7 +464,7 @@ export class ProjectService {
             return body;
         } else if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
             const {subtotalUSD, percentageAdditionalDiscount, additionalDiscountUSD, percentageIva, ivaUSD, totalUSD, percentageAdvanceUSD,
-                advanceUSD, exchangeRateUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
+                advanceUSD, exchangeRateUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD, exchangeRateAmountUSD} = quotation
             const body = {
                 subtotal: subtotalUSD,
                 percentageAdditionalDiscount: percentageAdditionalDiscount,
@@ -475,7 +475,7 @@ export class ProjectService {
                 percentageAdvance: percentageAdvanceUSD,
                 advance: advanceUSD,
                 exchangeRate: exchangeRateUSD,
-                exchangeRateAmountUSD: 15,
+                exchangeRateAmount: exchangeRateAmountUSD,
                 advanceCustomer: advanceCustomerUSD,
                 conversionAdvance: conversionAdvanceUSD,
                 balance: balanceUSD,
@@ -483,7 +483,7 @@ export class ProjectService {
             return body;
         } else if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
             const {subtotalMXN, percentageAdditionalDiscount, additionalDiscountMXN, percentageIva, ivaMXN, totalMXN, percentageAdvanceMXN,
-                advanceMXN, exchangeRateMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
+                advanceMXN, exchangeRateMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN, exchangeRateAmountMXN} = quotation
             const body = {
                 subtotal: subtotalMXN,
                 percentageAdditionalDiscount: percentageAdditionalDiscount,
@@ -494,7 +494,7 @@ export class ProjectService {
                 percentageAdvance: percentageAdvanceMXN,
                 advance: advanceMXN,
                 exchangeRate: exchangeRateMXN,
-                exchangeRateAmountMXN: 15,
+                exchangeRateAmount: exchangeRateAmountMXN,
                 advanceCustomer: advanceCustomerMXN,
                 conversionAdvance: conversionAdvanceMXN,
                 balance: balanceMXN,
@@ -511,7 +511,7 @@ export class ProjectService {
             percentageAdvance: null,
             advance: null,
             exchangeRate: null,
-            exchangeRateAmountMXN: null,
+            exchangeRateAmount: null,
             advanceCustomer: null,
             conversionAdvance: null,
             balance: null,
@@ -654,7 +654,7 @@ export class ProjectService {
     }
 
     async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
-        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id} = quotation;
+        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id, createdAt} = quotation;
         const {total} = this.getPricesQuotation(quotation);
         const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0}, {transaction});
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
@@ -682,6 +682,29 @@ export class ProjectService {
                 await this.advancePaymentRecordRepository.documents(advancePaymentRecord.id).create({fileURL, name, extension})
             }
         }
+
+        const {advanceCustomer, exchangeRate, exchangeRateAmount} = this.getPricesQuotation(quotation);
+        if (advanceCustomer && advanceCustomer > 0) {
+            const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
+            const body = {
+                consecutiveId: proofPaymentQuotations?.length ? proofPaymentQuotations?.length + 1 : 1,
+                paymentDate: createdAt,
+                paymentMethod: PaymentTypeProofE.EFECTIVO,
+                amountPaid: advanceCustomer,
+                paymentCurrency: exchangeRate,
+                parity: exchangeRateAmount,
+                percentageIva: percentageIva,
+                currencyApply: exchangeRateQuotation,
+                conversionAmountPaid,
+                subtotalAmountPaid: this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)),
+                paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
+                projectId,
+                type: TypeAdvancePaymentRecordE.ANTICIPO_CLIENTE,
+                accountsReceivableId: accountsReceivable?.id
+            }
+            const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
+        }
+
     }
 
     bigNumberDividedBy(price: number, value: number): number {
