@@ -107,11 +107,6 @@ export enum ExchangeRateQuotationE {
     USD = 'USD',
     MXN = 'MXN',
 }
-export enum ProofPaymentTypeE {
-    EUR = 'EUR',
-    USD = 'USD',
-    MXN = 'MXN',
-}
 
 export enum StatusQuotationE {
     ENPROCESO = 'En proceso',

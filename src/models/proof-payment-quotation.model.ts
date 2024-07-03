@@ -1,6 +1,6 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
-import {ExchangeRateE, PaymentTypeProofE, ProofPaymentTypeE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Quotation} from './quotation.model';
@@ -47,10 +47,10 @@ export class ProofPaymentQuotation extends Entity {
     @property({
         type: 'string',
         jsonSchema: {
-            enum: [...Object.values(ProofPaymentTypeE)]
+            enum: [...Object.values(ExchangeRateQuotationE)]
         }
     })
-    proofPaymentType: ProofPaymentTypeE;
+    proofPaymentType: ExchangeRateQuotationE;
 
 
     //Tipo de cambio

@@ -404,8 +404,10 @@ export class ProjectService {
 
     async createPdfToAdvance(quotationId: number, projectId: number, transaction: any) {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'proofPaymentQuotations', scope: {order: ['createdAt ASC'], }}]});
-        const {customer, mainProjectManager, referenceCustomer, proofPaymentQuotations} = quotation;
+        const {customer, mainProjectManager, referenceCustomer} = quotation;
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
+
+        const advancePaymentRecord = await this.advancePaymentRecordRepository.find({where: {projectId}})
         try {
             const propertiesGeneral: any = {
                 "logo": logo,
@@ -415,22 +417,22 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
             }
-            for (let index = 0; index < proofPaymentQuotations?.length; index++) {
-                const {proofPaymentType, advanceCustomer, conversionAdvance, paymentType, exchangeRateAmount, paymentDate} = proofPaymentQuotations[index];
-                const letterNumber = this.letterNumberService.convertNumberToWords(advanceCustomer)
+            for (let index = 0; index < advancePaymentRecord?.length; index++) {
+                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, exchangeRateAmount} = advancePaymentRecord[index];
+                const letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
-                    advanceCustomer,
-                    conversionAdvance,
-                    proofPaymentType,
-                    paymentType,
+                    advanceCustomer: amountPaid,
+                    conversionAdvance: parity,
+                    proofPaymentType: currencyApply,
+                    paymentType: paymentMethod,
                     exchangeRateAmount,
                     paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
                     letterNumber,
                     consecutiveId: (index + 1)
                 }
 
-                const nameFile = `recibo_anticipo_${proofPaymentType}_${quotationId}_${dayjs().format()}.pdf`
+                const nameFile = `recibo_anticipo_${currencyApply}_${quotationId}_${dayjs().format()}.pdf`
                 await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
                 await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
 
@@ -440,6 +442,40 @@ export class ProjectService {
             await transaction.rollback()
             console.log('error: ', error)
         }
+        // try {
+        //     const propertiesGeneral: any = {
+        //         "logo": logo,
+        //         "customerName": `${customer?.name} ${customer?.lastName}`,
+        //         "quotationId": quotationId,
+        //         "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+        //         "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+        //         "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+        //     }
+        //     for (let index = 0; index < proofPaymentQuotations?.length; index++) {
+        //         const {proofPaymentType, advanceCustomer, conversionAdvance, paymentType, exchangeRateAmount, paymentDate} = proofPaymentQuotations[index];
+        //         const letterNumber = this.letterNumberService.convertNumberToWords(advanceCustomer)
+        //         const propertiesAdvance: any = {
+        //             ...propertiesGeneral,
+        //             advanceCustomer,
+        //             conversionAdvance,
+        //             proofPaymentType,
+        //             paymentType,
+        //             exchangeRateAmount,
+        //             paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
+        //             letterNumber,
+        //             consecutiveId: (index + 1)
+        //         }
+
+        //         const nameFile = `recibo_anticipo_${proofPaymentType}_${quotationId}_${dayjs().format()}.pdf`
+        //         await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+        //         await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
+
+        //     }
+
+        // } catch (error) {
+        //     await transaction.rollback()
+        //     console.log('error: ', error)
+        // }
     }
 
     getPricesQuotation(quotation: Quotation) {
@@ -659,7 +695,7 @@ export class ProjectService {
         const {total, iva} = this.getPricesQuotation(quotation);
         const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0}, {transaction});
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
-            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id, documents} = proofPaymentQuotations[index];
+            const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id, documents, conversionAdvance, proofPaymentType} = proofPaymentQuotations[index];
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
             const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
             const body = {
@@ -668,9 +704,10 @@ export class ProjectService {
                 paymentMethod: paymentType,
                 amountPaid: advanceCustomer,
                 paymentCurrency: exchangeRate,
-                parity: exchangeRateAmount,
+                parity: conversionAdvance,
                 percentageIva: percentageIva,
-                currencyApply: exchangeRateQuotation,
+                currencyApply: proofPaymentType,
+                exchangeRateAmount,
                 conversionAmountPaid,
                 salesDeviation: ((conversionAmountPaid / (1 + (iva ?? 0))) - subtotalAmountPaid),
                 subtotalAmountPaid,
@@ -686,7 +723,7 @@ export class ProjectService {
             }
         }
 
-        const {advanceCustomer, exchangeRate, exchangeRateAmount} = this.getPricesQuotation(quotation);
+        const {advanceCustomer, exchangeRate, exchangeRateAmount, conversionAdvance} = this.getPricesQuotation(quotation);
         if (advanceCustomer && advanceCustomer > 0) {
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
             const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
@@ -697,6 +734,7 @@ export class ProjectService {
                 amountPaid: advanceCustomer,
                 paymentCurrency: exchangeRate,
                 parity: exchangeRateAmount,
+                exchangeRateAmount: conversionAdvance,
                 percentageIva: percentageIva,
                 currencyApply: exchangeRateQuotation,
                 conversionAmountPaid,

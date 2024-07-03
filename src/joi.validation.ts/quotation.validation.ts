@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ProofPaymentTypeE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 
 const projectManager = Joi.object({
     userId: Joi.number(),
@@ -20,7 +20,7 @@ export const schemaProofPaymentQuotation = Joi.object({
     paymentType: Joi.string().valid(...Object.values(PaymentTypeProofE)).messages({
         'any.only': `El tipo de pago debe ser igual a uno de los valores permitidos.`
     }),
-    proofPaymentType: Joi.string().valid(...Object.values(ProofPaymentTypeE)).messages({
+    proofPaymentType: Joi.string().valid(...Object.values(ExchangeRateQuotationE)).messages({
         'any.only': `El tipo de comprobante debe ser igual a uno de los valores permitidos.`
     }),
     exchangeRate: Joi.string().valid(...Object.values(ExchangeRateE)).messages({
@@ -35,7 +35,7 @@ export const schemaProofPaymentQuotation = Joi.object({
 export const schemaProofPaymentQuotationQ = Joi.object({
     id: Joi.number().allow(null),
     paymentDate: Joi.string().required(),
-    proofPaymentType: Joi.string().valid(...Object.values(ProofPaymentTypeE)).messages({
+    proofPaymentType: Joi.string().valid(...Object.values(ExchangeRateQuotationE)).messages({
         'any.only': `El tipo de comprobante debe ser igual a uno de los valores permitidos.`
     }),
     paymentType: Joi.string().valid(...Object.values(PaymentTypeProofE)).messages({
