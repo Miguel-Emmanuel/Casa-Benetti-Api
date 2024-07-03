@@ -161,6 +161,15 @@ export class AdvancePaymentRecord extends Entity {
     })
     type: TypeAdvancePaymentRecordE;
 
+    //Tipo de cambio monto (valor de la moneda que se selecciono)
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    exchangeRateAmount: number;
+
     @belongsTo(() => Project)
     projectId: number;
 
