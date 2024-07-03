@@ -61,7 +61,7 @@ export class AccountsReceivableService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['closingDate']
+                    fields: ['closingDate', 'branchId']
                 }
             },
 
