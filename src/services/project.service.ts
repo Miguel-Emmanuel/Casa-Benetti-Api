@@ -654,12 +654,13 @@ export class ProjectService {
     }
 
     async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
-        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id, createdAt} = quotation;
-        const {total} = this.getPricesQuotation(quotation);
+        const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id, createdAt, } = quotation;
+        const {total, iva} = this.getPricesQuotation(quotation);
         const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0}, {transaction});
         for (let index = 0; index < proofPaymentQuotations?.length; index++) {
             const {paymentDate, paymentType, advanceCustomer, exchangeRateAmount, exchangeRate, id, documents} = proofPaymentQuotations[index];
             const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
+            const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
             const body = {
                 consecutiveId: (index + 1),
                 paymentDate,
@@ -670,7 +671,8 @@ export class ProjectService {
                 percentageIva: percentageIva,
                 currencyApply: exchangeRateQuotation,
                 conversionAmountPaid,
-                subtotalAmountPaid: this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)),
+                salesDeviation: ((conversionAmountPaid / (1 + (iva ?? 0))) - subtotalAmountPaid),
+                subtotalAmountPaid,
                 paymentPercentage: this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid),
                 projectId,
                 type: TypeAdvancePaymentRecordE.ANTICIPO_PRODUCTO,

@@ -94,6 +94,15 @@ export class AdvancePaymentRecord extends Entity {
     })
     percentageIva: number;
 
+    //Desviacion venta
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    salesDeviation: number;
+
     @hasMany(() => Document)
     documents: Document[];
 
