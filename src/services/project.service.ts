@@ -407,7 +407,7 @@ export class ProjectService {
         const {customer, mainProjectManager, referenceCustomer} = quotation;
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
 
-        const advancePaymentRecord = await this.advancePaymentRecordRepository.find({where: {projectId}})
+        const advancePaymentRecord = await this.advancePaymentRecordRepository.find({where: {projectId}}, {transaction})
         try {
             const propertiesGeneral: any = {
                 "logo": logo,
