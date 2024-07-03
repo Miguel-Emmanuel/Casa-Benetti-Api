@@ -1,4 +1,5 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {ExchangeRateQuotationE} from '../enums';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {Customer} from './customer.model';
 import {Project} from './project.model';
@@ -38,7 +39,7 @@ export class AccountsReceivable extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     //Fecha de creacion
     @property({
@@ -100,6 +101,13 @@ export class AccountsReceivable extends Entity {
         },
     })
     balance: number;
+
+
+    //Tipo de moneda
+    @property({
+        type: 'string',
+    })
+    typeCurrency: ExchangeRateQuotationE
 
 
     constructor(data?: Partial<AccountsReceivable>) {

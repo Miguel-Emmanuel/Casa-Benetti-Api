@@ -194,6 +194,20 @@ export class Quotation extends BaseEntity {
     @belongsTo(() => User)
     showroomManagerId: number;
 
+
+    //Conocer en que ponedas se fracciono la cotizacion
+    @property({
+        type: 'object',
+    })
+    typeFractional: {EUR: boolean, MXN: boolean, USD: boolean};
+
+    //Tipo de cambio del anticipo del cliente
+    @property({
+        type: 'string',
+        required: false,
+    })
+    exchangeRate: ExchangeRateE;
+
     //************************************************ COTIZACION EN EUROS *********************************** */
 
     //Subtotal
@@ -299,12 +313,12 @@ export class Quotation extends BaseEntity {
     })
     advanceEUR: number;
 
-    //Tipo de cambio
-    @property({
-        type: 'string',
-        required: false,
-    })
-    exchangeRateEUR: ExchangeRateE;
+    // //Tipo de cambio
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    // })
+    // exchangeRateEUR: ExchangeRateE;
 
     //Tipo de cambio monto
     @property({
@@ -429,12 +443,12 @@ export class Quotation extends BaseEntity {
     })
     advanceMXN: number;
 
-    //Tipo de cambio
-    @property({
-        type: 'string',
-        required: false,
-    })
-    exchangeRateMXN: ExchangeRateE;
+    // //Tipo de cambio
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    // })
+    // exchangeRateMXN: ExchangeRateE;
 
     //Tipo de cambio monto
     @property({
@@ -559,12 +573,12 @@ export class Quotation extends BaseEntity {
     })
     advanceUSD: number;
 
-    //Tipo de cambio
-    @property({
-        type: 'string',
-        required: false,
-    })
-    exchangeRateUSD: ExchangeRateE;
+    // //Tipo de cambio
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    // })
+    // exchangeRateUSD: ExchangeRateE;
 
     //Tipo de cambio monto
     @property({
