@@ -403,7 +403,7 @@ export class ProjectService {
 
 
     async createPdfToAdvance(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'proofPaymentQuotations'}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'proofPaymentQuotations', scope: {order: ['createdAt ASC'], }}]});
         const {customer, mainProjectManager, referenceCustomer, proofPaymentQuotations} = quotation;
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
@@ -426,7 +426,8 @@ export class ProjectService {
                     paymentType,
                     exchangeRateAmount,
                     paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
-                    letterNumber
+                    letterNumber,
+                    consecutiveId: (index + 1)
                 }
 
                 const nameFile = `recibo_anticipo_${proofPaymentType}_${quotationId}_${dayjs().format()}.pdf`
@@ -750,6 +751,7 @@ export class ProjectService {
             where: {id}, include: [{
                 relation: 'proofPaymentQuotations',
                 scope: {
+                    order: ['createdAt ASC'],
                     include: ['documents']
                 }
             }]
