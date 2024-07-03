@@ -61,7 +61,7 @@ export class AccountsReceivableService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['closingDate', 'branchId']
+                    fields: ['closingDate', 'branchId', 'percentageIva', 'isFractionate', 'totalEUR', 'totalMXN', 'totalUSD',]
                 }
             },
 
@@ -185,7 +185,8 @@ export class AccountsReceivableService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['closingDate']
+                    fields: ['closingDate', 'branchId', 'percentageIva', 'isFractionate', 'totalEUR', 'totalMXN', 'totalUSD',]
+
                 }
             },
 

@@ -155,6 +155,14 @@ export class Quotation extends BaseEntity {
     })
     isDraft: boolean;
 
+    //Es fraccionado
+    @property({
+        type: 'boolean',
+        required: false,
+        default: false
+    })
+    isFractionate: boolean;
+
     //Porcentaje de comision project manager principal
     @property({
         type: 'number',

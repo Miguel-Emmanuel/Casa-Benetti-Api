@@ -728,7 +728,7 @@ export class QuotationService {
                 prices = this.calculatePricesExchangeRate(quotation);
         }
 
-        await this.quotationRepository.updateById(id, {status, comment, ...prices});
+        await this.quotationRepository.updateById(id, {status, comment, ...prices, isFractionate});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
