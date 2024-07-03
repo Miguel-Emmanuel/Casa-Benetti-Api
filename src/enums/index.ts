@@ -129,6 +129,7 @@ export enum AdvancePaymentStatusE {
 export enum TypeAdvancePaymentRecordE {
     ANTICIPO_PRODUCTO = 'Anticipo producto',
     ANTICIPO_CLIENTE = 'Anticipo cliente',
+    ANTICIPO = 'Anticipo',
 }
 
 export enum AdvancePaymentTypeE {
