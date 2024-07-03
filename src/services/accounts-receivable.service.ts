@@ -88,7 +88,6 @@ export class AccountsReceivableService {
         const project = await this.findProjectById(accountsReceivable.projectId);
         const {projectId, customer, quotation} = project;
         const {showroomManager, mainProjectManager, closingDate} = quotation;
-        console.log('advancePaymentRecordsFind: ', advancePaymentRecordsFind.length)
         let data = [];
         for (let index = 0; index < advancePaymentRecordsFind.length; index++) {
             const element = advancePaymentRecordsFind[index];
@@ -123,7 +122,6 @@ export class AccountsReceivableService {
         const properties: any = {
             data
         }
-        console.log('properties: ', properties)
         const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
         const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
         this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
