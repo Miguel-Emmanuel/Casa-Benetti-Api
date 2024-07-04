@@ -1,6 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
-import {schameCreateAdvancePayment} from '../joi.validation.ts/advance-payment-record.validation';
+import {schameCreateAdvancePayment, schameCreateAdvancePaymentUpdate} from '../joi.validation.ts/advance-payment-record.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AdvancePaymentRecord, AdvancePaymentRecordCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
@@ -102,17 +102,12 @@ export class AdvancePaymentRecordService {
 
     async updateById(id: number, advancePaymentRecord: AdvancePaymentRecordCreate,) {
         await this.findAdvancePayment(id);
-        await this.validateBodyAdvancePayment(advancePaymentRecord);
-        const {accountsReceivableId, vouchers} = advancePaymentRecord;
-        const accountsReceivable = await this.findAccountReceivable(accountsReceivableId);
-        const {advancePaymentRecords} = accountsReceivable;
-        let consecutiveId = 1;
-        if (advancePaymentRecords?.length > 0) {
-            consecutiveId = advancePaymentRecords[0].consecutiveId + 1
-        }
+        await this.validateBodyAdvancePaymentUpdate(advancePaymentRecord);
+        const {vouchers} = advancePaymentRecord;
         delete advancePaymentRecord?.vouchers;
         await this.createDocuments(id, vouchers);
-        await this.advancePaymentRecordRepository.updateById(id, {...advancePaymentRecord, consecutiveId});
+        await this.advancePaymentRecordRepository.updateById(id, {...advancePaymentRecord});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
     async deleteById(id: number) {
@@ -136,6 +131,20 @@ export class AdvancePaymentRecordService {
     async validateBodyAdvancePayment(advancePaymentRecord: Omit<AdvancePaymentRecordCreate, 'id'>,) {
         try {
             await schameCreateAdvancePayment.validateAsync(advancePaymentRecord);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateBodyAdvancePaymentUpdate(advancePaymentRecord: Omit<AdvancePaymentRecordCreate, 'id'>,) {
+        try {
+            await schameCreateAdvancePaymentUpdate.validateAsync(advancePaymentRecord);
         }
         catch (err) {
             const {details} = err;
