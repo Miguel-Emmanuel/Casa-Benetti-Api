@@ -4,6 +4,7 @@ import {Address, Document, ProofPaymentQuotationCreate} from '../models';
 export interface ProjectManagers {
     userId: number;
     commissionPercentageProjectManager: number;
+    classificationId: number;
 }
 
 export interface Designers {
@@ -128,6 +129,7 @@ export interface ProjectManagersById {
     id?: number;
     projectManagerName: string;
     commissionPercentageProjectManager: number;
+    classificationId: number;
 }
 
 export interface DesignersById {

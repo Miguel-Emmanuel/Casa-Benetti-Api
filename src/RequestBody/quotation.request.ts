@@ -115,6 +115,9 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 },
                                 commissionPercentageProjectManager: {
                                     type: 'number'
+                                },
+                                classificationId: {
+                                    type: 'number',
                                 }
                             }
                         }
@@ -387,6 +390,9 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                 },
                                 commissionPercentageProjectManager: {
                                     type: 'number'
+                                },
+                                classificationId: {
+                                    type: 'number',
                                 }
                             }
                         }
@@ -731,6 +737,9 @@ export const QuotationGteByIdResponse: ResponseModelOrSpec = {
                                         commissionPercentageProjectManager: {
                                             type: 'number'
                                         },
+                                        classificationId: {
+                                            type: 'number',
+                                        }
                                     }
                                 }
                             },

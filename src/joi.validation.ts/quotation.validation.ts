@@ -4,6 +4,7 @@ import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums
 const projectManager = Joi.object({
     userId: Joi.number(),
     commissionPercentageProjectManager: Joi.number(),
+    classificationId: Joi.number(),
 })
 
 

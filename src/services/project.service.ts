@@ -607,11 +607,12 @@ export class ProjectService {
         if (isProjectManager === true) {
             const quotationProjectManagers = await this.quotationProjectManagerRepository.find({where: {quotationId}});
             for (const iterator of quotationProjectManagers) {
-                const {commissionPercentageProjectManager, userId} = iterator;
+                const {commissionPercentageProjectManager, userId, classificationId} = iterator;
                 const body = {
                     userId: userId,
                     projectId,
                     commissionPercentage: commissionPercentageProjectManager,
+                    classificationId,
                     commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageProjectManager),
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                     type: AdvancePaymentTypeE.PROJECT_MANAGER

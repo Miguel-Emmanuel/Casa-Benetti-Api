@@ -257,7 +257,7 @@ export class QuotationService {
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user)
-                await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+                await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
         }
         for (const element of designers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
@@ -298,9 +298,9 @@ export class QuotationService {
             if (user) {
                 const findQuotationPM = await this.quotationProjectManagerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
                 if (findQuotationPM)
-                    await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+                    await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
                 else
-                    await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+                    await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
             }
         }
         for (const element of designers) {
@@ -592,6 +592,7 @@ export class QuotationService {
                 id: iterator.id,
                 projectManagerName: iterator.firstName,
                 commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
+                classificationId: iterator.quotationPM?.classificationId
             })
         }
 
