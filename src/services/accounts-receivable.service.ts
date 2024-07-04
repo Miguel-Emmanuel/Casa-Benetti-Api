@@ -83,44 +83,51 @@ export class AccountsReceivableService {
     async getAccountStatement(id: number) {
 
         const accountsReceivable = await this.findAccountReceivable(id);
+        const advancePaymentRecordsFind = await this.accountsReceivableRepository.find({where: {projectId: accountsReceivable.projectId}, include: ['advancePaymentRecords']});
+
         const project = await this.findProjectById(accountsReceivable.projectId);
-        console.log(project)
         const {projectId, customer, quotation} = project;
         const {showroomManager, mainProjectManager, closingDate} = quotation;
-        const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords} = accountsReceivable;
-        try {
-            const properties: any = {
-                today: dayjs().format('DD/MM/YYYY'),
-                projectId,
-                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
-                showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
-                closingDate: dayjs(closingDate).format('DD/MM/YYYY'),
-                totalSale,
-                updatedTotal,
-                totalPaid,
-                totalPercentage: 0,
-                balance,
-                advancePaymentRecords: advancePaymentRecords.map(value => {
-                    return {
-                        ...value,
-                        paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
-                        amountPaid: value.subtotalAmountPaid.toFixed(2),
-                        subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
-                        conversionAmountPaid: value.subtotalAmountPaid.toFixed(2),
-                    }
+        let data = [];
+        for (let index = 0; index < advancePaymentRecordsFind.length; index++) {
+            const element = advancePaymentRecordsFind[index];
+            const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords} = element;
+            try {
+                data.push({
+                    today: dayjs().format('DD/MM/YYYY'),
+                    projectId,
+                    customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                    showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
+                    closingDate: dayjs(closingDate).format('DD/MM/YYYY'),
+                    totalSale,
+                    updatedTotal,
+                    totalPaid,
+                    totalPercentage: 0,
+                    balance,
+                    advancePaymentRecords: advancePaymentRecords.map(value => {
+                        return {
+                            ...value,
+                            paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
+                            amountPaid: value.subtotalAmountPaid.toFixed(2),
+                            subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
+                            conversionAmountPaid: value.subtotalAmountPaid.toFixed(2),
+                        }
+                    })
                 })
+
+            } catch (error) {
             }
-
-            console.log(properties)
-            const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
-            const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
-            this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
-            this.response.setHeader('Content-Type', 'application/pdf');
-            return this.response.status(200).send(buffer)
-        } catch (error) {
-
         }
+        const properties: any = {
+            data
+        }
+        const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
+        const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
+        this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
+        this.response.setHeader('Content-Type', 'application/pdf');
+        return this.response.status(200).send(buffer)
+
     }
 
     async findProjectById(id: number) {

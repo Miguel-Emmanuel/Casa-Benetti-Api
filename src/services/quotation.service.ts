@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
-import {AccessLevelRolE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
+import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -159,7 +159,7 @@ export class QuotationService {
                 totalEUR: total,
                 percentageAdvanceEUR: percentageAdvance,
                 advanceEUR: advance,
-                exchangeRateEUR: exchangeRate,
+                exchangeRate: exchangeRate,
                 exchangeRateAmountEUR: 15,
                 advanceCustomerEUR: advanceCustomer,
                 conversionAdvanceEUR: conversionAdvance,
@@ -179,7 +179,7 @@ export class QuotationService {
                 totalMXN: total,
                 percentageAdvanceMXN: percentageAdvance,
                 advanceMXN: advance,
-                exchangeRateMXN: exchangeRate,
+                exchangeRate: exchangeRate,
                 exchangeRateAmountMXN: 15,
                 advanceCustomerMXN: advanceCustomer,
                 conversionAdvanceMXN: conversionAdvance,
@@ -199,7 +199,7 @@ export class QuotationService {
                 totalUSD: total,
                 percentageAdvanceUSD: percentageAdvance,
                 advanceUSD: advance,
-                exchangeRateUSD: exchangeRate,
+                exchangeRate: exchangeRate,
                 exchangeRateAmountUSD: 15,
                 advanceCustomerUSD: advanceCustomer,
                 conversionAdvanceUSD: conversionAdvance,
@@ -267,7 +267,7 @@ export class QuotationService {
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product)
-                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
+                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
         }
     }
 
@@ -320,7 +320,7 @@ export class QuotationService {
                 if (findQuotationP)
                     await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
                 else
-                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
+                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
             }
         }
     }
@@ -438,7 +438,7 @@ export class QuotationService {
         const {exchangeRateQuotation, } = quotation;
         if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
             const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
-                advanceEUR, exchangeRateEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+                advanceEUR, exchangeRate, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
             const body = {
                 subtotal: subtotalEUR,
                 percentageAdditionalDiscount: percentageAdditionalDiscount,
@@ -448,7 +448,7 @@ export class QuotationService {
                 total: totalEUR,
                 percentageAdvance: percentageAdvanceEUR,
                 advance: advanceEUR,
-                exchangeRate: exchangeRateEUR,
+                exchangeRate: exchangeRate,
                 exchangeRateAmountEUR: 15,
                 advanceCustomer: advanceCustomerEUR,
                 conversionAdvance: conversionAdvanceEUR,
@@ -457,7 +457,7 @@ export class QuotationService {
             return body;
         } else if (exchangeRateQuotation === ExchangeRateQuotationE.USD) {
             const {subtotalUSD, percentageAdditionalDiscount, additionalDiscountUSD, percentageIva, ivaUSD, totalUSD, percentageAdvanceUSD,
-                advanceUSD, exchangeRateUSD, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
+                advanceUSD, exchangeRate, advanceCustomerUSD, conversionAdvanceUSD, balanceUSD} = quotation
             const body = {
                 subtotal: subtotalUSD,
                 percentageAdditionalDiscount: percentageAdditionalDiscount,
@@ -467,7 +467,7 @@ export class QuotationService {
                 total: totalUSD,
                 percentageAdvance: percentageAdvanceUSD,
                 advance: advanceUSD,
-                exchangeRate: exchangeRateUSD,
+                exchangeRate: exchangeRate,
                 exchangeRateAmountUSD: 15,
                 advanceCustomer: advanceCustomerUSD,
                 conversionAdvance: conversionAdvanceUSD,
@@ -476,7 +476,7 @@ export class QuotationService {
             return body;
         } else if (exchangeRateQuotation === ExchangeRateQuotationE.MXN) {
             const {subtotalMXN, percentageAdditionalDiscount, additionalDiscountMXN, percentageIva, ivaMXN, totalMXN, percentageAdvanceMXN,
-                advanceMXN, exchangeRateMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
+                advanceMXN, exchangeRate, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
             const body = {
                 subtotal: subtotalMXN,
                 percentageAdditionalDiscount: percentageAdditionalDiscount,
@@ -486,7 +486,7 @@ export class QuotationService {
                 total: totalMXN,
                 percentageAdvance: percentageAdvanceMXN,
                 advance: advanceMXN,
-                exchangeRate: exchangeRateMXN,
+                exchangeRate: exchangeRate,
                 exchangeRateAmountMXN: 15,
                 advanceCustomer: advanceCustomerMXN,
                 conversionAdvance: conversionAdvanceMXN,
@@ -719,19 +719,28 @@ export class QuotationService {
 
         let prices = {}, status = null;
         const {isFractionate, isRejected, comment} = body;
-
+        let typeFractional = {};
         if (isRejected === true)
             status = StatusQuotationE.RECHAZADA;
         else {
             status = StatusQuotationE.ENREVISIONADMINSITRACION;
-            if (isFractionate === true)
+            if (isFractionate === true) {
                 prices = this.calculatePricesExchangeRate(quotation);
+                typeFractional = await this.typeCurrencyFractionate(id);
+            }
         }
 
-        await this.quotationRepository.updateById(id, {status, comment, ...prices, isFractionate});
+        await this.quotationRepository.updateById(id, {status, comment, ...prices, isFractionate, typeFractional});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
+    async typeCurrencyFractionate(quotationId: number) {
+        const quotationProducts = await this.quotationProductsRepository.find({where: {quotationId}});
+        const EURO = quotationProducts.find(value => value.currency == CurrencyE.EURO);
+        const PESO_MEXICANO = quotationProducts.find(value => value.currency == CurrencyE.PESO_MEXICANO);
+        const USD = quotationProducts.find(value => value.currency == CurrencyE.USD);
+        return {EUR: EURO ? true : false, MXN: PESO_MEXICANO ? true : false, USD: USD ? true : false}
+    }
     async validateIfExistCustomer(quotation: Quotation) {
         if (!quotation?.customerId)
             throw this.responseService.badRequest("La cotizacion debe tener un cliente asignado.");
@@ -859,7 +868,6 @@ export class QuotationService {
                 totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
                 percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
                 advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
-                exchangeRateEUR: ExchangeRateE.EUR,
                 exchangeRateAmountEUR: EUR,
                 advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerMXN, EUR),
                 conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceMXN, EUR),
@@ -875,7 +883,6 @@ export class QuotationService {
                 totalUSD: this.bigNumberMultipliedBy(totalMXN, USD),
                 percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceMXN, USD),
                 advanceUSD: this.bigNumberMultipliedBy(advanceMXN, USD),
-                exchangeRateUSD: ExchangeRateE.USD,
                 exchangeRateAmountUSD: USD,
                 advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerMXN, USD),
                 conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceMXN, USD),
@@ -900,7 +907,6 @@ export class QuotationService {
                 totalMXN: this.bigNumberMultipliedBy(totalUSD, MXN),
                 percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceUSD, MXN),
                 advanceMXN: this.bigNumberMultipliedBy(advanceUSD, MXN),
-                exchangeRateMXN: ExchangeRateE.MXN,
                 exchangeRateAmountMXN: MXN,
                 advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerUSD, MXN),
                 conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceUSD, MXN),
@@ -916,7 +922,6 @@ export class QuotationService {
                 totalEUR: this.bigNumberMultipliedBy(totalUSD, EUR),
                 percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceUSD, EUR),
                 advanceEUR: this.bigNumberMultipliedBy(advanceUSD, EUR),
-                exchangeRateEUR: ExchangeRateE.EUR,
                 exchangeRateAmountEUR: EUR,
                 advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerUSD, EUR),
                 conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceUSD, EUR),

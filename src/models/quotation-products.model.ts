@@ -1,5 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {QuotationProductStatusE, TypeSaleE} from '../enums';
+import {CurrencyE, QuotationProductStatusE, TypeSaleE} from '../enums';
 import {Product} from './product.model';
 
 @model({
@@ -140,6 +140,15 @@ export class QuotationProducts extends Entity {
         type: 'string',
     })
     status?: QuotationProductStatusE;
+
+    //Moneda de compra
+    @property({
+        type: 'string',
+        jsonSchema: {
+            enum: [...Object.values(CurrencyE)]
+        }
+    })
+    currency: CurrencyE;
 
 
     constructor(data?: Partial<QuotationProducts>) {

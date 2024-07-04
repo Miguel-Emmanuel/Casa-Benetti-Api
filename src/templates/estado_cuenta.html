@@ -144,6 +144,7 @@
 </head>
 
 <body>
+    {{#each data}}
     <div class="container">
         <div class="header">
             <div class="logo-container">
@@ -151,7 +152,7 @@
                 <span class="logo2">casa</span>
             </div>
             <div class="date">
-                <p>{{today}}</p>
+                <p>{{this.today}}</p>
             </div>
         </div>
         <div class="title">ESTADO DE CUENTA</div>
@@ -165,38 +166,38 @@
             <tbody>
                 <tr>
                     <td class="text-10">Proyecto:</td>
-                    <td class="text-10">{{projectId}}</td>
+                    <td class="text-10">{{this.projectId}}</td>
                     <td class="separate-table">Valor del proyecto:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">{{totalSale}}</td>
+                    <td class="aling-right">{{this.totalSale}}</td>
                 </tr>
                 <tr>
                     <td class="text-10">Cliente:</td>
-                    <td class="text-10">{{customer}}</td>
+                    <td class="text-10">{{this.customer}}</td>
                     <td class="separate-table">Valor actualizado:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">{{updatedTotal}}</td>
+                    <td class="aling-right">{{this.updatedTotal}}</td>
                 </tr>
                 <tr>
                     <td class="text-10">Project Manager:</td>
-                    <td class="text-10">{{projectManager}}</td>
+                    <td class="text-10">{{this.projectManager}}</td>
                     <td class="separate-table">Pagos realizados:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">{{totalPaid}}</td>
+                    <td class="aling-right">{{this.totalPaid}}</td>
                 </tr>
                 <tr>
                     <td class="text-10">Showroom:</td>
-                    <td class="text-10">{{showroomManager}}</td>
+                    <td class="text-10">{{this.showroomManager}}</td>
                     <td class="separate-table">Porcentaje pagado:</td>
                     <td></td>
-                    <td class="aling-right">{{totalPercentage}}%</td>
+                    <td class="aling-right">{{this.totalPercentage}}%</td>
                 </tr>
                 <tr>
                     <td class="text-10">Fecha de cierre:</td>
-                    <td class="text-10">{{closingDate}}</td>
+                    <td class="text-10">{{this.closingDate}}</td>
                     <td class="separate-table">Saldo a pagar:</td>
                     <td class="text-10">€</td>
-                    <td class="aling-right">{{balance}}</td>
+                    <td class="aling-right">{{this.balance}}</td>
                 </tr>
             </tbody>
         </table>
@@ -227,17 +228,17 @@
                 </tr>
             </thead>
             <tbody>
-                {{#each advancePaymentRecords}}
+                {{#each this.advancePaymentRecords}}
                 <tr>
-                    <td class="aling-center">{{projectId}}</td>
-                    <td class="aling-center">{{this.paymentDate}}</td>
-                    <td class="aling-center">{{this.paymentMethod}}</td>
-                    <td class="aling-center">{{this.paymentCurrency}}</td>
-                    <td class="aling-center">${{this.amountPaid}}</td>
-                    <td class="aling-center">{{this.parity}}</td>
-                    <td class="aling-center">{{this.percentageIva}}%</td>
-                    <td class="aling-center">€{{this.subtotalAmountPaid}}</td>
-                    <td class="aling-center">€{{this.conversionAmountPaid}}</td>
+                    <td class="aling-center">{{this.projectId}}</td>
+                    <td class="aling-center">{{this.this.paymentDate}}</td>
+                    <td class="aling-center">{{this.this.paymentMethod}}</td>
+                    <td class="aling-center">{{this.this.paymentCurrency}}</td>
+                    <td class="aling-center">${{this.this.amountPaid}}</td>
+                    <td class="aling-center">{{this.this.parity}}</td>
+                    <td class="aling-center">{{this.this.percentageIva}}%</td>
+                    <td class="aling-center">€{{this.this.subtotalAmountPaid}}</td>
+                    <td class="aling-center">€{{this.this.conversionAmountPaid}}</td>
                     <td class="aling-center">€ 15,584</td>
                 </tr>
                 {{/each}}
@@ -267,6 +268,8 @@
             </div>
         </div>
     </div>
+    {{/each}}
+
 </body>
 
 </html>

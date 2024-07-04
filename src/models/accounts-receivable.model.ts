@@ -38,7 +38,7 @@ export class AccountsReceivable extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     //Fecha de creacion
     @property({
@@ -100,6 +100,14 @@ export class AccountsReceivable extends Entity {
         },
     })
     balance: number;
+
+
+    //Tipo de moneda ExchangeRateQuotationE
+    @property({
+        type: 'string',
+    })
+    typeCurrency: string
+    // typeCurrency: ExchangeRateQuotationE
 
 
     constructor(data?: Partial<AccountsReceivable>) {
