@@ -84,7 +84,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId', 'mainProjectManagerClassificationId'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -122,7 +122,7 @@ export class ProjectService {
         const projects = await this.projectRepository.find(filter);
         return projects.map(value => {
             const {id, projectId, customer, branch, quotation, status, branchId} = value;
-            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId} = quotation;
+            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId, mainProjectManagerClassificationId} = quotation;
             return {
                 id,
                 projectId,
@@ -133,7 +133,8 @@ export class ProjectService {
                 status,
                 closingDate,
                 branchId,
-                mainProjectManagerId
+                mainProjectManagerId,
+                mainProjectManagerClassificationId
             }
         })
     }
@@ -143,7 +144,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -607,11 +608,12 @@ export class ProjectService {
         if (isProjectManager === true) {
             const quotationProjectManagers = await this.quotationProjectManagerRepository.find({where: {quotationId}});
             for (const iterator of quotationProjectManagers) {
-                const {commissionPercentageProjectManager, userId} = iterator;
+                const {commissionPercentageProjectManager, userId, classificationId} = iterator;
                 const body = {
                     userId: userId,
                     projectId,
                     commissionPercentage: commissionPercentageProjectManager,
+                    classificationId,
                     commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageProjectManager),
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                     type: AdvancePaymentTypeE.PROJECT_MANAGER

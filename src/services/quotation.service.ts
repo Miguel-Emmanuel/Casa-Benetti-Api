@@ -7,7 +7,7 @@ import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsB
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
-import {CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -40,18 +40,21 @@ export class QuotationService {
         @service()
         public proofPaymentQuotationService: ProofPaymentQuotationService,
         @service()
-        public projectService: ProjectService
+        public projectService: ProjectService,
+        @repository(ClassificationRepository)
+        public classificationRepository: ClassificationRepository,
     ) { }
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
-        const {isReferencedCustomer, mainProjectManagerId} = quotation;
+        const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerClassificationId} = quotation;
         const branchId = this.user.branchId;
         if (!branchId)
             throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
         //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
         await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
+        await this.validateClassificationPM(mainProjectManagerClassificationId);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
         let groupId = null;
@@ -81,6 +84,12 @@ export class QuotationService {
             throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
+    }
+
+    async validateClassificationPM(mainProjectManagerClassificationId: number) {
+        const classification = await this.classificationRepository.findOne({where: {id: mainProjectManagerClassificationId}});
+        if (!classification)
+            throw this.responseService.badRequest("La clasificacion no existe.");
     }
 
     async createProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
@@ -257,7 +266,7 @@ export class QuotationService {
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user)
-                await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+                await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
         }
         for (const element of designers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
@@ -298,9 +307,9 @@ export class QuotationService {
             if (user) {
                 const findQuotationPM = await this.quotationProjectManagerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
                 if (findQuotationPM)
-                    await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+                    await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
                 else
-                    await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager});
+                    await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
             }
         }
         for (const element of designers) {
@@ -417,7 +426,7 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId} = value;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId, mainProjectManagerClassificationId} = value;
             const {name} = customer;
             const {total} = this.getPricesQuotation(value);
             return {
@@ -425,6 +434,7 @@ export class QuotationService {
                 customerName: name,
                 pm: mainProjectManager ? `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}` : '',
                 pmId: mainProjectManagerId,
+                mainProjectManagerClassificationId,
                 branchId: branch?.id,
                 total,
                 branchName: branch?.name,
@@ -592,6 +602,7 @@ export class QuotationService {
                 id: iterator.id,
                 projectManagerName: iterator.firstName,
                 commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
+                classificationId: iterator.quotationPM?.classificationId
             })
         }
 
@@ -641,6 +652,7 @@ export class QuotationService {
                 conversionAdvance: conversionAdvance,
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
+                mainProjectManagerClassificationId: quotation?.mainProjectManagerClassificationId,
                 percentageMainProjectManager: quotation?.percentageMainProjectManager,
                 rejectedComment: quotation?.comment,
             },
