@@ -25,6 +25,12 @@ export class Classification extends BaseEntity {
     @hasMany(() => Line)
     lines: Line[];
 
+    //Porcentaje del limite del project manager
+    @property({
+        type: 'number',
+    })
+    projectManagerPercentage: number;
+
     constructor(data?: Partial<Classification>) {
         super(data);
     }
