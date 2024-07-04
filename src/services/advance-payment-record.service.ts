@@ -66,6 +66,12 @@ export class AdvancePaymentRecordService {
                     fields: ['id', 'createdAt', 'createdBy', 'fileURL', 'name', 'extension', 'advancePaymentRecordId', 'updatedBy', 'updatedAt']
                 }
             },
+            {
+                relation: 'accountsReceivable',
+                scope: {
+                    fields: ['id', 'totalSale']
+                }
+            },
 
         ]
         if (filter?.include)
