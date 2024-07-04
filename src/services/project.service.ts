@@ -752,61 +752,56 @@ export class ProjectService {
         const {advanceCustomer, exchangeRate, exchangeRateAmount, conversionAdvance} = this.getPricesQuotation(quotation);
         if (advanceCustomer && advanceCustomer > 0) {
             exchangeRate
-            const accountsReceivableFind = await this.accountsReceivableRepository.find({where: {projectId}})
-            for (let index = 0; index < accountsReceivableFind.length; index++) {
-                const element = accountsReceivableFind[index];
-                if (exchangeRate.toString() === element.typeCurrency.toString()) {
-
-                    const {total, iva} = this.getPricesQuotation(quotation);
-                    // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0}, {transaction});
-                    const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
-                    const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
-                    const paymentPercentage = this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid)
-                    const body = {
-                        consecutiveId: proofPaymentQuotations?.length ? proofPaymentQuotations?.length + 1 : 1,
-                        paymentDate: createdAt,
-                        paymentMethod: PaymentTypeProofE.EFECTIVO,
-                        amountPaid: advanceCustomer,
-                        paymentCurrency: exchangeRate,
-                        parity: exchangeRateAmount,
-                        exchangeRateAmount: conversionAdvance,
-                        percentageIva: percentageIva,
-                        currencyApply: exchangeRateQuotation,
-                        conversionAmountPaid,
-                        salesDeviation: ((conversionAmountPaid / (1 + (iva ?? 0))) - subtotalAmountPaid),
-                        subtotalAmountPaid,
-                        paymentPercentage: paymentPercentage,
-                        projectId,
-                        type: TypeAdvancePaymentRecordE.ANTICIPO_CLIENTE,
-                        accountsReceivableId: element?.id
-                    }
-                    const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
-                } else if (isFractionate == false) {
-                    const {total, iva} = this.getPricesQuotation(quotation);
-                    const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0}, {transaction});
-                    const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
-                    const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
-                    const paymentPercentage = this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid)
-                    const body = {
-                        consecutiveId: proofPaymentQuotations?.length ? proofPaymentQuotations?.length + 1 : 1,
-                        paymentDate: createdAt,
-                        paymentMethod: PaymentTypeProofE.EFECTIVO,
-                        amountPaid: advanceCustomer,
-                        paymentCurrency: exchangeRate,
-                        parity: exchangeRateAmount,
-                        exchangeRateAmount: conversionAdvance,
-                        percentageIva: percentageIva,
-                        currencyApply: exchangeRateQuotation,
-                        conversionAmountPaid,
-                        salesDeviation: ((conversionAmountPaid / (1 + (iva ?? 0))) - subtotalAmountPaid),
-                        subtotalAmountPaid,
-                        paymentPercentage: paymentPercentage,
-                        projectId,
-                        type: TypeAdvancePaymentRecordE.ANTICIPO_CLIENTE,
-                        accountsReceivableId: accountsReceivable?.id
-                    }
-                    const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
+            const accountsReceivableFind = await this.accountsReceivableRepository.findOne({where: {projectId, typeCurrency: exchangeRate}});
+            if (accountsReceivableFind) {
+                const {total, iva} = this.getPricesQuotation(quotation);
+                const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
+                const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
+                const paymentPercentage = this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid)
+                const body = {
+                    consecutiveId: proofPaymentQuotations?.length ? proofPaymentQuotations?.length + 1 : 1,
+                    paymentDate: createdAt,
+                    paymentMethod: PaymentTypeProofE.EFECTIVO,
+                    amountPaid: advanceCustomer,
+                    paymentCurrency: exchangeRate,
+                    parity: exchangeRateAmount,
+                    exchangeRateAmount: conversionAdvance,
+                    percentageIva: percentageIva,
+                    currencyApply: exchangeRateQuotation,
+                    conversionAmountPaid,
+                    salesDeviation: ((conversionAmountPaid / (1 + (iva ?? 0))) - subtotalAmountPaid),
+                    subtotalAmountPaid,
+                    paymentPercentage: paymentPercentage,
+                    projectId,
+                    type: TypeAdvancePaymentRecordE.ANTICIPO_CLIENTE,
+                    accountsReceivableId: accountsReceivableFind?.id
                 }
+                const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
+            } else if (exchangeRate !== ExchangeRateE.NA) {
+                const {total, iva} = this.getPricesQuotation(quotation);
+                const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0, typeCurrency: exchangeRate}, {transaction});
+                const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount);
+                const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
+                const paymentPercentage = this.calculatePercentage(exchangeRateQuotation, quotation, conversionAmountPaid)
+                const body = {
+                    consecutiveId: proofPaymentQuotations?.length ? proofPaymentQuotations?.length + 1 : 1,
+                    paymentDate: createdAt,
+                    paymentMethod: PaymentTypeProofE.EFECTIVO,
+                    amountPaid: advanceCustomer,
+                    paymentCurrency: exchangeRate,
+                    parity: exchangeRateAmount,
+                    exchangeRateAmount: conversionAdvance,
+                    percentageIva: percentageIva,
+                    currencyApply: exchangeRateQuotation,
+                    conversionAmountPaid,
+                    salesDeviation: ((conversionAmountPaid / (1 + (iva ?? 0))) - subtotalAmountPaid),
+                    subtotalAmountPaid,
+                    paymentPercentage: paymentPercentage,
+                    projectId,
+                    type: TypeAdvancePaymentRecordE.ANTICIPO_CLIENTE,
+                    accountsReceivableId: accountsReceivable?.id
+                }
+                const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
             }
         }
     }
