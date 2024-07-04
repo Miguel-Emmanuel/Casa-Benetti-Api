@@ -4,6 +4,7 @@ import {Address, Document, ProofPaymentQuotationCreate} from '../models';
 export interface ProjectManagers {
     userId: number;
     commissionPercentageProjectManager: number;
+    classificationId: number;
 }
 
 export interface Designers {
@@ -43,6 +44,7 @@ export interface Customer {
 
 export interface QuotationI {
     mainProjectManagerId: number;
+    mainProjectManagerClassificationId: number;
     percentageMainProjectManager: number;
     referenceCustomerId: number;
     isDesigner: boolean;
@@ -128,6 +130,7 @@ export interface ProjectManagersById {
     id?: number;
     projectManagerName: string;
     commissionPercentageProjectManager: number;
+    classificationId: number;
 }
 
 export interface DesignersById {
@@ -189,6 +192,7 @@ export interface QuotationFindOneResponse {
         conversionAdvance: number | null;
         status: string;
         mainProjectManagerId: number | null;
+        mainProjectManagerClassificationId: number | null;
         percentageMainProjectManager: number | null;
         rejectedComment?: string;
 

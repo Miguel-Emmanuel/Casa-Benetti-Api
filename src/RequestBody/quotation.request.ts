@@ -115,6 +115,9 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 },
                                 commissionPercentageProjectManager: {
                                     type: 'number'
+                                },
+                                classificationId: {
+                                    type: 'number',
                                 }
                             }
                         }
@@ -180,6 +183,9 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                         type: 'object',
                         properties: {
                             mainProjectManagerId: {
+                                type: 'number',
+                            },
+                            mainProjectManagerClassificationId: {
                                 type: 'number',
                             },
                             percentageMainProjectManager: {
@@ -387,6 +393,9 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                 },
                                 commissionPercentageProjectManager: {
                                     type: 'number'
+                                },
+                                classificationId: {
+                                    type: 'number',
                                 }
                             }
                         }
@@ -452,6 +461,9 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                         type: 'object',
                         properties: {
                             mainProjectManagerId: {
+                                type: 'number',
+                            },
+                            mainProjectManagerClassificationId: {
                                 type: 'number',
                             },
                             percentageMainProjectManager: {
@@ -731,6 +743,9 @@ export const QuotationGteByIdResponse: ResponseModelOrSpec = {
                                         commissionPercentageProjectManager: {
                                             type: 'number'
                                         },
+                                        classificationId: {
+                                            type: 'number',
+                                        }
                                     }
                                 }
                             },
