@@ -55,26 +55,6 @@ export class Document extends BaseEntity {
   @property({
     type: 'number',
   })
-  mainMaterialId?: number;
-
-  @property({
-    type: 'number',
-  })
-  mainFinishId?: number;
-
-  @property({
-    type: 'number',
-  })
-  secondaryMaterialId?: number;
-
-  @property({
-    type: 'number',
-  })
-  secondaryFinishingId?: number;
-
-  @property({
-    type: 'number',
-  })
   proofPaymentQuotationId?: number;
 
   @property({

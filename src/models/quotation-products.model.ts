@@ -1,5 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {CurrencyE, QuotationProductStatusE, TypeSaleE} from '../enums';
+import {CurrencyE, QuotationProductStatusE} from '../enums';
 import {Product} from './product.model';
 
 @model({
@@ -38,43 +38,105 @@ export class QuotationProducts extends Entity {
     })
     createdAt: Date;
 
-    @property({
-        type: 'number',
-    })
-    quotationId?: number;
+    //******************************************** ACTUALIZACION DE PRODUCTOS ***************
 
-    @belongsTo(() => Product)
-    productId: number;
-
-    //Venta o prestamo
+    //sku
     @property({
         type: 'string',
     })
-    typeSale?: TypeSaleE;
+    SKU: string;
 
-    //10 % de apartado
+    //Materia principal
     @property({
-        type: 'boolean',
+        type: 'string',
     })
-    isSeparate?: boolean;
+    mainMaterial: string;
 
-    //Porcentaje apartado
+    //Acabado principal
+    @property({
+        type: 'string',
+    })
+    mainFinish: string;
+
+    //Material secundario
+    @property({
+        type: 'string',
+    })
+    secondaryMaterial: string;
+
+    //Acabado secundario
+    @property({
+        type: 'string',
+    })
+    secondaryFinishing: string;
+
+    //Medidas
+    @property({
+        type: 'string',
+    })
+    measures: string;
+
+    //Proveedor
+    @property({
+        type: 'number',
+    })
+    providerId: number;
+
+    //Modelo/nombre origen
+    @property({
+        type: 'string',
+    })
+    model: string;
+
+    //Codigo de origen
+    @property({
+        type: 'string',
+    })
+    originCode: string;
+
+    //Costo Origen
+    @property({
+        type: 'string',
+    })
+    originCost: string;
+
+    //Moneda de compra
+    @property({
+        type: 'string',
+        jsonSchema: {
+            enum: [...Object.values(CurrencyE)]
+        }
+    })
+    currency: CurrencyE;
+
+    //Factor
     @property({
         type: 'number',
         postgresql: {
             dataType: 'double precision',
         },
     })
-    percentageSeparate?: number;
+    factor: number;
 
-    //Dias de apartado
+    //Descuento porcentaje maximo
     @property({
         type: 'number',
+        required: false,
         postgresql: {
             dataType: 'double precision',
         },
     })
-    reservationDays?: number;
+    percentageMaximumDiscount: number;
+
+    //Descuento maximo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    maximumDiscount: number;
 
     //Cantidad por producto
     @property({
@@ -84,6 +146,16 @@ export class QuotationProducts extends Entity {
         },
     })
     quantity: number;
+
+    //Subtotal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    subtotal: number;
 
     //Descuento porcentaje por producto
     @property({
@@ -105,26 +177,6 @@ export class QuotationProducts extends Entity {
     })
     discountProduct: number;
 
-    //Descuento adicional porcentaje
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageAdditionalDiscount: number;
-
-    //descuento adicional total
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    additionalDiscount: number;
-
     //Subtotal con descuento
     @property({
         type: 'number',
@@ -133,7 +185,13 @@ export class QuotationProducts extends Entity {
             dataType: 'double precision',
         },
     })
-    subtotal: number;
+    subtotalDiscount: number;
+
+    //Ubicacion
+    @property({
+        type: 'string',
+    })
+    location: string;
 
     //Status
     @property({
@@ -141,14 +199,15 @@ export class QuotationProducts extends Entity {
     })
     status?: QuotationProductStatusE;
 
-    //Moneda de compra
+    //******************************************** FIN ACTUALIZACION DE PRODUCTOS ***************
+
     @property({
-        type: 'string',
-        jsonSchema: {
-            enum: [...Object.values(CurrencyE)]
-        }
+        type: 'number',
     })
-    currency: CurrencyE;
+    quotationId?: number;
+
+    @belongsTo(() => Product)
+    productId: number;
 
 
     constructor(data?: Partial<QuotationProducts>) {

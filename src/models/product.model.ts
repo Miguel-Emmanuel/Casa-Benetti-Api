@@ -1,5 +1,5 @@
 import {Entity, belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {CurrencyE, LocationE, StatusProduct, TypeArticleE, UOME} from '../enums';
+import {TypeArticleE, UOME} from '../enums';
 import {AssembledProducts} from './assembled-products.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Brand, BrandWithRelations} from './brand.model';
@@ -7,7 +7,7 @@ import {Classification} from './classification.model';
 import {Document} from './document.model';
 import {Line} from './line.model';
 import {Organization} from './organization.model';
-import {Provider, ProviderWithRelations} from './provider.model';
+import {ProviderWithRelations} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {Quotation} from './quotation.model';
 
@@ -41,12 +41,6 @@ class DocumentSchema extends Entity {
                 entityKey: 'id',
                 foreignKey: 'organizationid',
             },
-            fk_provider_providerId: {
-                name: 'fk_provider_providerId',
-                entity: 'Provider',
-                entityKey: 'id',
-                foreignKey: 'providerid',
-            },
             fk_brand_brandId: {
                 name: 'fk_brand_brandId',
                 entity: 'Brand',
@@ -64,42 +58,31 @@ export class Product extends BaseEntity {
     })
     id: number;
 
-    @property({
-        type: 'string',
-    })
-    SKU: string;
+    //*********** ACTUALIZACION DE PRODUCTOS ***************
 
-    // @property({
-    //     type: 'string',
-    //
-    //     jsonSchema: {
-    //         enum: [...Object.values(ClassificationE)]
-    //     }
-    // })
-    // classification: ClassificationE;
+    //Generales
 
-    // @property({
-    //     type: 'string',
-    //
-    //     jsonSchema: {
-    //         enum: [...Object.values(ClassificationE)]
-    //     }
-    // })
-    // line: ClassificationE;
+    //Fotografia
+    @hasOne(() => Document)
+    document: Document;
+
+    //Marca
+    @belongsTo(() => Brand)
+    brandId?: number;
+
+    //Clasificacion
     @belongsTo(() => Classification)
     classificationId?: number;
 
+    //Linea
     @belongsTo(() => Line)
     lineId?: number;
 
-    //Ubicacion
+    //Nombre del producto
     @property({
         type: 'string',
-        jsonSchema: {
-            enum: [...Object.values(LocationE)]
-        }
     })
-    location: LocationE;
+    name: string;
 
     //Tipo de articulo
     @property({
@@ -110,30 +93,6 @@ export class Product extends BaseEntity {
     })
     typeArticle: TypeArticleE;
 
-    // //Productos ensamblado
-    // @property({
-    //     type: 'array',
-    //     itemType: 'object',
-    //     jsonSchema: getJsonSchema(AssembledProducts),
-
-    // })
-    // assembledProducts: AssembledProducts[];
-
-    @hasMany(() => AssembledProducts)
-    assembledProducts: AssembledProducts[];
-
-    //Nombre del producto
-    @property({
-        type: 'string',
-    })
-    name: string;
-
-    //Descripcion
-    @property({
-        type: 'string',
-    })
-    description: string;
-
     //UOM
     @property({
         type: 'string',
@@ -143,76 +102,7 @@ export class Product extends BaseEntity {
     })
     UOM: UOME;
 
-    //Materia principal
-    @property({
-        type: 'string',
-    })
-    mainMaterial: string;
-
-    // //Materia principal imagen
-    // @property({
-    //     type: 'object',
-    //     jsonSchema: getJsonSchema(DocumentSchema)
-    // })
-    // mainMaterialImage: DocumentSchema
-
-    @hasOne(() => Document, {keyTo: 'mainMaterialId'})
-    mainMaterialImage: Document;
-
-    //Acabado principal
-    @property({
-        type: 'string',
-    })
-    mainFinish: string;
-
-    // //Acabado principal imagen
-    // @property({
-    //     type: 'object',
-    //     jsonSchema: getJsonSchema(DocumentSchema)
-    // })
-    // mainFinishImage: DocumentSchema
-
-    @hasOne(() => Document, {keyTo: 'mainFinishId'})
-    mainFinishImage: Document;
-
-    //Material secundario
-    @property({
-        type: 'string',
-    })
-    secondaryMaterial: string;
-
-    // //Material secundario image
-    // @property({
-    //     type: 'object',
-    //     jsonSchema: getJsonSchema(DocumentSchema)
-    // })
-    // secondaryMaterialImage: DocumentSchema
-
-
-    @hasOne(() => Document, {keyTo: 'secondaryMaterialId'})
-    secondaryMaterialImage: Document;
-
-    //Acabado secundario
-    @property({
-        type: 'string',
-    })
-    secondaryFinishing: string;
-
-    // //Acabado secundario image
-    // @property({
-    //     type: 'object',
-    //     jsonSchema: getJsonSchema(DocumentSchema)
-    // })
-    // secondaryFinishingImage: DocumentSchema
-
-    @hasOne(() => Document, {keyTo: 'secondaryFinishingId'})
-    secondaryFinishingImage: Document;
-
-    //Pais de origen
-    @property({
-        type: 'string',
-    })
-    countryOrigin: string;
+    //Información de compra
 
     //Se puede comprar?
     @property({
@@ -220,35 +110,23 @@ export class Product extends BaseEntity {
     })
     isPurchasable: boolean;
 
-    @belongsTo(() => Provider)
-    providerId?: number;
-
-    //Modelo/nombre origen
+    //Pais de origen
     @property({
         type: 'string',
     })
-    model: string;
+    countryOrigin: string;
 
-    //Codigo de origen
-    @property({
-        type: 'string',
-    })
-    originCode: string;
+    //AGREGAR ARRAY DE PROVEEDORES
 
-    //Moneda de compra
-    @property({
-        type: 'string',
-        jsonSchema: {
-            enum: [...Object.values(CurrencyE)]
-        }
-    })
-    currency: CurrencyE;
+
+    //Venta
 
     //Disponible para venta
     @property({
         type: 'boolean',
     })
     isSale: boolean;
+
 
     //Factor
     @property({
@@ -259,24 +137,6 @@ export class Product extends BaseEntity {
     })
     factor: number;
 
-    //Precio
-    @property({
-        type: 'number',
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    price: number;
-
-    //Precio de lista
-    @property({
-        type: 'number',
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    listPrice: number;
-
     //Descuento maximo
     @property({
         type: 'number',
@@ -286,6 +146,7 @@ export class Product extends BaseEntity {
     })
     discount: number;
 
+    //CATSAT
     @property({
         type: 'string',
     })
@@ -300,32 +161,19 @@ export class Product extends BaseEntity {
     })
     tariffFraction: number;
 
+    //*********** FIN ACTUALIZACION DE PRODUCTOS ***************
+
+    @hasMany(() => AssembledProducts)
+    assembledProducts: AssembledProducts[];
+
     @belongsTo(() => Organization)
     organizationId: number;
-
-    @hasOne(() => Document)
-    document: Document;
 
     @hasMany(() => Quotation, {through: {model: () => QuotationProducts}})
     quotations: Quotation[];
 
     @hasOne(() => QuotationProducts)
     quotationProducts: QuotationProducts;
-
-    // @hasOne(() => QuotationProducts)
-    // quotationProducts: QuotationProducts;
-    // @hasMany(() => QuotationProducts)
-    // quotationProducts: QuotationProducts[];
-
-    @belongsTo(() => Brand)
-    brandId?: number;
-
-    //Estatus del producto
-    @property({
-        type: 'string',
-        default: StatusProduct.PEDIDO
-    })
-    status: StatusProduct;
 
     @property({
         type: 'boolean',

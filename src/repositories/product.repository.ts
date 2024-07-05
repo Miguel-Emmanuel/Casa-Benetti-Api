@@ -1,20 +1,20 @@
 import {Getter, inject} from '@loopback/core';
-import {BelongsToAccessor, HasManyThroughRepositoryFactory, HasOneRepositoryFactory, repository, HasManyRepositoryFactory} from '@loopback/repository';
+import {BelongsToAccessor, HasManyRepositoryFactory, HasManyThroughRepositoryFactory, HasOneRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Brand, Classification, Line, Organization, Product, ProductRelations, Provider, Quotation, QuotationProducts, Document, AssembledProducts} from '../models';
+import {AssembledProducts, Brand, Classification, Document, Line, Organization, Product, ProductRelations, Quotation, QuotationProducts} from '../models';
 import {OperationHook} from '../operation-hooks';
+import {AssembledProductsRepository} from './assembled-products.repository';
 import {BrandRepository} from './brand.repository';
 import {ClassificationRepository} from './classification.repository';
+import {DocumentRepository} from './document.repository';
 import {LineRepository} from './line.repository';
 import {OrganizationRepository} from './organization.repository';
 import {ProviderRepository} from './provider.repository';
 import {QuotationProductsRepository} from './quotation-products.repository';
 import {QuotationRepository} from './quotation.repository';
 import {SoftCrudRepository} from './soft-delete-entity.repository.base';
-import {DocumentRepository} from './document.repository';
-import {AssembledProductsRepository} from './assembled-products.repository';
 
 export class ProductRepository extends SoftCrudRepository<
   Product,
@@ -23,9 +23,6 @@ export class ProductRepository extends SoftCrudRepository<
 > {
 
   public readonly organization: BelongsToAccessor<Organization, typeof Product.prototype.id>;
-
-
-  public readonly provider: BelongsToAccessor<Provider, typeof Product.prototype.id>;
 
   public readonly brand: BelongsToAccessor<Brand, typeof Product.prototype.id>;
 
@@ -44,14 +41,6 @@ export class ProductRepository extends SoftCrudRepository<
 
   public readonly assembledProducts: HasManyRepositoryFactory<AssembledProducts, typeof Product.prototype.id>;
 
-  public readonly mainMaterialImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
-
-  public readonly mainFinishImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
-
-  public readonly secondaryMaterialImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
-
-  public readonly secondaryFinishingImage: HasOneRepositoryFactory<Document, typeof Product.prototype.id>;
-
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
@@ -59,14 +48,6 @@ export class ProductRepository extends SoftCrudRepository<
     @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('LineRepository') protected lineRepositoryGetter: Getter<LineRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('AssembledProductsRepository') protected assembledProductsRepositoryGetter: Getter<AssembledProductsRepository>,
   ) {
     super(Product, dataSource);
-    this.secondaryFinishingImage = this.createHasOneRepositoryFactoryFor('secondaryFinishingImage', documentRepositoryGetter);
-    this.registerInclusionResolver('secondaryFinishingImage', this.secondaryFinishingImage.inclusionResolver);
-    this.secondaryMaterialImage = this.createHasOneRepositoryFactoryFor('secondaryMaterialImage', documentRepositoryGetter);
-    this.registerInclusionResolver('secondaryMaterialImage', this.secondaryMaterialImage.inclusionResolver);
-    this.mainFinishImage = this.createHasOneRepositoryFactoryFor('mainFinishImage', documentRepositoryGetter);
-    this.registerInclusionResolver('mainFinishImage', this.mainFinishImage.inclusionResolver);
-    this.mainMaterialImage = this.createHasOneRepositoryFactoryFor('mainMaterialImage', documentRepositoryGetter);
-    this.registerInclusionResolver('mainMaterialImage', this.mainMaterialImage.inclusionResolver);
     this.assembledProducts = this.createHasManyRepositoryFactoryFor('assembledProducts', assembledProductsRepositoryGetter,);
     this.registerInclusionResolver('assembledProducts', this.assembledProducts.inclusionResolver);
     this.document = this.createHasOneRepositoryFactoryFor('document', documentRepositoryGetter);
@@ -81,8 +62,6 @@ export class ProductRepository extends SoftCrudRepository<
     this.registerInclusionResolver('quotations', this.quotations.inclusionResolver);
     this.brand = this.createBelongsToAccessorFor('brand', brandRepositoryGetter,);
     this.registerInclusionResolver('brand', this.brand.inclusionResolver);
-    this.provider = this.createBelongsToAccessorFor('provider', providerRepositoryGetter,);
-    this.registerInclusionResolver('provider', this.provider.inclusionResolver);
     this.definePersistedModel(Product)
     this.modelClass.observe('before save', async (ctx: any) => {
       const hook = await this.operationHook();
