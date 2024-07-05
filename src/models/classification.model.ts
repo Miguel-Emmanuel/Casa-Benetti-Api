@@ -31,6 +31,24 @@ export class Classification extends BaseEntity {
     })
     projectManagerPercentage: number;
 
+    //Porcentaje del limite del proyectista
+    @property({
+        type: 'number',
+    })
+    designerPercentage: number;
+
+    //check comission pm
+    @property({
+        type: 'boolean',
+    })
+    iscommissionPM: boolean;
+
+    //check comission proyectista
+    @property({
+        type: 'boolean',
+    })
+    iscommissionDesigner: boolean;
+
     constructor(data?: Partial<Classification>) {
         super(data);
     }
