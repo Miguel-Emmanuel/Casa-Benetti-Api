@@ -26,9 +26,9 @@ export class ProofPaymentQuotationService {
         const {images, ...bodyProofPayment} = proofPaymentQuotation;
         await this.findQuotationById(quotationId);
         await this.validateBodyProofPayment(proofPaymentQuotation);
-        const exchangeRateAmount = this.calculateExchangeRateAmount(bodyProofPayment.exchangeRate);
-        const conversionAdvance = this.calculateConversionAdvance(exchangeRateAmount, bodyProofPayment.advanceCustomer);
-        const proofPaymentQuotationResponse = await this.proofPaymentQuotationRepository.create({...bodyProofPayment, exchangeRateAmount, conversionAdvance})
+        // const exchangeRateAmount = this.calculateExchangeRateAmount(bodyProofPayment.exchangeRate);
+        // const conversionAdvance = this.calculateConversionAdvance(exchangeRateAmount, bodyProofPayment.advanceCustomer);
+        const proofPaymentQuotationResponse = await this.proofPaymentQuotationRepository.create({...bodyProofPayment})
         await this.updateDocuments(proofPaymentQuotationResponse.id, images)
         return proofPaymentQuotationResponse;
     }
@@ -36,13 +36,13 @@ export class ProofPaymentQuotationService {
     calculateExchangeRateAmount(exchangeRate: ExchangeRateE) {
         switch (exchangeRate) {
             case ExchangeRateE.EUR:
-                return 1.0;
+                return 3.0;
                 break;
             case ExchangeRateE.MXN:
                 return 2.0;
                 break;
             case ExchangeRateE.USD:
-                return 3.0;
+                return 4.0;
                 break;
             default:
                 return 0;
