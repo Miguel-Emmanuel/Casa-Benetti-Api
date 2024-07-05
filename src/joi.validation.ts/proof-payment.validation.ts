@@ -22,6 +22,7 @@ export const schemaProofPaymentQuotationInside = Joi.object({
     }),
     advanceCustomer: Joi.number().required(),
     conversionAdvance: Joi.number().required(),
+    exchangeRateAmount: Joi.number().required(),
     quotationId: Joi.number().required(),
     images: Joi.array().items(documents).optional(),
 })
