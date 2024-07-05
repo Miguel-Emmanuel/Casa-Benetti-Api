@@ -80,6 +80,10 @@ export class QuotationProducts extends Entity {
     })
     secondaryMaterial: string;
 
+    //Material secundario Image
+    @hasOne(() => Document, {keyTo: 'secondaryMaterialId'})
+    secondaryMaterialImage: Document;
+
     //Acabado secundario
     @property({
         type: 'string',
