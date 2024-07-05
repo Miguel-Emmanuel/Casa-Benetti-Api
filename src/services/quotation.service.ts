@@ -775,7 +775,7 @@ export class QuotationService {
                 await this.projectService.create({quotationId: id}, transaction);
             }
 
-            // await this.quotationRepository.updateById(id, {status, comment, closingDate: isRejected === true ? undefined : new Date()}, {transaction});
+            await this.quotationRepository.updateById(id, {status, comment, closingDate: isRejected === true ? undefined : new Date()}, {transaction});
             await transaction.commit()
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
         } catch (error) {
