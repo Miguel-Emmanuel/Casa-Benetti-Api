@@ -3,6 +3,7 @@ import {CurrencyE, LocationE, TypeArticleE, UOME} from '../enums';
 
 export const schemaAssembledProducts = Joi.object({
     assembledProduct: Joi.object({
+        id: Joi.number(),
         description: Joi.string().required(),
         SKU: Joi.string().required(),
         mainMaterial: Joi.string().required(),
