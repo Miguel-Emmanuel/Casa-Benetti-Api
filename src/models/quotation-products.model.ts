@@ -1,5 +1,6 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
+import {Document} from './document.model';
 import {Product} from './product.model';
 import {Provider} from './provider.model';
 
@@ -58,6 +59,9 @@ export class QuotationProducts extends Entity {
         type: 'string',
     })
     mainMaterial: string;
+
+    @hasOne(() => Document, {keyTo: 'mainMaterialId'})
+    mainMaterialImage: Document;
 
     //Acabado principal
     @property({
