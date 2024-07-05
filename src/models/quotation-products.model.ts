@@ -60,6 +60,7 @@ export class QuotationProducts extends Entity {
     })
     mainMaterial: string;
 
+    //Materia principal imagen
     @hasOne(() => Document, {keyTo: 'mainMaterialId'})
     mainMaterialImage: Document;
 
