@@ -7,7 +7,8 @@ import {Classification} from './classification.model';
 import {Document} from './document.model';
 import {Line} from './line.model';
 import {Organization} from './organization.model';
-import {ProviderWithRelations} from './provider.model';
+import {ProductProvider} from './product-provider.model';
+import {Provider, ProviderWithRelations} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {Quotation} from './quotation.model';
 
@@ -118,6 +119,11 @@ export class Product extends BaseEntity {
 
     //AGREGAR ARRAY DE PROVEEDORES
 
+    @hasMany(() => Provider, {through: {model: () => ProductProvider}})
+    providers: Provider[];
+
+    @hasOne(() => ProductProvider)
+    productProvider: ProductProvider;
 
     //Venta
 

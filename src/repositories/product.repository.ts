@@ -3,7 +3,7 @@ import {BelongsToAccessor, HasManyRepositoryFactory, HasManyThroughRepositoryFac
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {AssembledProducts, Brand, Classification, Document, Line, Organization, Product, ProductRelations, Quotation, QuotationProducts} from '../models';
+import {AssembledProducts, Brand, Classification, Document, Line, Organization, Product, ProductRelations, Quotation, QuotationProducts, Provider, ProductProvider} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {AssembledProductsRepository} from './assembled-products.repository';
 import {BrandRepository} from './brand.repository';
@@ -15,6 +15,7 @@ import {ProviderRepository} from './provider.repository';
 import {QuotationProductsRepository} from './quotation-products.repository';
 import {QuotationRepository} from './quotation.repository';
 import {SoftCrudRepository} from './soft-delete-entity.repository.base';
+import {ProductProviderRepository} from './product-provider.repository';
 
 export class ProductRepository extends SoftCrudRepository<
   Product,
@@ -41,13 +42,24 @@ export class ProductRepository extends SoftCrudRepository<
 
   public readonly assembledProducts: HasManyRepositoryFactory<AssembledProducts, typeof Product.prototype.id>;
 
+  public readonly providers: HasManyThroughRepositoryFactory<Provider, typeof Provider.prototype.id,
+          ProductProvider,
+          typeof Product.prototype.id
+        >;
+
+  public readonly productProvider: HasOneRepositoryFactory<ProductProvider, typeof Product.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('LineRepository') protected lineRepositoryGetter: Getter<LineRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('AssembledProductsRepository') protected assembledProductsRepositoryGetter: Getter<AssembledProductsRepository>,
+    @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('LineRepository') protected lineRepositoryGetter: Getter<LineRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('AssembledProductsRepository') protected assembledProductsRepositoryGetter: Getter<AssembledProductsRepository>, @repository.getter('ProductProviderRepository') protected productProviderRepositoryGetter: Getter<ProductProviderRepository>,
   ) {
     super(Product, dataSource);
+    this.productProvider = this.createHasOneRepositoryFactoryFor('productProvider', productProviderRepositoryGetter);
+    this.registerInclusionResolver('productProvider', this.productProvider.inclusionResolver);
+    this.providers = this.createHasManyThroughRepositoryFactoryFor('providers', providerRepositoryGetter, productProviderRepositoryGetter,);
+    this.registerInclusionResolver('providers', this.providers.inclusionResolver);
     this.assembledProducts = this.createHasManyRepositoryFactoryFor('assembledProducts', assembledProductsRepositoryGetter,);
     this.registerInclusionResolver('assembledProducts', this.assembledProducts.inclusionResolver);
     this.document = this.createHasOneRepositoryFactoryFor('document', documentRepositoryGetter);
