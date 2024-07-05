@@ -1,5 +1,5 @@
 import {Entity, belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {CurrencyE, LocationE, StatusProduct, TypeArticleE, UOME} from '../enums';
+import {CurrencyE, StatusProduct, TypeArticleE, UOME} from '../enums';
 import {AssembledProducts} from './assembled-products.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Brand, BrandWithRelations} from './brand.model';
@@ -95,11 +95,8 @@ export class Product extends BaseEntity {
     //Ubicacion
     @property({
         type: 'string',
-        jsonSchema: {
-            enum: [...Object.values(LocationE)]
-        }
     })
-    location: LocationE;
+    location: string;
 
     //Tipo de articulo
     @property({
