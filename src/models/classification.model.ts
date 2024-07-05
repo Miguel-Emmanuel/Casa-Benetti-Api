@@ -41,13 +41,13 @@ export class Classification extends BaseEntity {
     @property({
         type: 'boolean',
     })
-    iscommissionPM: boolean;
+    isCommissionPM: boolean;
 
     //check comission proyectista
     @property({
         type: 'boolean',
     })
-    iscommissionDesigner: boolean;
+    isCommissionDesigner: boolean;
 
     constructor(data?: Partial<Classification>) {
         super(data);
