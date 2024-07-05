@@ -118,9 +118,9 @@ export class QuotationProducts extends Entity {
 
     //Costo Origen
     @property({
-        type: 'string',
+        type: 'number',
     })
-    originCost: string;
+    originCost: number;
 
     //Moneda de compra
     @property({
