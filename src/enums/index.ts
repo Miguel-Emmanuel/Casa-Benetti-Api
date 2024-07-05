@@ -59,11 +59,11 @@ export enum ClassificationE {
     SERVICIO = 'Servicio'
 }
 
-export enum LocationE {
-    COCINA = 'Cocina',
-    RECAMARA = 'Recamara',
-    SALA = 'Sala',
-}
+// export enum LocationE {
+//     COCINA = 'Cocina',
+//     RECAMARA = 'Recamara',
+//     SALA = 'Sala',
+// }
 
 export enum TypeArticleE {
     PRODUCTO_TERMINADO = 'Producto terminado',

@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {CurrencyE, LocationE, TypeArticleE, UOME} from '../enums';
+import {CurrencyE, TypeArticleE, UOME} from '../enums';
 
 export const schemaAssembledProducts = Joi.object({
     assembledProduct: Joi.object({
@@ -26,9 +26,7 @@ export const schemaCreateProduct = Joi.object({
         SKU: Joi.string().required(),
         classificationId: Joi.number().allow(null),
         lineId: Joi.number().allow(null),
-        location: Joi.string().valid(...Object.values(LocationE)).allow(null).allow('').messages({
-            'any.only': `El ubicación de articulo debe ser igual a uno de los valores permitidos.`
-        }),
+        location: Joi.string().allow(null),
         typeArticle: Joi.string().valid(...Object.values(TypeArticleE)).allow(null).allow('').messages({
             'any.only': `El tipo de articulo debe ser igual a uno de los valores permitidos.`
         }),
