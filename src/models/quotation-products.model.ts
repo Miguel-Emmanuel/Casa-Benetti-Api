@@ -90,6 +90,10 @@ export class QuotationProducts extends Entity {
     })
     secondaryFinishing: string;
 
+    //Acabado secundario imagen
+    @hasOne(() => Document, {keyTo: 'secondaryFinishingId'})
+    secondaryFinishingImage: Document;
+
     //Medidas
     @property({
         type: 'string',
