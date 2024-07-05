@@ -87,6 +87,11 @@ export class Document extends BaseEntity {
   })
   mainMaterialId?: number;
 
+  @property({
+    type: 'number',
+  })
+  mainFinishId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }

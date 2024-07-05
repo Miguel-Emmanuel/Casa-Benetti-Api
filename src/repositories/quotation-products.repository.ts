@@ -18,10 +18,14 @@ export class QuotationProductsRepository extends DefaultCrudRepository<
 
   public readonly mainMaterialImage: HasOneRepositoryFactory<Document, typeof QuotationProducts.prototype.id>;
 
+  public readonly mainFinishImage: HasOneRepositoryFactory<Document, typeof QuotationProducts.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
   ) {
     super(QuotationProducts, dataSource);
+    this.mainFinishImage = this.createHasOneRepositoryFactoryFor('mainFinishImage', documentRepositoryGetter);
+    this.registerInclusionResolver('mainFinishImage', this.mainFinishImage.inclusionResolver);
     this.mainMaterialImage = this.createHasOneRepositoryFactoryFor('mainMaterialImage', documentRepositoryGetter);
     this.registerInclusionResolver('mainMaterialImage', this.mainMaterialImage.inclusionResolver);
     this.provider = this.createBelongsToAccessorFor('provider', providerRepositoryGetter,);

@@ -70,6 +70,10 @@ export class QuotationProducts extends Entity {
     })
     mainFinish: string;
 
+    //Acabado principal imagen
+    @hasOne(() => Document, {keyTo: 'mainFinishId'})
+    mainFinishImage: Document;
+
     //Material secundario
     @property({
         type: 'string',
