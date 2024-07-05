@@ -731,17 +731,16 @@ export class QuotationService {
 
         let prices = {}, status = null;
         const {isFractionate, isRejected, comment} = body;
-        let typeFractional = {};
+        let typeFractional: any;
         if (isRejected === true)
             status = StatusQuotationE.RECHAZADA;
         else {
             status = StatusQuotationE.ENREVISIONADMINSITRACION;
             if (isFractionate === true) {
-                prices = this.calculatePricesExchangeRate(quotation);
                 typeFractional = await this.typeCurrencyFractionate(id);
+                prices = this.calculatePricesExchangeRate(quotation, typeFractional);
             }
         }
-
         await this.quotationRepository.updateById(id, {status, comment, ...prices, isFractionate, typeFractional});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
@@ -822,45 +821,51 @@ export class QuotationService {
         return Number(new BigNumber(num).toFixed(2));
     }
 
-    calculatePricesExchangeRate(quotation: Quotation) {
+    calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
-            const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
-                advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            let bodyMXN = {};
+            let bodyUSD = {};
             const USD = 1.074;
             const MXN = 19.28;
-
-            const bodyMXN = {
-                subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
-                percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
-                additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
-                percentageIva: this.roundToTwoDecimals(percentageIva),
-                ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
-                totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
-                percentageAdvanceMXN: this.roundToTwoDecimals(percentageAdvanceEUR),
-                advanceMXN: this.bigNumberMultipliedBy(advanceEUR, MXN),
-                exchangeRateMXN: ExchangeRateE.MXN,
-                exchangeRateAmountMXN: MXN,
-                advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerEUR, MXN),
-                conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceEUR, MXN),
-                balanceMXN: this.bigNumberMultipliedBy(balanceEUR, MXN),
+            const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
+                advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            if (typeFractional.MXN === true) {
+                bodyMXN = {
+                    subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
+                    percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
+                    additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
+                    percentageIva: this.roundToTwoDecimals(percentageIva),
+                    ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
+                    totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
+                    percentageAdvanceMXN: this.roundToTwoDecimals(percentageAdvanceEUR),
+                    advanceMXN: this.bigNumberMultipliedBy(advanceEUR, MXN),
+                    exchangeRateMXN: ExchangeRateE.MXN,
+                    exchangeRateAmountMXN: MXN,
+                    advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerEUR, MXN),
+                    conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceEUR, MXN),
+                    balanceMXN: this.bigNumberMultipliedBy(balanceEUR, MXN),
+                }
+            }
+            if (typeFractional.USD === true) {
+                bodyUSD = {
+                    subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
+                    percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
+                    additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
+                    percentageIva: this.roundToTwoDecimals(percentageIva),
+                    ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
+                    totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
+                    percentageAdvanceUSD: this.roundToTwoDecimals(percentageAdvanceEUR),
+                    advanceUSD: this.bigNumberMultipliedBy(advanceEUR, USD),
+                    exchangeRateUSD: ExchangeRateE.USD,
+                    exchangeRateAmountUSD: USD,
+                    advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerEUR, USD),
+                    conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceEUR, USD),
+                    balanceUSD: this.bigNumberMultipliedBy(balanceEUR, USD),
+                }
             }
 
-            const bodyUSD = {
-                subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
-                percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
-                additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
-                percentageIva: this.roundToTwoDecimals(percentageIva),
-                ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
-                totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
-                percentageAdvanceUSD: this.roundToTwoDecimals(percentageAdvanceEUR),
-                advanceUSD: this.bigNumberMultipliedBy(advanceEUR, USD),
-                exchangeRateUSD: ExchangeRateE.USD,
-                exchangeRateAmountUSD: USD,
-                advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerEUR, USD),
-                conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceEUR, USD),
-                balanceUSD: this.bigNumberMultipliedBy(balanceEUR, USD),
-            }
+
             return {...bodyMXN, ...bodyUSD}
 
         }
@@ -870,36 +875,43 @@ export class QuotationService {
                 advanceMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
             const EUR = 0.05184;
             const USD = 0.05566;
-
-            const bodyEUR = {
-                subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
-                percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
-                additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
-                percentageIva: this.roundToTwoDecimals(percentageIva),
-                ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
-                totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
-                percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
-                advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
-                exchangeRateAmountEUR: EUR,
-                advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerMXN, EUR),
-                conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceMXN, EUR),
-                balanceEUR: this.bigNumberMultipliedBy(balanceMXN, EUR),
+            let bodyEUR = {};
+            let bodyUSD = {};
+            if (typeFractional.EUR === true) {
+                bodyEUR = {
+                    subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
+                    percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
+                    additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
+                    percentageIva: this.roundToTwoDecimals(percentageIva),
+                    ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
+                    totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
+                    percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
+                    advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
+                    exchangeRateAmountEUR: EUR,
+                    advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerMXN, EUR),
+                    conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceMXN, EUR),
+                    balanceEUR: this.bigNumberMultipliedBy(balanceMXN, EUR),
+                }
+            }
+            if (typeFractional.USD === true) {
+                bodyUSD = {
+                    subtotalUSD: this.bigNumberMultipliedBy(subtotalMXN, USD),
+                    percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, USD),
+                    additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountMXN, USD),
+                    percentageIva: this.bigNumberMultipliedBy(percentageIva, USD),
+                    ivaUSD: this.bigNumberMultipliedBy(ivaMXN, USD),
+                    totalUSD: this.bigNumberMultipliedBy(totalMXN, USD),
+                    percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceMXN, USD),
+                    advanceUSD: this.bigNumberMultipliedBy(advanceMXN, USD),
+                    exchangeRateAmountUSD: USD,
+                    advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerMXN, USD),
+                    conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceMXN, USD),
+                    balanceUSD: this.bigNumberMultipliedBy(balanceMXN, USD),
+                }
             }
 
-            const bodyUSD = {
-                subtotalUSD: this.bigNumberMultipliedBy(subtotalMXN, USD),
-                percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, USD),
-                additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountMXN, USD),
-                percentageIva: this.bigNumberMultipliedBy(percentageIva, USD),
-                ivaUSD: this.bigNumberMultipliedBy(ivaMXN, USD),
-                totalUSD: this.bigNumberMultipliedBy(totalMXN, USD),
-                percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceMXN, USD),
-                advanceUSD: this.bigNumberMultipliedBy(advanceMXN, USD),
-                exchangeRateAmountUSD: USD,
-                advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerMXN, USD),
-                conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceMXN, USD),
-                balanceUSD: this.bigNumberMultipliedBy(balanceMXN, USD),
-            }
+
+
             return {...bodyEUR, ...bodyUSD}
 
         }
@@ -910,34 +922,42 @@ export class QuotationService {
             const EUR = 0.9315;
             const MXN = 17.95;
 
-            const bodyMXN = {
-                subtotalMXN: this.bigNumberMultipliedBy(subtotalUSD, MXN),
-                percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, MXN),
-                additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountUSD, MXN),
-                percentageIva: this.bigNumberMultipliedBy(percentageIva, MXN),
-                ivaMXN: this.bigNumberMultipliedBy(ivaUSD, MXN),
-                totalMXN: this.bigNumberMultipliedBy(totalUSD, MXN),
-                percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceUSD, MXN),
-                advanceMXN: this.bigNumberMultipliedBy(advanceUSD, MXN),
-                exchangeRateAmountMXN: MXN,
-                advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerUSD, MXN),
-                conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceUSD, MXN),
-                balanceMXN: this.bigNumberMultipliedBy(balanceUSD, MXN),
+            let bodyMXN = {};
+            let bodyEUR = {};
+            if (typeFractional.MXN === true) {
+                bodyMXN = {
+                    subtotalMXN: this.bigNumberMultipliedBy(subtotalUSD, MXN),
+                    percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, MXN),
+                    additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountUSD, MXN),
+                    percentageIva: this.bigNumberMultipliedBy(percentageIva, MXN),
+                    ivaMXN: this.bigNumberMultipliedBy(ivaUSD, MXN),
+                    totalMXN: this.bigNumberMultipliedBy(totalUSD, MXN),
+                    percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceUSD, MXN),
+                    advanceMXN: this.bigNumberMultipliedBy(advanceUSD, MXN),
+                    exchangeRateAmountMXN: MXN,
+                    advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerUSD, MXN),
+                    conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceUSD, MXN),
+                    balanceMXN: this.bigNumberMultipliedBy(balanceUSD, MXN),
+                }
+
             }
 
-            const bodyEUR = {
-                subtotalEUR: this.bigNumberMultipliedBy(subtotalUSD, EUR),
-                percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, EUR),
-                additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountUSD, EUR),
-                percentageIva: this.bigNumberMultipliedBy(percentageIva, EUR),
-                ivaEUR: this.bigNumberMultipliedBy(ivaUSD, EUR),
-                totalEUR: this.bigNumberMultipliedBy(totalUSD, EUR),
-                percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceUSD, EUR),
-                advanceEUR: this.bigNumberMultipliedBy(advanceUSD, EUR),
-                exchangeRateAmountEUR: EUR,
-                advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerUSD, EUR),
-                conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceUSD, EUR),
-                balanceEUR: this.bigNumberMultipliedBy(balanceUSD, EUR),
+
+            if (typeFractional.EUR === true) {
+                bodyEUR = {
+                    subtotalEUR: this.bigNumberMultipliedBy(subtotalUSD, EUR),
+                    percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, EUR),
+                    additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountUSD, EUR),
+                    percentageIva: this.bigNumberMultipliedBy(percentageIva, EUR),
+                    ivaEUR: this.bigNumberMultipliedBy(ivaUSD, EUR),
+                    totalEUR: this.bigNumberMultipliedBy(totalUSD, EUR),
+                    percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceUSD, EUR),
+                    advanceEUR: this.bigNumberMultipliedBy(advanceUSD, EUR),
+                    exchangeRateAmountEUR: EUR,
+                    advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerUSD, EUR),
+                    conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceUSD, EUR),
+                    balanceEUR: this.bigNumberMultipliedBy(balanceUSD, EUR),
+                }
             }
 
             return {...bodyMXN, ...bodyEUR}
