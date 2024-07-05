@@ -1,6 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
 import {Product} from './product.model';
+import {Provider} from './provider.model';
 
 @model({
     settings: {
@@ -13,6 +14,12 @@ import {Product} from './product.model';
                 entity: 'Quotation',
                 entityKey: 'id',
                 foreignKey: 'quotationid',
+            },
+            fk_provider_providerId: {
+                name: 'fk_provider_providerId',
+                entity: 'Provider',
+                entityKey: 'id',
+                foreignKey: 'providerid',
             },
             fk_product_productId: {
                 name: 'fk_product_productId',
@@ -77,9 +84,7 @@ export class QuotationProducts extends Entity {
     measures: string;
 
     //Proveedor
-    @property({
-        type: 'number',
-    })
+    @belongsTo(() => Provider)
     providerId: number;
 
     //Modelo/nombre origen
