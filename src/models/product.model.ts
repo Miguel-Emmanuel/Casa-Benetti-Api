@@ -42,11 +42,23 @@ class DocumentSchema extends Entity {
                 entityKey: 'id',
                 foreignKey: 'organizationid',
             },
+            fk_classification_classificationId: {
+                name: 'fk_classification_classificationId',
+                entity: 'Classification',
+                entityKey: 'id',
+                foreignKey: 'classificationid',
+            },
             fk_brand_brandId: {
                 name: 'fk_brand_brandId',
                 entity: 'Brand',
                 entityKey: 'id',
                 foreignKey: 'brandid',
+            },
+            fk_line_lineId: {
+                name: 'fk_line_lineId',
+                entity: 'Line',
+                entityKey: 'id',
+                foreignKey: 'lineid',
             },
         }
     }

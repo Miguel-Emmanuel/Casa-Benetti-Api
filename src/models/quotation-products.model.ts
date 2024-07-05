@@ -46,6 +46,14 @@ export class QuotationProducts extends Entity {
     })
     createdAt: Date;
 
+    @property({
+        type: 'number',
+    })
+    quotationId?: number;
+
+    @belongsTo(() => Product)
+    productId: number;
+
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************
 
     //sku
@@ -222,15 +230,6 @@ export class QuotationProducts extends Entity {
     status?: QuotationProductStatusE;
 
     //******************************************** FIN ACTUALIZACION DE PRODUCTOS ***************
-
-    @property({
-        type: 'number',
-    })
-    quotationId?: number;
-
-    @belongsTo(() => Product)
-    productId: number;
-
 
     constructor(data?: Partial<QuotationProducts>) {
         super(data);
