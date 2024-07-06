@@ -124,6 +124,7 @@ export enum ProjectStatusE {
 
 export enum AdvancePaymentStatusE {
     PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
 }
 
 export enum TypeAdvancePaymentRecordE {
