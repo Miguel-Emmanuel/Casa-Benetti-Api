@@ -106,8 +106,8 @@ export class AdvancePaymentRecordService {
         if (payment.status === AdvancePaymentStatusE.PAGADO)
             throw this.responseService.badRequest("El cobro ya fue pagado y no puede actualizarse.");
 
-        const {vouchers, status} = advancePaymentRecord;
-        const {conversionAmountPaid, accountsReceivable, salesDeviation} = payment;
+        const {vouchers, status, salesDeviation} = advancePaymentRecord;
+        const {conversionAmountPaid, accountsReceivable} = payment;
         let {totalSale, totalPaid, updatedTotal} = accountsReceivable;
         if (salesDeviation > 0) {
             const updatedTotalNew = totalSale + salesDeviation;
