@@ -329,7 +329,7 @@ export class ProjectService {
                 subtotal: quotationProducts?.subtotal
             })
         }
-        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
+        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
             const properties: any = {
@@ -349,10 +349,12 @@ export class ProjectService {
                 advance,
                 advanceCustomer,
                 conversionAdvance,
-                balance
+                balance,
+                exchangeRate,
+                percentageAdvance
 
             }
-            const nameFile = `cotizacion_cliente_${quotationId}_${dayjs().format()}.pdf`
+            const nameFile = `cotizacion_cliente_${customer?.name}-${customer?.lastName}_${quotationId}_${dayjs().format('DD/MM/YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
@@ -393,7 +395,7 @@ export class ProjectService {
                 "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
                 "products": prodcutsArray,
             }
-            const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format()}.pdf`
+            const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD/MM/YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
@@ -433,7 +435,7 @@ export class ProjectService {
                     consecutiveId: (index + 1)
                 }
 
-                const nameFile = `recibo_anticipo_${currencyApply}_${quotationId}_${dayjs().format()}.pdf`
+                const nameFile = `recibo_anticipo_${currencyApply}_${quotationId}_${dayjs().format('DD/MM/YYYY')}.pdf`
                 await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
                 await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
 
