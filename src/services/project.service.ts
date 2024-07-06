@@ -426,7 +426,7 @@ export class ProjectService {
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
                     advanceCustomer: amountPaid,
-                    conversionAdvance: conversionAmountPaid,
+                    conversionAdvance: conversionAmountPaid.toFixed(2),
                     proofPaymentType: currencyApply,
                     paymentType: paymentMethod,
                     exchangeRateAmount: parity,

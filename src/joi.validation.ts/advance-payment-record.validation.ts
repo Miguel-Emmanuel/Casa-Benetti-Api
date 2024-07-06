@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {ExchangeRateE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
+import {AdvancePaymentStatusE, ExchangeRateE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
 export const documents = Joi.object({
     id: Joi.number(),
     fileURL: Joi.string().required(),
@@ -30,6 +30,9 @@ export const schameCreateAdvancePayment = Joi.object({
 })
 
 export const schameCreateAdvancePaymentUpdate = Joi.object({
+    status: Joi.string().valid(...Object.values(AdvancePaymentStatusE)).messages({
+        'any.only': `El status debe ser igual a uno de los valores permitidos.`
+    }),
     paymentDate: Joi.date().required(),
     paymentMethod: Joi.string().valid(...Object.values(PaymentTypeProofE)).messages({
         'any.only': `El metodo de pago debe ser igual a uno de los valores permitidos.`

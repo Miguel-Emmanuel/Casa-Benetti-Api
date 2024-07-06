@@ -85,6 +85,7 @@ export class AccountsReceivable extends Entity {
     @property({
         type: 'number',
         required: false,
+        default: 0,
         postgresql: {
             dataType: 'double precision',
         },
