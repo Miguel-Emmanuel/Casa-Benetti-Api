@@ -354,7 +354,7 @@ export class ProjectService {
                 percentageAdvance
 
             }
-            const nameFile = `cotizacion_cliente_${customer?.name}-${customer?.lastName}_${quotationId}_${dayjs().format('DD/MM/YYYY')}.pdf`
+            const nameFile = `cotizacion_cliente_${customer?.name}-${customer?.lastName}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
@@ -395,7 +395,7 @@ export class ProjectService {
                 "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
                 "products": prodcutsArray,
             }
-            const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD/MM/YYYY')}.pdf`
+            const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
@@ -418,15 +418,15 @@ export class ProjectService {
                 "quotationId": quotationId,
                 "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
-                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
             }
             for (let index = 0; index < advancePaymentRecord?.length; index++) {
-                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod} = advancePaymentRecord[index];
-                const letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
+                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid} = advancePaymentRecord[index];
+                let letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
+                letterNumber = `${letterNumber} ${this.separeteDecimal(amountPaid)}/100 MN`;
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
                     advanceCustomer: amountPaid,
-                    conversionAdvance: parity,
+                    conversionAdvance: conversionAmountPaid,
                     proofPaymentType: currencyApply,
                     paymentType: paymentMethod,
                     exchangeRateAmount: parity,
@@ -435,7 +435,7 @@ export class ProjectService {
                     consecutiveId: (index + 1)
                 }
 
-                const nameFile = `recibo_anticipo_${currencyApply}_${quotationId}_${dayjs().format('DD/MM/YYYY')}.pdf`
+                const nameFile = `recibo_anticipo_${currencyApply}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
                 await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
                 await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
 
@@ -479,6 +479,12 @@ export class ProjectService {
         //     await transaction.rollback()
         //     console.log('error: ', error)
         // }
+    }
+
+    separeteDecimal(amountPaid: number) {
+        const decimalAarray = amountPaid.toString().split('.');
+        const decimalString = decimalAarray[1] ? decimalAarray[1].toString() : '00';
+        return decimalString
     }
 
     getPricesQuotation(quotation: Quotation) {
