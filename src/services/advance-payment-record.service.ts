@@ -121,7 +121,7 @@ export class AdvancePaymentRecordService {
                 totalVenta = updatedTotal;
 
             const balance = totalVenta - conversionAmountPaid;
-            const totalPaidNew = totalPaid ?? 0 + conversionAmountPaid;
+            const totalPaidNew = totalPaid + conversionAmountPaid;
             await this.accountsReceivableRepository.updateById(accountsReceivable.id, {balance, totalPaid: totalPaidNew})
         }
         await this.validateBodyAdvancePaymentUpdate(advancePaymentRecord);
@@ -136,7 +136,7 @@ export class AdvancePaymentRecordService {
     }
 
     async findAdvancePayment(id: number) {
-        const advancePaymentRecord = await this.advancePaymentRecordRepository.findOne({where: {id}, include: [{relation: 'accountsReceivable', scope: {fields: ['id', 'totalSale', 'updatedTotal']}}]});
+        const advancePaymentRecord = await this.advancePaymentRecordRepository.findOne({where: {id}, include: [{relation: 'accountsReceivable'}]});
         if (!advancePaymentRecord)
             throw this.responseService.badRequest("Cobro no existe.");
         return advancePaymentRecord;
