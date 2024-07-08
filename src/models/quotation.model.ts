@@ -2,7 +2,6 @@ import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository'
 import {ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
-import {Classification} from './classification.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
@@ -177,10 +176,6 @@ export class Quotation extends BaseEntity {
     //Project manager principal
     @belongsTo(() => User)
     mainProjectManagerId: number;
-
-    //Clasificacion del main project manager
-    @belongsTo(() => Classification)
-    mainProjectManagerClassificationId: number;
 
     //Comprobante de anticipos
     @hasMany(() => ProofPaymentQuotation)

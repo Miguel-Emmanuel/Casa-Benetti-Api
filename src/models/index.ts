@@ -34,3 +34,4 @@ export * from './project.model';
 export * from './advance-payment-record.model';
 export * from './commission-payment-record.model';
 export * from './accounts-receivable.model';
+export * from './classification-percentage-mainpm.model';

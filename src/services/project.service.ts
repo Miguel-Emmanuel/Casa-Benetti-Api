@@ -84,7 +84,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId', 'mainProjectManagerClassificationId'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -122,7 +122,7 @@ export class ProjectService {
         const projects = await this.projectRepository.find(filter);
         return projects.map(value => {
             const {id, projectId, customer, branch, quotation, status, branchId} = value;
-            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId, mainProjectManagerClassificationId} = quotation;
+            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId} = quotation;
             return {
                 id,
                 projectId,
@@ -134,7 +134,6 @@ export class ProjectService {
                 closingDate,
                 branchId,
                 mainProjectManagerId,
-                mainProjectManagerClassificationId
             }
         })
     }
@@ -144,7 +143,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
                     include: [
                         {
                             relation: 'mainProjectManager',
