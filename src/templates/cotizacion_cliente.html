@@ -263,7 +263,7 @@
                     <th>ACABADOS</th>
                     <th>CANTIDAD</th>
                     <th>DESCUENTO</th>
-                    <th>SUBTOTAL CON DESCUENTO</th>
+                    <th>PRECIO</th>
                 </tr>
             </thead>
             <tbody>
@@ -351,13 +351,14 @@
             <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">ANTICIPO</div>
                 <div class="grid-item">EUROS</div>
-                <div class="grid-item">{{advance}}%</div>
+                <div class="grid-item">{{advance}}€</div>
             </div>
             <div class="grid-container">
-                <div class="grid-item" style="background-color: #BEB5C6;">T.C. USD</div>
+                <div class="grid-item" style="background-color: #BEB5C6;">T.C. {{exchangeRate}}</div>
                 <div class="grid-item">{{conversionAdvance}}</div>
                 <div class="grid-item">{{advanceCustomer}}</div>
             </div>
+            </br>
             </br>
             <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">SALDO</div>

@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
+import {AdvancePaymentStatusE} from '../enums';
 import {schameCreateAdvancePayment, schameCreateAdvancePaymentUpdate} from '../joi.validation.ts/advance-payment-record.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AdvancePaymentRecord, AdvancePaymentRecordCreate} from '../models';
@@ -101,9 +102,29 @@ export class AdvancePaymentRecordService {
     }
 
     async updateById(id: number, advancePaymentRecord: AdvancePaymentRecordCreate,) {
-        await this.findAdvancePayment(id);
+        const payment = await this.findAdvancePayment(id);
+        if (payment.status === AdvancePaymentStatusE.PAGADO)
+            throw this.responseService.badRequest("El cobro ya fue pagado y no puede actualizarse.");
+
+        const {vouchers, status, salesDeviation} = advancePaymentRecord;
+        const {conversionAmountPaid, accountsReceivable} = payment;
+        let {totalSale, totalPaid, updatedTotal} = accountsReceivable;
+        if (salesDeviation > 0) {
+            const updatedTotalNew = totalSale + salesDeviation;
+            updatedTotal = updatedTotalNew
+            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {updatedTotal: updatedTotalNew})
+        }
+
+        if (status && status === AdvancePaymentStatusE.PAGADO) {
+            let totalVenta = totalSale;
+            if (updatedTotal > 0)
+                totalVenta = updatedTotal;
+
+            const balance = totalVenta - conversionAmountPaid;
+            const totalPaidNew = totalPaid + conversionAmountPaid;
+            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {balance, totalPaid: totalPaidNew})
+        }
         await this.validateBodyAdvancePaymentUpdate(advancePaymentRecord);
-        const {vouchers} = advancePaymentRecord;
         delete advancePaymentRecord?.vouchers;
         await this.createDocuments(id, vouchers);
         await this.advancePaymentRecordRepository.updateById(id, {...advancePaymentRecord});
@@ -115,7 +136,7 @@ export class AdvancePaymentRecordService {
     }
 
     async findAdvancePayment(id: number) {
-        const advancePaymentRecord = await this.advancePaymentRecordRepository.findOne({where: {id}});
+        const advancePaymentRecord = await this.advancePaymentRecordRepository.findOne({where: {id}, include: [{relation: 'accountsReceivable'}]});
         if (!advancePaymentRecord)
             throw this.responseService.badRequest("Cobro no existe.");
         return advancePaymentRecord;
