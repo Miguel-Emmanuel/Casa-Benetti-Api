@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {
     Filter,
     FilterExcludingWhere,
@@ -14,6 +15,7 @@ import {
 import {Line} from '../models';
 import {LineRepository} from '../repositories';
 
+@authenticate('jwt')
 export class LineController {
     constructor(
         @repository(LineRepository)
