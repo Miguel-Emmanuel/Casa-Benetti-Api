@@ -1,5 +1,6 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {Classification} from './classification.model';
+import {QuotationProjectManager} from './quotation-project-manager.model';
 import {Quotation} from './quotation.model';
 
 //Porcentajes y clasifficationId por el MainPm de la cotizacion
@@ -26,8 +27,9 @@ export class ClassificationPercentageMainpm extends Entity {
     })
     id?: number;
 
+    //Relacion hacia cotizacion para el pm principal
     @belongsTo(() => Quotation)
-    quotationId: number;
+    quotationId?: number;
 
     @property({
         type: 'number',
@@ -36,6 +38,16 @@ export class ClassificationPercentageMainpm extends Entity {
 
     @belongsTo(() => Classification)
     classificationId: number;
+
+    //Relacion hacia pm secundarios
+    @belongsTo(() => QuotationProjectManager)
+    quotationProjectManagerId?: number;
+
+    //Conocer si el pm es el principal o es secundario
+    @property({
+        type: 'boolean',
+    })
+    isMainProjectManager: boolean;
 
     constructor(data?: Partial<ClassificationPercentageMainpm>) {
         super(data);
