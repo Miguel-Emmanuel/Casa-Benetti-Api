@@ -19,6 +19,7 @@ export interface Products {
     percentageSeparate: number;
     reservationDays: number;
     quantity: number;
+    provedorId: number;
     percentageDiscountProduct: number;
     discountProduct: number;
     percentageAdditionalDiscount: number;

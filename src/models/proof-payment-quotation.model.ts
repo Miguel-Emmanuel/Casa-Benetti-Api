@@ -3,8 +3,6 @@ import {getJsonSchema} from '@loopback/rest';
 import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
-import {Product} from './product.model';
-import {Provider} from './provider.model';
 import {Quotation} from './quotation.model';
 
 //Comprobante de anticipo de la cotizacion
@@ -53,13 +51,6 @@ export class ProofPaymentQuotation extends Entity {
         }
     })
     proofPaymentType: ExchangeRateQuotationE;
-
-
-    @belongsTo(() => Product)
-    productId: number;
-
-    @belongsTo(() => Provider)
-    providerId: number;
 
     //Tipo de cambio
     @property({
