@@ -199,9 +199,6 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                     }
                                 }
                             },
-                            percentageMainProjectManager: {
-                                type: 'number',
-                            },
                             referenceCustomerId: {
                                 type: 'number',
                                 nullable: true
@@ -472,9 +469,6 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                         type: 'object',
                         properties: {
                             mainProjectManagerId: {
-                                type: 'number',
-                            },
-                            percentageMainProjectManager: {
                                 type: 'number',
                             },
                             referenceCustomerId: {

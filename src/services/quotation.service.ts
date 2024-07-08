@@ -3,11 +3,11 @@ import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
-import {ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -43,11 +43,13 @@ export class QuotationService {
         public projectService: ProjectService,
         @repository(ClassificationRepository)
         public classificationRepository: ClassificationRepository,
+        @repository(ClassificationPercentageMainpmRepository)
+        public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository
     ) { }
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
-        const {isReferencedCustomer, mainProjectManagerId} = quotation;
+        const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
         const branchId = this.user.branchId;
         if (!branchId)
             throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
@@ -63,10 +65,12 @@ export class QuotationService {
             groupId = await this.createOrGetGroup(customer);
             customerId = await this.createOrGetCustomer({...customer}, groupId);
             const userId = this.user.id;
+            delete quotation.mainProjectManagerCommissions;
             if (id === null || id == undefined) {
                 const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
                 await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
                 await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
+                await this.createComissionPmClasification(createQuotation.id, mainProjectManagerCommissions)
                 return createQuotation;
             } else {
                 const findQuotation = await this.findQuotationById(id);
@@ -83,6 +87,13 @@ export class QuotationService {
             throw this.responseService.badRequest(error?.message ? error?.message : error);
         }
 
+    }
+
+    async createComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
+            await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, isMainProjectManager: true});
+        }
     }
 
     async createProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
@@ -644,7 +655,6 @@ export class QuotationService {
                 conversionAdvance: conversionAdvance,
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
-                percentageMainProjectManager: quotation?.percentageMainProjectManager,
                 rejectedComment: quotation?.comment,
             },
             // quotation: {
@@ -667,7 +677,6 @@ export class QuotationService {
             //     conversionAdvance: quotation?.conversionAdvance,
             //     status: quotation.status,
             //     mainProjectManagerId: quotation?.mainProjectManagerId,
-            //     percentageMainProjectManager: quotation?.percentageMainProjectManager,
 
             // },
             commisions: {

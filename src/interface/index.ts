@@ -43,10 +43,13 @@ export interface Customer {
     groupName: string;
 }
 
+export interface MainProjectManagerCommissionsI {
+    classificationId: number, commissionPercentage: number
+}
+
 export interface QuotationI {
     mainProjectManagerId: number;
-    mainProjectManagerCommissions: {classificationId: number, commissionPercentage: number}[];
-    percentageMainProjectManager: number;
+    mainProjectManagerCommissions?: MainProjectManagerCommissionsI[];
     referenceCustomerId: number;
     isDesigner: boolean;
     isArchitect: boolean;
@@ -193,7 +196,6 @@ export interface QuotationFindOneResponse {
         conversionAdvance: number | null;
         status: string;
         mainProjectManagerId: number | null;
-        percentageMainProjectManager: number | null;
         rejectedComment?: string;
 
     },
