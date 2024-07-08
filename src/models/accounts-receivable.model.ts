@@ -74,7 +74,6 @@ export class AccountsReceivable extends Entity {
     //Total pagado (de las cuentas por cobrar)
     @property({
         type: 'number',
-        required: false,
         postgresql: {
             dataType: 'double precision',
         },
