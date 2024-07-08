@@ -111,8 +111,19 @@ export class Customer extends BaseEntity {
     @belongsTo(() => Organization)
     organizationId: number;
 
-    @belongsTo(() => Group)
-    groupId?: number;
+    @belongsTo(() => Group, {}, {jsonSchema: {nullable: true}})
+    groupId: number;
+
+    @property({
+        type: 'boolean',
+        default: true
+    })
+    isActive: boolean;
+
+    @property({
+        type: 'string',
+    })
+    activateDeactivateComment?: string;
 
     constructor(data?: Partial<Customer>) {
         super(data);
@@ -125,3 +136,16 @@ export interface CustomerRelations {
 }
 
 export type CustomerWithRelations = Customer & CustomerRelations;
+
+
+export class CustomerGroup extends Customer {
+    //Nombre del grupo
+    @property({
+        type: 'string',
+        jsonSchema: {
+            nullable: true
+        }
+    })
+    groupName: string;
+
+}

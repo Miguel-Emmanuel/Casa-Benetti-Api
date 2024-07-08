@@ -1,9 +1,10 @@
-import {ExchangeRateE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
-import {Address} from '../models';
+import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {Address, Document, ProofPaymentQuotationCreate} from '../models';
 
 export interface ProjectManagers {
     userId: number;
     commissionPercentageProjectManager: number;
+    classificationId: number;
 }
 
 export interface Designers {
@@ -42,6 +43,9 @@ export interface Customer {
 }
 
 export interface QuotationI {
+    mainProjectManagerId: number;
+    mainProjectManagerClassificationId: number;
+    percentageMainProjectManager: number;
     referenceCustomerId: number;
     isDesigner: boolean;
     isArchitect: boolean;
@@ -62,7 +66,23 @@ export interface QuotationI {
     advanceCustomer: number;
     conversionAdvance: number;
     balance: number;
+    exchangeRateQuotation: ExchangeRateQuotationE;
 }
+export interface Images {
+    fileURL: string;
+    name: string;
+    extension: string;
+}
+
+// export interface ProofPaymentQuotationE {
+//     paymentDate: string;
+//     paymentType: PaymentTypeProofE;
+//     exchangeRate: ExchangeRateE;
+//     advanceCustomer: number;
+//     conversionAdvance: number;
+//     quotationId: number;
+//     images: Images[]
+// }
 export interface CreateQuotation {
     id: number,
     isDraft: boolean;
@@ -71,13 +91,36 @@ export interface CreateQuotation {
     designers: Designers[],
     products: Products[],
     quotation: QuotationI
+    proofPaymentQuotation: ProofPaymentQuotationCreate[]
+}
+
+export interface BodyProofPayment {
+    id: number;
+    createdAt: Date;
+    documents: Document[];
+    paymentDate: Date;
+    paymentType: PaymentTypeProofE;
+    exchangeRate: ExchangeRateE;
+    advanceCustomer: number;
+    conversionAdvance: number;
+    quotationId: number;
+}
+
+export interface UpdateQuotation {
+    isDraft: boolean;
+    customer: Customer,
+    projectManagers: ProjectManagers[],
+    designers: Designers[],
+    products: Products[],
+    quotation: QuotationI,
+    proofPaymentQuotation: ProofPaymentQuotationCreate[]
 }
 
 export interface QuotationFindResponse {
     id: number;
     customerName: string;
     pm: string | undefined;
-    total: number;
+    total: number | null;
     branchName: string | undefined;
     status: StatusQuotationE;
     updatedAt: Date | undefined;
@@ -87,6 +130,7 @@ export interface ProjectManagersById {
     id?: number;
     projectManagerName: string;
     commissionPercentageProjectManager: number;
+    classificationId: number;
 }
 
 export interface DesignersById {
@@ -129,23 +173,28 @@ export interface QuotationFindOneResponse {
     },
     products: ProductsById[],
     quotation: {
-        subtotal: number;
-        additionalDiscount: number;
-        percentageIva: number;
-        iva: number;
-        total: number;
-        advance: number;
-        exchangeRate: ExchangeRateE;
-        balance: number;
+        subtotal: number | null;
+        additionalDiscount: number | null;
+        percentageIva: number | null;
+        iva: number | null;
+        total: number | null;
+        advance: number | null;
+        exchangeRate: ExchangeRateE | null;
+        balance: number | null;
         isArchitect: boolean;
         architectName: string;
-        commissionPercentageArchitect: number;
+        commissionPercentageArchitect: number | null;
         isReferencedCustomer: boolean;
-        referenceCustomerId?: number;
-        commissionPercentagereferencedCustomer: number;
-        percentageAdditionalDiscount: number;
-        advanceCustomer: number;
-        conversionAdvance: number;
+        referenceCustomerId?: number | null;
+        commissionPercentagereferencedCustomer: number | null;
+        percentageAdditionalDiscount: number | null;
+        advanceCustomer: number | null;
+        conversionAdvance: number | null;
+        status: string;
+        mainProjectManagerId: number | null;
+        mainProjectManagerClassificationId: number | null;
+        percentageMainProjectManager: number | null;
+        rejectedComment?: string;
 
     },
     commisions: {
@@ -155,5 +204,23 @@ export interface QuotationFindOneResponse {
         projectManagers: ProjectManagersById[],
         designers: DesignersById[]
 
-    }
+    },
+    proofPaymentQuotations: any[]
+}
+
+
+export interface AssembledProductsE {
+    description: string;
+    SKU: string;
+    document: {
+        fileURL: string;
+        name: string;
+        extension: string;
+    };
+    mainMaterial: string;
+    mainFinish: string;
+    secondaryMaterial: string;
+    secondaryFinishing: string;
+    quantity: number;
+    isActive: boolean;
 }

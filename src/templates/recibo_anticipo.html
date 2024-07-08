@@ -1,0 +1,261 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cotización</title>
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .row {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+        }
+
+        .column {
+            background-color: #ffffff;
+            padding: 20px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            margin-right: 10px;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+
+        }
+
+
+        .column-1 {
+            width: 15%;
+            /* Tamaño de la columna 1 */
+        }
+
+        .column-2 {
+            width: 60%;
+            background-color: #ffffff;
+            padding: 20px;
+            font-size: 6px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            text-align: center;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+        }
+
+        .column-3 {
+            width: 25%;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            font-size: 6px;
+        }
+
+        .title {
+            color: red;
+            font-size: 10px;
+            margin-bottom: 12px;
+        }
+
+
+        .property {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            margin-bottom: 10px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .property-name {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .small-cell {
+            width: 20%;
+        }
+
+        .table-container {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            font-size: 10px;
+        }
+
+        .text {
+            -webkit-box-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .table-container2 {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            font-size: 10px;
+        }
+
+        .linea-firma {
+            border: 1px solid black;
+            width: 100%;
+            margin: 0 auto;
+            font-size: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="row">
+        <div class="column column-1" style="justify-content: end;">
+            <img src="{{{logo}}}" width="80px" />
+        </div>
+        <div class="column column-2">
+            <p class="title">RECIBO DE PAGO CLIENTE</p>
+            <p>Pabellón Bosques, Local 153. Prolongación Bosques de Reforma 1813, Lomas de Vista Hermosa. Of. 2167 5008
+                - 2167 5301.</p>
+            <p>Monte Everest 635, Piso 1. Lomas de Chapultepec, Miguel Hidalgo. 11000. Tel: 5035 7988</p>
+            <p>Av. Paseo de los Virreyes 45, Local P4, Puerta de Hierro, 45116, Zapopan, Jalisco</p>
+        </div>
+        <div class="column column-3">
+            <div class="property">
+                <div class="property-name">Cliente:</div>
+                <div class="property-value">{{customerName}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Cotización:</div>
+                <div class="property-value">{{quotationId}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Project Manager::</div>
+                <div class="property-value">{{projectManager}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Fecha:</div>
+                <div class="property-value">{{paymentDate}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Referencia:</div>
+                <div class="property-value"></div>
+            </div>
+        </div>
+    </div>
+    <div style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex; width: 100%; background-color: #BFB5C6;height: 10px;"></div>
+    <div class="table-container">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
+            <p></p>
+            <p style="margin-bottom: 0;">Cantidad:</p>
+            <p style="margin-top: 0;">Forma de pago:</p>
+        </div>
+        <table style="width: 50%;">
+            <tr>
+                <td colspan="2">Pago Cliente</td>
+            </tr>
+            <tr>
+                <td class="small-cell">${{advanceCustomer}}</td>
+                <td>{{letterNumber}}</td>
+            </tr>
+            <tr>
+                <td colspan="2">{{paymentType}}</td>
+            </tr>
+        </table>
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
+        </div>
+    </div>
+    <br>
+    <div class="table-container2">
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
+            <p style="margin-top: 0;">Concepto:</p>
+            <p></p>
+            <p></p>
+        </div>
+        <table style="width: 50%;">
+            <tr>
+                <td colspan="2">Anticipo {{consecutiveId}}</td>
+            </tr>
+        </table>
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
+        </div>
+    </div>
+    <br>
+    <div style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;">
+        <table style="width: 20%; justify-content: end;">
+            <tr>
+                <td style="background-color: #BFB5C6;" rowspan="2">T.C.</td>
+                <td>{{exchangeRateAmount}}</td>
+            </tr>
+            <tr>
+                <td>{{proofPaymentType}} {{conversionAdvance}}</td>
+            </tr>
+        </table>
+        <div
+            style="width: 50%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-pack: end; -ms-flex-pack: end; justify-content: end; -webkit-box-align: center; -ms-flex-align: center; align-items: center;  -webkit-box-orient: vertical;  -webkit-box-direction: normal;  -ms-flex-direction: column;  flex-direction: column; margin-left: 50px;">
+            <hr class="linea-firma">
+            <div style="font-size: 10px;">Fecha, nombre y firma de quien recibe</div>
+        </div>
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;"
+            class="text">
+        </div>
+    </div>
+    <br>
+    <div style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;">
+        <div style="width: 20%; justify-content: end;">
+        </div>
+        <div
+            style="width: 50%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-pack: end; -ms-flex-pack: end; justify-content: end; -webkit-box-align: center; -ms-flex-align: center; align-items: center;  -webkit-box-orient: vertical;  -webkit-box-direction: normal;  -ms-flex-direction: column;  flex-direction: column; margin-left: 50px;">
+            <!-- <div style="font-size: 10px;"><strong>Recibido en efectivo por Daniel Michan el 09/05/2024</strong></div> -->
+        </div>
+        <div style="width: 25%; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: end; -ms-flex-align: end; align-items: end;-webkit-box-orient: vertical;-webkit-box-direction: normal;-ms-flex-direction: column;flex-direction: column;  "
+            class="text">
+        </div>
+    </div>
+</body>
+
+</html>

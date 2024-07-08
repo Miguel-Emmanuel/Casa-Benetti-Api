@@ -1,0 +1,276 @@
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Estado de Cuenta</title>
+    <style type="text/css">
+        @page {
+            /* margin: 20mm; */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            font-size: 12px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        .container {
+            padding: 30px 100px;
+            margin: auto;
+            width: auto;
+            height: 100%;
+        }
+
+        .logo-container {
+            font-weight: bold;
+        }
+
+        .logo1 {
+            font-size: 40px;
+        }
+
+        .logo2 {
+            margin-top: -12px;
+            font-size: 25px;
+            margin-left: 73px;
+        }
+
+        .header img,
+        .footer img {
+            height: 50px;
+        }
+
+        .date {
+            float: right;
+            font-size: 12px;
+        }
+
+        .title {
+            text-align: center;
+            margin: 40px auto 20px;
+            font-weight: bold;
+            font-size: 22px;
+            border: 1px solid #7030a0;
+            max-width: 400px;
+            padding: 5px 0px;
+        }
+
+        .text-10 {
+            font-size: 10px;
+        }
+
+        .header-table {
+            border: 1px solid #7030a0;
+            height: 20px;
+            font-size: 8px !important;
+        }
+
+        .separate-table {
+            border-left: 1px solid #7030a0;
+        }
+
+        .aling-left {
+            text-align: left;
+        }
+
+        .aling-right {
+            text-align: right;
+        }
+
+        .aling-center {
+            text-align: center;
+            font-size: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            border: 1px solid #7030a0;
+            width: 100%;
+        }
+
+        td {
+            padding: 3px 8px;
+            font-size: 12px;
+        }
+
+        span {
+            display: block;
+            margin-top: 5px;
+            max-width: 75%;
+        }
+
+        .text-container {
+            margin-top: 20px;
+        }
+
+        .table-title {
+            margin-top: 50px;
+            width: calc(100%-1px);
+            border: 1px solid #7030a0;
+            border-bottom: 0;
+            padding-top: 0;
+            margin-bottom: -11px;
+            padding-bottom: 10px;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .statusOfGenerateOrder {
+            width: 400px;
+            margin-top: 100px;
+        }
+
+        .observations {
+            width: 400px;
+            margin-top: 10px;
+            margin-left: 38%;
+        }
+
+        .footer {
+            display: table;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 8px;
+        }
+
+        .footer-item {
+            display: table-cell;
+            text-align: center;
+            vertical-align: top;
+            width: 33%;
+        }
+    </style>
+</head>
+
+<body>
+    {{#each data}}
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <span class="logo1">benetti</span>
+                <span class="logo2">casa</span>
+            </div>
+            <div class="date">
+                <p>{{this.today}}</p>
+            </div>
+        </div>
+        <div class="title">ESTADO DE CUENTA</div>
+        <table style="border: 1px solid #7030a0; width: 100%">
+            <thead>
+                <tr>
+                    <th class="header-table" colspan="2">DATOS GENERALES</th>
+                    <th class="header-table" colspan="3">RESUMEN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-10">Proyecto:</td>
+                    <td class="text-10">{{this.projectId}}</td>
+                    <td class="separate-table">Valor del proyecto:</td>
+                    <td class="text-10">€</td>
+                    <td class="aling-right">{{this.totalSale}}</td>
+                </tr>
+                <tr>
+                    <td class="text-10">Cliente:</td>
+                    <td class="text-10">{{this.customer}}</td>
+                    <td class="separate-table">Valor actualizado:</td>
+                    <td class="text-10">€</td>
+                    <td class="aling-right">{{this.updatedTotal}}</td>
+                </tr>
+                <tr>
+                    <td class="text-10">Project Manager:</td>
+                    <td class="text-10">{{this.projectManager}}</td>
+                    <td class="separate-table">Pagos realizados:</td>
+                    <td class="text-10">€</td>
+                    <td class="aling-right">{{this.totalPaid}}</td>
+                </tr>
+                <tr>
+                    <td class="text-10">Showroom:</td>
+                    <td class="text-10">{{this.showroomManager}}</td>
+                    <td class="separate-table">Porcentaje pagado:</td>
+                    <td></td>
+                    <td class="aling-right">{{this.totalPercentage}}%</td>
+                </tr>
+                <tr>
+                    <td class="text-10">Fecha de cierre:</td>
+                    <td class="text-10">{{this.closingDate}}</td>
+                    <td class="separate-table">Saldo a pagar:</td>
+                    <td class="text-10">€</td>
+                    <td class="aling-right">{{this.balance}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="text-container">
+            <span class="text-10">Estimado cliente, reciba un cordial saludo.</span>
+            <span class="text-10">
+                A continuación detallamos el estatus de su proyecto con nosotros y
+                aprovechamos para agradecer su preferencia. Quedamos atentos a
+                cualquier precisión por medio de su Project Manager
+            </span>
+        </div>
+        <div class="table-title">
+            <p class="aling-center">DETALLE</p>
+        </div>
+        <table style="border: 1px solid #7030a0; width: 100%">
+            <thead>
+                <tr>
+                    <th class="header-table" colspan="1">Proyecto</th>
+                    <th class="header-table" colspan="1">Fechas de pago</th>
+                    <th class="header-table" colspan="1">Método de pago</th>
+                    <th class="header-table" colspan="1">Moneda de pago</th>
+                    <th class="header-table" colspan="1">Monto pagado</th>
+                    <th class="header-table" colspan="1">Tipo de cambio</th>
+                    <th class="header-table" colspan="1">Impuesto</th>
+                    <th class="header-table" colspan="1">Importe pagado S/Imp</th>
+                    <th class="header-table" colspan="1">Importe pagado</th>
+                    <th class="header-table" colspan="1">Saldo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each this.advancePaymentRecords}}
+                <tr>
+                    <td class="aling-center">{{this.projectId}}</td>
+                    <td class="aling-center">{{this.this.paymentDate}}</td>
+                    <td class="aling-center">{{this.this.paymentMethod}}</td>
+                    <td class="aling-center">{{this.this.paymentCurrency}}</td>
+                    <td class="aling-center">${{this.this.amountPaid}}</td>
+                    <td class="aling-center">{{this.this.parity}}</td>
+                    <td class="aling-center">{{this.this.percentageIva}}%</td>
+                    <td class="aling-center">€{{this.this.subtotalAmountPaid}}</td>
+                    <td class="aling-center">€{{this.this.conversionAmountPaid}}</td>
+                    <td class="aling-center">€ 15,584</td>
+                </tr>
+                {{/each}}
+
+            </tbody>
+        </table>
+
+        <div class="observations">
+            <div class="table-title">
+                <p class="aling-center">OBSERVACIONES</p>
+            </div>
+            <div style="border: 1px solid #7030a0; height: 100px"></div>
+        </div>
+        <div class="footer">
+            <div class="footer-item">
+                <span>MONTE EVEREST 635, 1ER PISO</span>
+                <span>LOMAS DE CHAPULTEPEC, CDMX</span>
+                <span>TEL. 55 5553 7988 / 55 8434 8023</span>
+            </div>
+            <div class="footer-item">
+                <span>WWW.BENETTICASA.COM</span>
+            </div>
+            <div class="footer-item">
+                <span>PABELLÓN BOSQUES L.153-154</span>
+                <span>CDMX</span>
+                <span>TEL.2167-5008 / 2167</span>
+            </div>
+        </div>
+    </div>
+    {{/each}}
+
+</body>
+
+</html>

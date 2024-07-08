@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     Count,
@@ -21,6 +22,7 @@ import {Classification, Line} from '../models';
 import {ClassificationRepository} from '../repositories';
 import {ClassificationService} from '../services';
 
+@authenticate('jwt')
 export class ClassificationController {
     constructor(
         @repository(ClassificationRepository)

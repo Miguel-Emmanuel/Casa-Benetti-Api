@@ -47,6 +47,61 @@ export class Document extends BaseEntity {
   })
   productId?: number;
 
+  @property({
+    type: 'number',
+  })
+  assembledProductsId?: number;
+
+  @property({
+    type: 'number',
+  })
+  mainMaterialId?: number;
+
+  @property({
+    type: 'number',
+  })
+  mainFinishId?: number;
+
+  @property({
+    type: 'number',
+  })
+  secondaryMaterialId?: number;
+
+  @property({
+    type: 'number',
+  })
+  secondaryFinishingId?: number;
+
+  @property({
+    type: 'number',
+  })
+  proofPaymentQuotationId?: number;
+
+  @property({
+    type: 'number',
+  })
+  clientQuoteFileId?: number;
+
+  @property({
+    type: 'number',
+  })
+  providerFileId?: number;
+
+  @property({
+    type: 'number',
+  })
+  advanceFileId?: number;
+
+  @property({
+    type: 'number',
+  })
+  projectId?: number;
+
+  @property({
+    type: 'number',
+  })
+  advancePaymentRecordId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }

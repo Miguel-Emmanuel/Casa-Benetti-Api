@@ -18,3 +18,11 @@ export * from './customer.controller';
 export * from './expense.controller';
 export * from './group.controller';
 
+export * from './assembled-products.controller';
+export * from './project.controller';
+export * from './proof-payment-quotation.controller';
+
+export * from './accounts-receivable.controller';
+export * from './advance-payment-record.controller';
+export * from './documents.controller';
+

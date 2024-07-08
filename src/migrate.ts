@@ -40,6 +40,12 @@ export async function migrate(args: string[]) {
       'QuotationProjectManager',
       'Classification',
       'Line',
+      'AssembledProducts',
+      'ProofPaymentQuotation',
+      'Project',
+      'AccountsReceivable',
+      'AdvancePaymentRecord',
+      'CommissionPaymentRecord',
     ],
   });
 

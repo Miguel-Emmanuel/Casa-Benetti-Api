@@ -25,7 +25,7 @@ export class Group extends BaseEntity {
     id: true,
     generated: true,
   })
-  id?: number;
+  id: number;
 
   //Nombre
   @property({

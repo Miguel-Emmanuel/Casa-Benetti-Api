@@ -14,6 +14,8 @@ export enum LogModelName {
     GROUP = "Group",
     EXPENSE = "Expense",
     QUOTATION = "Quotation",
+    ASSEMPLEDPRODUCTS = "AssembledProducts",
+    PROJECT = "Project",
 }
 
 export enum LogModificationType {
@@ -27,7 +29,9 @@ export enum LogModificationType {
 
 export enum ModuleCategories {
     CATALOGS = 'Catálogos',
-    COTIZACIONES = 'Cotizaciones'
+    COTIZACIONES = 'Cotizaciones',
+    PROYECTOS = 'Proyectos',
+    CUENTAS_POR_COBRAR = 'Cuentas por cobrar',
 }
 
 export enum TypeUserE {
@@ -55,11 +59,11 @@ export enum ClassificationE {
     SERVICIO = 'Servicio'
 }
 
-export enum LocationE {
-    COCINA = 'Cocina',
-    RECAMARA = 'Recamara',
-    SALA = 'Sala',
-}
+// export enum LocationE {
+//     COCINA = 'Cocina',
+//     RECAMARA = 'Recamara',
+//     SALA = 'Sala',
+// }
 
 export enum TypeArticleE {
     PRODUCTO_TERMINADO = 'Producto terminado',
@@ -86,6 +90,11 @@ export enum TypeSaleE {
 }
 
 
+export enum QuotationProductStatusE {
+    PEDIDO = 'Pedido',
+}
+
+
 export enum ExchangeRateE {
     EUR = 'EUR',
     USD = 'USD',
@@ -93,13 +102,49 @@ export enum ExchangeRateE {
     NA = 'No aplica',
 }
 
+export enum ExchangeRateQuotationE {
+    EUR = 'EUR',
+    USD = 'USD',
+    MXN = 'MXN',
+}
+
 export enum StatusQuotationE {
     ENPROCESO = 'En proceso',
     ENREVISIONSM = 'En revisión por SM',
-    ENREVISIONA = 'En revisión por Administración',
+    ENREVISIONADMINSITRACION = 'En revisión por Administración',
     CERRADA = 'Cerrada',
     RECHAZADA = 'Rechazada',
 }
+
+export enum ProjectStatusE {
+    NUEVO = 'Nuevo',
+    ENTREGA_PARCIAL = 'Entrega parcial',
+    ENTREGA_TOTAL = 'Entrega total',
+}
+
+export enum AdvancePaymentStatusE {
+    PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
+}
+
+export enum TypeAdvancePaymentRecordE {
+    ANTICIPO_PRODUCTO = 'Anticipo producto',
+    ANTICIPO_CLIENTE = 'Anticipo cliente',
+    ANTICIPO = 'Anticipo',
+}
+
+export enum AdvancePaymentTypeE {
+    ARQUITECTO = 'Arquitecto',
+    CLIENTE_REFERENCIADO = 'Cliente referenciado',
+    PROJECT_MANAGER = 'Project manager',
+    SHOWROOM_MANAGER = 'Showroom manager',
+    PROYECTISTA = 'Proyectista',
+}
+
+export enum CommissionPaymentStatus {
+    PENDIENTE = 'Pendiente',
+}
+
 
 export enum StatusProduct {
     PEDIDO = 'Pedido'
@@ -109,4 +154,15 @@ export enum TypeRegimenE {
     PERSONA_FISICA = 'Persona física',
     PERSONA_MORAL = 'Persona moral',
     PERSONA_FISICA_EMPRESARIAL = 'Persona física con actividad empresarial'
+}
+
+
+export enum PaymentTypeProofE {
+    EFECTIVO = 'Efectivo',
+    TRANSFERENCIA = 'Transferencia',
+    DEPOSITO = 'Depósito',
+    CHEQUE = 'Cheque',
+    EFECTIVO_EXTERNO = 'Efectivo (Externo)',
+    TRANSFERENCIA_EXTERNA = 'Transferencia (Cuenta externa)',
+    SALDO_FAVOR = 'Saldo a favor',
 }

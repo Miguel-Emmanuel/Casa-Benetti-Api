@@ -1,10 +1,13 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
-import {ExchangeRateE, StatusQuotationE} from '../enums';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
+import {ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
+import {Classification} from './classification.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
+import {Project} from './project.model';
+import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProducts} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
@@ -122,6 +125,96 @@ export class Quotation extends BaseEntity {
     @hasMany(() => Product, {through: {model: () => QuotationProducts}})
     products: Product[];
 
+    @belongsTo(() => Organization)
+    organizationId: number;
+
+    @belongsTo(() => Branch)
+    branchId: number;
+
+    //Usuario que creo la cotizacion
+    @belongsTo(() => User, {name: 'projectManager'})
+    userId: number;
+
+    //Estatus de la cotizacion
+    @property({
+        type: 'string',
+        required: false,
+    })
+    status: StatusQuotationE;
+
+    //Comentario para rechazada - rejected comment
+    @property({
+        type: 'string',
+        required: false,
+    })
+    comment: string;
+
+    //Es borrador
+    @property({
+        type: 'boolean',
+        required: false,
+    })
+    isDraft: boolean;
+
+    //Es fraccionado
+    @property({
+        type: 'boolean',
+        required: false,
+        default: false
+    })
+    isFractionate: boolean;
+
+    //Porcentaje de comision project manager principal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageMainProjectManager: number;
+
+    //Project manager principal
+    @belongsTo(() => User)
+    mainProjectManagerId: number;
+
+    //Clasificacion del main project manager
+    @belongsTo(() => Classification)
+    mainProjectManagerClassificationId: number;
+
+    //Comprobante de anticipos
+    @hasMany(() => ProofPaymentQuotation)
+    proofPaymentQuotations: ProofPaymentQuotation[];
+
+
+    //Tipo de cambio de la cotizacion
+    @property({
+        type: 'string',
+        required: true,
+        default: ExchangeRateQuotationE.EUR
+    })
+    exchangeRateQuotation: ExchangeRateQuotationE;
+
+    //Showroom manager
+    @belongsTo(() => User)
+    showroomManagerId: number;
+
+
+    //Conocer en que ponedas se fracciono la cotizacion
+    @property({
+        type: 'object',
+    })
+    typeFractional: {EUR: boolean, MXN: boolean, USD: boolean};
+
+    //Tipo de cambio del anticipo del cliente
+    @property({
+        type: 'string',
+        required: false,
+    })
+    exchangeRate: ExchangeRateE;
+
+    //************************************************ COTIZACION EN EUROS *********************************** */
+
     //Subtotal
     @property({
         type: 'number',
@@ -130,7 +223,18 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    subtotal: number;
+    subtotalEUR: number;
+
+    //Porcentaje descuento adicional
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageAdditionalDiscountEUR: number;
+
 
     //Porcentaje descuento adicional
     @property({
@@ -142,12 +246,6 @@ export class Quotation extends BaseEntity {
     })
     percentageAdditionalDiscount: number;
 
-    @belongsTo(() => Organization)
-    organizationId: number;
-
-    @belongsTo(() => Branch)
-    branchId: number;
-
     //descuento adicional total
     @property({
         type: 'number',
@@ -156,11 +254,8 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    additionalDiscount: number;
+    additionalDiscountEUR: number;
 
-    //Usuario que creo la cotizacion
-    @belongsTo(() => User, {name: 'projectManager'})
-    userId: number;
 
     //Iva porcentaje
     @property({
@@ -172,6 +267,17 @@ export class Quotation extends BaseEntity {
     })
     percentageIva: number;
 
+
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaEUR: number;
+
     //Iva total
     @property({
         type: 'number',
@@ -180,7 +286,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    iva: number;
+    ivaEUR: number;
 
     //Total
     @property({
@@ -190,7 +296,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    total: number;
+    totalEUR: number;
 
     //Porcentaje anticipo
     @property({
@@ -200,7 +306,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    percentageAdvance: number;
+    percentageAdvanceEUR: number;
 
     //Anticipo total
     @property({
@@ -210,14 +316,14 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    advance: number;
+    advanceEUR: number;
 
-    //Tipo de cambio
-    @property({
-        type: 'string',
-        required: false,
-    })
-    exchangeRate: ExchangeRateE;
+    // //Tipo de cambio
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    // })
+    // exchangeRateEUR: ExchangeRateE;
 
     //Tipo de cambio monto
     @property({
@@ -227,7 +333,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    exchangeRateAmount: number;
+    exchangeRateAmountEUR: number;
 
     //Anticipo cliente
     @property({
@@ -237,7 +343,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    advanceCustomer: number;
+    advanceCustomerEUR: number;
 
     //Anticipo Conversión
     @property({
@@ -247,7 +353,7 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    conversionAdvance: number;
+    conversionAdvanceEUR: number;
 
     //Saldo
     @property({
@@ -257,21 +363,279 @@ export class Quotation extends BaseEntity {
             dataType: 'double precision',
         },
     })
-    balance: number;
+    balanceEUR: number;
 
-    //Estatus de la cotizacion
-    @property({
-        type: 'string',
-        required: false,
-    })
-    status: StatusQuotationE;
+    //********************************MXN************************ */
 
-    //Es borrador
+    //Subtotal
     @property({
-        type: 'boolean',
+        type: 'number',
         required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
-    isDraft: boolean;
+    subtotalMXN: number;
+
+    //Porcentaje descuento adicional
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageAdditionalDiscountMXN: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    additionalDiscountMXN: number;
+
+
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaMXN: number;
+
+    //Iva total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    ivaMXN: number;
+
+    //Total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    totalMXN: number;
+
+    //Porcentaje anticipo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageAdvanceMXN: number;
+
+    //Anticipo total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceMXN: number;
+
+    // //Tipo de cambio
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    // })
+    // exchangeRateMXN: ExchangeRateE;
+
+    //Tipo de cambio monto
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    exchangeRateAmountMXN: number;
+
+    //Anticipo cliente
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceCustomerMXN: number;
+
+    //Anticipo Conversión
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    conversionAdvanceMXN: number;
+
+    //Saldo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    balanceMXN: number;
+
+    //********************************USD************************ */
+
+    //Subtotal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    subtotalUSD: number;
+
+    //Porcentaje descuento adicional
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageAdditionalDiscountUSD: number;
+
+    //descuento adicional total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    additionalDiscountUSD: number;
+
+
+    // //Iva porcentaje
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // percentageIvaUSD: number;
+
+    //Iva total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    ivaUSD: number;
+
+    //Total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    totalUSD: number;
+
+    //Porcentaje anticipo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageAdvanceUSD: number;
+
+    //Anticipo total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceUSD: number;
+
+    // //Tipo de cambio
+    // @property({
+    //     type: 'string',
+    //     required: false,
+    // })
+    // exchangeRateUSD: ExchangeRateE;
+
+    //Tipo de cambio monto
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    exchangeRateAmountUSD: number;
+
+    //Anticipo cliente
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    advanceCustomerUSD: number;
+
+    //Anticipo Conversión
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    conversionAdvanceUSD: number;
+
+    //Saldo
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    balanceUSD: number;
+
+    //********************************* */
+
+    @hasOne(() => Project)
+    project: Project;
+
+
+    //Fecha de cierre de la cotizacion
+    @property({
+        type: 'date',
+    })
+    closingDate?: Date;
 
     constructor(data?: Partial<Quotation>) {
         super(data);
@@ -287,6 +651,9 @@ export interface QuotationRelations {
     referenceCustomer: UserWithRelations;
     branch: BranchWithRelations,
     projectManager: UserWithRelations
+    proofPaymentQuotations: ProofPaymentQuotationWithRelations[]
+    mainProjectManager: UserWithRelations
+    showroomManager: UserWithRelations
 }
 
 export type QuotationWithRelations = Quotation & QuotationRelations;
