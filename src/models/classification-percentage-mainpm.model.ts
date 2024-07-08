@@ -1,4 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Classification} from './classification.model';
 import {Quotation} from './quotation.model';
 
 //Porcentajes y clasifficationId por el MainPm de la cotizacion
@@ -27,6 +28,14 @@ export class ClassificationPercentageMainpm extends Entity {
 
     @belongsTo(() => Quotation)
     quotationId: number;
+
+    @property({
+        type: 'number',
+    })
+    commissionPercentage: number;
+
+    @belongsTo(() => Classification)
+    classificationId: number;
 
     constructor(data?: Partial<ClassificationPercentageMainpm>) {
         super(data);
