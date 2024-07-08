@@ -1,6 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {CurrencyE, QuotationProductStatusE, TypeSaleE} from '../enums';
 import {Product} from './product.model';
+import {Provider} from './provider.model';
 
 @model({
     settings: {
@@ -84,6 +85,9 @@ export class QuotationProducts extends Entity {
         },
     })
     quantity: number;
+
+    @belongsTo(() => Provider)
+    providerId: number;
 
     //Descuento porcentaje por producto
     @property({
