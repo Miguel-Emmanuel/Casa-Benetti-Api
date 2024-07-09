@@ -3,7 +3,6 @@ import {getJsonSchema} from '@loopback/rest';
 import {BaseEntity} from './base/base-entity.model';
 import {Brand} from './brand.model';
 import {Organization} from './organization.model';
-import {Product} from './product.model';
 import {ProviderBrand} from './provider-brand.model';
 
 @model()
@@ -145,8 +144,8 @@ export class Provider extends BaseEntity {
   @belongsTo(() => Organization)
   organizationId?: number;
 
-  @hasMany(() => Product)
-  products: Product[];
+  // @hasMany(() => Product)
+  // products: Product[];
 
   @hasMany(() => Brand, {through: {model: () => ProviderBrand}})
   brands: Brand[];

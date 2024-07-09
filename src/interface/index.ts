@@ -1,5 +1,5 @@
 import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
-import {Address, Document, ProofPaymentQuotationCreate} from '../models';
+import {Address, Document, ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export interface ProjectManagers {
     userId: number;
@@ -92,7 +92,7 @@ export interface CreateQuotation {
     customer: Customer,
     projectManagers: ProjectManagers[],
     designers: Designers[],
-    products: Products[],
+    products: QuotationProductsCreate[],
     quotation: QuotationI
     proofPaymentQuotation: ProofPaymentQuotationCreate[]
 }
@@ -114,7 +114,7 @@ export interface UpdateQuotation {
     customer: Customer,
     projectManagers: ProjectManagers[],
     designers: Designers[],
-    products: Products[],
+    products: QuotationProductsCreate[],
     quotation: QuotationI,
     proofPaymentQuotation: ProofPaymentQuotationCreate[]
 }
@@ -147,14 +147,11 @@ export interface ProductsById {
     status: string;
     description: string;
     image: string | undefined;
-    mainFinish: string;
-
-    sale: TypeSaleE | string;
     quantity: number;
     percentageDiscountProduct: number;
     discountProduct: number;
-    percentageAdditionalDiscount: number;
-    additionalDiscount: number;
+    percentageMaximumDiscount: number;
+    maximumDiscount: number;
     subtotal: number;
 }
 export interface QuotationFindOneResponse {
