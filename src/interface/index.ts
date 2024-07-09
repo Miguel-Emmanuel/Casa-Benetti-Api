@@ -43,7 +43,7 @@ export interface Customer {
 }
 
 export interface MainProjectManagerCommissionsI {
-    classificationId: number, commissionPercentage: number,
+    classificationId: number, commissionPercentage: number, id: number
 }
 
 export interface QuotationI {

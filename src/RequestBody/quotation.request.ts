@@ -124,6 +124,9 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                             commissionPercentage: {
                                                 type: 'number'
                                             },
+                                            id: {
+                                                type: 'number'
+                                            },
 
                                         }
                                     }
@@ -203,6 +206,9 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                             type: 'number'
                                         },
                                         commissionPercentage: {
+                                            type: 'number'
+                                        },
+                                        id: {
                                             type: 'number'
                                         },
                                     }

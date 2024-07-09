@@ -31,7 +31,7 @@ export class ClassificationPercentageMainpm extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     //Relacion hacia cotizacion para el pm principal
     @belongsTo(() => Quotation)
