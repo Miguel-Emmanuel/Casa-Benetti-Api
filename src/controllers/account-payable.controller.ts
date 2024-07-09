@@ -1,0 +1,124 @@
+import {authenticate} from '@loopback/authentication';
+import {service} from '@loopback/core';
+import {
+  CountSchema,
+  Filter,
+  FilterExcludingWhere,
+  repository,
+  Where
+} from '@loopback/repository';
+import {
+  get,
+  getModelSchemaRef,
+  param,
+  patch,
+  post,
+  requestBody,
+  response
+} from '@loopback/rest';
+import {AccountPayable} from '../models';
+import {AccountPayableRepository} from '../repositories';
+import {AccountPayableService} from '../services';
+
+@authenticate('jwt')
+export class AccountPayableController {
+  constructor(
+    @repository(AccountPayableRepository)
+    public accountPayableRepository: AccountPayableRepository,
+    @service()
+    public accountPayableService: AccountPayableService
+  ) { }
+
+  @post('/account-payables')
+  @response(200, {
+    description: 'AccountPayable model instance',
+    content: {'application/json': {schema: getModelSchemaRef(AccountPayable)}},
+  })
+  async create(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(AccountPayable, {
+            title: 'NewAccountPayable',
+            exclude: ['id'],
+          }),
+        },
+      },
+    })
+    accountPayable: Omit<AccountPayable, 'id'>,
+  ): Promise<object> {
+    return this.accountPayableService.create(accountPayable);
+  }
+
+  @get('/account-payables/count')
+  @response(200, {
+    description: 'AccountPayable model count',
+    content: {'application/json': {schema: CountSchema}},
+  })
+  async count(
+    @param.where(AccountPayable) where?: Where<AccountPayable>,
+  ): Promise<object> {
+    return this.accountPayableService.count(where);
+  }
+
+  @get('/account-payables')
+  @response(200, {
+    description: 'Array of AccountPayable model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(AccountPayable, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async find(
+    @param.filter(AccountPayable) filter?: Filter<AccountPayable>,
+  ): Promise<object> {
+    return this.accountPayableRepository.find(filter);
+  }
+
+  @get('/account-payables/{id}')
+  @response(200, {
+    description: 'AccountPayable model instance',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(AccountPayable, {includeRelations: true}),
+      },
+    },
+  })
+  async findById(
+    @param.path.number('id') id: number,
+    @param.filter(AccountPayable, {exclude: 'where'}) filter?: FilterExcludingWhere<AccountPayable>
+  ): Promise<object> {
+    return this.accountPayableService.findById(id, filter);
+  }
+
+  @patch('/account-payables/{id}')
+  @response(204, {
+    description: 'AccountPayable PATCH success',
+  })
+  async updateById(
+    @param.path.number('id') id: number,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(AccountPayable, {partial: true}),
+        },
+      },
+    })
+    accountPayable: AccountPayable,
+  ): Promise<void> {
+    await this.accountPayableService.updateById(id, accountPayable);
+  }
+
+
+  // @del('/account-payables/{id}')
+  // @response(204, {
+  //   description: 'AccountPayable DELETE success',
+  // })
+  // async deleteById(@param.path.number('id') id: number): Promise<void> {
+  //   await this.accountPayableRepository.deleteById(id);
+  // }
+}
