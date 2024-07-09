@@ -173,6 +173,10 @@ export enum PurchaseOrdersStatus {
     ENVIADA_AL_PROVEEDOR = 'Enviada al proveedor',
     PAGADA = 'Pagada',
 }
+export enum AccountPayableHistoryStatusE {
+    PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
+}
 
 export enum TypeCommisionE {
     MAIN_PROJECT_MANAGER = 'Project manager principal',

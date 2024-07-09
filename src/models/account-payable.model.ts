@@ -1,11 +1,11 @@
 import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateQuotationE} from '../enums';
+import {AccountPayableHistory} from './account-payable-history.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Customer} from './customer.model';
 import {Project} from './project.model';
 import {PurchaseOrders} from './purchase-orders.model';
 import {Quotation} from './quotation.model';
-import {AccountPayableHistory} from './account-payable-history.model';
 
 @model({
   settings: {
@@ -48,6 +48,16 @@ export class AccountPayable extends BaseEntity {
     required: true,
   })
   currency: ExchangeRateQuotationE;
+
+  //Total
+  @property({
+    type: 'number',
+    required: false,
+    postgresql: {
+      dataType: 'double precision',
+    },
+  })
+  total: number;
 
   @belongsTo(() => Project)
   projectId: number;

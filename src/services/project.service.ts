@@ -797,6 +797,8 @@ export class ProjectService {
     }
     async createAdvancePaymentAccount(quotation: Quotation, projectId: number, transaction: any) {
         const {id, customerId, proofPaymentQuotations, exchangeRateQuotation, isFractionate, typeFractional} = quotation;
+        const {total} = this.getPricesQuotation(quotation);
+
         const findQuotationProducts = await this.quotationProductsRepository.find({
             where: {
                 quotationId: id
@@ -806,7 +808,7 @@ export class ProjectService {
         if (isFractionate) {
             if (typeFractional.EUR == true) {
 
-                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.EUR}, {transaction});
+                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.EUR, total: total ?? 0}, {transaction});
                 const findQuationEUR = findQuotationProducts.filter((item) => item.currency === CurrencyE.EURO)
                 const {conversionAdvanceEUR, advanceEUR} = quotation
 
@@ -818,7 +820,7 @@ export class ProjectService {
             }
             if (typeFractional.USD == true) {
 
-                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.USD}, {transaction});
+                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.USD, total: total ?? 0}, {transaction});
                 const findQuationUSD = findQuotationProducts.filter((item) => item.currency === CurrencyE.USD)
                 const {conversionAdvanceUSD, advanceUSD} = quotation
 
@@ -830,7 +832,7 @@ export class ProjectService {
             }
             if (typeFractional.MXN == true) {
 
-                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.MXN}, {transaction});
+                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.MXN, total: total ?? 0}, {transaction});
                 const findQuationMXN = findQuotationProducts.filter((item) => item.currency === CurrencyE.PESO_MEXICANO)
                 const {conversionAdvanceMXN, advanceMXN} = quotation
 
@@ -841,8 +843,8 @@ export class ProjectService {
                 }
             }
         } else {
-            const {conversionAdvance, advance} = this.getPricesQuotation(quotation);
-            const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: exchangeRateQuotation}, {transaction});
+            const {conversionAdvance, advance, total} = this.getPricesQuotation(quotation);
+            const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: exchangeRateQuotation, total: total ?? 0}, {transaction});
 
             if (conversionAdvance && advance && conversionAdvance >= advance) {
                 findQuotationProducts.map(async (item) => {

@@ -35,7 +35,63 @@ export class AccountPayableService {
 
   async findById(id: number, filter?: Filter<AccountPayable>) {
     try {
-      return this.accountPayableRepository.findById(id, filter);
+      const findAccountPayable: any = await this.accountPayableRepository.findById(id, {
+        include: [
+          {relation: "project"},
+          {
+            relation: "quotation",
+            scope: {
+              include: [{relation: "showroomManager"}]
+            }
+          },
+          {relation: "customer"},
+          {
+            relation: "purchaseOrders",
+            scope: {
+              include: [{relation: "provider"}]
+            }
+          },
+          {
+            relation: "accountPayableHistories",
+            scope: {
+              include: [{relation: "provider"}]
+            }
+          },
+        ]
+      })
+      const purchaseOrders = findAccountPayable?.purchaseOrders?.map((item: any) => {
+        return {
+          id: item.id,
+          provider: item?.provider?.name,
+          quantity: item?.quantity,
+          total: item?.total,
+          status: item?.status,
+        }
+      })
+      const accountPayableHistories = findAccountPayable?.accountPayableHistories?.map((item: any) => {
+        return {
+          id: item?.id,
+          proformaDate: item?.proformaDate,
+          proformaNumber: item?.proformaNumber,
+          currency: item?.currency,
+          proformaAmount: item?.proformaAmount,
+          paymentDate: item?.paymentDate,
+          advancePaymentAmount: item?.advancePaymentAmount,
+          balance: item?.balance,
+          status: item?.status,
+          provider: item?.provider?.name,
+        }
+      })
+      const values: any = {
+        idProject: findAccountPayable.projectId,
+        clientName: `${findAccountPayable?.customer?.name} ${findAccountPayable?.customer?.lastName} ${findAccountPayable?.customer?.secondLastName}`,
+        closingDate: findAccountPayable?.quotation?.closingDate,
+        showroomManager: `${findAccountPayable?.showroomManager?.firstName} ${findAccountPayable?.showroomManager?.lastName}`,
+        total: findAccountPayable.total,
+        purchaseOrders,
+        accountPayableHistories
+      }
+      return values;
     } catch (error) {
       return this.responseService.internalServerError(
         error.message ? error.message : error
