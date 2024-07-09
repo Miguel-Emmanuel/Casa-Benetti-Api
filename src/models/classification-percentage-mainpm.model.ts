@@ -41,6 +41,9 @@ export class ClassificationPercentageMainpm extends Entity {
 
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     commissionPercentage: number;
 
