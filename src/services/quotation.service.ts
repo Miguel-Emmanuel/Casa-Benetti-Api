@@ -99,12 +99,8 @@ export class QuotationService {
 
     async updatecreateComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
         for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
-            const {classificationId, commissionPercentage, isDeleted} = mainProjectManagerCommissions[index];
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
             const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationId}});
-            if (isDeleted && classificationPercentageMainpm && isDeleted === true) {
-                await this.classificationPercentageMainpmRepository.deleteById(classificationPercentageMainpm.id);
-                continue;
-            }
             if (classificationPercentageMainpm) {
                 await this.classificationPercentageMainpmRepository.updateById(classificationPercentageMainpm.id, {commissionPercentage, });
             } else {

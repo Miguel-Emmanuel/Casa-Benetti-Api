@@ -124,9 +124,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                             commissionPercentage: {
                                                 type: 'number'
                                             },
-                                            isDeleted: {
-                                                type: 'boolean'
-                                            },
+
                                         }
                                     }
                                 },
@@ -206,9 +204,6 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                         },
                                         commissionPercentage: {
                                             type: 'number'
-                                        },
-                                        isDeleted: {
-                                            type: 'boolean'
                                         },
                                     }
                                 }

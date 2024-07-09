@@ -71,8 +71,6 @@ const products = Joi.object({
 const schemaMainProjectManagerCommissions = Joi.object({
     classificationId: Joi.number().required(),
     commissionPercentage: Joi.number().required(),
-    isDeleted: Joi.boolean()
-
 })
 
 const projectManager = Joi.object({

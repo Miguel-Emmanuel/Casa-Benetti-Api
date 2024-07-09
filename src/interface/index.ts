@@ -43,7 +43,7 @@ export interface Customer {
 }
 
 export interface MainProjectManagerCommissionsI {
-    classificationId: number, commissionPercentage: number, isDeleted: boolean
+    classificationId: number, commissionPercentage: number,
 }
 
 export interface QuotationI {
