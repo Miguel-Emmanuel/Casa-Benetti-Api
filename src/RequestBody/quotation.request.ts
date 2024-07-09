@@ -846,7 +846,21 @@ export const QuotationGteByIdResponse: ResponseModelOrSpec = {
                                             type: 'number'
                                         },
                                         commissionPercentageDesigner: {
-                                            type: 'number'
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    classificationId: {
+                                                        type: 'number'
+                                                    },
+                                                    commissionPercentage: {
+                                                        type: 'number'
+                                                    },
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                }
+                                            }
                                         },
                                     }
                                 }
