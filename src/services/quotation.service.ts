@@ -6,8 +6,9 @@ import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, Statu
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
-import {ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
-import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
+import {DocumentSchema} from '../models/base/document.model';
+import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -44,7 +45,9 @@ export class QuotationService {
         @repository(ClassificationRepository)
         public classificationRepository: ClassificationRepository,
         @repository(ClassificationPercentageMainpmRepository)
-        public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository
+        public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository
     ) { }
 
     async create(data: CreateQuotation) {
@@ -342,6 +345,38 @@ export class QuotationService {
                 await this.quotationProductsRepository.create(element);
 
             }
+        }
+    }
+
+    async createDocumentMainMaterial(productId: number, document: DocumentSchema) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.mainMaterialImage(productId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
+        }
+    }
+
+    async createDocumentMainFinish(productId: number, document: Document) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.mainFinishImage(productId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
+        }
+    }
+
+    async createDocumentSecondaryMaterial(productId: number, document: Document) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.secondaryMaterialImage(productId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
+        }
+    }
+
+    async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.secondaryFinishingImage(productId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
