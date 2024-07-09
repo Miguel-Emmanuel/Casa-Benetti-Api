@@ -1,4 +1,5 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {ClassificationPercentageMainpm} from './classification-percentage-mainpm.model';
 import {Classification} from './classification.model';
 import {User} from './user.model';
 
@@ -29,7 +30,7 @@ export class QuotationProjectManager extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     @property({
         type: 'date',
@@ -54,6 +55,9 @@ export class QuotationProjectManager extends Entity {
         },
     })
     commissionPercentageProjectManager: number;
+
+    @hasMany(() => ClassificationPercentageMainpm)
+    classificationPercentageMainpms: ClassificationPercentageMainpm[];
 
     @belongsTo(() => Classification)
     classificationId: number;

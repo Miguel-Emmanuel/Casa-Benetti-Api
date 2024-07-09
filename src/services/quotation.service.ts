@@ -2,12 +2,12 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
-import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeCommisionE} from '../enums';
+import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
-import {ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -43,18 +43,19 @@ export class QuotationService {
         public projectService: ProjectService,
         @repository(ClassificationRepository)
         public classificationRepository: ClassificationRepository,
+        @repository(ClassificationPercentageMainpmRepository)
+        public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository
     ) { }
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
-        const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerClassificationId} = quotation;
+        const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
         const branchId = this.user.branchId;
         if (!branchId)
             throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
         //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
         await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
-        await this.validateClassificationPM(mainProjectManagerClassificationId);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
         let groupId = null;
@@ -64,10 +65,12 @@ export class QuotationService {
             groupId = await this.createOrGetGroup(customer);
             customerId = await this.createOrGetCustomer({...customer}, groupId);
             const userId = this.user.id;
+            delete quotation.mainProjectManagerCommissions;
             if (id === null || id == undefined) {
                 const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
                 await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
                 await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
+                await this.createComissionPmClasification(createQuotation.id, mainProjectManagerCommissions)
                 return createQuotation;
             } else {
                 const findQuotation = await this.findQuotationById(id);
@@ -75,6 +78,7 @@ export class QuotationService {
                 await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
                 await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
                 await this.updateProofPayments(proofPaymentQuotation, id);
+                await this.updatecreateComissionPmClasification(findQuotation.id, mainProjectManagerCommissions)
                 return this.findQuotationById(id);
             }
         } catch (error) {
@@ -86,10 +90,42 @@ export class QuotationService {
 
     }
 
-    async validateClassificationPM(mainProjectManagerClassificationId: number) {
-        const classification = await this.classificationRepository.findOne({where: {id: mainProjectManagerClassificationId}});
-        if (!classification)
-            throw this.responseService.badRequest("La clasificacion no existe.");
+    async createComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
+            await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, type: TypeCommisionE.MAIN_PROJECT_MANAGER});
+        }
+    }
+
+    async updatecreateComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationId, type: TypeCommisionE.MAIN_PROJECT_MANAGER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
+            } else {
+                await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, type: TypeCommisionE.MAIN_PROJECT_MANAGER});
+            }
+        }
+    }
+
+    async createComissionPSClasification(quotationProjectManagerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
+            await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, type: TypeCommisionE.PROJECT_MANAGER});
+        }
+    }
+
+    async updatecreateComissionPSClasification(quotationProjectManagerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationProjectManagerId, type: TypeCommisionE.PROJECT_MANAGER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
+            } else {
+                await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, type: TypeCommisionE.PROJECT_MANAGER});
+            }
+        }
     }
 
     async createProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
@@ -265,8 +301,10 @@ export class QuotationService {
     async createManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
-            if (user)
-                await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
+            if (user) {
+                const quotationProjectManager = await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, });
+                await this.createComissionPSClasification(quotationProjectManager.id, element.projectManagerCommissions);
+            }
         }
         for (const element of designers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
@@ -284,7 +322,6 @@ export class QuotationService {
         const {id} = quotation;
         const projectManagersMap = projectManagers.map((value) => value.userId);
         const projectManagersDelete = quotation?.projectManagers?.filter((value) => !projectManagersMap.includes(value?.id ?? 0)) ?? []
-        console.log('projectManagersDelete: ', projectManagersDelete)
         for (const element of projectManagersDelete) {
             await this.quotationRepository.projectManagers(id).unlink(element.id)
         }
@@ -306,10 +343,16 @@ export class QuotationService {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user) {
                 const findQuotationPM = await this.quotationProjectManagerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
-                if (findQuotationPM)
-                    await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
-                else
-                    await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
+                if (findQuotationPM) {
+                    // await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {});
+                    await this.updatecreateComissionPSClasification(findQuotationPM.id, element.projectManagerCommissions)
+                }
+                else {
+                    const qpm = await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId});
+                    await this.createComissionPSClasification(qpm.id, element.projectManagerCommissions)
+
+                }
+
             }
         }
         for (const element of designers) {
@@ -426,7 +469,7 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId, mainProjectManagerClassificationId} = value;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId} = value;
             const {name} = customer;
             const {total} = this.getPricesQuotation(value);
             return {
@@ -434,7 +477,6 @@ export class QuotationService {
                 customerName: name,
                 pm: mainProjectManager ? `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}` : '',
                 pmId: mainProjectManagerId,
-                mainProjectManagerClassificationId,
                 branchId: branch?.id,
                 total,
                 branchName: branch?.name,
@@ -538,7 +580,12 @@ export class QuotationService {
                 relation: 'projectManagers',
                 scope: {
                     fields: ['id', 'firstName'],
-                    include: ['quotationPM']
+                    include: [{
+                        relation: 'quotationPM',
+                        scope: {
+                            include: ['classificationPercentageMainpms']
+                        }
+                    },]
                 }
             },
             {
@@ -563,7 +610,10 @@ export class QuotationService {
                         }
                     ]
                 }
-            }
+            },
+            {
+                relation: 'classificationPercentageMainpms',
+            },
         ]
         if (filter?.include)
             filter.include = [
@@ -601,8 +651,9 @@ export class QuotationService {
             projectManagers.push({
                 id: iterator.id,
                 projectManagerName: iterator.firstName,
-                commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
-                classificationId: iterator.quotationPM?.classificationId
+                // commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
+                // classificationId: iterator.quotationPM?.classificationId,
+                classificationPercentageMainpms: iterator.quotationPM?.classificationPercentageMainpms,
             })
         }
 
@@ -631,6 +682,7 @@ export class QuotationService {
                 group: quotation?.customer?.group?.name,
                 groupId: quotation?.customer?.groupId
             },
+            classificationPercentageMainpms: quotation?.classificationPercentageMainpms,
             products: products,
             quotation: {
                 subtotal: subtotal,
@@ -652,8 +704,6 @@ export class QuotationService {
                 conversionAdvance: conversionAdvance,
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
-                mainProjectManagerClassificationId: quotation?.mainProjectManagerClassificationId,
-                percentageMainProjectManager: quotation?.percentageMainProjectManager,
                 rejectedComment: quotation?.comment,
             },
             // quotation: {
@@ -676,7 +726,6 @@ export class QuotationService {
             //     conversionAdvance: quotation?.conversionAdvance,
             //     status: quotation.status,
             //     mainProjectManagerId: quotation?.mainProjectManagerId,
-            //     percentageMainProjectManager: quotation?.percentageMainProjectManager,
 
             // },
             commisions: {

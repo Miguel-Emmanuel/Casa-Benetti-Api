@@ -113,12 +113,24 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 userId: {
                                     type: 'number'
                                 },
-                                commissionPercentageProjectManager: {
-                                    type: 'number'
+                                projectManagerCommissions: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            classificationId: {
+                                                type: 'number'
+                                            },
+                                            commissionPercentage: {
+                                                type: 'number'
+                                            },
+                                            id: {
+                                                type: 'number'
+                                            },
+
+                                        }
+                                    }
                                 },
-                                classificationId: {
-                                    type: 'number',
-                                }
                             }
                         }
                     },
@@ -185,11 +197,22 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                             mainProjectManagerId: {
                                 type: 'number',
                             },
-                            mainProjectManagerClassificationId: {
-                                type: 'number',
-                            },
-                            percentageMainProjectManager: {
-                                type: 'number',
+                            mainProjectManagerCommissions: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        classificationId: {
+                                            type: 'number'
+                                        },
+                                        commissionPercentage: {
+                                            type: 'number'
+                                        },
+                                        id: {
+                                            type: 'number'
+                                        },
+                                    }
+                                }
                             },
                             referenceCustomerId: {
                                 type: 'number',
@@ -461,12 +484,6 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                         type: 'object',
                         properties: {
                             mainProjectManagerId: {
-                                type: 'number',
-                            },
-                            mainProjectManagerClassificationId: {
-                                type: 'number',
-                            },
-                            percentageMainProjectManager: {
                                 type: 'number',
                             },
                             referenceCustomerId: {
