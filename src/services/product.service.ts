@@ -251,6 +251,9 @@ export class ProductService {
             if (assembledProduct && !assembledProduct?.id) {
                 const assembledProductRes = await this.assembledProductsRepository.create({...assembledProduct, productId});
                 await this.updateDocumentAssembledProduct(assembledProductRes?.id, document)
+            } else if (assembledProduct && assembledProduct?.id) {
+                this.assembledProductsRepository.updateById(assembledProduct?.id, {...assembledProduct});
+                await this.updateDocumentAssembledProduct(assembledProduct?.id, document)
             }
         }
     }

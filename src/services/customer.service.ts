@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, Where, repository} from '@loopback/repository';
+import {Filter, IsolationLevel, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaActivateDeactivateCustomer, schemaCreateCustomer} from '../joi.validation.ts/customer.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -22,30 +22,33 @@ export class CustomerService {
 
     async create(customer: CustomerGroup) {
         const {groupName, ...newCustomer} = customer;
-        const groupId = await this.getOrCreateGroup(customer);
+        await this.validateBodyCustomer(customer);
+        const transaction = await this.customerRepository.dataSource.beginTransaction(IsolationLevel.SERIALIZABLE);
+
         try {
-            await this.validateBodyCustomer(customer);
-            return await this.customerRepository.create({...newCustomer, organizationId: this.user.organizationId, groupId});
+            const groupId = await this.getOrCreateGroup(customer, transaction);
+            const customerResp = await this.customerRepository.create({...newCustomer, organizationId: this.user.organizationId, groupId}, {transaction});
+            await transaction.commit()
+            return customerResp;
         } catch (error) {
-            if (groupName)
-                await this.groupRepository.deleteById(groupId);
+            await transaction.rollback();
             throw this.responseService.badRequest(error?.message ?? error)
         }
     }
 
-    async getOrCreateGroup(customer: CustomerGroup) {
+    async getOrCreateGroup(customer: CustomerGroup, transaction: any) {
         let {groupId, groupName} = customer;
         if (groupId) {
             await this.findByIdGroup(customer.groupId);
-        } else {
-            const group = await this.createGroup(groupName);
+        } else if (groupName) {
+            const group = await this.createGroup(groupName, transaction);
             groupId = group.id
         }
         return groupId;
     }
 
-    async createGroup(groupName: string) {
-        return this.groupRepository.create({name: groupName})
+    async createGroup(groupName: string, transaction: any) {
+        return this.groupRepository.create({name: groupName}, {transaction})
     }
 
     async findByIdGroup(id: number) {

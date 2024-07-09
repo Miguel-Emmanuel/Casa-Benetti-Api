@@ -21,7 +21,10 @@ export const schemaProofPaymentQuotationInside = Joi.object({
         'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
     }),
     advanceCustomer: Joi.number().required(),
+    productId: Joi.number(),
+    providerId: Joi.number(),
     conversionAdvance: Joi.number().required(),
+    exchangeRateAmount: Joi.number().required(),
     quotationId: Joi.number().required(),
     images: Joi.array().items(documents).optional(),
 })

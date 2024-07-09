@@ -2,12 +2,12 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
-import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeCommisionE} from '../enums';
+import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {ProofPaymentQuotationCreate, Quotation} from '../models';
-import {ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -43,18 +43,19 @@ export class QuotationService {
         public projectService: ProjectService,
         @repository(ClassificationRepository)
         public classificationRepository: ClassificationRepository,
+        @repository(ClassificationPercentageMainpmRepository)
+        public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository
     ) { }
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
-        const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerClassificationId} = quotation;
+        const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
         const branchId = this.user.branchId;
         if (!branchId)
             throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
         //Falta agregar validacion para saber cuando es borrador o no
         await this.validateBodyQuotation(data);
         await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
-        await this.validateClassificationPM(mainProjectManagerClassificationId);
         if (isReferencedCustomer === true)
             await this.findUserById(quotation.referenceCustomerId);
         let groupId = null;
@@ -64,10 +65,12 @@ export class QuotationService {
             groupId = await this.createOrGetGroup(customer);
             customerId = await this.createOrGetCustomer({...customer}, groupId);
             const userId = this.user.id;
+            delete quotation.mainProjectManagerCommissions;
             if (id === null || id == undefined) {
                 const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
                 await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
                 await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
+                await this.createComissionPmClasification(createQuotation.id, mainProjectManagerCommissions)
                 return createQuotation;
             } else {
                 const findQuotation = await this.findQuotationById(id);
@@ -75,6 +78,7 @@ export class QuotationService {
                 await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
                 await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
                 await this.updateProofPayments(proofPaymentQuotation, id);
+                await this.updatecreateComissionPmClasification(findQuotation.id, mainProjectManagerCommissions)
                 return this.findQuotationById(id);
             }
         } catch (error) {
@@ -86,10 +90,60 @@ export class QuotationService {
 
     }
 
-    async validateClassificationPM(mainProjectManagerClassificationId: number) {
-        const classification = await this.classificationRepository.findOne({where: {id: mainProjectManagerClassificationId}});
-        if (!classification)
-            throw this.responseService.badRequest("La clasificacion no existe.");
+    async createComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
+            await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, type: TypeCommisionE.MAIN_PROJECT_MANAGER});
+        }
+    }
+
+    async updatecreateComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationId, type: TypeCommisionE.MAIN_PROJECT_MANAGER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
+            } else {
+                await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, type: TypeCommisionE.MAIN_PROJECT_MANAGER});
+            }
+        }
+    }
+
+    async createComissionPSClasification(quotationProjectManagerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
+            await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, type: TypeCommisionE.PROJECT_MANAGER});
+        }
+    }
+
+    async createComissionDesignerClasification(quotationDesignerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
+            await this.classificationPercentageMainpmRepository.create({quotationDesignerId, classificationId, commissionPercentage, type: TypeCommisionE.DESIGNER});
+        }
+    }
+
+    async updatecreateComissionPSClasification(quotationProjectManagerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationProjectManagerId, type: TypeCommisionE.PROJECT_MANAGER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
+            } else {
+                await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, type: TypeCommisionE.PROJECT_MANAGER});
+            }
+        }
+    }
+    async updatecreateComissionDesignerClasification(quotationDesignerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationProjectManagerId, type: TypeCommisionE.DESIGNER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
+            } else {
+                await this.classificationPercentageMainpmRepository.create({quotationDesignerId, classificationId, commissionPercentage, type: TypeCommisionE.DESIGNER});
+            }
+        }
     }
 
     async createProofPayments(proofPaymentQuotation: ProofPaymentQuotationCreate[], quotationId: number) {
@@ -265,18 +319,22 @@ export class QuotationService {
     async createManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
-            if (user)
-                await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
+            if (user) {
+                const quotationProjectManager = await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, });
+                await this.createComissionPSClasification(quotationProjectManager.id, element.projectManagerCommissions);
+            }
         }
         for (const element of designers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
-            if (user)
-                await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageDesigner: element.commissionPercentageDesigner});
+            if (user) {
+                const quotationDesigner = await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId});
+                await this.createComissionDesignerClasification(quotationDesigner.id, element.commissionPercentageDesigner);
+            }
         }
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product)
-                await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
+                await this.quotationProductsRepository.create({providerId: element.provedorId, quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
         }
     }
 
@@ -284,7 +342,6 @@ export class QuotationService {
         const {id} = quotation;
         const projectManagersMap = projectManagers.map((value) => value.userId);
         const projectManagersDelete = quotation?.projectManagers?.filter((value) => !projectManagersMap.includes(value?.id ?? 0)) ?? []
-        console.log('projectManagersDelete: ', projectManagersDelete)
         for (const element of projectManagersDelete) {
             await this.quotationRepository.projectManagers(id).unlink(element.id)
         }
@@ -306,20 +363,31 @@ export class QuotationService {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user) {
                 const findQuotationPM = await this.quotationProjectManagerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
-                if (findQuotationPM)
-                    await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
-                else
-                    await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageProjectManager: element.commissionPercentageProjectManager, classificationId: element.classificationId});
+                if (findQuotationPM) {
+                    // await this.quotationProjectManagerRepository.updateById(findQuotationPM.id, {});
+                    await this.updatecreateComissionPSClasification(findQuotationPM.id, element.projectManagerCommissions)
+                }
+                else {
+                    const qpm = await this.quotationProjectManagerRepository.create({quotationId: quotationId, userId: element.userId});
+                    await this.createComissionPSClasification(qpm.id, element.projectManagerCommissions)
+
+                }
+
             }
         }
         for (const element of designers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user) {
                 const findQuotationD = await this.quotationDesignerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
-                if (findQuotationD)
-                    await this.quotationDesignerRepository.updateById(findQuotationD.id, {commissionPercentageDesigner: element.commissionPercentageDesigner});
-                else
-                    await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageDesigner: element.commissionPercentageDesigner});
+                if (findQuotationD) {
+                    // await this.quotationDesignerRepository.updateById(findQuotationD.id, {commissionPercentageDesigner: element.commissionPercentageDesigner});
+                    await this.updatecreateComissionDesignerClasification(findQuotationD.id, element.commissionPercentageDesigner)
+                }
+                else {
+                    const quotationDesigner = await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId});
+                    await this.createComissionDesignerClasification(quotationDesigner.id, element.commissionPercentageDesigner)
+
+                }
             }
         }
         for (const element of products) {
@@ -426,7 +494,7 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId, mainProjectManagerClassificationId} = value;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId} = value;
             const {name} = customer;
             const {total} = this.getPricesQuotation(value);
             return {
@@ -434,7 +502,6 @@ export class QuotationService {
                 customerName: name,
                 pm: mainProjectManager ? `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}` : '',
                 pmId: mainProjectManagerId,
-                mainProjectManagerClassificationId,
                 branchId: branch?.id,
                 total,
                 branchName: branch?.name,
@@ -538,14 +605,24 @@ export class QuotationService {
                 relation: 'projectManagers',
                 scope: {
                     fields: ['id', 'firstName'],
-                    include: ['quotationPM']
+                    include: [{
+                        relation: 'quotationPM',
+                        scope: {
+                            include: ['classificationPercentageMainpms']
+                        }
+                    },]
                 }
             },
             {
                 relation: 'designers',
                 scope: {
                     fields: ['id', 'firstName'],
-                    include: ['quotationDe']
+                    include: [{
+                        relation: 'quotationDe',
+                        scope: {
+                            include: ['classificationPercentageMainpms']
+                        }
+                    }]
                 }
             },
             {
@@ -563,7 +640,10 @@ export class QuotationService {
                         }
                     ]
                 }
-            }
+            },
+            {
+                relation: 'classificationPercentageMainpms',
+            },
         ]
         if (filter?.include)
             filter.include = [
@@ -601,8 +681,7 @@ export class QuotationService {
             projectManagers.push({
                 id: iterator.id,
                 projectManagerName: iterator.firstName,
-                commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
-                classificationId: iterator.quotationPM?.classificationId
+                classificationPercentageMainpms: iterator.quotationPM?.classificationPercentageMainpms,
             })
         }
 
@@ -610,7 +689,7 @@ export class QuotationService {
             designers.push({
                 id: iterator.id,
                 designerName: iterator.firstName,
-                commissionPercentageDesigner: iterator.quotationDe.commissionPercentageDesigner,
+                commissionPercentageDesigner: iterator.quotationDe.classificationPercentageMainpms,
             })
         }
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
@@ -631,6 +710,7 @@ export class QuotationService {
                 group: quotation?.customer?.group?.name,
                 groupId: quotation?.customer?.groupId
             },
+            classificationPercentageMainpms: quotation?.classificationPercentageMainpms,
             products: products,
             quotation: {
                 subtotal: subtotal,
@@ -652,8 +732,6 @@ export class QuotationService {
                 conversionAdvance: conversionAdvance,
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
-                mainProjectManagerClassificationId: quotation?.mainProjectManagerClassificationId,
-                percentageMainProjectManager: quotation?.percentageMainProjectManager,
                 rejectedComment: quotation?.comment,
             },
             // quotation: {
@@ -676,7 +754,6 @@ export class QuotationService {
             //     conversionAdvance: quotation?.conversionAdvance,
             //     status: quotation.status,
             //     mainProjectManagerId: quotation?.mainProjectManagerId,
-            //     percentageMainProjectManager: quotation?.percentageMainProjectManager,
 
             // },
             commisions: {
@@ -731,17 +808,16 @@ export class QuotationService {
 
         let prices = {}, status = null;
         const {isFractionate, isRejected, comment} = body;
-        let typeFractional = {};
+        let typeFractional: any;
         if (isRejected === true)
             status = StatusQuotationE.RECHAZADA;
         else {
             status = StatusQuotationE.ENREVISIONADMINSITRACION;
             if (isFractionate === true) {
-                prices = this.calculatePricesExchangeRate(quotation);
                 typeFractional = await this.typeCurrencyFractionate(id);
+                prices = this.calculatePricesExchangeRate(quotation, typeFractional);
             }
         }
-
         await this.quotationRepository.updateById(id, {status, comment, ...prices, isFractionate, typeFractional});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
@@ -822,45 +898,51 @@ export class QuotationService {
         return Number(new BigNumber(num).toFixed(2));
     }
 
-    calculatePricesExchangeRate(quotation: Quotation) {
+    calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
-            const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
-                advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            let bodyMXN = {};
+            let bodyUSD = {};
             const USD = 1.074;
             const MXN = 19.28;
-
-            const bodyMXN = {
-                subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
-                percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
-                additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
-                percentageIva: this.roundToTwoDecimals(percentageIva),
-                ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
-                totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
-                percentageAdvanceMXN: this.roundToTwoDecimals(percentageAdvanceEUR),
-                advanceMXN: this.bigNumberMultipliedBy(advanceEUR, MXN),
-                exchangeRateMXN: ExchangeRateE.MXN,
-                exchangeRateAmountMXN: MXN,
-                advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerEUR, MXN),
-                conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceEUR, MXN),
-                balanceMXN: this.bigNumberMultipliedBy(balanceEUR, MXN),
+            const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
+                advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
+            if (typeFractional.MXN === true) {
+                bodyMXN = {
+                    subtotalMXN: this.bigNumberMultipliedBy(subtotalEUR, MXN),
+                    percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
+                    additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountEUR, MXN),
+                    percentageIva: this.roundToTwoDecimals(percentageIva),
+                    ivaMXN: this.bigNumberMultipliedBy(ivaEUR, MXN),
+                    totalMXN: this.bigNumberMultipliedBy(totalEUR, MXN),
+                    percentageAdvanceMXN: this.roundToTwoDecimals(percentageAdvanceEUR),
+                    advanceMXN: this.bigNumberMultipliedBy(advanceEUR, MXN),
+                    exchangeRateMXN: ExchangeRateE.MXN,
+                    exchangeRateAmountMXN: MXN,
+                    advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerEUR, MXN),
+                    conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceEUR, MXN),
+                    balanceMXN: this.bigNumberMultipliedBy(balanceEUR, MXN),
+                }
+            }
+            if (typeFractional.USD === true) {
+                bodyUSD = {
+                    subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
+                    percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
+                    additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
+                    percentageIva: this.roundToTwoDecimals(percentageIva),
+                    ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
+                    totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
+                    percentageAdvanceUSD: this.roundToTwoDecimals(percentageAdvanceEUR),
+                    advanceUSD: this.bigNumberMultipliedBy(advanceEUR, USD),
+                    exchangeRateUSD: ExchangeRateE.USD,
+                    exchangeRateAmountUSD: USD,
+                    advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerEUR, USD),
+                    conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceEUR, USD),
+                    balanceUSD: this.bigNumberMultipliedBy(balanceEUR, USD),
+                }
             }
 
-            const bodyUSD = {
-                subtotalUSD: this.bigNumberMultipliedBy(subtotalEUR, USD),
-                percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
-                additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountEUR, USD),
-                percentageIva: this.roundToTwoDecimals(percentageIva),
-                ivaUSD: this.bigNumberMultipliedBy(ivaEUR, USD),
-                totalUSD: this.bigNumberMultipliedBy(totalEUR, USD),
-                percentageAdvanceUSD: this.roundToTwoDecimals(percentageAdvanceEUR),
-                advanceUSD: this.bigNumberMultipliedBy(advanceEUR, USD),
-                exchangeRateUSD: ExchangeRateE.USD,
-                exchangeRateAmountUSD: USD,
-                advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerEUR, USD),
-                conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceEUR, USD),
-                balanceUSD: this.bigNumberMultipliedBy(balanceEUR, USD),
-            }
+
             return {...bodyMXN, ...bodyUSD}
 
         }
@@ -870,36 +952,43 @@ export class QuotationService {
                 advanceMXN, advanceCustomerMXN, conversionAdvanceMXN, balanceMXN} = quotation
             const EUR = 0.05184;
             const USD = 0.05566;
-
-            const bodyEUR = {
-                subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
-                percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
-                additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
-                percentageIva: this.roundToTwoDecimals(percentageIva),
-                ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
-                totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
-                percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
-                advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
-                exchangeRateAmountEUR: EUR,
-                advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerMXN, EUR),
-                conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceMXN, EUR),
-                balanceEUR: this.bigNumberMultipliedBy(balanceMXN, EUR),
+            let bodyEUR = {};
+            let bodyUSD = {};
+            if (typeFractional.EUR === true) {
+                bodyEUR = {
+                    subtotalEUR: this.bigNumberMultipliedBy(subtotalMXN, EUR),
+                    percentageAdditionalDiscount: this.roundToTwoDecimals(percentageAdditionalDiscount),
+                    additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountMXN, EUR),
+                    percentageIva: this.roundToTwoDecimals(percentageIva),
+                    ivaEUR: this.bigNumberMultipliedBy(ivaMXN, EUR),
+                    totalEUR: this.bigNumberMultipliedBy(totalMXN, EUR),
+                    percentageAdvanceEUR: this.roundToTwoDecimals(percentageAdvanceMXN),
+                    advanceEUR: this.bigNumberMultipliedBy(advanceMXN, EUR),
+                    exchangeRateAmountEUR: EUR,
+                    advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerMXN, EUR),
+                    conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceMXN, EUR),
+                    balanceEUR: this.bigNumberMultipliedBy(balanceMXN, EUR),
+                }
+            }
+            if (typeFractional.USD === true) {
+                bodyUSD = {
+                    subtotalUSD: this.bigNumberMultipliedBy(subtotalMXN, USD),
+                    percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, USD),
+                    additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountMXN, USD),
+                    percentageIva: this.bigNumberMultipliedBy(percentageIva, USD),
+                    ivaUSD: this.bigNumberMultipliedBy(ivaMXN, USD),
+                    totalUSD: this.bigNumberMultipliedBy(totalMXN, USD),
+                    percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceMXN, USD),
+                    advanceUSD: this.bigNumberMultipliedBy(advanceMXN, USD),
+                    exchangeRateAmountUSD: USD,
+                    advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerMXN, USD),
+                    conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceMXN, USD),
+                    balanceUSD: this.bigNumberMultipliedBy(balanceMXN, USD),
+                }
             }
 
-            const bodyUSD = {
-                subtotalUSD: this.bigNumberMultipliedBy(subtotalMXN, USD),
-                percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, USD),
-                additionalDiscountUSD: this.bigNumberMultipliedBy(additionalDiscountMXN, USD),
-                percentageIva: this.bigNumberMultipliedBy(percentageIva, USD),
-                ivaUSD: this.bigNumberMultipliedBy(ivaMXN, USD),
-                totalUSD: this.bigNumberMultipliedBy(totalMXN, USD),
-                percentageAdvanceUSD: this.bigNumberMultipliedBy(percentageAdvanceMXN, USD),
-                advanceUSD: this.bigNumberMultipliedBy(advanceMXN, USD),
-                exchangeRateAmountUSD: USD,
-                advanceCustomerUSD: this.bigNumberMultipliedBy(advanceCustomerMXN, USD),
-                conversionAdvanceUSD: this.bigNumberMultipliedBy(conversionAdvanceMXN, USD),
-                balanceUSD: this.bigNumberMultipliedBy(balanceMXN, USD),
-            }
+
+
             return {...bodyEUR, ...bodyUSD}
 
         }
@@ -910,34 +999,42 @@ export class QuotationService {
             const EUR = 0.9315;
             const MXN = 17.95;
 
-            const bodyMXN = {
-                subtotalMXN: this.bigNumberMultipliedBy(subtotalUSD, MXN),
-                percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, MXN),
-                additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountUSD, MXN),
-                percentageIva: this.bigNumberMultipliedBy(percentageIva, MXN),
-                ivaMXN: this.bigNumberMultipliedBy(ivaUSD, MXN),
-                totalMXN: this.bigNumberMultipliedBy(totalUSD, MXN),
-                percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceUSD, MXN),
-                advanceMXN: this.bigNumberMultipliedBy(advanceUSD, MXN),
-                exchangeRateAmountMXN: MXN,
-                advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerUSD, MXN),
-                conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceUSD, MXN),
-                balanceMXN: this.bigNumberMultipliedBy(balanceUSD, MXN),
+            let bodyMXN = {};
+            let bodyEUR = {};
+            if (typeFractional.MXN === true) {
+                bodyMXN = {
+                    subtotalMXN: this.bigNumberMultipliedBy(subtotalUSD, MXN),
+                    percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, MXN),
+                    additionalDiscountMXN: this.bigNumberMultipliedBy(additionalDiscountUSD, MXN),
+                    percentageIva: this.bigNumberMultipliedBy(percentageIva, MXN),
+                    ivaMXN: this.bigNumberMultipliedBy(ivaUSD, MXN),
+                    totalMXN: this.bigNumberMultipliedBy(totalUSD, MXN),
+                    percentageAdvanceMXN: this.bigNumberMultipliedBy(percentageAdvanceUSD, MXN),
+                    advanceMXN: this.bigNumberMultipliedBy(advanceUSD, MXN),
+                    exchangeRateAmountMXN: MXN,
+                    advanceCustomerMXN: this.bigNumberMultipliedBy(advanceCustomerUSD, MXN),
+                    conversionAdvanceMXN: this.bigNumberMultipliedBy(conversionAdvanceUSD, MXN),
+                    balanceMXN: this.bigNumberMultipliedBy(balanceUSD, MXN),
+                }
+
             }
 
-            const bodyEUR = {
-                subtotalEUR: this.bigNumberMultipliedBy(subtotalUSD, EUR),
-                percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, EUR),
-                additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountUSD, EUR),
-                percentageIva: this.bigNumberMultipliedBy(percentageIva, EUR),
-                ivaEUR: this.bigNumberMultipliedBy(ivaUSD, EUR),
-                totalEUR: this.bigNumberMultipliedBy(totalUSD, EUR),
-                percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceUSD, EUR),
-                advanceEUR: this.bigNumberMultipliedBy(advanceUSD, EUR),
-                exchangeRateAmountEUR: EUR,
-                advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerUSD, EUR),
-                conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceUSD, EUR),
-                balanceEUR: this.bigNumberMultipliedBy(balanceUSD, EUR),
+
+            if (typeFractional.EUR === true) {
+                bodyEUR = {
+                    subtotalEUR: this.bigNumberMultipliedBy(subtotalUSD, EUR),
+                    percentageAdditionalDiscount: this.bigNumberMultipliedBy(percentageAdditionalDiscount, EUR),
+                    additionalDiscountEUR: this.bigNumberMultipliedBy(additionalDiscountUSD, EUR),
+                    percentageIva: this.bigNumberMultipliedBy(percentageIva, EUR),
+                    ivaEUR: this.bigNumberMultipliedBy(ivaUSD, EUR),
+                    totalEUR: this.bigNumberMultipliedBy(totalUSD, EUR),
+                    percentageAdvanceEUR: this.bigNumberMultipliedBy(percentageAdvanceUSD, EUR),
+                    advanceEUR: this.bigNumberMultipliedBy(advanceUSD, EUR),
+                    exchangeRateAmountEUR: EUR,
+                    advanceCustomerEUR: this.bigNumberMultipliedBy(advanceCustomerUSD, EUR),
+                    conversionAdvanceEUR: this.bigNumberMultipliedBy(conversionAdvanceUSD, EUR),
+                    balanceEUR: this.bigNumberMultipliedBy(balanceUSD, EUR),
+                }
             }
 
             return {...bodyMXN, ...bodyEUR}

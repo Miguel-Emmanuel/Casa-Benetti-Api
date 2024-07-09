@@ -59,11 +59,11 @@ export enum ClassificationE {
     SERVICIO = 'Servicio'
 }
 
-export enum LocationE {
-    COCINA = 'Cocina',
-    RECAMARA = 'Recamara',
-    SALA = 'Sala',
-}
+// export enum LocationE {
+//     COCINA = 'Cocina',
+//     RECAMARA = 'Recamara',
+//     SALA = 'Sala',
+// }
 
 export enum TypeArticleE {
     PRODUCTO_TERMINADO = 'Producto terminado',
@@ -124,6 +124,7 @@ export enum ProjectStatusE {
 
 export enum AdvancePaymentStatusE {
     PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
 }
 
 export enum TypeAdvancePaymentRecordE {
@@ -164,4 +165,11 @@ export enum PaymentTypeProofE {
     EFECTIVO_EXTERNO = 'Efectivo (Externo)',
     TRANSFERENCIA_EXTERNA = 'Transferencia (Cuenta externa)',
     SALDO_FAVOR = 'Saldo a favor',
+}
+
+
+export enum TypeCommisionE {
+    MAIN_PROJECT_MANAGER = 'Project manager principal',
+    PROJECT_MANAGER = 'Project manager secundario',
+    DESIGNER = 'Proyectista',
 }

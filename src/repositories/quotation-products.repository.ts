@@ -1,10 +1,10 @@
-import {inject, Getter} from '@loopback/core';
-import {DefaultCrudRepository, repository, BelongsToAccessor, HasOneRepositoryFactory} from '@loopback/repository';
+import {Getter, inject} from '@loopback/core';
+import {BelongsToAccessor, DefaultCrudRepository, HasOneRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {QuotationProducts, QuotationProductsRelations, Product, Provider, Document} from '../models';
+import {Document, Product, Provider, QuotationProducts, QuotationProductsRelations} from '../models';
+import {DocumentRepository} from './document.repository';
 import {ProductRepository} from './product.repository';
 import {ProviderRepository} from './provider.repository';
-import {DocumentRepository} from './document.repository';
 
 export class QuotationProductsRepository extends DefaultCrudRepository<
   QuotationProducts,

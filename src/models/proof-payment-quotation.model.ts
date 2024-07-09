@@ -52,7 +52,6 @@ export class ProofPaymentQuotation extends Entity {
     })
     proofPaymentType: ExchangeRateQuotationE;
 
-
     //Tipo de cambio
     @property({
         type: 'string',

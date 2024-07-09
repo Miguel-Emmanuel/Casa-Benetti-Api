@@ -136,7 +136,7 @@ export class AccountsReceivableService {
                 {
                     relation: 'quotation',
                     scope: {
-                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD', 'mainProjectManagerId', 'mainProjectManagerClassificationId'],
+                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD', 'mainProjectManagerId'],
                         include: [
                             {
                                 relation: 'showroomManager',
