@@ -710,9 +710,9 @@ export class QuotationService {
                 group: quotation?.customer?.group?.name,
                 groupId: quotation?.customer?.groupId
             },
-            classificationPercentageMainpms: quotation?.classificationPercentageMainpms,
             products: products,
             quotation: {
+                mainProjectManagerCommissions: quotation?.classificationPercentageMainpms,
                 subtotal: subtotal,
                 additionalDiscount: additionalDiscount,
                 percentageIva: percentageIva,

@@ -158,7 +158,6 @@ export interface ProductsById {
     subtotal: number;
 }
 export interface QuotationFindOneResponse {
-    classificationPercentageMainpms: MainProjectManagerCommissionsI[];
     customer: {
         customerId?: number;
         firstName: string;
@@ -196,7 +195,7 @@ export interface QuotationFindOneResponse {
         status: string;
         mainProjectManagerId: number | null;
         rejectedComment?: string;
-
+        mainProjectManagerCommissions: MainProjectManagerCommissionsI[];
     },
     commisions: {
         architectName: string;
