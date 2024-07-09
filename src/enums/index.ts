@@ -16,6 +16,7 @@ export enum LogModelName {
     QUOTATION = "Quotation",
     ASSEMPLEDPRODUCTS = "AssembledProducts",
     PROJECT = "Project",
+    ACCOUNTPAYABLE = "AccountPayable",
 }
 
 export enum LogModificationType {
@@ -167,6 +168,15 @@ export enum PaymentTypeProofE {
     SALDO_FAVOR = 'Saldo a favor',
 }
 
+export enum PurchaseOrdersStatus {
+    PENDIENTE = 'Pendiente',
+    ENVIADA_AL_PROVEEDOR = 'Enviada al proveedor',
+    PAGADA = 'Pagada',
+}
+export enum AccountPayableHistoryStatusE {
+    PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
+}
 
 export enum TypeCommisionE {
     MAIN_PROJECT_MANAGER = 'Project manager principal',
