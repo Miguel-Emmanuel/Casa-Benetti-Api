@@ -99,7 +99,7 @@ export class ClassificationPercentageMainpmController {
     //     await this.classificationPercentageMainpmRepository.updateById(id, classificationPercentageMainpm);
     // }
 
-    @del('/classification-percentage-mainpms/{id}')
+    @del('/classification-percentage/{id}')
     @response(204, {
         description: 'ClassificationPercentageMainpm DELETE success',
     })
