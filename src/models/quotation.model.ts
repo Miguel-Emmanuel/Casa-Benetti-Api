@@ -164,16 +164,6 @@ export class Quotation extends BaseEntity {
     })
     isFractionate: boolean;
 
-    //Porcentaje de comision project manager principal
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageMainProjectManager: number;
-
     //Project manager principal
     @belongsTo(() => User)
     mainProjectManagerId: number;

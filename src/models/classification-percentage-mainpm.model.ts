@@ -1,6 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {TypeCommisionE} from '../enums';
 import {Classification} from './classification.model';
+import {QuotationDesigner} from './quotation-designer.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {Quotation} from './quotation.model';
 
@@ -45,6 +46,9 @@ export class ClassificationPercentageMainpm extends Entity {
 
     @belongsTo(() => Classification)
     classificationId: number;
+
+    @belongsTo(() => QuotationDesigner)
+    quotationDesignerId: number;
 
     //Relacion hacia pm secundarios
     @belongsTo(() => QuotationProjectManager)
