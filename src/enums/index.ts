@@ -166,3 +166,9 @@ export enum PaymentTypeProofE {
     TRANSFERENCIA_EXTERNA = 'Transferencia (Cuenta externa)',
     SALDO_FAVOR = 'Saldo a favor',
 }
+
+export enum PurchaseOrdersStatus {
+    PENDIENTE = 'Pendiente',
+    ENVIADA_AL_PROVEEDOR = 'Enviada al proveedor',
+    PAGADA = 'Pagada',
+}
