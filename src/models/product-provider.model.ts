@@ -2,7 +2,21 @@ import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {CurrencyE} from '../enums';
 import {Product} from './product.model';
 
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'product_ProductProvider' // Nombre de la tabla en PostgreSQL
+        },
+        foreignKeys: {
+            fk_product_productId: {
+                name: 'fk_product_productId',
+                entity: 'Product',
+                entityKey: 'id',
+                foreignKey: 'productid',
+            },
+        }
+    }
+})
 export class ProductProvider extends Entity {
     @property({
         type: 'number',

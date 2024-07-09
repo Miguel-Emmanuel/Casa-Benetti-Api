@@ -42,6 +42,7 @@ export class ProductService {
             await this.findByIdBrand(brandId);
             await this.findByIdClassification(classificationId);
             await this.findByIdLine(lineId);
+            await this.validateProviderInProviderProducst(providersInformation);
             delete product.providersInformation;
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
             await this.createAssembledProducts(assembledProducts, response.id);
@@ -51,6 +52,15 @@ export class ProductService {
         } catch (error) {
             console.log(error)
             throw this.responseService.badRequest(error.message ?? error)
+        }
+    }
+
+    async validateProviderInProviderProducst(providersInformation: ProductProvider[] = []) {
+        for (let index = 0; index < providersInformation?.length; index++) {
+            const {providerId, } = providersInformation[index];
+            const provider = await this.providerRepository.findOne({where: {id: providerId}})
+            if (!provider)
+                throw this.responseService.badRequest('El proveedor no existe.')
         }
     }
 

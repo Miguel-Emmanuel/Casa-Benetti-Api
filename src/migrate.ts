@@ -46,7 +46,8 @@ export async function migrate(args: string[]) {
       'AccountsReceivable',
       'AdvancePaymentRecord',
       'CommissionPaymentRecord',
-      'ClassificationPercentageMainpm'
+      'ClassificationPercentageMainpm',
+      'ProductProvider'
     ],
   });
 
