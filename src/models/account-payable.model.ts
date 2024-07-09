@@ -1,9 +1,11 @@
-import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateQuotationE} from '../enums';
+import {BaseEntity} from './base/base-entity.model';
 import {Customer} from './customer.model';
 import {Project} from './project.model';
 import {PurchaseOrders} from './purchase-orders.model';
 import {Quotation} from './quotation.model';
+import {AccountPayableHistory} from './account-payable-history.model';
 
 @model({
   settings: {
@@ -32,7 +34,7 @@ import {Quotation} from './quotation.model';
     }
   }
 })
-export class AccountPayable extends Entity {
+export class AccountPayable extends BaseEntity {
   @property({
     type: 'number',
     id: true,
@@ -56,6 +58,8 @@ export class AccountPayable extends Entity {
   @hasMany(() => PurchaseOrders)
   purchaseOrders: PurchaseOrders[];
 
+  @hasMany(() => AccountPayableHistory)
+  accountPayableHistories: AccountPayableHistory[];
   @belongsTo(() => Quotation)
   quotationId: number;
 

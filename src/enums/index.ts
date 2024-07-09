@@ -16,6 +16,7 @@ export enum LogModelName {
     QUOTATION = "Quotation",
     ASSEMPLEDPRODUCTS = "AssembledProducts",
     PROJECT = "Project",
+    ACCOUNTPAYABLE = "AccountPayable",
 }
 
 export enum LogModificationType {

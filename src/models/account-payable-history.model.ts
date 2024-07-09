@@ -1,24 +1,19 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {AccountPayable} from './account-payable.model';
 
 @model({
   settings: {
     postgresql: {
       table: 'accountPayable_AccountPayableHistory' // Nombre de la tabla en PostgreSQL
     },
-    // foreignKeys: {
-    //     fk_quotation_quotationId: {
-    //         name: 'fk_quotation_quotationId',
-    //         entity: 'Quotation',
-    //         entityKey: 'id',
-    //         foreignKey: 'quotationid',
-    //     },
-    //     fk_product_productId: {
-    //         name: 'fk_product_productId',
-    //         entity: 'Product',
-    //         entityKey: 'id',
-    //         foreignKey: 'productid',
-    //     },
-    // }
+    foreignKeys: {
+      fk_accountPayableHistory_accountpayableid: {
+        name: 'fk_accountPayableHistory_accountpayableid',
+        entity: 'AccountPayable',
+        entityKey: 'id',
+        foreignKey: 'accountpayableid',
+      },
+    }
   }
 })
 export class AccountPayableHistory extends Entity {
@@ -61,6 +56,7 @@ export class AccountPayableHistory extends Entity {
   })
   proformaAmount: number;
 
+
   // Fecha de pago
   @property({
     type: 'string',
@@ -94,6 +90,9 @@ export class AccountPayableHistory extends Entity {
     required: true,
   })
   status: number;
+
+  @belongsTo(() => AccountPayable)
+  accountPayableId: number;
 
 
   constructor(data?: Partial<AccountPayableHistory>) {
