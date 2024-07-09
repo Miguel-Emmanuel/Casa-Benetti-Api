@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
-import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
+import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeCommisionE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -93,18 +93,18 @@ export class QuotationService {
     async createComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
         for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
             const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
-            await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, isMainProjectManager: true});
+            await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, type: TypeCommisionE.MAIN_PROJECT_MANAGER});
         }
     }
 
     async updatecreateComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
         for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
-            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
-            const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationId}});
-            if (classificationPercentageMainpm) {
-                await this.classificationPercentageMainpmRepository.updateById(classificationPercentageMainpm.id, {commissionPercentage, });
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationId, type: TypeCommisionE.MAIN_PROJECT_MANAGER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
             } else {
-                await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, isMainProjectManager: true});
+                await this.classificationPercentageMainpmRepository.create({quotationId, classificationId, commissionPercentage, type: TypeCommisionE.MAIN_PROJECT_MANAGER});
             }
         }
     }
@@ -112,18 +112,18 @@ export class QuotationService {
     async createComissionPSClasification(quotationProjectManagerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
         for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
             const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
-            await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, isMainProjectManager: false});
+            await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, type: TypeCommisionE.PROJECT_MANAGER});
         }
     }
 
     async updatecreateComissionPSClasification(quotationProjectManagerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
         for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
-            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
-            const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationProjectManagerId}});
-            if (classificationPercentageMainpm) {
-                await this.classificationPercentageMainpmRepository.updateById(classificationPercentageMainpm.id, {commissionPercentage, });
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationProjectManagerId, type: TypeCommisionE.PROJECT_MANAGER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
             } else {
-                await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, isMainProjectManager: false});
+                await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, type: TypeCommisionE.PROJECT_MANAGER});
             }
         }
     }

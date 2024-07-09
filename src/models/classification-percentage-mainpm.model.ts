@@ -1,4 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {TypeCommisionE} from '../enums';
 import {Classification} from './classification.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {Quotation} from './quotation.model';
@@ -51,9 +52,9 @@ export class ClassificationPercentageMainpm extends Entity {
 
     //Conocer si el pm es el principal o es secundario
     @property({
-        type: 'boolean',
+        type: 'string',
     })
-    isMainProjectManager: boolean;
+    type: TypeCommisionE;
 
     constructor(data?: Partial<ClassificationPercentageMainpm>) {
         super(data);

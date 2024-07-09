@@ -166,3 +166,10 @@ export enum PaymentTypeProofE {
     TRANSFERENCIA_EXTERNA = 'Transferencia (Cuenta externa)',
     SALDO_FAVOR = 'Saldo a favor',
 }
+
+
+export enum TypeCommisionE {
+    MAIN_PROJECT_MANAGER = 'Project manager principal',
+    PROJECT_MANAGER = 'Project manager secundario',
+    DESIGNER = 'Proyectista',
+}
