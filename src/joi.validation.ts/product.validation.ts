@@ -21,8 +21,19 @@ export const schemaAssembledProducts = Joi.object({
     }).required(),
 })
 
+const schemaProviderInformation = Joi.object({
+    providerId: Joi.number().required(),
+    model: Joi.string().required(),
+    originCode: Joi.string().required(),
+    originCost: Joi.number().required(),
+    currency: Joi.string().valid(...Object.values(CurrencyE)).messages({
+        'any.only': `El tipo de moneda debe ser igual a uno de los valores permitidos.`
+    }),
+})
+
 export const schemaCreateProduct = Joi.object({
     product: Joi.object({
+        providersInformation: Joi.array().items(schemaProviderInformation).required(),
         SKU: Joi.string().required(),
         classificationId: Joi.number().allow(null),
         lineId: Joi.number().allow(null),

@@ -1,4 +1,5 @@
 import {Entity, belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
+import {getJsonSchema} from '@loopback/rest';
 import {TypeArticleE, UOME} from '../enums';
 import {AssembledProducts} from './assembled-products.model';
 import {BaseEntity} from './base/base-entity.model';
@@ -217,3 +218,15 @@ export interface ProductRelations {
 }
 
 export type ProductWithRelations = Product & ProductRelations;
+
+
+export class ProductCreate extends Product {
+    @property({
+        type: 'array',
+        jsonSchema: {
+            type: 'array',
+            items: getJsonSchema(ProductProvider)
+        }
+    })
+    providersInformation?: ProductProvider[];
+}

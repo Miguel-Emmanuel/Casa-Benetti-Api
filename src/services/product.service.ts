@@ -3,8 +3,8 @@ import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/reposit
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
-import {AssembledProducts, Document, Product} from '../models';
-import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
+import {AssembledProducts, Document, Product, ProductCreate, ProductProvider} from '../models';
+import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductProviderRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -30,23 +30,34 @@ export class ProductService {
         public assembledProductsRepository: AssembledProductsRepository,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(ProductProviderRepository)
+        public productProviderRepository: ProductProviderRepository
     ) { }
 
-    async create(data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
+    async create(data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
         await this.validateBodyProduct(data);
         try {
             const {product, document, assembledProducts} = data;
-            const {brandId, classificationId, lineId} = product;
+            const {brandId, classificationId, lineId, providersInformation} = product;
             await this.findByIdBrand(brandId);
             await this.findByIdClassification(classificationId);
             await this.findByIdLine(lineId);
+            delete product.providersInformation;
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
             await this.createAssembledProducts(assembledProducts, response.id);
             await this.createDocument(response.id, document)
+            await this.createProviderProducts(response.id, providersInformation);
             return response;
         } catch (error) {
             console.log(error)
             throw this.responseService.badRequest(error.message ?? error)
+        }
+    }
+
+    async createProviderProducts(productId: number, providersInformation: ProductProvider[] = []) {
+        for (let index = 0; index < providersInformation?.length; index++) {
+            const {providerId, model, originCode, originCost, currency} = providersInformation[index];
+            await this.productProviderRepository.create({providerId, productId, model, originCode, originCost, currency})
         }
     }
 
@@ -64,7 +75,7 @@ export class ProductService {
         }
     }
 
-    async validateBodyProduct(data: {product: Omit<Product, 'id'>, document: Document}) {
+    async validateBodyProduct(data: {product: Omit<ProductCreate, 'id'>, document: Document}) {
         try {
             await schemaCreateProduct.validateAsync(data);
         }
@@ -231,7 +242,7 @@ export class ProductService {
         }
         return product
     }
-    async updateById(id: number, data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
+    async updateById(id: number, data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
         await this.validateBodyProduct(data);
         const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
         const {brandId, classificationId, lineId} = product;

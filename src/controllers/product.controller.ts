@@ -17,7 +17,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {AssembledProducts, Document, Product} from '../models';
+import {AssembledProducts, Document, Product, ProductCreate} from '../models';
 import {ProductService} from '../services';
 
 @authenticate('jwt')
@@ -39,7 +39,7 @@ export class ProductController {
                     schema: {
                         type: 'object',
                         properties: {
-                            product: getModelSchemaRef(Product, {
+                            product: getModelSchemaRef(ProductCreate, {
                                 title: 'NewProduct',
                                 exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'organizationId', 'isActive', 'activateDeactivateComment'],
                             }),
@@ -79,7 +79,7 @@ export class ProductController {
             },
         })
         data: {
-            product: Omit<Product, 'id'>,
+            product: Omit<ProductCreate, 'id'>,
             document: Document,
             assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]
         },
@@ -145,7 +145,7 @@ export class ProductController {
                     schema: {
                         type: 'object',
                         properties: {
-                            product: getModelSchemaRef(Product, {
+                            product: getModelSchemaRef(ProductCreate, {
                                 title: 'NewProduct',
                                 exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'organizationId', 'isActive', 'activateDeactivateComment'],
                             }),
@@ -227,7 +227,7 @@ export class ProductController {
             },
         })
         data: {
-            product: Omit<Product, 'id'>,
+            product: Omit<ProductCreate, 'id'>,
             document: Document,
             assembledProducts: {assembledProduct: AssembledProducts, document: Document}[],
             mainMaterialImage: Document,
