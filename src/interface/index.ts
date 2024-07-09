@@ -147,14 +147,11 @@ export interface ProductsById {
     status: string;
     description: string;
     image: string | undefined;
-    mainFinish: string;
-
-    sale: TypeSaleE | string;
     quantity: number;
     percentageDiscountProduct: number;
     discountProduct: number;
-    percentageAdditionalDiscount: number;
-    additionalDiscount: number;
+    percentageMaximumDiscount: number;
+    maximumDiscount: number;
     subtotal: number;
 }
 export interface QuotationFindOneResponse {

@@ -147,7 +147,7 @@ export class ProductController {
                         properties: {
                             product: getModelSchemaRef(ProductCreate, {
                                 title: 'NewProduct',
-                                exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'organizationId', 'isActive', 'activateDeactivateComment'],
+                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'organizationId', 'isActive', 'activateDeactivateComment'],
                             }),
                             assembledProducts: {
                                 type: 'array',
@@ -155,14 +155,13 @@ export class ProductController {
                                     type: 'object',
                                     properties: {
                                         assembledProduct: getModelSchemaRef(AssembledProducts, {
-                                            title: 'AssembledProductsUpdate',
-                                            exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                            title: 'AssembledProducts',
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
                                         }),
                                         document: {
                                             type: 'object',
                                             nullable: true,
                                             properties: {
-                                                id: {type: 'number'},
                                                 fileURL: {type: 'string'},
                                                 name: {type: 'string'},
                                                 extension: {type: 'string'}
@@ -175,47 +174,6 @@ export class ProductController {
                                 type: 'object',
                                 nullable: true,
                                 properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            mainMaterialImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            mainFinishImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            secondaryMaterialImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            secondaryFinishingImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
                                     fileURL: {type: 'string'},
                                     name: {type: 'string'},
                                     extension: {type: 'string'}
@@ -230,10 +188,6 @@ export class ProductController {
             product: Omit<ProductCreate, 'id'>,
             document: Document,
             assembledProducts: {assembledProduct: AssembledProducts, document: Document}[],
-            mainMaterialImage: Document,
-            mainFinishImage: Document,
-            secondaryMaterialImage: Document,
-            secondaryFinishingImage: Document,
         },
     ): Promise<void> {
         await this.productService.updateById(id, data);

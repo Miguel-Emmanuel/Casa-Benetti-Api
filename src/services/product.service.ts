@@ -242,9 +242,9 @@ export class ProductService {
         }
         return product
     }
-    async updateById(id: number, data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
+    async updateById(id: number, data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
         await this.validateBodyProduct(data);
-        const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
+        const {product, document, assembledProducts, } = data;
         const {brandId, classificationId, lineId} = product;
         await this.findByIdProduct(id);
         await this.findByIdBrand(brandId);

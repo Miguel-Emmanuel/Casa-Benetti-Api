@@ -6,7 +6,7 @@ import {BaseEntity} from './base/base-entity.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Classification} from './classification.model';
 import {Document} from './document.model';
-import {Line} from './line.model';
+import {Line, LineWithRelations} from './line.model';
 import {Organization} from './organization.model';
 import {ProductProvider} from './product-provider.model';
 import {Provider, ProviderWithRelations} from './provider.model';
@@ -215,6 +215,7 @@ export interface ProductRelations {
     brand: BrandWithRelations
     quotationProducts: QuotationProductsWithRelations
     provider: ProviderWithRelations
+    line: LineWithRelations
 }
 
 export type ProductWithRelations = Product & ProductRelations;

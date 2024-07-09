@@ -38,7 +38,7 @@ export class QuotationProducts extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     //Fecha de creacion
     @property({
@@ -125,7 +125,7 @@ export class QuotationProducts extends Entity {
     })
     originCode: string;
 
-    //Costo Origen
+    //Costo Origen (precio de lista)
     @property({
         type: 'number',
     })
@@ -148,6 +148,15 @@ export class QuotationProducts extends Entity {
         },
     })
     factor: number;
+
+    //precio (factor * Costo Origen)
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    price: number;
 
     //Descuento porcentaje maximo
     @property({
@@ -227,8 +236,9 @@ export class QuotationProducts extends Entity {
     //Status
     @property({
         type: 'string',
+        default: QuotationProductStatusE.PEDIDO
     })
-    status?: QuotationProductStatusE;
+    status: QuotationProductStatusE;
 
     //******************************************** FIN ACTUALIZACION DE PRODUCTOS ***************
 

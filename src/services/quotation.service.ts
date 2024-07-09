@@ -342,39 +342,42 @@ export class QuotationService {
                 delete element.mainFinishImg;
                 delete element.secondaryMaterialImg;
                 delete element.secondaryFinishingImag;
-                await this.quotationProductsRepository.create(element);
-
+                const response = await this.quotationProductsRepository.create(element);
+                await this.createDocumentMainMaterial(response.id, mainMaterialImg)
+                await this.createDocumentMainFinish(response.id, mainFinishImg);
+                await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
+                await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImag);
             }
         }
     }
 
-    async createDocumentMainMaterial(productId: number, document: DocumentSchema) {
+    async createDocumentMainMaterial(quotationProductId: number, document?: DocumentSchema) {
         if (document && !document?.id) {
-            await this.quotationProductsRepository.mainMaterialImage(productId).create(document);
+            await this.quotationProductsRepository.mainMaterialImage(quotationProductId).create(document);
         } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
-    async createDocumentMainFinish(productId: number, document: Document) {
+    async createDocumentMainFinish(quotationProductId: number, document?: Document) {
         if (document && !document?.id) {
-            await this.quotationProductsRepository.mainFinishImage(productId).create(document);
+            await this.quotationProductsRepository.mainFinishImage(quotationProductId).create(document);
         } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
-    async createDocumentSecondaryMaterial(productId: number, document: Document) {
+    async createDocumentSecondaryMaterial(quotationProductId: number, document?: Document) {
         if (document && !document?.id) {
-            await this.quotationProductsRepository.secondaryMaterialImage(productId).create(document);
+            await this.quotationProductsRepository.secondaryMaterialImage(quotationProductId).create(document);
         } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
-    async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
+    async createDocumentSecondaryFinishingImage(quotationProductId: number, document?: Document) {
         if (document && !document?.id) {
-            await this.quotationProductsRepository.secondaryFinishingImage(productId).create(document);
+            await this.quotationProductsRepository.secondaryFinishingImage(quotationProductId).create(document);
         } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
@@ -437,9 +440,19 @@ export class QuotationService {
             if (product) {
                 const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
                 if (findQuotationP)
-                    await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
-                else
-                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, element);
+                else {
+                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                    delete element.mainMaterialImg;
+                    delete element.mainFinishImg;
+                    delete element.secondaryMaterialImg;
+                    delete element.secondaryFinishingImag;
+                    const response = await this.quotationProductsRepository.create(element);
+                    await this.createDocumentMainMaterial(response.id, mainMaterialImg)
+                    await this.createDocumentMainFinish(response.id, mainFinishImg);
+                    await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
+                    await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImag);
+                }
             }
         }
     }
@@ -639,7 +652,7 @@ export class QuotationService {
             {
                 relation: 'products',
                 scope: {
-                    include: ['quotationProducts', 'brand', 'document']
+                    include: ['quotationProducts', 'brand', 'document', 'line']
                 }
 
             },
@@ -703,18 +716,16 @@ export class QuotationService {
         for (const iterator of quotation?.products ?? []) {
             products.push({
                 ...iterator,
-                SKU: iterator.SKU,
+                SKU: iterator.quotationProducts?.SKU,
                 brandName: iterator?.brand?.brandName ?? '',
-                status: iterator.status,
-                description: iterator.description,
+                status: iterator.quotationProducts.status,
+                description: `${iterator.line?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measures}`,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
-                mainFinish: iterator.mainFinish,
-                sale: iterator.quotationProducts.typeSale ?? '',
                 quantity: iterator.quotationProducts.quantity,
                 percentageDiscountProduct: iterator.quotationProducts.percentageDiscountProduct,
                 discountProduct: iterator.quotationProducts.discountProduct,
-                percentageAdditionalDiscount: iterator.quotationProducts.percentageAdditionalDiscount,
-                additionalDiscount: iterator.quotationProducts.additionalDiscount,
+                percentageMaximumDiscount: iterator.quotationProducts.percentageMaximumDiscount,
+                maximumDiscount: iterator.quotationProducts.maximumDiscount,
                 subtotal: iterator.quotationProducts.subtotal,
             })
         }
