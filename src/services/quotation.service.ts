@@ -580,7 +580,12 @@ export class QuotationService {
                 relation: 'projectManagers',
                 scope: {
                     fields: ['id', 'firstName'],
-                    include: ['quotationPM']
+                    include: [{
+                        relation: 'quotationPM',
+                        scope: {
+                            include: ['classificationPercentageMainpms']
+                        }
+                    },]
                 }
             },
             {
@@ -605,7 +610,10 @@ export class QuotationService {
                         }
                     ]
                 }
-            }
+            },
+            {
+                relation: 'classificationPercentageMainpms',
+            },
         ]
         if (filter?.include)
             filter.include = [
@@ -643,8 +651,9 @@ export class QuotationService {
             projectManagers.push({
                 id: iterator.id,
                 projectManagerName: iterator.firstName,
-                commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
-                classificationId: iterator.quotationPM?.classificationId
+                // commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
+                // classificationId: iterator.quotationPM?.classificationId,
+                classificationPercentageMainpms: iterator.quotationPM?.classificationPercentageMainpms,
             })
         }
 
@@ -673,6 +682,7 @@ export class QuotationService {
                 group: quotation?.customer?.group?.name,
                 groupId: quotation?.customer?.groupId
             },
+            classificationPercentageMainpms: quotation?.classificationPercentageMainpms,
             products: products,
             quotation: {
                 subtotal: subtotal,

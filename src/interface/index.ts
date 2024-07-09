@@ -132,8 +132,9 @@ export interface QuotationFindResponse {
 export interface ProjectManagersById {
     id?: number;
     projectManagerName: string;
-    commissionPercentageProjectManager: number;
-    classificationId: number;
+    // commissionPercentageProjectManager: number;
+    // classificationId: number;
+    classificationPercentageMainpms: MainProjectManagerCommissionsI[];
 }
 
 export interface DesignersById {
@@ -159,6 +160,7 @@ export interface ProductsById {
     subtotal: number;
 }
 export interface QuotationFindOneResponse {
+    classificationPercentageMainpms: MainProjectManagerCommissionsI[];
     customer: {
         customerId?: number;
         firstName: string;
