@@ -164,7 +164,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     },
                     products: {
                         type: 'array',
-                        items: getModelSchemaRef(QuotationProducts, {exclude: ['id', 'createdAt', 'status']})
+                        items: getModelSchemaRef(QuotationProducts, {exclude: ['id', 'createdAt', 'status', 'quotationId']})
                         // {
                         //     properties: {
                         //         productId: {

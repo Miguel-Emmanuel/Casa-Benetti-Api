@@ -62,11 +62,12 @@ const products = Joi.object({
     providerId: Joi.number().required(),
     model: Joi.string().required(),
     originCode: Joi.string().required(),
-    originCost: Joi.string().required(),
+    originCost: Joi.number().required(),
     currency: Joi.string().valid(...Object.values(CurrencyE)).messages({
         'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
     }).required(),
     factor: Joi.number().required(),
+    price: Joi.number().required(),
     percentageMaximumDiscount: Joi.number().required(),
     maximumDiscount: Joi.number().required(),
     quantity: Joi.number().required(),
@@ -74,7 +75,7 @@ const products = Joi.object({
     percentageDiscountProduct: Joi.number().required(),
     discountProduct: Joi.number().required(),
     subtotalDiscount: Joi.number().required(),
-    location: Joi.number().required(),
+    location: Joi.string().required(),
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({
