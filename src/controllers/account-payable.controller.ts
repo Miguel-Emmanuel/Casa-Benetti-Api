@@ -84,7 +84,48 @@ export class AccountPayableController {
     description: 'AccountPayable model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(AccountPayable, {includeRelations: true}),
+        schema: {
+          type: 'object',
+          properties: {
+            idProject: {type: 'number'},
+            clientName: {type: 'string'},
+            closingDate: {type: 'string', format: 'date-time'},
+            showroomManager: {type: 'string'},
+            total: {type: 'number', nullable: true},
+            purchaseOrders: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {type: 'number'},
+                  provider: {type: 'string'},
+                  quantity: {type: 'number'},
+                  total: {type: 'number'},
+                  status: {type: 'string'},
+                },
+              },
+            },
+            accountPayableHistories: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {type: 'number'},
+                  proformaDate: {type: 'string', format: 'date-time'},
+                  proformaNumber: {type: 'string'},
+                  currency: {type: 'string'},
+                  proformaAmount: {type: 'number'},
+                  paymentDate: {type: 'string', format: 'date-time'},
+                  advancePaymentAmount: {type: 'number'},
+                  balance: {type: 'number'},
+                  status: {type: 'string'},
+                  provider: {type: 'string'},
+                },
+              },
+            },
+          },
+        },
+
       },
     },
   })

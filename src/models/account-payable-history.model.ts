@@ -1,5 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {AccountPayableHistoryStatusE} from '../enums';
 import {AccountPayable} from './account-payable.model';
+import {Provider} from './provider.model';
 
 @model({
   settings: {
@@ -12,6 +14,12 @@ import {AccountPayable} from './account-payable.model';
         entity: 'AccountPayable',
         entityKey: 'id',
         foreignKey: 'accountpayableid',
+      },
+      fk_accountPayableHistory_providerId: {
+        name: 'fk_accountPayableHistory_providerId',
+        entity: 'Provider',
+        entityKey: 'id',
+        foreignKey: 'providerid',
       },
     }
   }
@@ -26,10 +34,11 @@ export class AccountPayableHistory extends Entity {
 
   // Fecha proforma
   @property({
-    type: 'string',
+    type: 'date',
     required: true,
+    default: () => new Date(),
   })
-  proformaDate: string;
+  proformaDate: Date;
 
   // No. Proforma
   @property({
@@ -59,10 +68,12 @@ export class AccountPayableHistory extends Entity {
 
   // Fecha de pago
   @property({
-    type: 'string',
+    type: 'date',
     required: true,
+    default: () => new Date(),
+
   })
-  paymentDate: string;
+  paymentDate: Date;
 
   // Monto anticipo
   @property({
@@ -86,13 +97,17 @@ export class AccountPayableHistory extends Entity {
 
   // Estatus
   @property({
-    type: 'number',
+    type: 'string',
     required: true,
+    default: AccountPayableHistoryStatusE.PENDIENTE
   })
-  status: number;
+  status: AccountPayableHistoryStatusE;
 
   @belongsTo(() => AccountPayable)
   accountPayableId: number;
+
+  @belongsTo(() => Provider)
+  providerId: number;
 
 
   constructor(data?: Partial<AccountPayableHistory>) {
