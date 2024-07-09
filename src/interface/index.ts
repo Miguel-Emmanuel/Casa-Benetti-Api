@@ -3,8 +3,7 @@ import {Address, Document, ProofPaymentQuotationCreate} from '../models';
 
 export interface ProjectManagers {
     userId: number;
-    commissionPercentageProjectManager: number;
-    classificationId: number;
+    projectManagerCommissions?: MainProjectManagerCommissionsI[];
 }
 
 export interface Designers {
@@ -44,7 +43,7 @@ export interface Customer {
 }
 
 export interface MainProjectManagerCommissionsI {
-    classificationId: number, commissionPercentage: number
+    classificationId: number, commissionPercentage: number, isDeleted: boolean
 }
 
 export interface QuotationI {

@@ -1,13 +1,6 @@
 import * as Joi from "joi";
 import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 
-const projectManager = Joi.object({
-    userId: Joi.number(),
-    commissionPercentageProjectManager: Joi.number(),
-    classificationId: Joi.number(),
-})
-
-
 export const documents = Joi.object({
     id: Joi.number(),
     fileURL: Joi.string().required(),
@@ -78,8 +71,16 @@ const products = Joi.object({
 const schemaMainProjectManagerCommissions = Joi.object({
     classificationId: Joi.number().required(),
     commissionPercentage: Joi.number().required(),
+    isDeleted: Joi.boolean()
 
 })
+
+const projectManager = Joi.object({
+    userId: Joi.number(),
+    projectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
+})
+
+
 export const schemaCreateQuotition = Joi.object({
     id: Joi.number().allow(null),
     isDraft: Joi.boolean().required(),

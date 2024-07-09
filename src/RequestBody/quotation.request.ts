@@ -113,12 +113,23 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 userId: {
                                     type: 'number'
                                 },
-                                commissionPercentageProjectManager: {
-                                    type: 'number'
+                                projectManagerCommissions: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            classificationId: {
+                                                type: 'number'
+                                            },
+                                            commissionPercentage: {
+                                                type: 'number'
+                                            },
+                                            isDeleted: {
+                                                type: 'boolean'
+                                            },
+                                        }
+                                    }
                                 },
-                                classificationId: {
-                                    type: 'number',
-                                }
                             }
                         }
                     },
@@ -195,7 +206,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                         },
                                         commissionPercentage: {
                                             type: 'number'
-                                        }
+                                        },
+                                        isDeleted: {
+                                            type: 'boolean'
+                                        },
                                     }
                                 }
                             },
