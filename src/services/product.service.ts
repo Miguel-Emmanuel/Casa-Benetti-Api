@@ -3,8 +3,8 @@ import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/reposit
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
-import {AssembledProducts, Document, Product} from '../models';
-import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
+import {AssembledProducts, Document, Product, ProductCreate, ProductProvider} from '../models';
+import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductProviderRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -30,28 +30,44 @@ export class ProductService {
         public assembledProductsRepository: AssembledProductsRepository,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(ProductProviderRepository)
+        public productProviderRepository: ProductProviderRepository
     ) { }
 
-    async create(data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
+    async create(data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
         await this.validateBodyProduct(data);
         try {
-            const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
-            const {brandId, providerId, classificationId, lineId} = product;
+            const {product, document, assembledProducts} = data;
+            const {brandId, classificationId, lineId, providersInformation} = product;
             await this.findByIdBrand(brandId);
-            await this.findByIdProvider(providerId);
             await this.findByIdClassification(classificationId);
             await this.findByIdLine(lineId);
+            await this.validateProviderInProviderProducst(providersInformation);
+            delete product.providersInformation;
             const response = await this.productRepository.create({...product, organizationId: this.user.organizationId});
             await this.createAssembledProducts(assembledProducts, response.id);
             await this.createDocument(response.id, document)
-            await this.createDocumentMainMaterial(response.id, mainMaterialImage)
-            await this.createDocumentMainFinish(response.id, mainFinishImage);
-            await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImage);
-            await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImage);
+            await this.createProviderProducts(response.id, providersInformation);
             return response;
         } catch (error) {
             console.log(error)
             throw this.responseService.badRequest(error.message ?? error)
+        }
+    }
+
+    async validateProviderInProviderProducst(providersInformation: ProductProvider[] = []) {
+        for (let index = 0; index < providersInformation?.length; index++) {
+            const {providerId, } = providersInformation[index];
+            const provider = await this.providerRepository.findOne({where: {id: providerId}})
+            if (!provider)
+                throw this.responseService.badRequest('El proveedor no existe.')
+        }
+    }
+
+    async createProviderProducts(productId: number, providersInformation: ProductProvider[] = []) {
+        for (let index = 0; index < providersInformation?.length; index++) {
+            const {providerId, model, originCode, originCost, currency} = providersInformation[index];
+            await this.productProviderRepository.create({providerId, productId, model, originCode, originCost, currency})
         }
     }
 
@@ -69,7 +85,7 @@ export class ProductService {
         }
     }
 
-    async validateBodyProduct(data: {product: Omit<Product, 'id'>, document: Document}) {
+    async validateBodyProduct(data: {product: Omit<ProductCreate, 'id'>, document: Document}) {
         try {
             await schemaCreateProduct.validateAsync(data);
         }
@@ -86,37 +102,6 @@ export class ProductService {
     async createDocument(productId: number, document: Document) {
         if (document && !document?.id) {
             await this.productRepository.document(productId).create(document);
-        } else if (document) {
-            await this.documentRepository.updateById(document.id, {...document});
-        }
-    }
-    async createDocumentMainMaterial(productId: number, document: Document) {
-        if (document && !document?.id) {
-            await this.productRepository.mainMaterialImage(productId).create(document);
-        } else if (document) {
-            await this.documentRepository.updateById(document.id, {...document});
-        }
-    }
-
-    async createDocumentMainFinish(productId: number, document: Document) {
-        if (document && !document?.id) {
-            await this.productRepository.mainFinishImage(productId).create(document);
-        } else if (document) {
-            await this.documentRepository.updateById(document.id, {...document});
-        }
-    }
-
-    async createDocumentSecondaryMaterial(productId: number, document: Document) {
-        if (document && !document?.id) {
-            await this.productRepository.secondaryMaterialImage(productId).create(document);
-        } else if (document) {
-            await this.documentRepository.updateById(document.id, {...document});
-        }
-    }
-
-    async createDocumentSecondaryFinishingImage(productId: number, document: Document) {
-        if (document && !document?.id) {
-            await this.productRepository.secondaryFinishingImage(productId).create(document);
         } else if (document) {
             await this.documentRepository.updateById(document.id, {...document});
         }
@@ -267,20 +252,15 @@ export class ProductService {
         }
         return product
     }
-    async updateById(id: number, data: {product: Omit<Product, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[], mainMaterialImage: Document, mainFinishImage: Document, secondaryMaterialImage: Document, secondaryFinishingImage: Document, }) {
+    async updateById(id: number, data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
         await this.validateBodyProduct(data);
-        const {product, document, assembledProducts, mainMaterialImage, mainFinishImage, secondaryMaterialImage, secondaryFinishingImage} = data;
-        const {brandId, providerId, classificationId, lineId} = product;
+        const {product, document, assembledProducts, } = data;
+        const {brandId, classificationId, lineId} = product;
         await this.findByIdProduct(id);
         await this.findByIdBrand(brandId);
-        await this.findByIdProvider(providerId);
         await this.findByIdClassification(classificationId);
         await this.findByIdLine(lineId);
         await this.createDocument(id, document)
-        await this.createDocumentMainMaterial(id, mainMaterialImage)
-        await this.createDocumentMainFinish(id, mainFinishImage);
-        await this.createDocumentSecondaryMaterial(id, secondaryMaterialImage);
-        await this.createDocumentSecondaryFinishingImage(id, secondaryFinishingImage);
         await this.updateAssembledProducts(assembledProducts, id);
         await this.productRepository.updateById(id, product);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
@@ -315,13 +295,6 @@ export class ProductService {
         const product = await this.findByIdProduct(id);
         await this.validateBodyActivateDeactivate(body);
         await this.productRepository.updateById(id, {isActive: !product?.isActive, activateDeactivateComment: body.activateDeactivateComment});
-        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
-    }
-
-    async updateProforma(id: number, body: {price: number}) {
-        await this.findByIdProduct(id);
-        await this.validateBodyProforma(body);
-        await this.productRepository.updateById(id, {listPrice: body.price});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 

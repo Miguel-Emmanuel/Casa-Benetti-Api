@@ -3,11 +3,12 @@ import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeCommisionE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
-import {ProofPaymentQuotationCreate, Quotation} from '../models';
-import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
+import {DocumentSchema} from '../models/base/document.model';
+import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -44,7 +45,9 @@ export class QuotationService {
         @repository(ClassificationRepository)
         public classificationRepository: ClassificationRepository,
         @repository(ClassificationPercentageMainpmRepository)
-        public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository
+        public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository
     ) { }
 
     async create(data: CreateQuotation) {
@@ -316,7 +319,7 @@ export class QuotationService {
 
     }
 
-    async createManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
+    async createManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: QuotationProductsCreate[], quotationId: number) {
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user) {
@@ -333,12 +336,54 @@ export class QuotationService {
         }
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
-            if (product)
-                await this.quotationProductsRepository.create({providerId: element.provedorId, quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
+            if (product) {
+                const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                delete element.mainMaterialImg;
+                delete element.mainFinishImg;
+                delete element.secondaryMaterialImg;
+                delete element.secondaryFinishingImag;
+                const response = await this.quotationProductsRepository.create({...element, quotationId});
+                await this.createDocumentMainMaterial(response.id, mainMaterialImg)
+                await this.createDocumentMainFinish(response.id, mainFinishImg);
+                await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
+                await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImag);
+            }
         }
     }
 
-    async deleteManyQuotation(quotation: Quotation, projectManagers: ProjectManagers[], designers: Designers[], products: Products[],) {
+    async createDocumentMainMaterial(quotationProductId: number, document?: DocumentSchema) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.mainMaterialImage(quotationProductId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
+        }
+    }
+
+    async createDocumentMainFinish(quotationProductId: number, document?: Document) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.mainFinishImage(quotationProductId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
+        }
+    }
+
+    async createDocumentSecondaryMaterial(quotationProductId: number, document?: Document) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.secondaryMaterialImage(quotationProductId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
+        }
+    }
+
+    async createDocumentSecondaryFinishingImage(quotationProductId: number, document?: Document) {
+        if (document && !document?.id) {
+            await this.quotationProductsRepository.secondaryFinishingImage(quotationProductId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
+        }
+    }
+
+    async deleteManyQuotation(quotation: Quotation, projectManagers: ProjectManagers[], designers: Designers[], products: QuotationProductsCreate[],) {
         const {id} = quotation;
         const projectManagersMap = projectManagers.map((value) => value.userId);
         const projectManagersDelete = quotation?.projectManagers?.filter((value) => !projectManagersMap.includes(value?.id ?? 0)) ?? []
@@ -357,7 +402,7 @@ export class QuotationService {
         }
     }
 
-    async updateManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
+    async updateManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: QuotationProductsCreate[], quotationId: number) {
 
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
@@ -395,9 +440,19 @@ export class QuotationService {
             if (product) {
                 const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
                 if (findQuotationP)
-                    await this.quotationProductsRepository.updateById(findQuotationP.id, {typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct});
-                else
-                    await this.quotationProductsRepository.create({quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, element);
+                else {
+                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                    delete element.mainMaterialImg;
+                    delete element.mainFinishImg;
+                    delete element.secondaryMaterialImg;
+                    delete element.secondaryFinishingImag;
+                    const response = await this.quotationProductsRepository.create({...element, quotationId});
+                    await this.createDocumentMainMaterial(response.id, mainMaterialImg)
+                    await this.createDocumentMainFinish(response.id, mainFinishImg);
+                    await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
+                    await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImag);
+                }
             }
         }
     }
@@ -597,7 +652,7 @@ export class QuotationService {
             {
                 relation: 'products',
                 scope: {
-                    include: ['quotationProducts', 'brand', 'document']
+                    include: ['quotationProducts', 'brand', 'document', 'line']
                 }
 
             },
@@ -661,18 +716,16 @@ export class QuotationService {
         for (const iterator of quotation?.products ?? []) {
             products.push({
                 ...iterator,
-                SKU: iterator.SKU,
+                SKU: iterator.quotationProducts?.SKU,
                 brandName: iterator?.brand?.brandName ?? '',
-                status: iterator.status,
-                description: iterator.description,
+                status: iterator.quotationProducts.status,
+                description: `${iterator.line?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measures}`,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
-                mainFinish: iterator.mainFinish,
-                sale: iterator.quotationProducts.typeSale ?? '',
                 quantity: iterator.quotationProducts.quantity,
                 percentageDiscountProduct: iterator.quotationProducts.percentageDiscountProduct,
                 discountProduct: iterator.quotationProducts.discountProduct,
-                percentageAdditionalDiscount: iterator.quotationProducts.percentageAdditionalDiscount,
-                additionalDiscount: iterator.quotationProducts.additionalDiscount,
+                percentageMaximumDiscount: iterator.quotationProducts.percentageMaximumDiscount,
+                maximumDiscount: iterator.quotationProducts.maximumDiscount,
                 subtotal: iterator.quotationProducts.subtotal,
             })
         }

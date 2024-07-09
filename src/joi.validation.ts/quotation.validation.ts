@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
+import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 
 export const documents = Joi.object({
     id: Joi.number(),
@@ -48,19 +48,34 @@ export const schemaProofPaymentQuotationQ = Joi.object({
 })
 
 const products = Joi.object({
-    productId: Joi.number(),
-    typeSale: Joi.string(),
-    isSeparate: Joi.boolean().required(),
-    percentageSeparate: Joi.number(),
-    reservationDays: Joi.number(),
-    provedorId: Joi.number(),
-    quantity: Joi.number(),
-    percentageDiscountProduct: Joi.number(),
-    discountProduct: Joi.number(),
-    percentageAdditionalDiscount: Joi.number(),
-    additionalDiscount: Joi.number(),
-    subtotal: Joi.number(),
-
+    productId: Joi.number().required(),
+    SKU: Joi.string().required(),
+    mainMaterial: Joi.string().required(),
+    mainMaterialImage: documents.optional(),
+    mainFinish: Joi.string().required(),
+    mainFinishImage: documents.optional(),
+    secondaryMaterial: Joi.string().required(),
+    secondaryMaterialImage: documents.optional(),
+    secondaryFinishing: Joi.string().required(),
+    secondaryFinishingImage: documents.optional(),
+    measures: Joi.string().required(),
+    providerId: Joi.number().required(),
+    model: Joi.string().required(),
+    originCode: Joi.string().required(),
+    originCost: Joi.number().required(),
+    currency: Joi.string().valid(...Object.values(CurrencyE)).messages({
+        'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    factor: Joi.number().required(),
+    price: Joi.number().required(),
+    percentageMaximumDiscount: Joi.number().required(),
+    maximumDiscount: Joi.number().required(),
+    quantity: Joi.number().required(),
+    subtotal: Joi.number().required(),
+    percentageDiscountProduct: Joi.number().required(),
+    discountProduct: Joi.number().required(),
+    subtotalDiscount: Joi.number().required(),
+    location: Joi.string().required(),
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({
@@ -109,7 +124,7 @@ export const schemaCreateQuotition = Joi.object({
     }),
     projectManagers: Joi.array().items(projectManager).optional(),
     designers: Joi.array().items(designer).optional(),
-    products: Joi.array().items(products).optional(),
+    products: Joi.array().items(products).required(),
     quotation: Joi.object({
         mainProjectManagerId: Joi.number().required(),
         mainProjectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),

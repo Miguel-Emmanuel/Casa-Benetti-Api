@@ -34,6 +34,7 @@ export * from './customer.model';
 export * from './expense.model';
 export * from './group.model';
 export * from './line.model';
+export * from './product-provider.model';
 export * from './project.model';
 export * from './proof-payment-quotation.model';
 export * from './provider-brand.model';

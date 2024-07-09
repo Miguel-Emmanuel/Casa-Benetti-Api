@@ -31,6 +31,7 @@ export * from './customer.repository';
 export * from './expense.repository';
 export * from './group.repository';
 export * from './line.repository';
+export * from './product-provider.repository';
 export * from './project.repository';
 export * from './proof-payment-quotation.repository';
 export * from './provider-brand.repository';
