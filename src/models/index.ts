@@ -21,6 +21,8 @@ export * from './quotation-project-manager.model';
 export * from './quotation.model';
 export * from './warehouse.model';
 
+export * from './account-payable-history.model';
+export * from './account-payable.model';
 export * from './accounts-receivable.model';
 export * from './advance-payment-record.model';
 export * from './assembled-products.model';
@@ -36,4 +38,5 @@ export * from './product-provider.model';
 export * from './project.model';
 export * from './proof-payment-quotation.model';
 export * from './provider-brand.model';
+export * from './purchase-orders.model';
 

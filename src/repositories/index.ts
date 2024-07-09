@@ -18,6 +18,8 @@ export * from './quotation-project-manager.repository';
 export * from './quotation.repository';
 export * from './warehouse.repository';
 
+export * from './account-payable-history.repository';
+export * from './account-payable.repository';
 export * from './accounts-receivable.repository';
 export * from './advance-payment-record.repository';
 export * from './assembled-products.repository';
@@ -33,4 +35,5 @@ export * from './product-provider.repository';
 export * from './project.repository';
 export * from './proof-payment-quotation.repository';
 export * from './provider-brand.repository';
+export * from './purchase-orders.repository';
 
