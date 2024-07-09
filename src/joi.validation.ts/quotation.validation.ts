@@ -1,13 +1,6 @@
 import * as Joi from "joi";
 import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 
-const projectManager = Joi.object({
-    userId: Joi.number(),
-    commissionPercentageProjectManager: Joi.number(),
-    classificationId: Joi.number(),
-})
-
-
 export const documents = Joi.object({
     id: Joi.number(),
     fileURL: Joi.string().required(),
@@ -54,11 +47,6 @@ export const schemaProofPaymentQuotationQ = Joi.object({
     images: Joi.array().items(documents).optional(),
 })
 
-
-const designer = Joi.object({
-    userId: Joi.number(),
-    commissionPercentageDesigner: Joi.number(),
-})
 const products = Joi.object({
     productId: Joi.number(),
     typeSale: Joi.string(),
@@ -74,6 +62,23 @@ const products = Joi.object({
     subtotal: Joi.number(),
 
 })
+
+const schemaMainProjectManagerCommissions = Joi.object({
+    classificationId: Joi.number().required(),
+    commissionPercentage: Joi.number().required(),
+    id: Joi.number(),
+})
+
+const projectManager = Joi.object({
+    userId: Joi.number(),
+    projectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
+})
+
+const designer = Joi.object({
+    userId: Joi.number(),
+    commissionPercentageDesigner: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
+})
+
 export const schemaCreateQuotition = Joi.object({
     id: Joi.number().allow(null),
     isDraft: Joi.boolean().required(),
@@ -107,8 +112,7 @@ export const schemaCreateQuotition = Joi.object({
     products: Joi.array().items(products).optional(),
     quotation: Joi.object({
         mainProjectManagerId: Joi.number().required(),
-        mainProjectManagerClassificationId: Joi.number().allow(null),
-        percentageMainProjectManager: Joi.number().required(),
+        mainProjectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
         commissionPercentageArchitect: Joi.number().allow(null),
         isArchitect: Joi.boolean().allow(null),
         architectName: Joi.string().allow(null).allow(""),
@@ -171,8 +175,6 @@ export const schemaUpdateQuotition = Joi.object({
     products: Joi.array().items(products).optional(),
     quotation: Joi.object({
         mainProjectManagerId: Joi.number().required(),
-        mainProjectManagerClassificationId: Joi.number().allow(null),
-        percentageMainProjectManager: Joi.number().required(),
         commissionPercentageArchitect: Joi.number().allow(null),
         isArchitect: Joi.boolean().allow(null),
         architectName: Joi.string().allow(null).allow(""),

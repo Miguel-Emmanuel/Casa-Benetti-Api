@@ -84,7 +84,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId', 'mainProjectManagerClassificationId'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -122,7 +122,7 @@ export class ProjectService {
         const projects = await this.projectRepository.find(filter);
         return projects.map(value => {
             const {id, projectId, customer, branch, quotation, status, branchId} = value;
-            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId, mainProjectManagerClassificationId} = quotation;
+            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId} = quotation;
             return {
                 id,
                 projectId,
@@ -134,7 +134,6 @@ export class ProjectService {
                 closingDate,
                 branchId,
                 mainProjectManagerId,
-                mainProjectManagerClassificationId
             }
         })
     }
@@ -144,7 +143,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -584,6 +583,26 @@ export class ProjectService {
 
     async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number, transaction: any) {
         const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
+        //ProjectManager principal
+        if (isArchitect === true) {
+            const {mainProjectManagerId, classificationPercentageMainpms} = quotation;
+
+            for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
+                const element = classificationPercentageMainpms[index];
+                const body = {
+                    userId: mainProjectManagerId,
+                    projectId,
+                    commissionPercentage: element.commissionPercentage,
+                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage),
+                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                    type: AdvancePaymentTypeE.ARQUITECTO
+                }
+                await this.commissionPaymentRecordRepository.create(body, {transaction});
+
+            }
+        }
+
+
         //Arquitecto
         if (isArchitect === true) {
             const {architectName, commissionPercentageArchitect} = quotation;
@@ -614,18 +633,22 @@ export class ProjectService {
 
         //Project managers
         if (isProjectManager === true) {
-            const quotationProjectManagers = await this.quotationProjectManagerRepository.find({where: {quotationId}});
+            const quotationProjectManagers = await this.quotationProjectManagerRepository.find({where: {quotationId}, include: ['classificationPercentageMainpms']});
             for (const iterator of quotationProjectManagers) {
-                const {commissionPercentageProjectManager, userId} = iterator;
-                const body = {
-                    userId: userId,
-                    projectId,
-                    commissionPercentage: commissionPercentageProjectManager,
-                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageProjectManager),
-                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                    type: AdvancePaymentTypeE.PROJECT_MANAGER
+                const {classificationPercentageMainpms, userId} = iterator;
+                for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
+                    const element = classificationPercentageMainpms[index];
+                    const body = {
+                        userId: userId,
+                        projectId,
+                        commissionPercentage: element.commissionPercentage,
+                        commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage),
+                        projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                        type: AdvancePaymentTypeE.PROJECT_MANAGER
+                    }
+                    await this.commissionPaymentRecordRepository.create(body, {transaction});
                 }
-                await this.commissionPaymentRecordRepository.create(body, {transaction});
+
             }
         }
 
@@ -645,18 +668,22 @@ export class ProjectService {
 
         //Proyectistas
         if (isDesigner === true) {
-            const QuotationDesigners = await this.quotationDesignerRepository.find({where: {quotationId}});
+            const QuotationDesigners = await this.quotationDesignerRepository.find({where: {quotationId}, include: ['classificationPercentageMainpms']});
             for (const iterator of QuotationDesigners) {
-                const {commissionPercentageDesigner, userId} = iterator;
-                const body = {
-                    userId: userId,
-                    projectId,
-                    commissionPercentage: commissionPercentageDesigner,
-                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageDesigner),
-                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                    type: AdvancePaymentTypeE.PROYECTISTA
+                const {classificationPercentageMainpms, userId} = iterator;
+                for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
+                    const element = classificationPercentageMainpms[index];
+                    const body = {
+                        userId: userId,
+                        projectId,
+                        commissionPercentage: element.commissionPercentage,
+                        commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage),
+                        projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                        type: AdvancePaymentTypeE.PROYECTISTA
+                    }
+                    await this.commissionPaymentRecordRepository.create(body, {transaction});
+
                 }
-                await this.commissionPaymentRecordRepository.create(body, {transaction});
             }
         }
 
@@ -812,6 +839,8 @@ export class ProjectService {
                     order: ['createdAt ASC'],
                     include: ['documents']
                 }
+            }, {
+                relation: 'classificationPercentageMainpms'
             }]
         });
         if (!quotation)
