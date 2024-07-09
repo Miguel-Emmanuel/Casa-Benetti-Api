@@ -132,8 +132,6 @@ export interface QuotationFindResponse {
 export interface ProjectManagersById {
     id?: number;
     projectManagerName: string;
-    // commissionPercentageProjectManager: number;
-    // classificationId: number;
     classificationPercentageMainpms: MainProjectManagerCommissionsI[];
 }
 

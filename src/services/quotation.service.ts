@@ -681,8 +681,6 @@ export class QuotationService {
             projectManagers.push({
                 id: iterator.id,
                 projectManagerName: iterator.firstName,
-                // commissionPercentageProjectManager: iterator.quotationPM.commissionPercentageProjectManager,
-                // classificationId: iterator.quotationPM?.classificationId,
                 classificationPercentageMainpms: iterator.quotationPM?.classificationPercentageMainpms,
             })
         }
