@@ -3,10 +3,10 @@ import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeCommisionE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, Products, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
-import {ProofPaymentQuotationCreate, Quotation} from '../models';
+import {ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
@@ -316,7 +316,7 @@ export class QuotationService {
 
     }
 
-    async createManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
+    async createManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: QuotationProductsCreate[], quotationId: number) {
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user) {
@@ -333,12 +333,19 @@ export class QuotationService {
         }
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
-            if (product)
-                await this.quotationProductsRepository.create({providerId: element.provedorId, quotationId: quotationId, productId: element.productId, typeSale: element.typeSale, isSeparate: element.isSeparate, percentageSeparate: element.percentageSeparate, reservationDays: element.reservationDays, quantity: element.quantity, percentageDiscountProduct: element.percentageDiscountProduct, percentageAdditionalDiscount: element.percentageAdditionalDiscount, subtotal: element.subtotal, additionalDiscount: element.additionalDiscount, discountProduct: element.discountProduct, currency: product.currency});
+            if (product) {
+                const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                delete element.mainMaterialImg;
+                delete element.mainFinishImg;
+                delete element.secondaryMaterialImg;
+                delete element.secondaryFinishingImag;
+                await this.quotationProductsRepository.create(element);
+
+            }
         }
     }
 
-    async deleteManyQuotation(quotation: Quotation, projectManagers: ProjectManagers[], designers: Designers[], products: Products[],) {
+    async deleteManyQuotation(quotation: Quotation, projectManagers: ProjectManagers[], designers: Designers[], products: QuotationProductsCreate[],) {
         const {id} = quotation;
         const projectManagersMap = projectManagers.map((value) => value.userId);
         const projectManagersDelete = quotation?.projectManagers?.filter((value) => !projectManagersMap.includes(value?.id ?? 0)) ?? []
@@ -357,7 +364,7 @@ export class QuotationService {
         }
     }
 
-    async updateManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: Products[], quotationId: number) {
+    async updateManyQuotition(projectManagers: ProjectManagers[], designers: Designers[], products: QuotationProductsCreate[], quotationId: number) {
 
         for (const element of projectManagers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});

@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
+import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
 
 export const documents = Joi.object({
     id: Joi.number(),
@@ -49,18 +49,32 @@ export const schemaProofPaymentQuotationQ = Joi.object({
 
 const products = Joi.object({
     productId: Joi.number(),
-    typeSale: Joi.string(),
-    isSeparate: Joi.boolean().required(),
-    percentageSeparate: Joi.number(),
-    reservationDays: Joi.number(),
-    provedorId: Joi.number(),
+    SKU: Joi.string(),
+    mainMaterial: Joi.string(),
+    mainMaterialImage: documents,
+    mainFinish: Joi.string(),
+    mainFinishImage: documents,
+    secondaryMaterial: Joi.string(),
+    secondaryMaterialImage: documents,
+    secondaryFinishing: Joi.string(),
+    secondaryFinishingImage: documents,
+    measures: Joi.string(),
+    providerId: Joi.number(),
+    model: Joi.string(),
+    originCode: Joi.string(),
+    originCost: Joi.string(),
+    currency: Joi.string().valid(...Object.values(CurrencyE)).messages({
+        'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+    }),
+    factor: Joi.number(),
+    percentageMaximumDiscount: Joi.number(),
+    maximumDiscount: Joi.number(),
     quantity: Joi.number(),
+    subtotal: Joi.number(),
     percentageDiscountProduct: Joi.number(),
     discountProduct: Joi.number(),
-    percentageAdditionalDiscount: Joi.number(),
-    additionalDiscount: Joi.number(),
-    subtotal: Joi.number(),
-
+    subtotalDiscount: Joi.number(),
+    location: Joi.number(),
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({
