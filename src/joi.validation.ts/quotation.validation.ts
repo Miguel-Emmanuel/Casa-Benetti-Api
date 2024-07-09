@@ -47,11 +47,6 @@ export const schemaProofPaymentQuotationQ = Joi.object({
     images: Joi.array().items(documents).optional(),
 })
 
-
-const designer = Joi.object({
-    userId: Joi.number(),
-    commissionPercentageDesigner: Joi.number(),
-})
 const products = Joi.object({
     productId: Joi.number(),
     typeSale: Joi.string(),
@@ -79,6 +74,10 @@ const projectManager = Joi.object({
     projectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
 })
 
+const designer = Joi.object({
+    userId: Joi.number(),
+    commissionPercentageDesigner: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
+})
 
 export const schemaCreateQuotition = Joi.object({
     id: Joi.number().allow(null),

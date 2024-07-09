@@ -8,7 +8,7 @@ export interface ProjectManagers {
 
 export interface Designers {
     userId: number;
-    commissionPercentageDesigner: number;
+    commissionPercentageDesigner: MainProjectManagerCommissionsI[];
 }
 
 export interface Products {
@@ -140,7 +140,7 @@ export interface ProjectManagersById {
 export interface DesignersById {
     id?: number;
     designerName: string;
-    commissionPercentageDesigner: number;
+    commissionPercentageDesigner: MainProjectManagerCommissionsI[];
 }
 
 export interface ProductsById {

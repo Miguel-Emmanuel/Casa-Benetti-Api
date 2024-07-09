@@ -116,6 +116,13 @@ export class QuotationService {
         }
     }
 
+    async createComissionDesignerClasification(quotationDesignerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage} = mainProjectManagerCommissions[index];
+            await this.classificationPercentageMainpmRepository.create({quotationDesignerId, classificationId, commissionPercentage, type: TypeCommisionE.DESIGNER});
+        }
+    }
+
     async updatecreateComissionPSClasification(quotationProjectManagerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
         for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
             const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
@@ -124,6 +131,17 @@ export class QuotationService {
                 await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
             } else {
                 await this.classificationPercentageMainpmRepository.create({quotationProjectManagerId, classificationId, commissionPercentage, type: TypeCommisionE.PROJECT_MANAGER});
+            }
+        }
+    }
+    async updatecreateComissionDesignerClasification(quotationDesignerId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
+        for (let index = 0; index < mainProjectManagerCommissions?.length; index++) {
+            const {classificationId, commissionPercentage, id} = mainProjectManagerCommissions[index];
+            // const classificationPercentageMainpm = await this.classificationPercentageMainpmRepository.findOne({where: {classificationId, quotationProjectManagerId, type: TypeCommisionE.DESIGNER}});
+            if (id) {
+                await this.classificationPercentageMainpmRepository.updateById(id, {commissionPercentage, });
+            } else {
+                await this.classificationPercentageMainpmRepository.create({quotationDesignerId, classificationId, commissionPercentage, type: TypeCommisionE.DESIGNER});
             }
         }
     }
@@ -308,8 +326,10 @@ export class QuotationService {
         }
         for (const element of designers) {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
-            if (user)
-                await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageDesigner: element.commissionPercentageDesigner});
+            if (user) {
+                const quotationDesigner = await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId});
+                await this.createComissionDesignerClasification(quotationDesigner.id, element.commissionPercentageDesigner);
+            }
         }
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
@@ -359,10 +379,15 @@ export class QuotationService {
             const user = await this.userRepository.findOne({where: {id: element.userId}});
             if (user) {
                 const findQuotationD = await this.quotationDesignerRepository.findOne({where: {quotationId: quotationId, userId: element.userId}});
-                if (findQuotationD)
-                    await this.quotationDesignerRepository.updateById(findQuotationD.id, {commissionPercentageDesigner: element.commissionPercentageDesigner});
-                else
-                    await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId, commissionPercentageDesigner: element.commissionPercentageDesigner});
+                if (findQuotationD) {
+                    // await this.quotationDesignerRepository.updateById(findQuotationD.id, {commissionPercentageDesigner: element.commissionPercentageDesigner});
+                    await this.updatecreateComissionDesignerClasification(findQuotationD.id, element.commissionPercentageDesigner)
+                }
+                else {
+                    const quotationDesigner = await this.quotationDesignerRepository.create({quotationId: quotationId, userId: element.userId});
+                    await this.createComissionDesignerClasification(quotationDesigner.id, element.commissionPercentageDesigner)
+
+                }
             }
         }
         for (const element of products) {
@@ -592,7 +617,12 @@ export class QuotationService {
                 relation: 'designers',
                 scope: {
                     fields: ['id', 'firstName'],
-                    include: ['quotationDe']
+                    include: [{
+                        relation: 'quotationDe',
+                        scope: {
+                            include: ['classificationPercentageMainpms']
+                        }
+                    }]
                 }
             },
             {
@@ -661,7 +691,7 @@ export class QuotationService {
             designers.push({
                 id: iterator.id,
                 designerName: iterator.firstName,
-                commissionPercentageDesigner: iterator.quotationDe.commissionPercentageDesigner,
+                commissionPercentageDesigner: iterator.quotationDe.classificationPercentageMainpms,
             })
         }
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
