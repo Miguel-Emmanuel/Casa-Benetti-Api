@@ -1,6 +1,5 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ClassificationPercentageMainpm} from './classification-percentage-mainpm.model';
-import {Classification} from './classification.model';
 import {User} from './user.model';
 
 @model({
@@ -58,9 +57,6 @@ export class QuotationProjectManager extends Entity {
 
     @hasMany(() => ClassificationPercentageMainpm)
     classificationPercentageMainpms: ClassificationPercentageMainpm[];
-
-    @belongsTo(() => Classification)
-    classificationId: number;
 
     constructor(data?: Partial<QuotationProjectManager>) {
         super(data);
