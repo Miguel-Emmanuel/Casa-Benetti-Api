@@ -3,13 +3,12 @@ import {Address, Document, ProofPaymentQuotationCreate} from '../models';
 
 export interface ProjectManagers {
     userId: number;
-    commissionPercentageProjectManager: number;
-    classificationId: number;
+    projectManagerCommissions?: MainProjectManagerCommissionsI[];
 }
 
 export interface Designers {
     userId: number;
-    commissionPercentageDesigner: number;
+    commissionPercentageDesigner: MainProjectManagerCommissionsI[];
 }
 
 export interface Products {
@@ -19,6 +18,7 @@ export interface Products {
     percentageSeparate: number;
     reservationDays: number;
     quantity: number;
+    provedorId: number;
     percentageDiscountProduct: number;
     discountProduct: number;
     percentageAdditionalDiscount: number;
@@ -42,10 +42,13 @@ export interface Customer {
     groupName: string;
 }
 
+export interface MainProjectManagerCommissionsI {
+    classificationId: number, commissionPercentage: number, id: number
+}
+
 export interface QuotationI {
     mainProjectManagerId: number;
-    mainProjectManagerClassificationId: number;
-    percentageMainProjectManager: number;
+    mainProjectManagerCommissions?: MainProjectManagerCommissionsI[];
     referenceCustomerId: number;
     isDesigner: boolean;
     isArchitect: boolean;
@@ -129,14 +132,13 @@ export interface QuotationFindResponse {
 export interface ProjectManagersById {
     id?: number;
     projectManagerName: string;
-    commissionPercentageProjectManager: number;
-    classificationId: number;
+    classificationPercentageMainpms: MainProjectManagerCommissionsI[];
 }
 
 export interface DesignersById {
     id?: number;
     designerName: string;
-    commissionPercentageDesigner: number;
+    commissionPercentageDesigner: MainProjectManagerCommissionsI[];
 }
 
 export interface ProductsById {
@@ -156,6 +158,7 @@ export interface ProductsById {
     subtotal: number;
 }
 export interface QuotationFindOneResponse {
+    classificationPercentageMainpms: MainProjectManagerCommissionsI[];
     customer: {
         customerId?: number;
         firstName: string;
@@ -192,8 +195,6 @@ export interface QuotationFindOneResponse {
         conversionAdvance: number | null;
         status: string;
         mainProjectManagerId: number | null;
-        mainProjectManagerClassificationId: number | null;
-        percentageMainProjectManager: number | null;
         rejectedComment?: string;
 
     },

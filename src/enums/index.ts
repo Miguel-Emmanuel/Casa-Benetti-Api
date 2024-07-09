@@ -172,3 +172,9 @@ export enum PurchaseOrdersStatus {
     ENVIADA_AL_PROVEEDOR = 'Enviada al proveedor',
     PAGADA = 'Pagada',
 }
+
+export enum TypeCommisionE {
+    MAIN_PROJECT_MANAGER = 'Project manager principal',
+    PROJECT_MANAGER = 'Project manager secundario',
+    DESIGNER = 'Proyectista',
+}

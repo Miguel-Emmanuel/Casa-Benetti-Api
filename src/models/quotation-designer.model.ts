@@ -1,4 +1,5 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {ClassificationPercentageMainpm} from './classification-percentage-mainpm.model';
 import {User} from './user.model';
 
 @model({
@@ -28,7 +29,7 @@ export class QuotationDesigner extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     @property({
         type: 'number',
@@ -38,15 +39,18 @@ export class QuotationDesigner extends Entity {
     @belongsTo(() => User)
     userId: number;
 
-    //Comision del potectista
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    commissionPercentageDesigner: number;
+    @hasMany(() => ClassificationPercentageMainpm)
+    classificationPercentageMainpms: ClassificationPercentageMainpm[];
+
+    // //Comision del potectista
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // commissionPercentageDesigner: number;
 
     constructor(data?: Partial<QuotationDesigner>) {
         super(data);

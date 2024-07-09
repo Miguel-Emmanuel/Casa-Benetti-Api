@@ -30,3 +30,6 @@ export * from './account-payable-history.controller';
 export * from './account-payable.controller';
 export * from './purchase-orders.controller';
 
+export * from './classification-percentage-mainpm.controller';
+export * from './line.controller';
+
