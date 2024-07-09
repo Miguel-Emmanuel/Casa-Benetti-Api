@@ -45,15 +45,15 @@ export class QuotationProjectManager extends Entity {
     @belongsTo(() => User)
     userId: number;
 
-    //Comision del proyect manager
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    commissionPercentageProjectManager: number;
+    // //Comision del proyect manager
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // commissionPercentageProjectManager: number;
 
     @hasMany(() => ClassificationPercentageMainpm)
     classificationPercentageMainpms: ClassificationPercentageMainpm[];

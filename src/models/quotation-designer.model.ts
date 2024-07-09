@@ -42,15 +42,15 @@ export class QuotationDesigner extends Entity {
     @hasMany(() => ClassificationPercentageMainpm)
     classificationPercentageMainpms: ClassificationPercentageMainpm[];
 
-    //Comision del potectista
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    commissionPercentageDesigner: number;
+    // //Comision del potectista
+    // @property({
+    //     type: 'number',
+    //     required: false,
+    //     postgresql: {
+    //         dataType: 'double precision',
+    //     },
+    // })
+    // commissionPercentageDesigner: number;
 
     constructor(data?: Partial<QuotationDesigner>) {
         super(data);
