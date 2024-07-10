@@ -345,7 +345,7 @@ export class ProjectService {
                 "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
                 "products": productsTemplate,
                 subtotal,
-                percentageAdditionalDiscount,
+                percentageAdditionalDiscount: percentageAdditionalDiscount ?? 0,
                 additionalDiscount,
                 percentageIva,
                 iva,
@@ -430,7 +430,7 @@ export class ProjectService {
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
                     advanceCustomer: amountPaid,
-                    conversionAdvance: conversionAmountPaid.toFixed(2),
+                    conversionAdvance: conversionAmountPaid ? conversionAmountPaid.toFixed(2) : 0,
                     proofPaymentType: paymentCurrency,
                     paymentType: paymentMethod,
                     exchangeRateAmount: parity,
