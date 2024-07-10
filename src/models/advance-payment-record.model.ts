@@ -164,6 +164,12 @@ export class AdvancePaymentRecord extends Entity {
     @belongsTo(() => Project)
     projectId: number;
 
+    //Referencia
+    @property({
+        type: 'string',
+    })
+    reference: string;
+
 
     constructor(data?: Partial<AdvancePaymentRecord>) {
         super(data);
