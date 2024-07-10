@@ -3,11 +3,12 @@ import {BelongsToAccessor, DefaultCrudRepository, repository, HasOneRepositoryFa
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Proforma, ProformaRelations, Provider, Brand, Document} from '../models';
+import {Proforma, ProformaRelations, Provider, Brand, Document, Project} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {ProviderRepository} from './provider.repository';
 import {BrandRepository} from './brand.repository';
 import {DocumentRepository} from './document.repository';
+import {ProjectRepository} from './project.repository';
 
 export class ProformaRepository extends DefaultCrudRepository<
   Proforma,
@@ -21,12 +22,16 @@ export class ProformaRepository extends DefaultCrudRepository<
 
   public readonly document: HasOneRepositoryFactory<Document, typeof Proforma.prototype.id>;
 
+  public readonly project: BelongsToAccessor<Project, typeof Proforma.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
-    public operationHook: Getter<OperationHook>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
+    public operationHook: Getter<OperationHook>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>,
   ) {
     super(Proforma, dataSource);
+    this.project = this.createBelongsToAccessorFor('project', projectRepositoryGetter,);
+    this.registerInclusionResolver('project', this.project.inclusionResolver);
     this.document = this.createHasOneRepositoryFactoryFor('document', documentRepositoryGetter);
     this.registerInclusionResolver('document', this.document.inclusionResolver);
     this.brand = this.createBelongsToAccessorFor('brand', brandRepositoryGetter,);

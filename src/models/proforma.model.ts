@@ -3,6 +3,7 @@ import {ProformaCurrencyE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Brand} from './brand.model';
 import {Document} from './document.model';
+import {Project} from './project.model';
 import {Provider} from './provider.model';
 
 @model({
@@ -22,6 +23,12 @@ import {Provider} from './provider.model';
         entity: 'Provider',
         entityKey: 'id',
         foreignKey: 'providerid',
+      },
+      fk_proforma_projectId: {
+        name: 'fk_proforma_projectid',
+        entity: 'Project',
+        entityKey: 'id',
+        foreignKey: 'projectid',
       },
     }
   }
@@ -64,6 +71,8 @@ export class Proforma extends BaseEntity {
   })
   proformaAmount: number;
 
+
+
   //Moneda
   @property({
     type: 'string',
@@ -82,6 +91,9 @@ export class Proforma extends BaseEntity {
 
   @hasOne(() => Document)
   document: Document;
+
+  @belongsTo(() => Project)
+  projectId: number;
 
 
 
