@@ -73,6 +73,12 @@ export class Project extends BaseEntity {
     @hasMany(() => AdvancePaymentRecord)
     advancePaymentRecords: AdvancePaymentRecord[];
 
+    //Referencia
+    @property({
+        type: 'string',
+    })
+    reference: string;
+
     constructor(data?: Partial<Project>) {
         super(data);
     }

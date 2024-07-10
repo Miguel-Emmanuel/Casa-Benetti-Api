@@ -229,6 +229,17 @@ export class ProductService {
                     ]
                 }
             },
+            {
+                relation: 'providers',
+                scope: {
+                    fields: ['productProvider'],
+                    include: [
+                        {
+                            relation: 'productProvider',
+                        },
+                    ]
+                }
+            },
         ]
         if (filter?.include)
             filter.include = [
