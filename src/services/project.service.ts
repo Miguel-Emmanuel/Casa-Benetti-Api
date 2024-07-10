@@ -345,7 +345,7 @@ export class ProjectService {
                 "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
                 "products": productsTemplate,
                 subtotal,
-                percentageAdditionalDiscount,
+                percentageAdditionalDiscount: percentageAdditionalDiscount ?? 0,
                 additionalDiscount,
                 percentageIva,
                 iva,
