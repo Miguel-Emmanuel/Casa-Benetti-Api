@@ -159,7 +159,7 @@ export class ProjectService {
                         {
                             relation: 'products',
                             scope: {
-                                include: ['brand', 'document', 'mainFinishImage', 'provider', 'secondaryFinishingImage', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
+                                include: ['name', 'brand', 'document', 'mainFinishImage', 'provider', 'secondaryFinishingImage', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
                             }
                         },
                     ]
@@ -208,7 +208,7 @@ export class ProjectService {
                 id: iterator?.id,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 brandName: iterator?.brand?.brandName ?? '',
-                description: `${iterator.line?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measures}`,
+                description: `${iterator.line?.name} ${iterator?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measureWide}`,
                 price: iterator?.quotationProducts?.price,
                 listPrice: iterator?.quotationProducts?.originCost,
                 factor: iterator?.quotationProducts?.factor,
@@ -314,17 +314,17 @@ export class ProjectService {
 
 
     async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', 'name']}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
 
         let productsTemplate = [];
         for (const product of products) {
-            const {brand, document, quotationProducts, line} = product;
+            const {brand, document, quotationProducts, line, name} = product;
             productsTemplate.push({
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
-                description: `${line?.name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measures}`,
+                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
@@ -368,17 +368,17 @@ export class ProjectService {
     }
 
     async createPdfToProvider(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['name', 'line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
 
         let prodcutsArray = [];
         for (const product of products) {
-            const {brand, document, quotationProducts, typeArticle, assembledProducts, line} = product;
+            const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
             prodcutsArray.push({
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
-                description: `${line?.name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measures}`,
+                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
