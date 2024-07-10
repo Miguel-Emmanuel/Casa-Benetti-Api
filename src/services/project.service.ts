@@ -598,10 +598,20 @@ export class ProjectService {
 
     async updateSKUProducts(quotationId: number, reference: string, transaction: any) {
         const quotationProducts = await this.quotationProductsRepository.find({where: {quotationId}, include: [{relation: 'product', scope: {fields: ['id', 'classificationId']}}]});
+        const folioInitial = '001';
         for (let index = 0; index < quotationProducts.length; index++) {
-            const {product} = quotationProducts[index];
+            const {product, id, assembledProducts} = quotationProducts[index];
             const {classificationId} = product;
-            const sku = `${reference}-${classificationId}00`
+            const SKU = `${reference}-${classificationId}${this.incrementarFolio(folioInitial)}`;
+            if (assembledProducts) {
+                const folioInitialAssembled = '01';
+                for (let index = 0; index < assembledProducts.length; index++) {
+                    const element = assembledProducts[index];
+                    const SKUAssembled = `${SKU}.${this.incrementarFolio(folioInitialAssembled)}`;
+                    element.SKU = SKUAssembled;
+                }
+            }
+            await this.quotationProductsRepository.updateById(id, {SKU, assembledProducts}, {transaction})
         }
     }
 
