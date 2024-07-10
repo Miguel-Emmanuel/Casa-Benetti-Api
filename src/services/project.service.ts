@@ -53,6 +53,7 @@ export class ProjectService {
         const quotation = await this.findQuotationById(quotationId);
         const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
+        // await this.updateSKUProducts(quotationId, project.reference, transaction);
         await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
         await this.createAdvancePaymentAccount(quotation, project.id, transaction)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
@@ -371,7 +372,7 @@ export class ProjectService {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
-
+        //aqui
         let prodcutsArray = [];
         for (const product of products) {
             const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
@@ -593,6 +594,22 @@ export class ProjectService {
 
     async changeStatusProductsToPedido(quotationId: number, transaction: any) {
         await this.quotationProductsRepository.updateAll({status: QuotationProductStatusE.PEDIDO}, {quotationId}, {transaction})
+    }
+
+    async updateSKUProducts(quotationId: number, reference: string, transaction: any) {
+        const quotationProducts = await this.quotationProductsRepository.find({where: {quotationId}, include: [{relation: 'product', scope: {fields: ['id', 'classificationId']}}]});
+        for (let index = 0; index < quotationProducts.length; index++) {
+            const {product} = quotationProducts[index];
+            const {classificationId} = product;
+            const sku = `${reference}-${classificationId}00`
+        }
+    }
+
+    incrementarFolio(folioActual: string): string {
+        let numero = parseInt(folioActual, 10);
+        numero++;
+        let nuevoFolio = numero.toString().padStart(folioActual.length, '0');
+        return nuevoFolio;
     }
 
     async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number, transaction: any) {

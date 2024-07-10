@@ -3,7 +3,7 @@ import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
 import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
-import {Product} from './product.model';
+import {Product, ProductWithRelations} from './product.model';
 import {Provider} from './provider.model';
 
 @model({
@@ -274,6 +274,7 @@ export class QuotationProducts extends Entity {
 
 export interface QuotationProductsRelations {
     // describe navigational properties here
+    product: ProductWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;
