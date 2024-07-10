@@ -37,3 +37,4 @@ export * from './proof-payment-quotation.repository';
 export * from './provider-brand.repository';
 export * from './purchase-orders.repository';
 
+export * from './proforma.repository';
