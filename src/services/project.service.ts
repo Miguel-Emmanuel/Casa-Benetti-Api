@@ -159,7 +159,7 @@ export class ProjectService {
                         {
                             relation: 'products',
                             scope: {
-                                include: ['name', 'brand', 'document', 'mainFinishImage', 'provider', 'secondaryFinishingImage', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
+                                include: ['brand', 'document', 'mainFinishImage', 'provider', 'secondaryFinishingImage', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
                             }
                         },
                     ]
@@ -314,7 +314,7 @@ export class ProjectService {
 
 
     async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', 'name']}}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
 
@@ -368,7 +368,7 @@ export class ProjectService {
     }
 
     async createPdfToProvider(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['name', 'line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
 
