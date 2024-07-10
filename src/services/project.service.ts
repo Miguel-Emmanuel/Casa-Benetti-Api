@@ -51,7 +51,7 @@ export class ProjectService {
     async create(body: {quotationId: number}, transaction: any) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, transaction);
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
         await this.createAdvancePaymentRecord(quotation, project.id, transaction)
         await this.createAdvancePaymentAccount(quotation, project.id, transaction)
@@ -569,17 +569,26 @@ export class ProjectService {
         return body;
     }
 
-    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, transaction: any) {
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, showroomManager: string, transaction: any) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
+        let reference = null;
         if (previousProject) {
             projectId = `${previousProject.id + 1}${branch?.name?.charAt(0)}`;
+            reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
         } else {
             projectId = `${1}${branch?.name?.charAt(0)}`;
+            reference = `${this.getNumberReference(showroomManager)}`;
         }
-        const project = await this.projectRepository.create({...body, projectId}, {transaction});
+
+
+        const project = await this.projectRepository.create({...body, projectId, reference}, {transaction});
         return project;
+    }
+
+    getNumberReference(nameShowroom: string, reference?: string) {
+        return reference ? `${reference.match(/\d+/g)!.join('')}${nameShowroom.charAt(0)}` : `1${nameShowroom.charAt(0)}`;
     }
 
     async changeStatusProductsToPedido(quotationId: number, transaction: any) {
@@ -905,6 +914,9 @@ export class ProjectService {
                 }
             }, {
                 relation: 'classificationPercentageMainpms'
+            },
+            {
+                relation: 'showroomManager'
             }]
         });
         if (!quotation)

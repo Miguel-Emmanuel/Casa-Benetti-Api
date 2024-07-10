@@ -1,8 +1,9 @@
-import {Model, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {Model, belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {BaseEntity} from './base/base-entity.model';
 import {Brand} from './brand.model';
 import {Organization} from './organization.model';
+import {ProductProvider} from './product-provider.model';
 import {ProviderBrand} from './provider-brand.model';
 
 @model()
@@ -143,6 +144,9 @@ export class Provider extends BaseEntity {
 
   @belongsTo(() => Organization)
   organizationId?: number;
+
+  @hasOne(() => ProductProvider)
+  productProvider: ProductProvider;
 
   // @hasMany(() => Product)
   // products: Product[];
