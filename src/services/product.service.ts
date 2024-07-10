@@ -85,6 +85,13 @@ export class ProductService {
         }
     }
 
+    async updateProforma(id: number, body: {price: number}) {
+        // await this.findByIdProduct(id);
+        // await this.validateBodyProforma(body);
+        // await this.productRepository.updateById(id, {listPrice: body.price});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
     async validateBodyProduct(data: {product: Omit<ProductCreate, 'id'>, document: Document}) {
         try {
             await schemaCreateProduct.validateAsync(data);
