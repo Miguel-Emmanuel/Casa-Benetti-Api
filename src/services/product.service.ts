@@ -185,31 +185,31 @@ export class ProductService {
 
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {
         const include = [
-            {
-                relation: 'mainMaterialImage',
-                scope: {
-                    fields: ['fileURL', 'name', 'extension', 'id']
-                }
+            // {
+            //     relation: 'mainMaterialImage',
+            //     scope: {
+            //         fields: ['fileURL', 'name', 'extension', 'id']
+            //     }
 
-            },
-            {
-                relation: 'mainFinishImage',
-                scope: {
-                    fields: ['fileURL', 'name', 'extension', 'id']
-                }
-            },
-            {
-                relation: 'secondaryMaterialImage',
-                scope: {
-                    fields: ['fileURL', 'name', 'extension', 'id']
-                }
-            },
-            {
-                relation: 'secondaryFinishingImage',
-                scope: {
-                    fields: ['fileURL', 'name', 'extension', 'id']
-                }
-            },
+            // },
+            // {
+            //     relation: 'mainFinishImage',
+            //     scope: {
+            //         fields: ['fileURL', 'name', 'extension', 'id']
+            //     }
+            // },
+            // {
+            //     relation: 'secondaryMaterialImage',
+            //     scope: {
+            //         fields: ['fileURL', 'name', 'extension', 'id']
+            //     }
+            // },
+            // {
+            //     relation: 'secondaryFinishingImage',
+            //     scope: {
+            //         fields: ['fileURL', 'name', 'extension', 'id']
+            //     }
+            // },
             {
                 relation: 'document',
                 scope: {
