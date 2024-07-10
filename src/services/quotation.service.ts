@@ -652,7 +652,7 @@ export class QuotationService {
             {
                 relation: 'products',
                 scope: {
-                    include: ['quotationProducts', 'brand', 'document', 'line']
+                    include: ['quotationProducts', 'brand', 'document', 'line', 'name']
                 }
 
             },
@@ -719,7 +719,7 @@ export class QuotationService {
                 SKU: iterator.quotationProducts?.SKU,
                 brandName: iterator?.brand?.brandName ?? '',
                 status: iterator.quotationProducts.status,
-                description: `${iterator.line?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measures}`,
+                description: `${iterator.line?.name} ${iterator?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measureWide}`,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 quantity: iterator.quotationProducts.quantity,
                 percentageDiscountProduct: iterator.quotationProducts.percentageDiscountProduct,
