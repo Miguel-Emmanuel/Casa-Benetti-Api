@@ -25,7 +25,22 @@ export class AccountPayableService {
   }
   async find(filter?: Filter<AccountPayable>) {
     try {
-      return this.accountPayableRepository.find(filter);
+      const findAccountPayable = await this.accountPayableRepository.find({
+        include: [
+          {relation: "project"},
+          {relation: "quotation"},
+          {relation: "customer"}
+        ]
+      })
+
+      const arrayValues = findAccountPayable?.map((item: any) => {
+        return {
+          idProject: item.projectId,
+          clientName: `${item?.customer?.name} ${item?.customer?.lastName} ${item?.customer?.secondLastName}`,
+          closingDate: item?.quotation?.closingDate,
+        }
+      })
+      return arrayValues;
     } catch (error) {
       return this.responseService.internalServerError(
         error.message ? error.message : error

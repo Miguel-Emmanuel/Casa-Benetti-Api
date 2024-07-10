@@ -76,7 +76,7 @@ export class AccountPayableController {
   async find(
     @param.filter(AccountPayable) filter?: Filter<AccountPayable>,
   ): Promise<object> {
-    return this.accountPayableRepository.find(filter);
+    return this.accountPayableService.find(filter);
   }
 
   @get('/account-payables/{id}')

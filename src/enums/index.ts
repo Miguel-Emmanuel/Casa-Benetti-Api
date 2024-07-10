@@ -17,6 +17,7 @@ export enum LogModelName {
     ASSEMPLEDPRODUCTS = "AssembledProducts",
     PROJECT = "Project",
     ACCOUNTPAYABLE = "AccountPayable",
+    PROFORMA = "Proforma",
 }
 
 export enum LogModificationType {
@@ -182,4 +183,10 @@ export enum TypeCommisionE {
     MAIN_PROJECT_MANAGER = 'Project manager principal',
     PROJECT_MANAGER = 'Project manager secundario',
     DESIGNER = 'Proyectista',
+}
+
+export enum ProformaCurrencyE {
+    EURO = 'Euro',
+    USD = 'Dolar',
+    PESO_MEXICANO = 'Peso Mexicano',
 }
