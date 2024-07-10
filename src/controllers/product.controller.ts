@@ -50,7 +50,7 @@ export class ProductController {
                                     properties: {
                                         assembledProduct: getModelSchemaRef(AssembledProducts, {
                                             title: 'AssembledProducts',
-                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId', 'SKU'],
                                         }),
                                         document: {
                                             type: 'object',

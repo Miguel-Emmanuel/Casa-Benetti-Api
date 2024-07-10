@@ -58,7 +58,6 @@ export const schemaAssembledProducts = Joi.object({
 
 const products = Joi.object({
     productId: Joi.number().required(),
-    SKU: Joi.string().required(),
     mainMaterial: Joi.string().required(),
     mainMaterialImg: documents.optional(),
     mainFinish: Joi.string().required(),
