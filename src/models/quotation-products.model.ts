@@ -1,4 +1,5 @@
 import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
+import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
 import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
@@ -281,21 +282,25 @@ export type QuotationProductsWithRelations = QuotationProducts & QuotationProduc
 export class QuotationProductsCreate extends QuotationProducts {
     @property({
         type: 'object',
+        jsonSchema: getJsonSchema(DocumentSchema)
     })
     mainMaterialImg?: DocumentSchema;
 
     @property({
         type: 'object',
+        jsonSchema: getJsonSchema(DocumentSchema)
     })
     mainFinishImg?: DocumentSchema;
 
     @property({
         type: 'object',
+        jsonSchema: getJsonSchema(DocumentSchema)
     })
     secondaryMaterialImg?: DocumentSchema;
 
     @property({
         type: 'object',
+        jsonSchema: getJsonSchema(DocumentSchema)
     })
     secondaryFinishingImag?: DocumentSchema;
 }

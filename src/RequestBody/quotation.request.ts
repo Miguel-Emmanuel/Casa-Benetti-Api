@@ -1,6 +1,6 @@
 import {RequestBodyObject, ResponseModelOrSpec, getModelSchemaRef} from '@loopback/rest';
 import {ExchangeRateE} from '../enums';
-import {ProofPaymentQuotationCreate, QuotationProducts} from '../models';
+import {ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export const CreateRequestBody: Partial<RequestBodyObject> = {
     content: {
@@ -164,7 +164,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     },
                     products: {
                         type: 'array',
-                        items: getModelSchemaRef(QuotationProducts, {exclude: ['id', 'createdAt', 'status', 'quotationId']})
+                        items: getModelSchemaRef(QuotationProductsCreate, {exclude: ['id', 'createdAt', 'status', 'quotationId']})
                         // {
                         //     properties: {
                         //         productId: {
