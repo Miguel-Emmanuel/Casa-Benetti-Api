@@ -51,7 +51,7 @@ export class ProjectService {
     async create(body: {quotationId: number}, transaction: any) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, transaction);
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
         await this.createAdvancePaymentRecord(quotation, project.id, transaction)
         await this.createAdvancePaymentAccount(quotation, project.id, transaction)
@@ -159,7 +159,7 @@ export class ProjectService {
                         {
                             relation: 'products',
                             scope: {
-                                include: ['brand', 'document', 'mainFinishImage', 'quotationProducts', 'provider', 'secondaryFinishingImage']
+                                include: ['brand', 'document', 'mainFinishImage', 'provider', 'secondaryFinishingImage', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
                             }
                         },
                     ]
@@ -208,17 +208,17 @@ export class ProjectService {
                 id: iterator?.id,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 brandName: iterator?.brand?.brandName ?? '',
-                description: iterator?.description,
-                price: iterator?.price,
-                listPrice: iterator?.listPrice,
-                factor: iterator?.factor,
+                description: `${iterator.line?.name} ${iterator?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measureWide}`,
+                price: iterator?.quotationProducts?.price,
+                listPrice: iterator?.quotationProducts?.originCost,
+                factor: iterator?.quotationProducts?.factor,
                 quantity: iterator?.quotationProducts?.quantity,
                 provider: iterator?.provider?.name,
-                status: iterator?.status,
-                mainFinish: iterator?.mainFinish,
-                mainFinishImage: iterator?.mainFinishImage?.fileURL,
-                secondaryFinishing: iterator?.secondaryFinishing,
-                secondaryFinishingImage: iterator?.secondaryFinishingImage?.fileURL,
+                status: iterator?.quotationProducts?.status,
+                mainFinish: iterator?.quotationProducts?.mainFinish,
+                mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
+                secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
+                secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
             })
         }
         return {
@@ -314,20 +314,20 @@ export class ProjectService {
 
 
     async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
 
         let productsTemplate = [];
         for (const product of products) {
-            const {brand, status, description, document, mainFinish, mainFinishImage, quotationProducts} = product;
+            const {brand, document, quotationProducts, line, name} = product;
             productsTemplate.push({
                 brandName: brand?.brandName,
-                status,
-                description,
+                status: quotationProducts?.status,
+                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
                 image: document?.fileURL ?? defaultImage,
-                mainFinish,
-                mainFinishImage: mainFinishImage?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 percentage: quotationProducts?.percentageDiscountProduct,
                 subtotal: quotationProducts?.subtotal
@@ -345,7 +345,7 @@ export class ProjectService {
                 "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
                 "products": productsTemplate,
                 subtotal,
-                percentageAdditionalDiscount,
+                percentageAdditionalDiscount: percentageAdditionalDiscount ?? 0,
                 additionalDiscount,
                 percentageIva,
                 iva,
@@ -368,23 +368,23 @@ export class ProjectService {
     }
 
     async createPdfToProvider(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
 
         let prodcutsArray = [];
         for (const product of products) {
-            const {brand, status, description, document, mainFinish, mainFinishImage, quotationProducts, typeArticle, assembledProducts, originCode} = product;
+            const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
             prodcutsArray.push({
                 brandName: brand?.brandName,
-                status,
-                description,
+                status: quotationProducts?.status,
+                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
                 image: document?.fileURL ?? defaultImage,
-                mainFinish,
-                mainFinishImage: mainFinishImage?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
-                originCode,
+                originCode: quotationProducts?.originCode,
                 assembledProducts: assembledProducts
             })
         }
@@ -430,7 +430,7 @@ export class ProjectService {
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
                     advanceCustomer: amountPaid,
-                    conversionAdvance: conversionAmountPaid.toFixed(2),
+                    conversionAdvance: conversionAmountPaid ? conversionAmountPaid.toFixed(2) : 0,
                     proofPaymentType: paymentCurrency,
                     paymentType: paymentMethod,
                     exchangeRateAmount: parity,
@@ -569,17 +569,26 @@ export class ProjectService {
         return body;
     }
 
-    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, transaction: any) {
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, showroomManager: string, transaction: any) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
+        let reference = null;
         if (previousProject) {
             projectId = `${previousProject.id + 1}${branch?.name?.charAt(0)}`;
+            reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
         } else {
             projectId = `${1}${branch?.name?.charAt(0)}`;
+            reference = `${this.getNumberReference(showroomManager)}`;
         }
-        const project = await this.projectRepository.create({...body, projectId}, {transaction});
+
+
+        const project = await this.projectRepository.create({...body, projectId, reference}, {transaction});
         return project;
+    }
+
+    getNumberReference(nameShowroom: string, reference?: string) {
+        return reference ? `${reference.match(/\d+/g)!.join('')}${nameShowroom.charAt(0)}` : `1${nameShowroom.charAt(0)}`;
     }
 
     async changeStatusProductsToPedido(quotationId: number, transaction: any) {
@@ -905,6 +914,9 @@ export class ProjectService {
                 }
             }, {
                 relation: 'classificationPercentageMainpms'
+            },
+            {
+                relation: 'showroomManager'
             }]
         });
         if (!quotation)

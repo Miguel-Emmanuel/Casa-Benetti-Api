@@ -21,36 +21,32 @@ export const schemaAssembledProducts = Joi.object({
     }).required(),
 })
 
+const schemaProviderInformation = Joi.object({
+    providerId: Joi.number().required(),
+    model: Joi.string().required(),
+    originCode: Joi.string().required(),
+    originCost: Joi.number().required(),
+    currency: Joi.string().valid(...Object.values(CurrencyE)).messages({
+        'any.only': `El tipo de moneda debe ser igual a uno de los valores permitidos.`
+    }),
+})
+
 export const schemaCreateProduct = Joi.object({
     product: Joi.object({
-        SKU: Joi.string().required(),
+        providersInformation: Joi.array().items(schemaProviderInformation).required(),
         classificationId: Joi.number().allow(null),
         lineId: Joi.number().allow(null),
-        location: Joi.string().allow(null),
         typeArticle: Joi.string().valid(...Object.values(TypeArticleE)).allow(null).allow('').messages({
             'any.only': `El tipo de articulo debe ser igual a uno de los valores permitidos.`
         }),
         name: Joi.string().required(),
-        description: Joi.string().allow('').allow(null),
         UOM: Joi.string().valid(...Object.values(UOME)).allow(null).allow('').messages({
             'any.only': `El UOM debe ser igual a uno de los valores permitidos.`
         }),
-        mainMaterial: Joi.string().allow('').allow(null),
-        mainFinish: Joi.string().allow('').allow(null),
-        secondaryMaterial: Joi.string().allow('').allow(null),
-        secondaryFinishing: Joi.string().allow('').allow(null),
         countryOrigin: Joi.string().allow('').allow(null),
         isPurchasable: Joi.boolean().allow(null),
-        providerId: Joi.number().allow(null),
-        model: Joi.string().allow('').allow(null),
-        originCode: Joi.string().allow('').allow(null),
-        currency: Joi.string().valid(...Object.values(CurrencyE)).allow(null).allow('').messages({
-            'any.only': `El moneda de compra debe ser igual a uno de los valores permitidos.`
-        }),
         isSale: Joi.boolean().allow(null),
         factor: Joi.number().allow(0).allow(null),
-        price: Joi.number().allow(0).allow(null),
-        listPrice: Joi.number().allow(0).allow(null),
         discount: Joi.number().allow(0).allow(null),
         CATSAT: Joi.string().allow('').allow(null),
         tariffFraction: Joi.number().allow(0).allow(null),

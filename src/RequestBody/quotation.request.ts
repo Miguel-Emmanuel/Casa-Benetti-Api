@@ -1,6 +1,6 @@
 import {RequestBodyObject, ResponseModelOrSpec, getModelSchemaRef} from '@loopback/rest';
 import {ExchangeRateE} from '../enums';
-import {ProofPaymentQuotationCreate} from '../models';
+import {ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export const CreateRequestBody: Partial<RequestBodyObject> = {
     content: {
@@ -164,46 +164,47 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     },
                     products: {
                         type: 'array',
-                        items: {
-                            properties: {
-                                productId: {
-                                    type: 'number'
-                                },
-                                typeSale: {
-                                    type: 'string'
-                                },
-                                isSeparate: {
-                                    type: 'boolean'
-                                },
-                                percentageSeparate: {
-                                    type: 'number'
-                                },
-                                reservationDays: {
-                                    type: 'number'
-                                },
-                                provedorId: {
-                                    type: 'number'
-                                },
-                                quantity: {
-                                    type: 'number'
-                                },
-                                percentageDiscountProduct: {
-                                    type: 'number'
-                                },
-                                discountProduct: {
-                                    type: 'number'
-                                },
-                                percentageAdditionalDiscount: {
-                                    type: 'number'
-                                },
-                                additionalDiscount: {
-                                    type: 'number'
-                                },
-                                subtotal: {
-                                    type: 'number'
-                                },
-                            }
-                        }
+                        items: getModelSchemaRef(QuotationProductsCreate, {exclude: ['id', 'createdAt', 'status', 'quotationId']})
+                        // {
+                        //     properties: {
+                        //         productId: {
+                        //             type: 'number'
+                        //         },
+                        //         typeSale: {
+                        //             type: 'string'
+                        //         },
+                        //         isSeparate: {
+                        //             type: 'boolean'
+                        //         },
+                        //         percentageSeparate: {
+                        //             type: 'number'
+                        //         },
+                        //         reservationDays: {
+                        //             type: 'number'
+                        //         },
+                        //         provedorId: {
+                        //             type: 'number'
+                        //         },
+                        //         quantity: {
+                        //             type: 'number'
+                        //         },
+                        //         percentageDiscountProduct: {
+                        //             type: 'number'
+                        //         },
+                        //         discountProduct: {
+                        //             type: 'number'
+                        //         },
+                        //         percentageAdditionalDiscount: {
+                        //             type: 'number'
+                        //         },
+                        //         additionalDiscount: {
+                        //             type: 'number'
+                        //         },
+                        //         subtotal: {
+                        //             type: 'number'
+                        //         },
+                        //     }
+                        // }
                     },
                     quotation: {
                         type: 'object',
