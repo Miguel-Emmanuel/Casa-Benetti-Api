@@ -103,11 +103,35 @@ export class QuotationProducts extends Entity {
     @hasOne(() => Document, {keyTo: 'secondaryFinishingId'})
     secondaryFinishingImage: Document;
 
-    //Medidas
+    //Medidas (ancho)
     @property({
-        type: 'string',
+        type: 'number',
     })
-    measures: string;
+    measureWide: number;
+
+    //Medidas (alto)
+    @property({
+        type: 'number',
+    })
+    measureHigh: number;
+
+    //Medidas (profundidad)
+    @property({
+        type: 'number',
+    })
+    measureDepth: number;
+
+    //Medidas (circuferencia)
+    @property({
+        type: 'number',
+    })
+    measureCircumference: number;
+
+    //Peso
+    @property({
+        type: 'number',
+    })
+    weight: number;
 
     //Proveedor
     @belongsTo(() => Provider)
