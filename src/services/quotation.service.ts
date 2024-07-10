@@ -652,7 +652,7 @@ export class QuotationService {
             {
                 relation: 'products',
                 scope: {
-                    include: ['quotationProducts', 'brand', 'document', 'line', 'name']
+                    include: ['quotationProducts', 'brand', 'document', 'line']
                 }
 
             },
