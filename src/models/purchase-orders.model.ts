@@ -7,7 +7,7 @@ import {Provider} from './provider.model';
 @model({
   settings: {
     postgresql: {
-      table: 'accountPayable_PurchaseOrders' // Nombre de la tabla en PostgreSQL
+      table: 'proforma_PurchaseOrders' // Nombre de la tabla en PostgreSQL
     },
     foreignKeys: {
       fk_purchaseOrders_providerId: {
@@ -21,6 +21,12 @@ import {Provider} from './provider.model';
         entity: 'AccountPayable',
         entityKey: 'id',
         foreignKey: 'accountpayableid',
+      },
+      fk_purchaseOrders_proformaId: {
+        name: 'fk_purchaseOrders_proformaId',
+        entity: 'Proforma',
+        entityKey: 'id',
+        foreignKey: 'proformaid',
       },
     }
   }
