@@ -226,7 +226,7 @@ export class ProductCreate extends Product {
         type: 'array',
         jsonSchema: {
             type: 'array',
-            items: getJsonSchema(ProductProvider, {exclude: ['id', 'createdAt', 'productId']})
+            items: getJsonSchema(ProductProvider, {exclude: ['createdAt', 'productId']})
         }
     })
     providersInformation?: ProductProvider[];

@@ -21,6 +21,7 @@ export const schemaAssembledProducts = Joi.object({
 })
 
 const schemaProviderInformation = Joi.object({
+    id: Joi.number(),
     providerId: Joi.number().required(),
     model: Joi.string().required(),
     originCode: Joi.string().required(),
