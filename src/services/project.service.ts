@@ -213,7 +213,7 @@ export class ProjectService {
                 listPrice: iterator?.quotationProducts?.originCost,
                 factor: iterator?.quotationProducts?.factor,
                 quantity: iterator?.quotationProducts?.quantity,
-                provider: iterator?.provider?.name,
+                // provider: iterator?.provider?.name,
                 status: iterator?.quotationProducts?.status,
                 mainFinish: iterator?.quotationProducts?.mainFinish,
                 mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
