@@ -1,10 +1,10 @@
 import {belongsTo, hasOne, model, property} from '@loopback/repository';
 import {ProformaCurrencyE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
-import {Brand} from './brand.model';
+import {Brand, BrandRelations} from './brand.model';
 import {Document} from './document.model';
-import {Project} from './project.model';
-import {Provider} from './provider.model';
+import {Project, ProjectRelations} from './project.model';
+import {Provider, ProviderRelations} from './provider.model';
 
 @model({
   settings: {
@@ -71,8 +71,6 @@ export class Proforma extends BaseEntity {
   })
   proformaAmount: number;
 
-
-
   //Moneda
   @property({
     type: 'string',
@@ -104,6 +102,9 @@ export class Proforma extends BaseEntity {
 
 export interface ProformaRelations {
   // describe navigational properties here
+  project: ProjectRelations,
+  provider: ProviderRelations,
+  brand: BrandRelations,
 }
 
 export type ProformaWithRelations = Proforma & ProformaRelations;
