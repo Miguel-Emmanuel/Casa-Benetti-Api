@@ -102,6 +102,11 @@ export class Document extends BaseEntity {
   })
   secondaryFinishingId?: number;
 
+  @property({
+    type: 'number',
+  })
+  proformaId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }

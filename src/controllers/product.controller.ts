@@ -50,7 +50,7 @@ export class ProductController {
                                     properties: {
                                         assembledProduct: getModelSchemaRef(AssembledProducts, {
                                             title: 'AssembledProducts',
-                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId', 'SKU'],
                                         }),
                                         document: {
                                             type: 'object',
@@ -233,6 +233,41 @@ export class ProductController {
         body: {activateDeactivateComment: string},
     ): Promise<object> {
         return this.productService.activateDeactivate(id, body);
+    }
+
+    @patch('/products/proforma/{id}')
+    @response(201, {
+        description: 'customer model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async updateProforma(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            price: {
+                                type: 'number'
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        body: {price: number},
+    ): Promise<void> {
+        await this.productService.updateProforma(id, body);
     }
 
 }

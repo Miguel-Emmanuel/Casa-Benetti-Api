@@ -40,3 +40,4 @@ export * from './proof-payment-quotation.model';
 export * from './provider-brand.model';
 export * from './purchase-orders.model';
 
+export * from './proforma.model';
