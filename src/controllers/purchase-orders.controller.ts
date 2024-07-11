@@ -72,7 +72,7 @@ export class PurchaseOrdersController {
     })
     async find(
         @param.filter(PurchaseOrders) filter?: Filter<PurchaseOrders>,
-    ): Promise<PurchaseOrders[]> {
+    ): Promise<Object[]> {
         return this.purchaseOrdersService.find(filter);
     }
 

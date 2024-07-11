@@ -4,8 +4,8 @@ import {BaseEntity} from './base/base-entity.model';
 import {Branch} from './branch.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
-import {Project, ProjectRelations} from './project.model';
-import {Provider, ProviderRelations} from './provider.model';
+import {Project, ProjectWithRelations} from './project.model';
+import {Provider, ProviderWithRelations} from './provider.model';
 import {QuotationProducts} from './quotation-products.model';
 
 @model({
@@ -116,8 +116,8 @@ export class Proforma extends BaseEntity {
 
 export interface ProformaRelations {
   // describe navigational properties here
-  project: ProjectRelations,
-  provider: ProviderRelations,
+  project: ProjectWithRelations,
+  provider: ProviderWithRelations,
   brand: BrandWithRelations
 
 }
