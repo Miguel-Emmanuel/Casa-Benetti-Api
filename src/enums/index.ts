@@ -170,9 +170,7 @@ export enum PaymentTypeProofE {
 }
 
 export enum PurchaseOrdersStatus {
-    PENDIENTE = 'Pendiente',
-    ENVIADA_AL_PROVEEDOR = 'Enviada al proveedor',
-    PAGADA = 'Pagada',
+    NUEVA = 'Nueva',
 }
 export enum AccountPayableHistoryStatusE {
     PENDIENTE = 'Pendiente',

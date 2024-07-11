@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
   CountSchema,
@@ -14,9 +15,10 @@ import {
   requestBody,
   response
 } from '@loopback/rest';
-import {Proforma} from '../models';
+import {Document, Proforma} from '../models';
 import {ProformaService} from '../services';
 
+@authenticate('jwt')
 export class ProformaController {
   constructor(
     @service()
@@ -32,16 +34,33 @@ export class ProformaController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Proforma, {
-            title: 'NewProforma',
-            exclude: ['id'],
-          }),
+          schema: {
+            type: "object",
+            properties: {
+              proforma: getModelSchemaRef(Proforma, {
+                title: 'NewProforma',
+                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment',],
+              },),
+              document: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                  fileURL: {type: 'string'},
+                  name: {type: 'string'},
+                  extension: {type: 'string'}
+                }
+              },
+            }
+          },
         },
       },
     })
-    proforma: Omit<Proforma, 'id'>,
+    data: {
+      proforma: Omit<Proforma, 'id'>,
+      document: Document
+    }
   ): Promise<object> {
-    return this.proformaService.create(proforma);
+    return this.proformaService.create(data);
   }
 
   @get('/proformas/count')
@@ -138,12 +157,34 @@ export class ProformaController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Proforma, {partial: true}),
+          schema: {
+            type: "object",
+            properties: {
+              proforma: getModelSchemaRef(Proforma, {
+                partial: true,
+                title: 'NewProforma',
+                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment',],
+              },
+              ),
+              document: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                  fileURL: {type: 'string'},
+                  name: {type: 'string'},
+                  extension: {type: 'string'}
+                }
+              },
+            },
+          },
         },
       },
     })
-    proforma: Proforma,
+    data: {
+      proforma: Omit<Proforma, 'id'>,
+      document: Document
+    }
   ): Promise<void> {
-    await this.proformaService.updateById(id, proforma);
+    await this.proformaService.updateById(id, data);
   }
 }

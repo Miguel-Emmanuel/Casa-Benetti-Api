@@ -6,6 +6,7 @@ import {DocumentSchema} from './base/document.model';
 import {Brand} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
+import {Proforma} from './proforma.model';
 import {Provider} from './provider.model';
 
 @model({
@@ -136,6 +137,7 @@ export class QuotationProducts extends Entity {
     })
     weight: number;
 
+
     //Marca
     @belongsTo(() => Brand)
     brandId: number;
@@ -143,6 +145,10 @@ export class QuotationProducts extends Entity {
     //Proveedor
     @belongsTo(() => Provider)
     providerId: number;
+
+    //Proforma
+    @belongsTo(() => Proforma)
+    proformaId: number;
 
     //Modelo/nombre origen
     @property({

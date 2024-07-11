@@ -1,6 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {CurrencyE} from '../enums';
 import {Product} from './product.model';
+import {Provider, ProviderWithRelations} from './provider.model';
 
 @model({
     settings: {
@@ -32,10 +33,8 @@ export class ProductProvider extends Entity {
     })
     createdAt: Date;
 
-    @property({
-        type: 'number',
-    })
-    providerId?: number;
+    @belongsTo(() => Provider)
+    providerId: number;
 
     @belongsTo(() => Product)
     productId: number;
@@ -74,6 +73,7 @@ export class ProductProvider extends Entity {
 
 export interface ProductProviderRelations {
     // describe navigational properties here
+    provider: ProviderWithRelations
 }
 
 export type ProductProviderWithRelations = ProductProvider & ProductProviderRelations;

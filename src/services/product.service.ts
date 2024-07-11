@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, FilterExcludingWhere, Where, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -66,8 +66,12 @@ export class ProductService {
 
     async createProviderProducts(productId: number, providersInformation: ProductProvider[] = []) {
         for (let index = 0; index < providersInformation?.length; index++) {
-            const {providerId, model, originCode, originCost, currency} = providersInformation[index];
-            await this.productProviderRepository.create({providerId, productId, model, originCode, originCost, currency})
+            const {providerId, model, originCode, originCost, currency, id} = providersInformation[index];
+            if (id) {
+                await this.productProviderRepository.updateById(id, {providerId, productId, model, originCode, originCost, currency})
+            } else {
+                await this.productProviderRepository.create({providerId, productId, model, originCode, originCost, currency})
+            }
         }
     }
 
@@ -191,7 +195,7 @@ export class ProductService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {
-        const include = [
+        const include: InclusionFilter[] = [
             // {
             //     relation: 'mainMaterialImage',
             //     scope: {
@@ -243,6 +247,14 @@ export class ProductService {
                     include: [
                         {
                             relation: 'productProvider',
+                            scope: {
+                                include: [{
+                                    relation: 'provider',
+                                    scope: {
+                                        fields: ['name']
+                                    }
+                                }]
+                            }
                         },
                     ]
                 }
@@ -273,13 +285,16 @@ export class ProductService {
     async updateById(id: number, data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
         await this.validateBodyProduct(data);
         const {product, document, assembledProducts, } = data;
-        const {brandId, classificationId, lineId} = product;
+        const {brandId, classificationId, lineId, providersInformation} = product;
         await this.findByIdProduct(id);
         await this.findByIdBrand(brandId);
         await this.findByIdClassification(classificationId);
         await this.findByIdLine(lineId);
         await this.createDocument(id, document)
         await this.updateAssembledProducts(assembledProducts, id);
+        await this.validateProviderInProviderProducst(providersInformation);
+        delete product.providersInformation;
+        await this.createProviderProducts(id, providersInformation);
         await this.productRepository.updateById(id, product);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
