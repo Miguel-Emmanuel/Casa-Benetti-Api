@@ -1,11 +1,7 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateQuotationE} from '../enums';
 import {AccountPayableHistory} from './account-payable-history.model';
 import {BaseEntity} from './base/base-entity.model';
-import {Customer} from './customer.model';
-import {Project} from './project.model';
-import {PurchaseOrders} from './purchase-orders.model';
-import {Quotation} from './quotation.model';
 
 @model({
   settings: {
@@ -49,7 +45,7 @@ export class AccountPayable extends BaseEntity {
   })
   currency: ExchangeRateQuotationE;
 
-  //Total
+  //Monto a pagar
   @property({
     type: 'number',
     required: false,
@@ -59,19 +55,8 @@ export class AccountPayable extends BaseEntity {
   })
   total: number;
 
-  @belongsTo(() => Project)
-  projectId: number;
-
-  @belongsTo(() => Customer)
-  customerId: number;
-
-  @hasMany(() => PurchaseOrders)
-  purchaseOrders: PurchaseOrders[];
-
   @hasMany(() => AccountPayableHistory)
   accountPayableHistories: AccountPayableHistory[];
-  @belongsTo(() => Quotation)
-  quotationId: number;
 
   constructor(data?: Partial<AccountPayable>) {
     super(data);
