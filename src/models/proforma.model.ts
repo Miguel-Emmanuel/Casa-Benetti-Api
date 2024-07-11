@@ -1,10 +1,12 @@
-import {belongsTo, hasOne, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {ProformaCurrencyE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
+import {Branch} from './branch.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Project, ProjectRelations} from './project.model';
 import {Provider, ProviderRelations} from './provider.model';
+import {QuotationProducts} from './quotation-products.model';
 
 @model({
   settings: {
@@ -81,6 +83,9 @@ export class Proforma extends BaseEntity {
   })
   currency: ProformaCurrencyE;
 
+  @belongsTo(() => Branch)
+  branchId: number;
+
   @belongsTo(() => Provider)
   providerId: number;
 
@@ -92,6 +97,9 @@ export class Proforma extends BaseEntity {
 
   @belongsTo(() => Project)
   projectId: number;
+
+  @hasMany(() => QuotationProducts)
+  quotationProducts: QuotationProducts[];
 
 
 
@@ -105,6 +113,7 @@ export interface ProformaRelations {
   project: ProjectRelations,
   provider: ProviderRelations,
   brand: BrandWithRelations
+
 }
 
 export type ProformaWithRelations = Proforma & ProformaRelations;

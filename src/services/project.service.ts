@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
@@ -55,7 +55,6 @@ export class ProjectService {
         await this.changeStatusProductsToPedido(quotationId, transaction);
         // await this.updateSKUProducts(quotationId, project.reference, transaction);
         await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
-        await this.createAdvancePaymentAccount(quotation, project.id, transaction)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
         await this.createPdfToCustomer(quotationId, project.id, transaction);
         await this.createPdfToProvider(quotationId, project.id, transaction);
@@ -827,65 +826,6 @@ export class ProjectService {
                 const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
                 await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, conversionAmountPaid, subtotalAmountPaid, paymentPercentage, projectId, accountsReceivable.id, transaction, documents, paymentDate);
 
-            }
-
-        }
-    }
-    async createAdvancePaymentAccount(quotation: Quotation, projectId: number, transaction: any) {
-        const {id, customerId, proofPaymentQuotations, exchangeRateQuotation, isFractionate, typeFractional} = quotation;
-        const {total} = this.getPricesQuotation(quotation);
-
-        const findQuotationProducts = await this.quotationProductsRepository.find({
-            where: {
-                quotationId: id
-            }
-        })
-
-        if (isFractionate) {
-            if (typeFractional.EUR == true) {
-
-                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.EUR, total: total ?? 0}, {transaction});
-                const findQuationEUR = findQuotationProducts.filter((item) => item.currency === CurrencyE.EURO)
-                const {conversionAdvanceEUR, advanceEUR} = quotation
-
-                if (conversionAdvanceEUR && advanceEUR && conversionAdvanceEUR >= advanceEUR) {
-                    findQuationEUR.map(async (item) => {
-                        await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-                    })
-                }
-            }
-            if (typeFractional.USD == true) {
-
-                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.USD, total: total ?? 0}, {transaction});
-                const findQuationUSD = findQuotationProducts.filter((item) => item.currency === CurrencyE.USD)
-                const {conversionAdvanceUSD, advanceUSD} = quotation
-
-                if (conversionAdvanceUSD && advanceUSD && conversionAdvanceUSD >= advanceUSD) {
-                    findQuationUSD.map(async (item) => {
-                        await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-                    })
-                }
-            }
-            if (typeFractional.MXN == true) {
-
-                const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.MXN, total: total ?? 0}, {transaction});
-                const findQuationMXN = findQuotationProducts.filter((item) => item.currency === CurrencyE.PESO_MEXICANO)
-                const {conversionAdvanceMXN, advanceMXN} = quotation
-
-                if (conversionAdvanceMXN && advanceMXN && conversionAdvanceMXN >= advanceMXN) {
-                    findQuationMXN.map(async (item) => {
-                        await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-                    })
-                }
-            }
-        } else {
-            const {conversionAdvance, advance, total} = this.getPricesQuotation(quotation);
-            const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: exchangeRateQuotation, total: total ?? 0}, {transaction});
-
-            if (conversionAdvance && advance && conversionAdvance >= advance) {
-                findQuotationProducts.map(async (item) => {
-                    await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-                })
             }
 
         }

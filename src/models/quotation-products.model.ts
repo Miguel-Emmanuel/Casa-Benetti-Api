@@ -5,6 +5,7 @@ import {AssembledProducts} from './assembled-products.model';
 import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
+import {Proforma} from './proforma.model';
 import {Provider} from './provider.model';
 
 @model({
@@ -135,9 +136,15 @@ export class QuotationProducts extends Entity {
     })
     weight: number;
 
+
+
     //Proveedor
     @belongsTo(() => Provider)
     providerId: number;
+
+    //Proforma
+    @belongsTo(() => Proforma)
+    proformaId: number;
 
     //Modelo/nombre origen
     @property({

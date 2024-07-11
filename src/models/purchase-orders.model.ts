@@ -1,6 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
 import {AccountPayable} from './account-payable.model';
+import {Proforma} from './proforma.model';
 import {Provider} from './provider.model';
 
 @model({
@@ -32,40 +33,22 @@ export class PurchaseOrders extends Entity {
   })
   id?: number;
 
-  //Cantidad de artículos
-  @property({
-    type: 'number',
-    postgresql: {
-      dataType: 'double precision',
-    },
-  })
-  quantity: number;
-
-  //Monto total
-  @property({
-    type: 'number',
-    required: false,
-    postgresql: {
-      dataType: 'double precision',
-    },
-  })
-  total: number;
-
   //Estatus
   @property({
     type: 'string',
     required: true,
-    default: PurchaseOrdersStatus.PENDIENTE
+    default: PurchaseOrdersStatus.NUEVA
   })
   status: PurchaseOrdersStatus;
 
   @belongsTo(() => AccountPayable)
   accountPayableId: number;
 
+  @belongsTo(() => Proforma)
+  proformaId: number;
+
   @belongsTo(() => Provider)
   providerId: number;
-
-
 
 
   constructor(data?: Partial<PurchaseOrders>) {

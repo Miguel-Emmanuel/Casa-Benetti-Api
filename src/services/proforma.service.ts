@@ -1,6 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
-import {CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus} from '../enums';
+import {ExchangeRateQuotationE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {Document, Proforma, Quotation} from '../models';
 import {AccountPayableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
@@ -44,7 +44,7 @@ export class ProformaService {
 
       const newProforma = await this.proformaRepository.create({...proforma});
       await this.createDocument(newProforma.id, document)
-      await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
+      // await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
       return newProforma
     } catch (error) {
@@ -155,75 +155,77 @@ export class ProformaService {
     }
   }
 
-  async createAdvancePaymentAccount(proforma: Proforma, proformId: number, transaction: any) {
-    const {projectId, proformaAmount} = proforma
-    const findQuotation = await this.proformaRepository.findById(proformId, {
-      include: [{
-        relation: "project",
-        scope: {
-          include: [{relation: "quotation"}]
-        }
-      }]
-    })
-    const {project} = findQuotation
-    const {quotation} = project
-    const {id, customerId, proofPaymentQuotations, exchangeRateQuotation, isFractionate, typeFractional} = quotation;
+  // async createAdvancePaymentAccount(proforma: Proforma, proformId: number, transaction: any) {
+  //   const {projectId, proformaAmount} = proforma
+  //   const findQuotation = await this.proformaRepository.findById(proformId, {
+  //     include: [{
+  //       relation: "project",
+  //       scope: {
+  //         include: [{relation: "quotation"}]
+  //       }
+  //     }]
+  //   })
+  //   console.log("FIND", findQuotation);
 
-    const findQuotationProducts = await this.quotationProductsRepository.find({
-      where: {
-        quotationId: id
-      }
-    })
+  //   const {project} = findQuotation
+  //   const {quotation} = project
+  //   const {id, customerId, proofPaymentQuotations, exchangeRateQuotation, isFractionate, typeFractional} = quotation;
 
-    if (isFractionate) {
-      if (typeFractional.EUR == true) {
+  //   const findQuotationProducts = await this.quotationProductsRepository.find({
+  //     where: {
+  //       quotationId: id
+  //     }
+  //   })
 
-        const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.EUR, total: proformaAmount ?? 0}, {transaction});
-        const findQuationEUR = findQuotationProducts.filter((item) => item.currency === CurrencyE.EURO)
-        const {conversionAdvanceEUR, advanceEUR} = quotation
+  //   if (isFractionate) {
+  //     if (typeFractional.EUR == true) {
 
-        if (conversionAdvanceEUR && advanceEUR && conversionAdvanceEUR >= advanceEUR) {
-          findQuationEUR.map(async (item) => {
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-          })
-        }
-      }
-      if (typeFractional.USD == true) {
+  //       const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.EUR, total: proformaAmount ?? 0}, {transaction});
+  //       const findQuationEUR = findQuotationProducts.filter((item) => item.currency === CurrencyE.EURO)
+  //       const {conversionAdvanceEUR, advanceEUR} = quotation
 
-        const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.USD, total: proformaAmount ?? 0}, {transaction});
-        const findQuationUSD = findQuotationProducts.filter((item) => item.currency === CurrencyE.USD)
-        const {conversionAdvanceUSD, advanceUSD} = quotation
+  //       if (conversionAdvanceEUR && advanceEUR && conversionAdvanceEUR >= advanceEUR) {
+  //         findQuationEUR.map(async (item) => {
+  //           await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
+  //         })
+  //       }
+  //     }
+  //     if (typeFractional.USD == true) {
 
-        if (conversionAdvanceUSD && advanceUSD && conversionAdvanceUSD >= advanceUSD) {
-          findQuationUSD.map(async (item) => {
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-          })
-        }
-      }
-      if (typeFractional.MXN == true) {
+  //       const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.USD, total: proformaAmount ?? 0}, {transaction});
+  //       const findQuationUSD = findQuotationProducts.filter((item) => item.currency === CurrencyE.USD)
+  //       const {conversionAdvanceUSD, advanceUSD} = quotation
 
-        const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.MXN, total: proformaAmount ?? 0}, {transaction});
-        const findQuationMXN = findQuotationProducts.filter((item) => item.currency === CurrencyE.PESO_MEXICANO)
-        const {conversionAdvanceMXN, advanceMXN} = quotation
+  //       if (conversionAdvanceUSD && advanceUSD && conversionAdvanceUSD >= advanceUSD) {
+  //         findQuationUSD.map(async (item) => {
+  //           await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
+  //         })
+  //       }
+  //     }
+  //     if (typeFractional.MXN == true) {
 
-        if (conversionAdvanceMXN && advanceMXN && conversionAdvanceMXN >= advanceMXN) {
-          findQuationMXN.map(async (item) => {
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-          })
-        }
-      }
-    } else {
-      const {conversionAdvance, advance, total} = this.getPricesQuotation(quotation);
-      const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: exchangeRateQuotation, total: total ?? 0}, {transaction});
+  //       const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: ExchangeRateQuotationE.MXN, total: proformaAmount ?? 0}, {transaction});
+  //       const findQuationMXN = findQuotationProducts.filter((item) => item.currency === CurrencyE.PESO_MEXICANO)
+  //       const {conversionAdvanceMXN, advanceMXN} = quotation
 
-      if (conversionAdvance && advance && conversionAdvance >= advance) {
-        findQuotationProducts.map(async (item) => {
-          await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
-        })
-      }
+  //       if (conversionAdvanceMXN && advanceMXN && conversionAdvanceMXN >= advanceMXN) {
+  //         findQuationMXN.map(async (item) => {
+  //           await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
+  //         })
+  //       }
+  //     }
+  //   } else {
+  //     const {conversionAdvance, advance, total} = this.getPricesQuotation(quotation);
+  //     const accountsPayable = await this.accountPayableRepository.create({quotationId: id, projectId, customerId, currency: exchangeRateQuotation, total: total ?? 0}, {transaction});
 
-    }
-  }
+  //     if (conversionAdvance && advance && conversionAdvance >= advance) {
+  //       findQuotationProducts.map(async (item) => {
+  //         await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, quantity: item.quantity, status: PurchaseOrdersStatus.PENDIENTE, total: item.subtotal, providerId: item.providerId}, {transaction})
+  //       })
+  //     }
+
+  //   }
+  // }
   getPricesQuotation(quotation: Quotation) {
     const {exchangeRateQuotation, } = quotation;
     if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
