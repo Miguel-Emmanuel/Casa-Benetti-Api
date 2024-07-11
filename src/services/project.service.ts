@@ -159,7 +159,7 @@ export class ProjectService {
                         {
                             relation: 'products',
                             scope: {
-                                include: ['brand', 'document', 'mainFinishImage', 'provider', 'secondaryFinishingImage', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
+                                include: ['brand', 'document', 'provider', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
                             }
                         },
                     ]
