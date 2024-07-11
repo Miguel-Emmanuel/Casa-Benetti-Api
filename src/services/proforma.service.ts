@@ -113,6 +113,25 @@ export class ProformaService {
 
   async findById(id: number, filter?: Filter<Proforma>) {
     try {
+      const include: InclusionFilter[] = [
+        {
+          relation: 'document',
+          scope: {
+            fields: ['id', 'fileURL', 'name', 'extension']
+          }
+        }
+      ]
+      if (filter?.include)
+        filter.include = [
+          ...filter.include,
+          ...include
+        ]
+      else
+        filter = {
+          ...filter, include: [
+            ...include
+          ]
+        };
       return this.proformaRepository.findById(id, filter);
     } catch (error) {
       return this.responseService.internalServerError(
