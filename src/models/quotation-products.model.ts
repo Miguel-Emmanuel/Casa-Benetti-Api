@@ -3,6 +3,7 @@ import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
 import {AssembledProducts} from './assembled-products.model';
 import {DocumentSchema} from './base/document.model';
+import {Brand} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Provider} from './provider.model';
@@ -134,6 +135,10 @@ export class QuotationProducts extends Entity {
         type: 'number',
     })
     weight: number;
+
+    //Marca
+    @belongsTo(() => Brand)
+    brandId: number;
 
     //Proveedor
     @belongsTo(() => Provider)

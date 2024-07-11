@@ -1,10 +1,11 @@
 import {Getter, inject} from '@loopback/core';
 import {BelongsToAccessor, DefaultCrudRepository, HasOneRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {Document, Product, Provider, QuotationProducts, QuotationProductsRelations} from '../models';
+import {Document, Product, Provider, QuotationProducts, QuotationProductsRelations, Brand} from '../models';
 import {DocumentRepository} from './document.repository';
 import {ProductRepository} from './product.repository';
 import {ProviderRepository} from './provider.repository';
+import {BrandRepository} from './brand.repository';
 
 export class QuotationProductsRepository extends DefaultCrudRepository<
   QuotationProducts,
@@ -24,10 +25,14 @@ export class QuotationProductsRepository extends DefaultCrudRepository<
 
   public readonly secondaryFinishingImage: HasOneRepositoryFactory<Document, typeof QuotationProducts.prototype.id>;
 
+  public readonly brand: BelongsToAccessor<Brand, typeof QuotationProducts.prototype.id>;
+
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
+    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>,
   ) {
     super(QuotationProducts, dataSource);
+    this.brand = this.createBelongsToAccessorFor('brand', brandRepositoryGetter,);
+    this.registerInclusionResolver('brand', this.brand.inclusionResolver);
     this.secondaryFinishingImage = this.createHasOneRepositoryFactoryFor('secondaryFinishingImage', documentRepositoryGetter);
     this.registerInclusionResolver('secondaryFinishingImage', this.secondaryFinishingImage.inclusionResolver);
     this.secondaryMaterialImage = this.createHasOneRepositoryFactoryFor('secondaryMaterialImage', documentRepositoryGetter);
