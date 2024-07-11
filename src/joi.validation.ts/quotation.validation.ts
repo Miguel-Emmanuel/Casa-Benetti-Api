@@ -46,18 +46,26 @@ export const schemaProofPaymentQuotationQ = Joi.object({
     // quotationId: Joi.number().required(),
     images: Joi.array().items(documents).optional(),
 })
+export const schemaAssembledProducts = Joi.object({
+    id: Joi.number(),
+    description: Joi.string().required(),
+    mainMaterial: Joi.string().required(),
+    mainFinish: Joi.string().required(),
+    secondaryMaterial: Joi.string().required(),
+    secondaryFinishing: Joi.string().required(),
+    quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
+})
 
 const products = Joi.object({
     productId: Joi.number().required(),
-    SKU: Joi.string().required(),
     mainMaterial: Joi.string().required(),
-    mainMaterialImage: documents.optional(),
+    mainMaterialImg: documents.optional(),
     mainFinish: Joi.string().required(),
-    mainFinishImage: documents.optional(),
+    mainFinishImg: documents.optional(),
     secondaryMaterial: Joi.string().required(),
-    secondaryMaterialImage: documents.optional(),
+    secondaryMaterialImg: documents.optional(),
     secondaryFinishing: Joi.string().required(),
-    secondaryFinishingImage: documents.optional(),
+    secondaryFinishingImag: documents.optional(),
     measureWide: Joi.number().required(),
     measureHigh: Joi.number().required(),
     measureDepth: Joi.number().required(),
@@ -80,6 +88,7 @@ const products = Joi.object({
     discountProduct: Joi.number().required(),
     subtotalDiscount: Joi.number().required(),
     location: Joi.string().required(),
+    assembledProducts: Joi.array().items(schemaAssembledProducts).optional().allow(null),
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({

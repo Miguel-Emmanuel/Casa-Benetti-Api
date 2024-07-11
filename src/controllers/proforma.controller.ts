@@ -81,7 +81,47 @@ export class ProformaController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Proforma, {includeRelations: true}),
+          items: {
+            type: 'object',
+            properties: {
+              hola: {
+                type: 'number'
+              },
+              proformaId: {
+                type: 'string'
+              },
+              brandName: {
+                type: 'string'
+              },
+              proformaDate: {
+                type: 'string',
+                format: 'date-time'
+              },
+              proformaAmount: {
+                type: 'number'
+              },
+              currency: {
+                type: 'string'
+              },
+              document: {
+                type: 'object',
+                properties: {
+                  id: {
+                    type: 'number'
+                  },
+                  fileURL: {
+                    type: 'string'
+                  },
+                  name: {
+                    type: 'string'
+                  },
+                  extension: {
+                    type: 'string'
+                  },
+                }
+              },
+            }
+          }
         },
       },
     },

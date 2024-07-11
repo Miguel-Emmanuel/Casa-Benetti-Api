@@ -1,9 +1,10 @@
 import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
+import {AssembledProducts} from './assembled-products.model';
 import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
-import {Product} from './product.model';
+import {Product, ProductWithRelations} from './product.model';
 import {Provider} from './provider.model';
 
 @model({
@@ -265,6 +266,13 @@ export class QuotationProducts extends Entity {
     })
     status: QuotationProductStatusE;
 
+    @property({
+        type: 'array',
+        itemType: 'object',
+        jsonSchema: getJsonSchema(AssembledProducts, {exclude: ['SKU', 'isDeleted', 'isActive', 'deleteComment', 'createdAt', 'createdBy', 'updatedBy', 'updatedAt', 'productId']})
+    })
+    assembledProducts?: AssembledProducts[];
+
     //******************************************** FIN ACTUALIZACION DE PRODUCTOS ***************
 
     constructor(data?: Partial<QuotationProducts>) {
@@ -274,6 +282,7 @@ export class QuotationProducts extends Entity {
 
 export interface QuotationProductsRelations {
     // describe navigational properties here
+    product: ProductWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;
@@ -303,4 +312,13 @@ export class QuotationProductsCreate extends QuotationProducts {
         jsonSchema: getJsonSchema(DocumentSchema)
     })
     secondaryFinishingImag?: DocumentSchema;
+
+    // @property({
+    //     type: 'array',
+    //     jsonSchema: {
+    //         type: 'array',
+    //         items: getJsonSchema(AssembledProducts, {exclude: ['SKU', 'isDeleted', 'isActive', 'deleteComment', 'createdAt', 'createdBy', 'updatedBy', 'updatedAt', 'productId']})
+    //     }
+    // })
+    // assembledProducts?: AssembledProducts[];
 }
