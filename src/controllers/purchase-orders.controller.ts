@@ -13,7 +13,6 @@ import {
     getModelSchemaRef,
     param,
     patch,
-    post,
     requestBody,
     response
 } from '@loopback/rest';
@@ -27,11 +26,11 @@ export class PurchaseOrdersController {
         public purchaseOrdersService: PurchaseOrdersService
     ) { }
 
-    @post('/purchase-orders')
-    @response(200, {
-        description: 'PurchaseOrders model instance',
-        content: {'application/json': {schema: getModelSchemaRef(PurchaseOrders)}},
-    })
+    // @post('/purchase-orders')
+    // @response(200, {
+    //     description: 'PurchaseOrders model instance',
+    //     content: {'application/json': {schema: getModelSchemaRef(PurchaseOrders)}},
+    // })
     // async create(
     //     @requestBody({
     //         content: {
