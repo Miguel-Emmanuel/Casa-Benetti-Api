@@ -6,7 +6,7 @@ import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Project, ProjectWithRelations} from './project.model';
 import {Provider, ProviderWithRelations} from './provider.model';
-import {QuotationProducts} from './quotation-products.model';
+import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 
 @model({
   settings: {
@@ -119,6 +119,7 @@ export interface ProformaRelations {
   project: ProjectWithRelations,
   provider: ProviderWithRelations,
   brand: BrandWithRelations
+  quotationProducts: QuotationProductsWithRelations[]
 
 }
 

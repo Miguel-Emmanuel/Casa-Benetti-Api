@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository, Where} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {AccessLevelRolE} from '../enums';
-import {PurchaseOrders} from '../models';
+import {PurchaseOrders, QuotationProductsWithRelations} from '../models';
 import {ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationRepository} from '../repositories';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -103,7 +103,123 @@ export class PurchaseOrdersService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<PurchaseOrders>) {
-        return this.purchaseOrdersRepository.findById(id, filter);
+        const include: InclusionFilter[] = [
+            {
+                relation: 'proforma',
+                scope: {
+                    include: [
+                        {
+                            relation: 'provider',
+                            scope: {
+                                fields: ['id', 'name']
+                            }
+                        }
+                        ,
+                        {
+                            relation: 'brand',
+                            scope: {
+                                fields: ['id', 'brandName']
+                            }
+                        },
+                        {
+                            relation: 'quotationProducts',
+                            scope: {
+                                fields: ['id', 'productId'],
+                                include: [
+                                    {
+                                        relation: 'product',
+                                        scope: {
+                                            fields: ['id', 'lineId', 'document'],
+                                            include: [
+                                                {
+                                                    relation: 'line',
+                                                    scope: {
+                                                        fields: ['id', 'name'],
+                                                    }
+                                                },
+                                                {
+                                                    relation: 'document',
+                                                    scope: {
+                                                        fields: ['id', 'fileURL'],
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            relation: 'project',
+                            scope: {
+                                fields: ['id', 'customerId', 'quotationId'],
+                                include: [
+                                    {
+                                        relation: 'customer',
+                                        scope: {
+                                            fields: ['id', 'name', 'lastName', 'secondLastName']
+                                        }
+                                    },
+                                    {
+                                        relation: 'quotation',
+                                        scope: {
+                                            fields: ['id', 'mainProjectManagerId'],
+                                            include: [
+                                                {
+                                                    relation: 'mainProjectManager',
+                                                    scope: {
+                                                        fields: ['id', 'firstName', 'lastName']
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
+        const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
+        const {createdAt, proforma, status, accountPayableId} = purchaseOrders;
+        const {provider, brand, quotationProducts, project} = proforma;
+        const {customer, quotation} = project
+        const {mainProjectManager} = quotation
+        return {
+            id,
+            createdAt,
+            provider,
+            brand,
+            customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+            mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+            accountPayableId,
+            status,
+            date: 'Aun estamos trabajando en calcular la fecha.',
+            quotationProducts: quotationProducts.map((value: QuotationProductsWithRelations) => {
+                const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, originCode, model, quantity} = value;
+                const {line, name, document} = product;
+                return {
+                    SKU,
+                    image: document?.fileURL,
+                    model,
+                    description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
+                    originCode,
+                    quantity
+                }
+            })
+        };
     }
 
     async updateById(id: number, purchaseOrders: PurchaseOrders,) {
