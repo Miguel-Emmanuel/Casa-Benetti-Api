@@ -35,3 +35,4 @@ export * from './line.controller';
 
 export * from './proforma.controller';
 export * from './account-payable-proforma.controller';
+export * from './product-provider.controller';
