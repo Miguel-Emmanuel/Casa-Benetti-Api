@@ -1,7 +1,7 @@
 import {belongsTo, hasOne, model, property} from '@loopback/repository';
 import {ProformaCurrencyE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
-import {Brand} from './brand.model';
+import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Project} from './project.model';
 import {Provider} from './provider.model';
@@ -104,6 +104,7 @@ export class Proforma extends BaseEntity {
 
 export interface ProformaRelations {
   // describe navigational properties here
+  brand: BrandWithRelations
 }
 
 export type ProformaWithRelations = Proforma & ProformaRelations;
