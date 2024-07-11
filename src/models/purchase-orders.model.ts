@@ -32,6 +32,13 @@ export class PurchaseOrders extends Entity {
   })
   id?: number;
 
+  //Fecha de creacion
+  @property({
+    type: 'date',
+    default: () => new Date(),
+  })
+  createdAt: Date;
+
   //Estatus
   @property({
     type: 'string',
