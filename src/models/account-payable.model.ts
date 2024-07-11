@@ -1,31 +1,20 @@
-import {hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateQuotationE} from '../enums';
 import {AccountPayableHistory} from './account-payable-history.model';
 import {BaseEntity} from './base/base-entity.model';
+import {Proforma} from './proforma.model';
 
 @model({
   settings: {
     postgresql: {
-      table: 'project_AccountPayable' // Nombre de la tabla en PostgreSQL
+      table: 'proforma_AccountPayable' // Nombre de la tabla en PostgreSQL
     },
     foreignKeys: {
-      fk_accountPayable_projectId: {
-        name: 'fk_accountPayable_projectId',
-        entity: 'Project',
+      fk_accountPayable_proformaId: {
+        name: 'fk_accountPayable_proformaId',
+        entity: 'Proforma',
         entityKey: 'id',
-        foreignKey: 'projectid',
-      },
-      fk_accountPayable_quotationId: {
-        name: 'fk_accountPayable_quotationId',
-        entity: 'Quotation',
-        entityKey: 'id',
-        foreignKey: 'quotationid',
-      },
-      fk_accountPayable_customerId: {
-        name: 'fk_accountPayable_customerId',
-        entity: 'Customer',
-        entityKey: 'id',
-        foreignKey: 'customerid',
+        foreignKey: 'proformaid',
       },
     }
   }
@@ -45,6 +34,7 @@ export class AccountPayable extends BaseEntity {
   })
   currency: ExchangeRateQuotationE;
 
+
   //Monto a pagar
   @property({
     type: 'number',
@@ -54,6 +44,9 @@ export class AccountPayable extends BaseEntity {
     },
   })
   total: number;
+
+  @belongsTo(() => Proforma)
+  proformaId: number;
 
   @hasMany(() => AccountPayableHistory)
   accountPayableHistories: AccountPayableHistory[];

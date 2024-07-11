@@ -32,6 +32,12 @@ import {QuotationProducts} from './quotation-products.model';
         entityKey: 'id',
         foreignKey: 'projectid',
       },
+      fk_proforma_branchId: {
+        name: 'fk_proforma_branchId',
+        entity: 'Branch',
+        entityKey: 'id',
+        foreignKey: 'branchid',
+      },
     }
   }
 })

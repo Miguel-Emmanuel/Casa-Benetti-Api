@@ -34,3 +34,4 @@ export * from './classification-percentage-mainpm.controller';
 export * from './line.controller';
 
 export * from './proforma.controller';
+export * from './account-payable-proforma.controller';
