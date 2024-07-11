@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, Where, repository} from '@loopback/repository';
+import {Filter, InclusionFilter, Where, repository} from '@loopback/repository';
 import {ResponseServiceBindings} from '../keys';
 import {Proforma} from '../models';
 import {ProformaRepository} from '../repositories';
@@ -31,8 +31,45 @@ export class ProformaService {
   }
 
   async find(filter?: Filter<Proforma>) {
+    const include: InclusionFilter[] = [
+      {
+        relation: 'brand',
+        scope: {
+          fields: ['brandName']
+        }
+      },
+      {
+        relation: 'document',
+        scope: {
+          fields: ['fileURL', 'name', 'extension', 'id']
+        }
+      },
+
+    ]
+    if (filter?.include)
+      filter.include = [
+        ...filter.include,
+        ...include
+      ]
+    else
+      filter = {
+        ...filter, include: [
+          ...include
+        ]
+      };
     try {
-      return this.proformaRepository.find(filter);
+      return (await this.proformaRepository.find(filter)).map(value => {
+        const {id, proformaId, brand, proformaDate, proformaAmount, currency, document} = value;
+        return {
+          id,
+          proformaId,
+          brandName: brand?.brandName,
+          proformaDate,
+          proformaAmount,
+          currency,
+          document
+        }
+      });
     } catch (error) {
       return this.responseService.internalServerError(
         error.message ? error.message : error
