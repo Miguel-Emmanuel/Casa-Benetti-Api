@@ -14,7 +14,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {AccountPayableHistory} from '../models';
+import {AccountPayableHistory, AccountPayableHistoryCreate} from '../models';
 import {AccountPayableHistoryService} from '../services';
 
 @authenticate('jwt')
@@ -33,14 +33,14 @@ export class AccountPayableHistoryController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(AccountPayableHistory, {
+                    schema: getModelSchemaRef(AccountPayableHistoryCreate, {
                         title: 'NewAccountPayableHistory',
-                        exclude: ['id'],
+                        exclude: ['id', 'createdAt', 'createdBy', 'updatedBy', 'updatedAt', 'providerId', 'isDeleted', 'deleteComment'],
                     }),
                 },
             },
         })
-        accountPayableHistory: Omit<AccountPayableHistory, 'id'>,
+        accountPayableHistory: Omit<AccountPayableHistoryCreate, 'id'>,
     ): Promise<AccountPayableHistory> {
         return this.accountPayableHistoryService.create(accountPayableHistory);
     }
@@ -52,7 +52,7 @@ export class AccountPayableHistoryController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(AccountPayableHistory, {includeRelations: true}),
+                    items: getModelSchemaRef(AccountPayableHistory, {includeRelations: false}),
                 },
             },
         },
@@ -68,7 +68,7 @@ export class AccountPayableHistoryController {
         description: 'AccountPayableHistory model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(AccountPayableHistory, {includeRelations: true}),
+                schema: getModelSchemaRef(AccountPayableHistory, {includeRelations: false}),
             },
         },
     })
@@ -82,17 +82,27 @@ export class AccountPayableHistoryController {
     @patch('/account-payable-histories/{id}')
     @response(204, {
         description: 'AccountPayableHistory PATCH success',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
     })
     async updateById(
         @param.path.number('id') id: number,
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(AccountPayableHistory, {partial: true}),
+                    schema: getModelSchemaRef(AccountPayableHistoryCreate, {partial: true, exclude: ['id', 'createdAt', 'createdBy', 'updatedBy', 'updatedAt', 'providerId', 'isDeleted', 'deleteComment'], }),
                 },
             },
         })
-        accountPayableHistory: AccountPayableHistory,
+        accountPayableHistory: AccountPayableHistoryCreate,
     ): Promise<void> {
         await this.accountPayableHistoryService.updateById(id, accountPayableHistory);
     }
