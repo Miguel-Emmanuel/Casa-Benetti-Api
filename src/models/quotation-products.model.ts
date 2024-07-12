@@ -6,7 +6,7 @@ import {Brand} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma} from './proforma.model';
-import {Provider} from './provider.model';
+import {Provider, ProviderWithRelations} from './provider.model';
 
 @model({
     settings: {
@@ -332,7 +332,8 @@ export class QuotationProducts extends Entity {
 
 export interface QuotationProductsRelations {
     // describe navigational properties here
-    product: ProductWithRelations
+    product: ProductWithRelations,
+    provider: ProviderWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;

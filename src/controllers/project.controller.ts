@@ -96,7 +96,32 @@ export class ProjectController {
         description: 'Project model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Project,),
+                schema: {
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'number'
+                        },
+                        provider: {
+                            type: 'string'
+                        },
+                        SKU: {
+                            type: 'string'
+                        },
+                        name: {
+                            type: 'string'
+                        },
+                        brand: {
+                            type: 'string'
+                        },
+                        prices: {
+                            type: 'string'
+                        },
+                        description: {
+                            type: 'string'
+                        },
+                    }
+                }
             },
         },
     })
