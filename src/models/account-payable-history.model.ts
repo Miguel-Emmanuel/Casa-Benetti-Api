@@ -1,5 +1,5 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {AccountPayableHistoryStatusE} from '../enums';
+import {AccountPayableHistoryStatusE, ExchangeRateE} from '../enums';
 import {AccountPayable} from './account-payable.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 
@@ -32,68 +32,37 @@ export class AccountPayableHistory extends Entity {
     })
     id?: number;
 
-    // Fecha proforma
-    @property({
-        type: 'date',
-        required: true,
-        default: () => new Date(),
-    })
-    proformaDate: Date;
-
-    // No. Proforma
+    // Concepto
     @property({
         type: 'string',
         required: true,
     })
-    proformaNumber: string;
+    concept: string;
 
     // Moneda
     @property({
         type: 'string',
         required: true,
     })
-    currency: string;
-
-    // Importe proforma
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-
-    })
-    proformaAmount: number;
-
+    currency: ExchangeRateE;
 
     // Fecha de pago
     @property({
         type: 'date',
         required: true,
-        default: () => new Date(),
 
     })
     paymentDate: Date;
 
-    // Monto anticipo
+    // Monto
     @property({
         type: 'number',
-        required: false,
+        required: true,
         postgresql: {
             dataType: 'double precision',
         },
     })
-    advancePaymentAmount: number;
-
-    // Saldo
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    balance: number;
+    amount: number;
 
     // Estatus
     @property({
@@ -108,7 +77,6 @@ export class AccountPayableHistory extends Entity {
 
     @belongsTo(() => Provider)
     providerId: number;
-
 
     constructor(data?: Partial<AccountPayableHistory>) {
         super(data);

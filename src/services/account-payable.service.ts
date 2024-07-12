@@ -206,15 +206,12 @@ export class AccountPayableService {
             const accountPayableHistories = findAccountPayable?.accountPayableHistories?.map((item) => {
                 return {
                     id: item?.id,
-                    proformaDate: item?.proformaDate,
-                    proformaNumber: item?.proformaNumber,
+                    concept: item?.concept,
                     currency: item?.currency,
-                    proformaAmount: item?.proformaAmount,
+                    amount: item?.amount,
                     paymentDate: item?.paymentDate,
-                    advancePaymentAmount: item?.advancePaymentAmount,
-                    balance: item?.balance,
+                    image: '',
                     status: item?.status,
-                    provider: item?.provider?.name,
                 }
             })
             const {proforma, purchaseOrders, total, totalPaid, balance} = findAccountPayable;
