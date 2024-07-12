@@ -1,9 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import {AccessLevelRolE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayable} from '../models';
-import {AccountPayableRepository} from '../repositories';
+import {AccountPayableRepository, ProformaRepository, ProjectRepository, QuotationRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -15,6 +16,12 @@ export class AccountPayableService {
         public responseService: ResponseService,
         @inject(SecurityBindings.USER)
         private user: UserProfile,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository,
+        @repository(ProformaRepository)
+        public proformaRepository: ProformaRepository,
+        @repository(QuotationRepository)
+        public quotationRepository: QuotationRepository,
     ) { }
 
     async create(accountPayable: AccountPayable) {
@@ -28,26 +35,26 @@ export class AccountPayableService {
     }
     async find(filter?: Filter<AccountPayable>) {
 
-        // const accessLevel = this.user.accessLevel;
-        // let where: any = {};
-        // if (accessLevel === AccessLevelRolE.SUCURSAL) {
-        //     const projects = (await this.projectRepository.find({where: {branchId: this.user.branchId}})).map(value => value.id);
-        //     const proforma = (await this.proformaRepository.find({where: {projectId: {inq: [...projects]}}})).map(value => value.id);
-        //     where = {...where, proformaId: {inq: [...proforma]}}
-        // }
+        const accessLevel = this.user.accessLevel;
+        let where: any = {};
+        if (accessLevel === AccessLevelRolE.SUCURSAL) {
+            const projects = (await this.projectRepository.find({where: {branchId: this.user.branchId}})).map(value => value.id);
+            const proforma = (await this.proformaRepository.find({where: {projectId: {inq: [...projects]}}})).map(value => value.id);
+            where = {...where, proformaId: {inq: [...proforma]}}
+        }
 
-        // if (accessLevel === AccessLevelRolE.PERSONAL) {
-        //     const quotations = (await this.quotationRepository.find({where: {mainProjectManagerId: this.user.id}})).map(value => value.id);
-        //     const projects = (await this.projectRepository.find({where: {quotationId: {inq: [...quotations]}}})).map(value => value.id);
-        //     const proforma = (await this.proformaRepository.find({where: {projectId: {inq: [...projects]}}})).map(value => value.id);
-        //     where = {...where, proformaId: {inq: [...proforma]}}
-        // }
+        if (accessLevel === AccessLevelRolE.PERSONAL) {
+            const quotations = (await this.quotationRepository.find({where: {mainProjectManagerId: this.user.id}})).map(value => value.id);
+            const projects = (await this.projectRepository.find({where: {quotationId: {inq: [...quotations]}}})).map(value => value.id);
+            const proforma = (await this.proformaRepository.find({where: {projectId: {inq: [...projects]}}})).map(value => value.id);
+            where = {...where, proformaId: {inq: [...proforma]}}
+        }
 
-        // if (filter?.where) {
-        //     filter.where = {...filter.where, ...where}
-        // } else {
-        //     filter = {...filter, where: {...where}};
-        // }
+        if (filter?.where) {
+            filter.where = {...filter.where, ...where}
+        } else {
+            filter = {...filter, where: {...where}};
+        }
 
         const include: InclusionFilter[] = [
             {
