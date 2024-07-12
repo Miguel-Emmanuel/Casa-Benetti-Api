@@ -170,6 +170,7 @@ export class ProformaController {
                                 type: 'object',
                                 nullable: true,
                                 properties: {
+                                    id: {type: 'number'},
                                     fileURL: {type: 'string'},
                                     name: {type: 'string'},
                                     extension: {type: 'string'}
