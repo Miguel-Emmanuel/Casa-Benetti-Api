@@ -91,6 +91,21 @@ export class ProjectController {
         return this.projectService.findById(id, filter);
     }
 
+    @get('/projects/{id}/products')
+    @response(200, {
+        description: 'Project model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Project,),
+            },
+        },
+    })
+    async getProducts(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.projectService.getProducts(id);
+    }
+
     @patch('/projects/{id}')
     @response(204, {
         description: 'Project PATCH success',
