@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
+import fs from "fs/promises";
 import {ExchangeRateQuotationE, PurchaseOrdersStatus, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Document, Proforma, Quotation} from '../models';
@@ -72,6 +73,8 @@ export class ProformaService {
                 })
             }
             await this.createDocument(newProforma.id, document, transaction)
+
+            await this.sendEmailProforma(newProforma.id, document.fileURL);
             await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
             return newProforma
@@ -82,34 +85,72 @@ export class ProformaService {
         }
     }
 
-    async sendEmailProforma(body: {projectName: string, customerName: string, proformaId: number, providerName: string, brandName: string, proformaDate: string, amount: number, currency: string}, fileURL: string) {
-        const {projectName, customerName, proformaId, providerName, brandName, proformaDate, amount, currency} = body;
+    async sendEmailProforma(proformaId?: number, fileURL?: string) {
+
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
-        const option = {
-            templateId: SendgridTemplates.NEW_PROFORMA.id,
-            attachments: [
+        let attachments = undefined;
+        if (fileURL) {
+            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}/files/`, '')
+            const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
+            attachments = [
                 {
                     filename: 'proforma.pdf',
-                    content: ''
+                    content
                 }
-            ],
+            ]
+        }
+        const proforma = await this.proformaRepository.findById(proformaId, {
+            include: [
+                {
+                    relation: 'project',
+                    scope: {
+                        fields: ['id', 'customerId', 'quotationId'],
+                        include: [
+                            {
+                                relation: 'customer',
+                                scope: {
+                                    fields: ['id', 'name', 'lastName', 'secondLastName']
+                                }
+                            },
+                        ]
+                    }
+                },
+                {
+                    relation: 'provider',
+                    scope: {
+                        fields: ['id', 'name']
+                    }
+                },
+                {
+                    relation: 'brand',
+                    scope: {
+                        fields: ['id', 'brandName']
+                    }
+                },
+            ]
+        })
+        const {projectId, project, provider, brand, proformaDate, proformaAmount, currency} = proforma
+        const {customer} = project
+        const option = {
+            templateId: SendgridTemplates.NEW_PROFORMA.id,
+            attachments: attachments,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.NEW_PROFORMA.subject,
+                projectId,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                proformaId,
+                providerName: provider.name,
+                brandName: brand.brandName,
+                proformaDate,
+                amount: proformaAmount,
+                currency,
+            }
         }
         for (let index = 0; index < users.length; index++) {
             const element = users[index];
             const optionsDynamic = {
                 to: element.email,
                 ...option,
-                dynamicTemplateData: {
-                    subject: SendgridTemplates.NEW_PROFORMA.subject,
-                    projectName,
-                    customerName,
-                    proformaId,
-                    providerName,
-                    brandName,
-                    proformaDate,
-                    amount,
-                    currency,
-                },
             };
             await this.sendgridService.sendNotification(optionsDynamic);
         }
