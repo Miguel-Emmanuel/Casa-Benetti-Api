@@ -1,7 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {AccountPayableHistoryStatusE} from '../enums';
 import {AccountPayable} from './account-payable.model';
-import {Provider} from './provider.model';
+import {Provider, ProviderWithRelations} from './provider.model';
 
 @model({
   settings: {
@@ -117,6 +117,7 @@ export class AccountPayableHistory extends Entity {
 
 export interface AccountPayableHistoryRelations {
   // describe navigational properties here
+  provider: ProviderWithRelations
 }
 
 export type AccountPayableHistoryWithRelations = AccountPayableHistory & AccountPayableHistoryRelations;

@@ -125,40 +125,85 @@ export class AccountPayableService {
 
     async findById(id: number, filter?: Filter<AccountPayable>) {
         try {
-            const findAccountPayable: any = await this.accountPayableRepository.findById(id, {
-                include: [
-                    {relation: "project"},
-                    {
-                        relation: "quotation",
-                        scope: {
-                            include: [{relation: "showroomManager"}]
-                        }
-                    },
-                    {relation: "customer"},
-                    {
-                        relation: "purchaseOrders",
-                        scope: {
-                            include: [{relation: "provider"}]
-                        }
-                    },
-                    {
-                        relation: "accountPayableHistories",
-                        scope: {
-                            include: [{relation: "provider"}]
-                        }
-                    },
-                ]
-            })
-            const purchaseOrders = findAccountPayable?.purchaseOrders?.map((item: any) => {
-                return {
-                    id: item.id,
-                    provider: item?.provider?.name,
-                    quantity: item?.quantity,
-                    total: item?.total,
-                    status: item?.status,
+
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'proforma',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'provider',
+                                scope: {
+                                    fields: ['name']
+                                }
+                            }
+                            ,
+                            {
+                                relation: 'brand',
+                                scope: {
+                                    fields: ['brandName']
+                                }
+                            },
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    fields: ['id', 'accountPayableId']
+                                }
+                            },
+                            {
+                                relation: 'project',
+                                scope: {
+                                    fields: ['id', 'customerId', 'quotationId'],
+                                    include: [
+                                        {
+                                            relation: 'customer',
+                                            scope: {
+                                                fields: ['id', 'name', 'lastName', 'secondLastName']
+                                            }
+                                        },
+                                        {
+                                            relation: 'quotation',
+                                            scope: {
+                                                fields: ['id', 'mainProjectManagerId', 'closingDate', 'showroomManagerId'],
+                                                include: [
+                                                    {
+                                                        relation: 'mainProjectManager',
+                                                        scope: {
+                                                            fields: ['id', 'firstName', 'lastName']
+                                                        }
+                                                    },
+                                                    {
+                                                        relation: 'showroomManager',
+                                                        scope: {
+                                                            fields: ['id', 'firstName', 'lastName']
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'accountPayableHistories'
                 }
-            })
-            const accountPayableHistories = findAccountPayable?.accountPayableHistories?.map((item: any) => {
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+            const findAccountPayable = await this.accountPayableRepository.findById(id, filter);
+            const accountPayableHistories = findAccountPayable?.accountPayableHistories?.map((item) => {
                 return {
                     id: item?.id,
                     proformaDate: item?.proformaDate,
@@ -172,13 +217,23 @@ export class AccountPayableService {
                     provider: item?.provider?.name,
                 }
             })
-            const values: any = {
-                idProject: findAccountPayable.projectId,
-                clientName: `${findAccountPayable?.customer?.name} ${findAccountPayable?.customer?.lastName} ${findAccountPayable?.customer?.secondLastName}`,
-                closingDate: findAccountPayable?.quotation?.closingDate,
-                showroomManager: `${findAccountPayable?.showroomManager?.firstName} ${findAccountPayable?.showroomManager?.lastName}`,
-                total: findAccountPayable.total,
-                purchaseOrders,
+            const {proforma, purchaseOrders, total, totalPaid, balance} = findAccountPayable;
+            const {provider, brand, project, projectId} = proforma;
+            const {customer, quotation} = project
+            const {closingDate, showroomManager, mainProjectManager} = quotation
+            const values = {
+                id,
+                provider: `${provider.name}`,
+                brand: brand?.brandName,
+                purchaseOrderId: purchaseOrders?.id,
+                projectId,
+                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                closingDate,
+                showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
+                mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                total,
+                totalPaid,
+                balance,
                 accountPayableHistories
             }
             return values;
