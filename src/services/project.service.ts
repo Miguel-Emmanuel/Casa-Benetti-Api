@@ -77,8 +77,11 @@ export class ProjectService {
                             {
                                 relation: 'quotationProducts',
                                 scope: {
-                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide'],
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId'],
                                     include: [
+                                        {
+                                            relation: 'provider'
+                                        },
                                         {
                                             relation: 'product',
                                             scope: {
@@ -110,11 +113,12 @@ export class ProjectService {
         const {quotation} = project;
         const {quotationProducts} = quotation;
         return quotationProducts.map(value => {
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide} = value;
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider} = value;
             const {name, brand, line} = product;
             return {
                 id,
                 SKU,
+                provider: provider?.name,
                 name,
                 brand: brand,
                 price,
