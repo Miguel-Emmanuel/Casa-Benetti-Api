@@ -72,7 +72,7 @@ export class PurchaseOrdersController {
     })
     async find(
         @param.filter(PurchaseOrders) filter?: Filter<PurchaseOrders>,
-    ): Promise<PurchaseOrders[]> {
+    ): Promise<Object[]> {
         return this.purchaseOrdersService.find(filter);
     }
 
@@ -88,7 +88,7 @@ export class PurchaseOrdersController {
     async findById(
         @param.path.number('id') id: number,
         @param.filter(PurchaseOrders, {exclude: 'where'}) filter?: FilterExcludingWhere<PurchaseOrders>
-    ): Promise<PurchaseOrders> {
+    ): Promise<Object> {
         return this.purchaseOrdersService.findById(id, filter);
     }
 

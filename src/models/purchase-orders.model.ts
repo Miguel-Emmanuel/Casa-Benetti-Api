@@ -1,7 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
 import {AccountPayable} from './account-payable.model';
-import {Proforma} from './proforma.model';
+import {Proforma, ProformaWithRelations} from './proforma.model';
 
 @model({
   settings: {
@@ -32,6 +32,13 @@ export class PurchaseOrders extends Entity {
   })
   id?: number;
 
+  //Fecha de creacion
+  @property({
+    type: 'date',
+    default: () => new Date(),
+  })
+  createdAt: Date;
+
   //Estatus
   @property({
     type: 'string',
@@ -54,6 +61,7 @@ export class PurchaseOrders extends Entity {
 
 export interface PurchaseOrdersRelations {
   // describe navigational properties here
+  proforma: ProformaWithRelations
 }
 
 export type PurchaseOrdersWithRelations = PurchaseOrders & PurchaseOrdersRelations;
