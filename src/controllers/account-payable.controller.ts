@@ -68,7 +68,7 @@ export class AccountPayableController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(AccountPayable, {includeRelations: true}),
+          items: getModelSchemaRef(AccountPayable, {includeRelations: false}),
         },
       },
     },
