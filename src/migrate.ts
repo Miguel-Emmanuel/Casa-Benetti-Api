@@ -48,11 +48,11 @@ export async function migrate(args: string[]) {
       'CommissionPaymentRecord',
       'ClassificationPercentageMainpm',
       'ProductProvider',
+      'Proforma',
       'AccountPayable',
       'PurchaseOrders',
       'AccountPayableHistory',
       'ClassificationPercentageMainpm',
-      'Proforma'
     ],
   });
 
