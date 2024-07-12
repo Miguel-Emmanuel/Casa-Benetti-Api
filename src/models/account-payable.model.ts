@@ -1,8 +1,9 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {ExchangeRateQuotationE} from '../enums';
 import {AccountPayableHistory} from './account-payable-history.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
+import {PurchaseOrders} from './purchase-orders.model';
 
 @model({
   settings: {
@@ -44,6 +45,31 @@ export class AccountPayable extends BaseEntity {
     },
   })
   total: number;
+
+  //Total pagado
+  @property({
+    type: 'number',
+    postgresql: {
+      dataType: 'double precision',
+    },
+    default: 0
+  })
+  totalPaid: number;
+
+  //Saldo
+  @property({
+    type: 'number',
+    required: false,
+    postgresql: {
+      dataType: 'double precision',
+    },
+    default: 0
+
+  })
+  balance: number;
+
+  @hasOne(() => PurchaseOrders)
+  purchaseOrders: PurchaseOrders;
 
   @belongsTo(() => Proforma)
   proformaId: number;

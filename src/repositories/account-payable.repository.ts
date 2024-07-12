@@ -1,9 +1,9 @@
 import {Getter, inject} from '@loopback/core';
-import {DefaultCrudRepository, HasManyRepositoryFactory, repository, BelongsToAccessor} from '@loopback/repository';
+import {DefaultCrudRepository, HasManyRepositoryFactory, repository, BelongsToAccessor, HasOneRepositoryFactory} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {AccountPayable, AccountPayableHistory, AccountPayableRelations, Proforma} from '../models';
+import {AccountPayable, AccountPayableHistory, AccountPayableRelations, Proforma, PurchaseOrders} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {AccountPayableHistoryRepository} from './account-payable-history.repository';
 import {CustomerRepository} from './customer.repository';
@@ -23,6 +23,8 @@ export class AccountPayableRepository extends DefaultCrudRepository<
 
   public readonly proforma: BelongsToAccessor<Proforma, typeof AccountPayable.prototype.id>;
 
+  public readonly purchaseOrders: HasOneRepositoryFactory<PurchaseOrders, typeof AccountPayable.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>,
     @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>,
@@ -33,6 +35,8 @@ export class AccountPayableRepository extends DefaultCrudRepository<
     public operationHook: Getter<OperationHook>, @repository.getter('AccountPayableHistoryRepository') protected accountPayableHistoryRepositoryGetter: Getter<AccountPayableHistoryRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>,
   ) {
     super(AccountPayable, dataSource);
+    this.purchaseOrders = this.createHasOneRepositoryFactoryFor('purchaseOrders', purchaseOrdersRepositoryGetter);
+    this.registerInclusionResolver('purchaseOrders', this.purchaseOrders.inclusionResolver);
     this.proforma = this.createBelongsToAccessorFor('proforma', proformaRepositoryGetter,);
     this.registerInclusionResolver('proforma', this.proforma.inclusionResolver);
     this.accountPayableHistories = this.createHasManyRepositoryFactoryFor('accountPayableHistories', accountPayableHistoryRepositoryGetter,);

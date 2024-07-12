@@ -72,7 +72,14 @@ export class AccountPayableService {
                             scope: {
                                 fields: ['id']
                             }
-                        }]
+                        },
+                        {
+                            relation: 'purchaseOrders',
+                            scope: {
+                                fields: ['id', 'accountPayableId']
+                            }
+                        }
+                    ]
                 }
             }
         ]
@@ -90,12 +97,16 @@ export class AccountPayableService {
         try {
             const findAccountPayable = await this.accountPayableRepository.find(filter)
             return findAccountPayable.map(value => {
-                const {id, proforma} = value;
-                const {provider, brand, quotationProducts} = proforma;
+                const {id, proforma, purchaseOrders, total, totalPaid, balance} = value;
+                const {provider, projectId} = proforma;
                 return {
                     id,
                     provider: `${provider.name}`,
-
+                    purchaseOrderId: purchaseOrders?.id,
+                    projectId,
+                    total,
+                    totalPaid,
+                    balance
                 }
             });
         } catch (error) {
