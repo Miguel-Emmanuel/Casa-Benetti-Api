@@ -2,7 +2,7 @@ import {belongsTo, hasMany, model, property} from '@loopback/repository';
 import {ExchangeRateQuotationE} from '../enums';
 import {AccountPayableHistory} from './account-payable-history.model';
 import {BaseEntity} from './base/base-entity.model';
-import {Proforma} from './proforma.model';
+import {Proforma, ProformaWithRelations} from './proforma.model';
 
 @model({
   settings: {
@@ -58,6 +58,7 @@ export class AccountPayable extends BaseEntity {
 
 export interface AccountPayableRelations {
   // describe navigational properties here
+  proforma: ProformaWithRelations
 }
 
 export type AccountPayableWithRelations = AccountPayable & AccountPayableRelations;

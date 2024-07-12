@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, Where, repository} from '@loopback/repository';
+import {Filter, InclusionFilter, Where, repository} from '@loopback/repository';
+import {SecurityBindings, UserProfile} from '@loopback/security';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayable} from '../models';
 import {AccountPayableRepository} from '../repositories';
@@ -12,6 +13,8 @@ export class AccountPayableService {
         public accountPayableRepository: AccountPayableRepository,
         @inject(ResponseServiceBindings.RESPONSE_SERVICE)
         public responseService: ResponseService,
+        @inject(SecurityBindings.USER)
+        private user: UserProfile,
     ) { }
 
     async create(accountPayable: AccountPayable) {
@@ -24,19 +27,77 @@ export class AccountPayableService {
         }
     }
     async find(filter?: Filter<AccountPayable>) {
-        try {
-            const findAccountPayable = await this.accountPayableRepository.find({
 
-            })
+        // const accessLevel = this.user.accessLevel;
+        // let where: any = {};
+        // if (accessLevel === AccessLevelRolE.SUCURSAL) {
+        //     const projects = (await this.projectRepository.find({where: {branchId: this.user.branchId}})).map(value => value.id);
+        //     const proforma = (await this.proformaRepository.find({where: {projectId: {inq: [...projects]}}})).map(value => value.id);
+        //     where = {...where, proformaId: {inq: [...proforma]}}
+        // }
 
-            const arrayValues = findAccountPayable?.map((item: any) => {
-                return {
-                    idProject: item.projectId,
-                    clientName: `${item?.customer?.name} ${item?.customer?.lastName} ${item?.customer?.secondLastName}`,
-                    closingDate: item?.quotation?.closingDate,
+        // if (accessLevel === AccessLevelRolE.PERSONAL) {
+        //     const quotations = (await this.quotationRepository.find({where: {mainProjectManagerId: this.user.id}})).map(value => value.id);
+        //     const projects = (await this.projectRepository.find({where: {quotationId: {inq: [...quotations]}}})).map(value => value.id);
+        //     const proforma = (await this.proformaRepository.find({where: {projectId: {inq: [...projects]}}})).map(value => value.id);
+        //     where = {...where, proformaId: {inq: [...proforma]}}
+        // }
+
+        // if (filter?.where) {
+        //     filter.where = {...filter.where, ...where}
+        // } else {
+        //     filter = {...filter, where: {...where}};
+        // }
+
+        const include: InclusionFilter[] = [
+            {
+                relation: 'proforma',
+                scope: {
+                    include: [
+                        {
+                            relation: 'provider',
+                            scope: {
+                                fields: ['name']
+                            }
+                        }
+                        ,
+                        {
+                            relation: 'brand',
+                            scope: {
+                                fields: ['brandName']
+                            }
+                        },
+                        {
+                            relation: 'quotationProducts',
+                            scope: {
+                                fields: ['id']
+                            }
+                        }]
                 }
-            })
-            return arrayValues;
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
+        try {
+            const findAccountPayable = await this.accountPayableRepository.find(filter)
+            return findAccountPayable.map(value => {
+                const {id, proforma} = value;
+                const {provider, brand, quotationProducts} = proforma;
+                return {
+                    id,
+                    provider: `${provider.name}`,
+
+                }
+            });
         } catch (error) {
             return this.responseService.internalServerError(
                 error.message ? error.message : error
