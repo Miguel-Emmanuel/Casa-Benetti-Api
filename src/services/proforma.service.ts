@@ -3,7 +3,7 @@ import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopb
 import fs from "fs/promises";
 import {ExchangeRateQuotationE, PurchaseOrdersStatus, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
-import {Document, Proforma, Quotation} from '../models';
+import {Document, Proforma, ProformaWithRelations, Quotation} from '../models';
 import {AccountPayableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
@@ -177,7 +177,7 @@ export class ProformaService {
             {
                 relation: 'document',
                 scope: {
-                    fields: ['fileURL', 'name', 'extension', 'id']
+                    fields: ['fileURL', 'name', 'extension', 'id', 'proformaId']
                 }
             },
 
@@ -219,7 +219,7 @@ export class ProformaService {
                 {
                     relation: 'document',
                     scope: {
-                        fields: ['id', 'fileURL', 'name', 'extension']
+                        fields: ['id', 'fileURL', 'name', 'extension', 'proformaId']
                     }
                 }
             ]
@@ -267,12 +267,118 @@ export class ProformaService {
 
             if (!document)
                 return this.responseService.badRequest('¡Oh, no! Debes subir un documento de Proforma');
+
+            await this.createDocument(id, document, 'transaction')
+            const oldData = await this.getDataProforma(id);
             await this.proformaRepository.updateById(id, proforma);
+            const newData = await this.getDataProforma(id);
+            await this.sendEmailProformaUpdate(id, oldData, newData, newData?.document.fileURL)
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
         } catch (error) {
             return this.responseService.internalServerError(
                 error.message ? error.message : error
             );
+        }
+    }
+
+    async getDataProforma(proformaId: number) {
+        const proforma = await this.proformaRepository.findById(proformaId, {
+            include: [
+                {
+                    relation: 'document',
+                    scope: {
+                        fields: ['id', 'fileURL', 'name', 'extension', 'proformaId']
+                    }
+                },
+                {
+                    relation: 'project',
+                    scope: {
+                        fields: ['id', 'customerId', 'quotationId'],
+                        include: [
+                            {
+                                relation: 'customer',
+                                scope: {
+                                    fields: ['id', 'name', 'lastName', 'secondLastName']
+                                }
+                            },
+                        ]
+                    }
+                },
+                {
+                    relation: 'provider',
+                    scope: {
+                        fields: ['id', 'name']
+                    }
+                },
+                {
+                    relation: 'brand',
+                    scope: {
+                        fields: ['id', 'brandName']
+                    }
+                },
+            ]
+        })
+        return proforma
+    }
+
+    async sendEmailProformaUpdate(proformaId: number, oldData: ProformaWithRelations, newData: ProformaWithRelations, fileURL?: string) {
+
+        const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+        let attachments = undefined;
+        if (fileURL) {
+            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}/files/`, '')
+            const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
+            attachments = [
+                {
+                    filename: 'proforma.pdf',
+                    content
+                }
+            ]
+        }
+        let objectOld = null;
+        let objectNew = null;
+        if (oldData) {
+            const {provider, brand, proformaDate, proformaAmount, currency} = oldData;
+            objectOld = {
+                providerNameOld: provider.name,
+                brandNameOld: brand.brandName,
+                proformaDateOld: proformaDate,
+                amountOld: proformaAmount,
+                currencyOld: currency,
+            }
+        }
+
+        if (newData) {
+            const {provider, brand, proformaDate, proformaAmount, currency} = newData;
+            objectNew = {
+                providerNameNew: provider.name,
+                brandNameNew: brand.brandName,
+                proformaDateNew: proformaDate,
+                amountNew: proformaAmount,
+                currencyNew: currency,
+            }
+        }
+        const {projectId, project} = oldData;
+        const {customer} = project
+        const option = {
+            templateId: SendgridTemplates.UPDATE_PROFORMA.id,
+            attachments: attachments,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.UPDATE_PROFORMA.subject,
+                projectId,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                proformaId,
+                ...objectOld,
+                ...objectNew
+            }
+        }
+        for (let index = 0; index < users.length; index++) {
+            const element = users[index];
+            const optionsDynamic = {
+                to: element.email,
+                ...option,
+            };
+            await this.sendgridService.sendNotification(optionsDynamic);
         }
     }
 
