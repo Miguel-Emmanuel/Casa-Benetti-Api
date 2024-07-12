@@ -1,11 +1,8 @@
 import {authenticate} from '@loopback/authentication';
+import {service} from '@loopback/core';
 import {
-    Count,
-    CountSchema,
     Filter,
-    FilterExcludingWhere,
-    repository,
-    Where,
+    FilterExcludingWhere
 } from '@loopback/repository';
 import {
     del,
@@ -18,13 +15,13 @@ import {
     response
 } from '@loopback/rest';
 import {AccountPayableHistory} from '../models';
-import {AccountPayableHistoryRepository} from '../repositories';
+import {AccountPayableHistoryService} from '../services';
 
 @authenticate('jwt')
 export class AccountPayableHistoryController {
     constructor(
-        @repository(AccountPayableHistoryRepository)
-        public accountPayableHistoryRepository: AccountPayableHistoryRepository,
+        @service()
+        public accountPayableHistoryService: AccountPayableHistoryService
     ) { }
 
     @post('/account-payable-histories')
@@ -45,18 +42,7 @@ export class AccountPayableHistoryController {
         })
         accountPayableHistory: Omit<AccountPayableHistory, 'id'>,
     ): Promise<AccountPayableHistory> {
-        return this.accountPayableHistoryRepository.create(accountPayableHistory);
-    }
-
-    @get('/account-payable-histories/count')
-    @response(200, {
-        description: 'AccountPayableHistory model count',
-        content: {'application/json': {schema: CountSchema}},
-    })
-    async count(
-        @param.where(AccountPayableHistory) where?: Where<AccountPayableHistory>,
-    ): Promise<Count> {
-        return this.accountPayableHistoryRepository.count(where);
+        return this.accountPayableHistoryService.create(accountPayableHistory);
     }
 
     @get('/account-payable-histories')
@@ -74,7 +60,7 @@ export class AccountPayableHistoryController {
     async find(
         @param.filter(AccountPayableHistory) filter?: Filter<AccountPayableHistory>,
     ): Promise<AccountPayableHistory[]> {
-        return this.accountPayableHistoryRepository.find(filter);
+        return this.accountPayableHistoryService.find(filter);
     }
 
     @get('/account-payable-histories/{id}')
@@ -90,7 +76,7 @@ export class AccountPayableHistoryController {
         @param.path.number('id') id: number,
         @param.filter(AccountPayableHistory, {exclude: 'where'}) filter?: FilterExcludingWhere<AccountPayableHistory>
     ): Promise<AccountPayableHistory> {
-        return this.accountPayableHistoryRepository.findById(id, filter);
+        return this.accountPayableHistoryService.findById(id, filter);
     }
 
     @patch('/account-payable-histories/{id}')
@@ -108,7 +94,7 @@ export class AccountPayableHistoryController {
         })
         accountPayableHistory: AccountPayableHistory,
     ): Promise<void> {
-        await this.accountPayableHistoryRepository.updateById(id, accountPayableHistory);
+        await this.accountPayableHistoryService.updateById(id, accountPayableHistory);
     }
 
     @del('/account-payable-histories/{id}')
@@ -116,6 +102,6 @@ export class AccountPayableHistoryController {
         description: 'AccountPayableHistory DELETE success',
     })
     async deleteById(@param.path.number('id') id: number): Promise<void> {
-        await this.accountPayableHistoryRepository.deleteById(id);
+        await this.accountPayableHistoryService.deleteById(id);
     }
 }
