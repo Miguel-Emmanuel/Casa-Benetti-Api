@@ -1,6 +1,7 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {AccountPayableHistoryStatusE, ExchangeRateE} from '../enums';
 import {AccountPayable} from './account-payable.model';
+import {Document} from './document.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 
 @model({
@@ -53,6 +54,9 @@ export class AccountPayableHistory extends Entity {
 
     })
     paymentDate: Date;
+
+    @hasMany(() => Document)
+    documents: Document[];
 
     // Monto
     @property({
