@@ -1,6 +1,9 @@
-import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {getJsonSchema} from '@loopback/rest';
 import {AccountPayableHistoryStatusE, ExchangeRateE} from '../enums';
 import {AccountPayable} from './account-payable.model';
+import {BaseEntity} from './base/base-entity.model';
+import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 
@@ -25,13 +28,13 @@ import {Provider, ProviderWithRelations} from './provider.model';
         }
     }
 })
-export class AccountPayableHistory extends Entity {
+export class AccountPayableHistory extends BaseEntity {
     @property({
         type: 'number',
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     // Concepto
     @property({
@@ -93,3 +96,14 @@ export interface AccountPayableHistoryRelations {
 }
 
 export type AccountPayableHistoryWithRelations = AccountPayableHistory & AccountPayableHistoryRelations;
+
+export class AccountPayableHistoryCreate extends AccountPayableHistory {
+    @property({
+        type: 'array',
+        jsonSchema: {
+            type: 'array',
+            items: getJsonSchema(DocumentSchema)
+        }
+    })
+    images?: DocumentSchema[];
+}

@@ -18,6 +18,7 @@ export enum LogModelName {
     PROJECT = "Project",
     ACCOUNTPAYABLE = "AccountPayable",
     PROFORMA = "Proforma",
+    ACCOUNTPAYABLEHISTORY = "AccountPayableHistory",
 }
 
 export enum LogModificationType {
