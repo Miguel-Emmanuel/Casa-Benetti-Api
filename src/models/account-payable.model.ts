@@ -1,6 +1,6 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {ExchangeRateQuotationE} from '../enums';
-import {AccountPayableHistory} from './account-payable-history.model';
+import {AccountPayableHistory, AccountPayableHistoryWithRelations} from './account-payable-history.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {PurchaseOrders} from './purchase-orders.model';
@@ -75,7 +75,7 @@ export class AccountPayable extends BaseEntity {
   proformaId: number;
 
   @hasMany(() => AccountPayableHistory)
-  accountPayableHistories: AccountPayableHistory[];
+  accountPayableHistories: AccountPayableHistoryWithRelations[];
 
   constructor(data?: Partial<AccountPayable>) {
     super(data);
