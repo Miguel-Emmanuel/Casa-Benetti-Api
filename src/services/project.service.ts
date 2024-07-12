@@ -66,6 +66,20 @@ export class ProjectService {
     async count(where?: Where<Project>,) {
         return this.projectRepository.count(where);
     }
+    async getProducts(projectId: number) {
+        const project = await this.projectRepository.findOne({
+            where: {id: projectId},
+            include: [
+                {
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', '']
+                    }
+                }
+            ]
+        });
+    }
+
 
     async find(filter?: Filter<Project>,) {
         const accessLevel = this.user.accessLevel;
