@@ -17,6 +17,10 @@ export const SendgridTemplates = {
   NEW_PROFORMA: {
     id: 'd-a0f920e2e6ea498289a59a3760175a9e',
     subject: 'Proforma agregada',
+  },
+  UPDATE_PROFORMA: {
+    id: 'd-81dd06348c0e475b8f220232a6b9a67f',
+    subject: 'Proforma actualizada',
   }
 };
 

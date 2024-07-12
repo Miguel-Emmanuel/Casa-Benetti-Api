@@ -361,10 +361,10 @@ export class ProformaService {
         const {projectId, project} = oldData;
         const {customer} = project
         const option = {
-            templateId: SendgridTemplates.NEW_PROFORMA.id,
+            templateId: SendgridTemplates.UPDATE_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
-                subject: SendgridTemplates.NEW_PROFORMA.subject,
+                subject: SendgridTemplates.UPDATE_PROFORMA.subject,
                 projectId,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 proformaId,
