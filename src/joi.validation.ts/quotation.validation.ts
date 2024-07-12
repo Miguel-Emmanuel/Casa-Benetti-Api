@@ -54,6 +54,7 @@ export const schemaAssembledProducts = Joi.object({
     secondaryMaterial: Joi.string().required(),
     secondaryFinishing: Joi.string().required(),
     quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
+    document: documents
 })
 
 const products = Joi.object({

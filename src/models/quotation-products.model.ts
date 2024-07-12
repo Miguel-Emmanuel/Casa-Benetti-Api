@@ -1,7 +1,6 @@
 import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
-import {AssembledProducts} from './assembled-products.model';
 import {DocumentSchema} from './base/document.model';
 import {Brand} from './brand.model';
 import {Document} from './document.model';
@@ -280,9 +279,49 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'array',
         itemType: 'object',
-        jsonSchema: getJsonSchema(AssembledProducts, {exclude: ['SKU', 'isDeleted', 'isActive', 'deleteComment', 'createdAt', 'createdBy', 'updatedBy', 'updatedAt', 'productId']})
+        // jsonSchema: getJsonSchema(AssembledProducts, {exclude: ['SKU', 'isDeleted', 'isActive', 'deleteComment', 'createdAt', 'createdBy', 'updatedBy', 'updatedAt', 'productId']})
+        jsonSchema: {
+            type: 'object',
+            properties: {
+                id: {
+                    type: 'number'
+                },
+                description: {
+                    type: 'string'
+                },
+                mainMaterial: {
+                    type: 'string'
+                },
+                mainFinish: {
+                    type: 'string'
+                },
+                secondaryMaterial: {
+                    type: 'string'
+                },
+                secondaryFinishing: {
+                    type: 'string'
+                },
+                quantity: {
+                    type: 'number'
+                },
+                document: {
+                    type: 'object',
+                    properties: {
+                        fileURL: {
+                            type: 'string'
+                        },
+                        name: {
+                            type: 'string'
+                        },
+                        extension: {
+                            type: 'string'
+                        },
+                    }
+                }
+            }
+        }
     })
-    assembledProducts?: AssembledProducts[];
+    assembledProducts?: any[];
 
     //******************************************** FIN ACTUALIZACION DE PRODUCTOS ***************
 
