@@ -15,7 +15,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {Project} from '../models';
+import {Project, QuotationProducts} from '../models';
 import {ProjectService} from '../services';
 
 @authenticate('jwt')
@@ -96,7 +96,7 @@ export class ProjectController {
         description: 'Project model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Project,),
+                schema: getModelSchemaRef(QuotationProducts,),
             },
         },
     })
