@@ -75,7 +75,10 @@ export class AccountPayableHistory extends BaseEntity {
     @property({
         type: 'string',
         required: true,
-        default: AccountPayableHistoryStatusE.PENDIENTE
+        default: AccountPayableHistoryStatusE.PENDIENTE,
+        jsonSchema: {
+            enum: Object.values(AccountPayableHistoryStatusE),
+        },
     })
     status: AccountPayableHistoryStatusE;
 
