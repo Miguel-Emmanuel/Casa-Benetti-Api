@@ -14,9 +14,8 @@ import {
     param,
     patch,
     post,
-    put,
     requestBody,
-    response,
+    response
 } from '@loopback/rest';
 import {AccountPayableHistory} from '../models';
 import {AccountPayableHistoryRepository} from '../repositories';
@@ -78,25 +77,6 @@ export class AccountPayableHistoryController {
         return this.accountPayableHistoryRepository.find(filter);
     }
 
-    @patch('/account-payable-histories')
-    @response(200, {
-        description: 'AccountPayableHistory PATCH success count',
-        content: {'application/json': {schema: CountSchema}},
-    })
-    async updateAll(
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(AccountPayableHistory, {partial: true}),
-                },
-            },
-        })
-        accountPayableHistory: AccountPayableHistory,
-        @param.where(AccountPayableHistory) where?: Where<AccountPayableHistory>,
-    ): Promise<Count> {
-        return this.accountPayableHistoryRepository.updateAll(accountPayableHistory, where);
-    }
-
     @get('/account-payable-histories/{id}')
     @response(200, {
         description: 'AccountPayableHistory model instance',
@@ -129,17 +109,6 @@ export class AccountPayableHistoryController {
         accountPayableHistory: AccountPayableHistory,
     ): Promise<void> {
         await this.accountPayableHistoryRepository.updateById(id, accountPayableHistory);
-    }
-
-    @put('/account-payable-histories/{id}')
-    @response(204, {
-        description: 'AccountPayableHistory PUT success',
-    })
-    async replaceById(
-        @param.path.number('id') id: number,
-        @requestBody() accountPayableHistory: AccountPayableHistory,
-    ): Promise<void> {
-        await this.accountPayableHistoryRepository.replaceById(id, accountPayableHistory);
     }
 
     @del('/account-payable-histories/{id}')
