@@ -66,6 +66,63 @@ export class ProjectService {
     async count(where?: Where<Project>,) {
         return this.projectRepository.count(where);
     }
+    async getProducts(projectId: number) {
+        const project = await this.projectRepository.findById(projectId, {
+            include: [
+                {
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'quotationProducts'],
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide'],
+                                    include: [
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                fields: ['id', 'name', 'lineId'],
+                                                include: [
+                                                    {
+                                                        relation: 'line',
+                                                        scope: {
+                                                            fields: ['id', 'name']
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'brand',
+                                            scope: {
+                                                fields: ['id', 'brandName']
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        const {quotation} = project;
+        const {quotationProducts} = quotation;
+        return quotationProducts.map(value => {
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide} = value;
+            const {name, brand, line} = product;
+            return {
+                id,
+                SKU,
+                name,
+                brand: brand,
+                price,
+                description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
+            }
+        })
+    }
+
 
     async find(filter?: Filter<Project>,) {
         const accessLevel = this.user.accessLevel;

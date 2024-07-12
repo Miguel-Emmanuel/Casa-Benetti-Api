@@ -9,7 +9,7 @@ import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
 import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
-import {QuotationProducts} from './quotation-products.model';
+import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {User, UserWithRelations} from './user.model';
 
@@ -124,6 +124,9 @@ export class Quotation extends BaseEntity {
 
     @hasMany(() => Product, {through: {model: () => QuotationProducts}})
     products: Product[];
+
+    @hasMany(() => QuotationProducts)
+    quotationProducts: QuotationProductsWithRelations[];
 
     @belongsTo(() => Organization)
     organizationId: number;
