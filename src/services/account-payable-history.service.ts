@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, FilterExcludingWhere, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
 import {AccountPayableHistoryRepository, AccountPayableRepository, DocumentRepository} from '../repositories';
@@ -33,6 +33,26 @@ export class AccountPayableHistoryService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<AccountPayableHistory>) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'documents',
+                scope: {
+                    fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'accountPayableHistoryId']
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
+        await this.findAccountPayableHistory(id);
         return this.accountPayableHistoryRepository.findById(id, filter);
     }
     async updateById(id: number, accountPayableHistory: AccountPayableHistoryCreate,) {
