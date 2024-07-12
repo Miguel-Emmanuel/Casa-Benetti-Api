@@ -107,6 +107,11 @@ export class Document extends BaseEntity {
   })
   proformaId?: number;
 
+  @property({
+    type: 'number',
+  })
+  accountPayableHistoryId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }
