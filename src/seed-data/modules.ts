@@ -40,4 +40,9 @@ export const modulesSeed = [
     description: 'Ordenes de compra',
     categoryName: ModuleCategories.ORDENES_DE_COMPRA
   },
+  {
+    name: 'Cuentas por pagar',
+    description: 'Cuentas por pagar',
+    categoryName: ModuleCategories.CUENTAS_POR_PAGAR
+  },
 ];

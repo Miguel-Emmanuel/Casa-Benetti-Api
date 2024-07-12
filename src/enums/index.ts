@@ -35,6 +35,7 @@ export enum ModuleCategories {
     PROYECTOS = 'Proyectos',
     CUENTAS_POR_COBRAR = 'Cuentas por cobrar',
     ORDENES_DE_COMPRA = 'Ordenes de compra',
+    CUENTAS_POR_PAGAR = 'Cuentas por pagar',
 }
 
 export enum TypeUserE {
