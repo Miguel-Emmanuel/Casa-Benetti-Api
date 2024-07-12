@@ -13,6 +13,10 @@ export const SendgridTemplates = {
   NEW_USER: {
     id: 'd-3baf6b26baa041eab3ca8e8f1e321da1',
     subject: '¡Bienvenido a Casa Benetti!',
+  },
+  NEW_PROFORMA: {
+    id: 'd-a0f920e2e6ea498289a59a3760175a9e',
+    subject: 'Proforma agregada',
   }
 };
 
