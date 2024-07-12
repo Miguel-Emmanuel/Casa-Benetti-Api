@@ -39,7 +39,7 @@ export class ProformaController {
             properties: {
               proforma: getModelSchemaRef(Proforma, {
                 title: 'NewProforma',
-                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment',],
+                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'branchId'],
               },),
               document: {
                 type: 'object',
