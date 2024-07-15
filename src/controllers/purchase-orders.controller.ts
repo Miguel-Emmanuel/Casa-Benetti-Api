@@ -65,7 +65,7 @@ export class PurchaseOrdersController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(PurchaseOrders, {includeRelations: true}),
+                    items: getModelSchemaRef(PurchaseOrders, {includeRelations: false}),
                 },
             },
         },
@@ -81,7 +81,7 @@ export class PurchaseOrdersController {
         description: 'PurchaseOrders model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(PurchaseOrders, {includeRelations: true}),
+                schema: getModelSchemaRef(PurchaseOrders, {includeRelations: false}),
             },
         },
     })
