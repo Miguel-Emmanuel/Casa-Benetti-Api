@@ -103,6 +103,9 @@ export class ProformaController {
                             currency: {
                                 type: 'string'
                             },
+                            projectId: {
+                                type: 'number'
+                            },
                             document: {
                                 type: 'object',
                                 properties: {

@@ -52,7 +52,7 @@ export const schemaCreateProduct = Joi.object({
         tariffFraction: Joi.number().allow(0).allow(null),
         brandId: Joi.number().allow(null),
     }),
-    assembledProducts: Joi.when('product.typeArticle', {is: TypeArticleE.PRODUCTO_ENSAMBLADO, then: Joi.array().items(schemaAssembledProducts)}).optional().allow(null),
+    assembledProducts: Joi.when('product.typeArticle', {is: TypeArticleE.PRODUCTO_ENSAMBLADO, then: Joi.array().items(schemaAssembledProducts).required()}),
     document: Joi.object({
         id: Joi.number(),
         fileURL: Joi.string().required(),

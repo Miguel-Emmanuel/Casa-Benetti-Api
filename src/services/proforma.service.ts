@@ -195,7 +195,7 @@ export class ProformaService {
             };
         try {
             return (await this.proformaRepository.find(filter)).map(value => {
-                const {id, proformaId, brand, proformaDate, proformaAmount, currency, document} = value;
+                const {id, proformaId, brand, proformaDate, proformaAmount, currency, document, projectId} = value;
                 return {
                     id,
                     proformaId,
@@ -203,7 +203,8 @@ export class ProformaService {
                     proformaDate,
                     proformaAmount,
                     currency,
-                    document
+                    document,
+                    projectId
                 }
             });
         } catch (error) {

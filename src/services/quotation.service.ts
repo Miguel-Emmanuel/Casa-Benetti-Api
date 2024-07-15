@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
-import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeCommisionE} from '../enums';
+import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeArticleE, TypeCommisionE} from '../enums';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -901,6 +901,7 @@ export class QuotationService {
             if (isRejected === true)
                 status = StatusQuotationE.RECHAZADA;
             else {
+                await this.validateAdvanceCustomerAndEnsamblado(id);
                 status = StatusQuotationE.CERRADA;
                 await this.projectService.create({quotationId: id}, transaction);
             }
@@ -912,6 +913,22 @@ export class QuotationService {
             await transaction.rollback();
             throw this.responseService.badRequest(error?.message ?? error)
         }
+    }
+
+    async validateAdvanceCustomerAndEnsamblado(quotationId: number) {
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'proofPaymentQuotations'}, {relation: 'quotationProducts'}]});
+        const {conversionAdvance} = this.getPricesQuotation(quotation);
+        if (conversionAdvance && conversionAdvance > 0 && (!quotation?.proofPaymentQuotations || quotation?.proofPaymentQuotations.length <= 0)) {
+            throw this.responseService.badRequest("No puedes finalizar la cotización sin capturar la información del anticipo correspondiente. Por favor, revisa y completa esta información.");
+        }
+        for (let index = 0; index < quotation?.quotationProducts.length; index++) {
+            const {productId, assembledProducts} = quotation?.quotationProducts[index];
+            const product = await this.productRepository.findOne({where: {id: productId}})
+            if (product)
+                if (product.typeArticle === TypeArticleE.PRODUCTO_ENSAMBLADO && (!assembledProducts || assembledProducts?.length <= 0))
+                    throw this.responseService.badRequest("Algunos productos de tipo ensamble no tienen piezas o ensambles asignados. Por favor, revisa y completa esta información para poder finalizar tu cotización.");
+        }
+
     }
 
 
