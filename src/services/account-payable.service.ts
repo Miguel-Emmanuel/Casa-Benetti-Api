@@ -80,13 +80,13 @@ export class AccountPayableService {
                                 fields: ['id']
                             }
                         },
-                        {
-                            relation: 'purchaseOrders',
-                            scope: {
-                                fields: ['id', 'accountPayableId']
-                            }
-                        }
                     ]
+                }
+            },
+            {
+                relation: 'purchaseOrders',
+                scope: {
+                    fields: ['id', 'accountPayableId']
                 }
             }
         ]
