@@ -113,14 +113,16 @@ export class ProjectService {
         const {quotation} = project;
         const {quotationProducts} = quotation;
         return quotationProducts.map(value => {
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider} = value;
-            const {name, brand, line} = product;
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand} = value;
+            const {name, line} = product;
             return {
                 id,
                 SKU,
                 provider: provider?.name,
+                providerId,
                 name,
-                brand: brand,
+                brand: brand?.brandName,
+                brandId,
                 price,
                 description: `${line?.name} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
             }

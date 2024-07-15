@@ -2,7 +2,7 @@ import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE} from '../enums';
 import {DocumentSchema} from './base/document.model';
-import {Brand} from './brand.model';
+import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma} from './proforma.model';
@@ -334,6 +334,7 @@ export interface QuotationProductsRelations {
     // describe navigational properties here
     product: ProductWithRelations,
     provider: ProviderWithRelations
+    brand: BrandWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;
