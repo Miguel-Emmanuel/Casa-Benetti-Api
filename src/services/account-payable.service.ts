@@ -222,7 +222,7 @@ export class AccountPayableService {
                 id,
                 provider: `${provider.name}`,
                 brand: brand?.brandName,
-                purchaseOrderId: purchaseOrders?.id,
+                purchaseOrderId: purchaseOrders?.id ?? null,
                 projectId,
                 customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 closingDate,
