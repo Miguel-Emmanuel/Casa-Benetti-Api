@@ -187,7 +187,7 @@ export class ProjectService {
             };
         const projects = await this.projectRepository.find(filter);
         return projects.map(value => {
-            const {id, projectId, customer, branch, quotation, status, branchId} = value;
+            const {id, projectId, customer, branch, quotation, status, branchId, reference} = value;
             const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId} = quotation;
             return {
                 id,
@@ -200,6 +200,7 @@ export class ProjectService {
                 closingDate,
                 branchId,
                 mainProjectManagerId,
+                reference
             }
         })
     }
@@ -260,7 +261,7 @@ export class ProjectService {
                 ]
             };
         const project = await this.projectRepository.findById(id, filter);
-        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents} = project;
+        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
         const {closingDate, products, exchangeRateQuotation} = quotation;
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const productsArray = [];
@@ -292,6 +293,7 @@ export class ProjectService {
             products: productsArray,
             advancePaymentRecords,
             exchangeRateQuotation,
+            reference,
             files: {
                 clientQuoteFile: {
                     fileURL: clientQuoteFile?.fileURL,
