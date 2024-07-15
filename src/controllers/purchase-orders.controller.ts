@@ -92,6 +92,13 @@ export class PurchaseOrdersController {
         return this.purchaseOrdersService.findById(id, filter);
     }
 
+    @get('/purchase-orders/{id}/pdf')
+    async getAccountStatement(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.purchaseOrdersService.downloadPurchaseOrder(id);
+    }
+
     @patch('/purchase-orders/{id}')
     @response(204, {
         description: 'PurchaseOrders PATCH success',

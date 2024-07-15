@@ -1,9 +1,15 @@
-import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository, Where} from '@loopback/repository';
+import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {AccessLevelRolE} from '../enums';
+import dayjs from 'dayjs';
+import fs from "fs/promises";
+import {AccessLevelRolE, TypeArticleE} from '../enums';
+import {ResponseServiceBindings} from '../keys';
 import {PurchaseOrders, QuotationProductsWithRelations} from '../models';
-import {ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationRepository} from '../repositories';
+import {ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository} from '../repositories';
+import {PdfService} from './pdf.service';
+import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class PurchaseOrdersService {
@@ -18,6 +24,14 @@ export class PurchaseOrdersService {
         public projectRepository: ProjectRepository,
         @repository(ProformaRepository)
         public proformaRepository: ProformaRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
+        @inject(ResponseServiceBindings.RESPONSE_SERVICE)
+        public responseService: ResponseService,
+        @service()
+        public pdfService: PdfService,
+        @inject(RestBindings.Http.RESPONSE)
+        private response: Response,
     ) { }
 
 
@@ -193,7 +207,7 @@ export class PurchaseOrdersService {
                 ]
             };
         const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
-        const {createdAt, proforma, status, accountPayableId} = purchaseOrders;
+        const {createdAt, proforma, status, accountPayableId, proformaId} = purchaseOrders;
         const {provider, brand, quotationProducts, project} = proforma;
         const {customer, quotation} = project
         const {mainProjectManager} = quotation
@@ -206,6 +220,7 @@ export class PurchaseOrdersService {
             mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
             accountPayableId,
             status,
+            proformaId,
             date: 'Aun estamos trabajando en calcular la fecha.',
             quotationProducts: quotationProducts.map((value: QuotationProductsWithRelations) => {
                 const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, originCode, model, quantity} = value;
@@ -220,6 +235,74 @@ export class PurchaseOrdersService {
                 }
             })
         };
+    }
+
+    async downloadPurchaseOrder(proformaId: number) {
+        const proforma = await this.proformaRepository.findOne({
+            where: {id: proformaId}, include: [
+                {
+                    relation: 'quotationProducts',
+                    scope:
+                    {
+                        include: [
+                            {
+                                relation: 'product'
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'project',
+                }
+            ]
+        })
+        if (!proforma)
+            throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+        const {quotationProducts, project} = proforma
+        //aqui
+        let prodcutsArray = [];
+        for (const quotationProduct of quotationProducts) {
+            const {product} = quotationProduct;
+            const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
+            prodcutsArray.push({
+                brandName: brand?.brandName,
+                status: quotationProducts?.status,
+                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
+                image: document?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
+                quantity: quotationProducts?.quantity,
+                typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
+                originCode: quotationProducts?.originCode,
+                assembledProducts: assembledProducts
+            })
+        }
+        const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
+
+        const {quotationId} = project
+
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
+        const {customer, mainProjectManager, referenceCustomer, } = quotation;
+
+        try {
+            const properties: any = {
+                "logo": logo,
+                "customerName": `${customer?.name} ${customer?.lastName}`,
+                "quotationId": quotationId,
+                "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+                "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "products": prodcutsArray,
+            }
+            const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'});
+            this.response.setHeader('Content-Disposition', `attachment; filename=order_compra.pdf`);
+            this.response.setHeader('Content-Type', 'application/pdf');
+            return this.response.status(200).send(buffer)
+        } catch (error) {
+            console.log('error: ', error)
+        }
     }
 
     async updateById(id: number, purchaseOrders: PurchaseOrders,) {
