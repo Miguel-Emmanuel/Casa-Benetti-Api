@@ -120,6 +120,12 @@ export class ProjectController {
                         description: {
                             type: 'string'
                         },
+                        providerId: {
+                            type: 'string'
+                        },
+                        brandId: {
+                            type: 'string'
+                        },
                     }
                 }
             },
