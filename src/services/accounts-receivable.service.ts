@@ -110,7 +110,7 @@ export class AccountsReceivableService {
                         balanceDetail = balanceDetail - value.subtotalAmountPaid;
                         return {
                             ...value,
-                            balanceDetail,
+                            balanceDetail: balanceDetail.toFixed(2),
                             paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
                             amountPaid: value.subtotalAmountPaid.toFixed(2),
                             subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
