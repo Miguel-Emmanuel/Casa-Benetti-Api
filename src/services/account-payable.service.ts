@@ -214,7 +214,7 @@ export class AccountPayableService {
                     status: item?.status,
                 }
             })
-            const {proforma, purchaseOrders, total, totalPaid, balance} = findAccountPayable;
+            const {proforma, purchaseOrders, total, totalPaid, balance, currency} = findAccountPayable;
             const {provider, brand, project, projectId} = proforma;
             const {customer, quotation} = project
             const {closingDate, showroomManager, mainProjectManager} = quotation
@@ -222,7 +222,7 @@ export class AccountPayableService {
                 id,
                 provider: `${provider.name}`,
                 brand: brand?.brandName,
-                purchaseOrderId: purchaseOrders?.id,
+                purchaseOrderId: purchaseOrders?.id ?? null,
                 projectId,
                 customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 closingDate,
@@ -231,7 +231,8 @@ export class AccountPayableService {
                 total,
                 totalPaid,
                 balance,
-                accountPayableHistories
+                accountPayableHistories,
+                currency
             }
             return values;
         } catch (error) {
