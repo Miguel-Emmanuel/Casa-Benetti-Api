@@ -92,12 +92,10 @@ export class AccountPayableHistoryService {
 
     async findAccountPayable(id: number) {
         const account = await this.accountPayableRepository.findOne({
-            where: {id}, include: [
+            where: {id},
+            include: [
                 {
-                    relation: 'accountPayable',
-                    scope: {
-                        include: ['proforma']
-                    }
+                    relation: 'proforma',
                 }
             ]
         })
