@@ -237,9 +237,13 @@ export class PurchaseOrdersService {
         };
     }
 
-    async downloadPurchaseOrder(proformaId: number) {
+    async downloadPurchaseOrder(purchaseOrderId: number) {
+        const purchaseOrde = await this.purchaseOrdersRepository.findOne({where: {id: purchaseOrderId}})
+        if (!purchaseOrde)
+            throw this.responseService.notFound("La orden de compra no se ha encontrado.")
+
         const proforma = await this.proformaRepository.findOne({
-            where: {id: proformaId}, include: [
+            where: {id: purchaseOrde?.proformaId}, include: [
                 {
                     relation: 'quotationProducts',
                     scope:
@@ -257,7 +261,7 @@ export class PurchaseOrdersService {
             ]
         })
         if (!proforma)
-            throw this.responseService.notFound("El proyecto no se ha encontrado.")
+            throw this.responseService.notFound("La proforma no se ha encontrado.")
 
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         const {quotationProducts, project} = proforma
