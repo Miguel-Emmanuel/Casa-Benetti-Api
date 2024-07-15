@@ -88,7 +88,7 @@ const products = Joi.object({
     percentageDiscountProduct: Joi.number().required(),
     discountProduct: Joi.number().required(),
     subtotalDiscount: Joi.number().required(),
-    location: Joi.string().required(),
+    location: Joi.string(),
     assembledProducts: Joi.array().items(schemaAssembledProducts).optional().allow(null),
 })
 
