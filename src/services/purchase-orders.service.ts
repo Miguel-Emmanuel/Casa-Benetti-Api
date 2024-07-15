@@ -4,7 +4,8 @@ import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE} from '../enums';
+import {schameUpdateStatusPurchase} from '../joi.validation.ts/purchase-order.validation';
 import {ResponseServiceBindings} from '../keys';
 import {PurchaseOrders, QuotationProductsWithRelations} from '../models';
 import {ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository} from '../repositories';
@@ -312,6 +313,36 @@ export class PurchaseOrdersService {
     async updateById(id: number, purchaseOrders: PurchaseOrders,) {
         await this.purchaseOrdersRepository.updateById(id, purchaseOrders);
     }
+
+    async updateStatusById(id: number, data: {status: PurchaseOrdersStatus},) {
+        await this.findPurchaseOrderById(id);
+        await this.validateBodyStatusPurchase(data);
+        const {status} = data;
+        await this.purchaseOrdersRepository.updateById(id, {status});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async validateBodyStatusPurchase(data: {status: PurchaseOrdersStatus},) {
+        try {
+            await schameUpdateStatusPurchase.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async findPurchaseOrderById(id: number) {
+        const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {id}})
+        if (!purchaseOrder)
+            throw this.responseService.notFound("La orden de compra no se ha encontrado.")
+
+    }
+
 
     async deleteById(id: number) {
         await this.purchaseOrdersRepository.deleteById(id);
