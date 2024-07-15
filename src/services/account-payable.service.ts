@@ -145,12 +145,6 @@ export class AccountPayableService {
                                 }
                             },
                             {
-                                relation: 'purchaseOrders',
-                                scope: {
-                                    fields: ['id', 'accountPayableId']
-                                }
-                            },
-                            {
                                 relation: 'project',
                                 scope: {
                                     fields: ['id', 'customerId', 'quotationId'],
@@ -189,7 +183,13 @@ export class AccountPayableService {
                 },
                 {
                     relation: 'accountPayableHistories'
-                }
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        fields: ['id', 'accountPayableId']
+                    }
+                },
             ]
             if (filter?.include)
                 filter.include = [
