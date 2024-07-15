@@ -80,6 +80,40 @@ export class AccountPayableService {
                                 fields: ['id']
                             }
                         },
+                        {
+                            relation: 'project',
+                            scope: {
+                                fields: ['id', 'customerId', 'quotationId'],
+                                include: [
+                                    {
+                                        relation: 'customer',
+                                        scope: {
+                                            fields: ['id', 'name', 'lastName', 'secondLastName', 'groupId']
+                                        }
+                                    },
+                                    {
+                                        relation: 'quotation',
+                                        scope: {
+                                            fields: ['id', 'mainProjectManagerId', 'closingDate', 'showroomManagerId'],
+                                            include: [
+                                                {
+                                                    relation: 'mainProjectManager',
+                                                    scope: {
+                                                        fields: ['id', 'firstName', 'lastName']
+                                                    }
+                                                },
+                                                {
+                                                    relation: 'showroomManager',
+                                                    scope: {
+                                                        fields: ['id', 'firstName', 'lastName']
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
                     ]
                 }
             },
@@ -105,12 +139,17 @@ export class AccountPayableService {
             const findAccountPayable = await this.accountPayableRepository.find(filter)
             return findAccountPayable.map(value => {
                 const {id, proforma, purchaseOrders, total, totalPaid, balance} = value;
-                const {provider, projectId} = proforma;
+                const {provider, projectId, project, branchId} = proforma;
+                const {customerId, customer} = project
+                const {groupId} = customer;
                 return {
                     id,
                     provider: `${provider.name}`,
-                    purchaseOrderId: purchaseOrders?.id,
+                    purchaseOrderId: purchaseOrders?.id ?? null,
+                    customerId,
+                    groupId,
                     projectId,
+                    branchId,
                     total,
                     totalPaid,
                     balance
