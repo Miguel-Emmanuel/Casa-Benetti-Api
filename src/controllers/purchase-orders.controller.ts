@@ -16,6 +16,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {PurchaseOrdersStatus} from '../enums';
 import {PurchaseOrders} from '../models';
 import {PurchaseOrdersService} from '../services';
 
@@ -115,6 +116,41 @@ export class PurchaseOrdersController {
         purchaseOrders: PurchaseOrders,
     ): Promise<void> {
         await this.purchaseOrdersService.updateById(id, purchaseOrders);
+    }
+
+    @patch('/purchase-orders/{id}/status')
+    @response(204, {
+        description: 'purchase order PATCH success',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async updateStatusById(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            status: {
+                                type: 'string'
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {status: PurchaseOrdersStatus},
+    ): Promise<void> {
+        await this.purchaseOrdersService.updateStatusById(id, data);
     }
 
     @del('/purchase-orders/{id}')
