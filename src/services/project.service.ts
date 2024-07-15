@@ -53,7 +53,7 @@ export class ProjectService {
         const quotation = await this.findQuotationById(quotationId);
         const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
-        // await this.updateSKUProducts(quotationId, project.reference, transaction);
+        await this.updateSKUProducts(quotationId, project.reference, transaction);
         await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
         await this.createPdfToCustomer(quotationId, project.id, transaction);
