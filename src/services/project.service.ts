@@ -77,7 +77,7 @@ export class ProjectService {
                             {
                                 relation: 'quotationProducts',
                                 scope: {
-                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId'],
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId'],
                                     include: [
                                         {
                                             relation: 'provider'
@@ -113,18 +113,16 @@ export class ProjectService {
         const {quotation} = project;
         const {quotationProducts} = quotation;
         return quotationProducts.map(value => {
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand} = value;
-            const {name, line} = product;
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider} = value;
+            const {name, brand, line} = product;
             return {
                 id,
                 SKU,
-                provider: provider?.name ?? '',
-                providerId,
+                provider: provider?.name,
                 name,
-                brand: brand?.brandName ?? '',
-                brandId,
+                brand: brand,
                 price,
-                description: `${line?.name} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
+                description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
             }
         })
     }
@@ -420,7 +418,8 @@ export class ProjectService {
                 conversionAdvance,
                 balance,
                 exchangeRate,
-                percentageAdvance
+                percentageAdvance,
+                emailPM: mainProjectManager?.email
 
             }
             const nameFile = `cotizacion_cliente_${customer?.name}-${customer?.lastName}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
