@@ -77,7 +77,7 @@ export class ProjectService {
                             {
                                 relation: 'quotationProducts',
                                 scope: {
-                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId'],
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId'],
                                     include: [
                                         {
                                             relation: 'provider'
@@ -122,7 +122,7 @@ export class ProjectService {
                 name,
                 brand: brand,
                 price,
-                description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
+                description: `${line?.name} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
             }
         })
     }
