@@ -221,7 +221,17 @@ export class AccountPayableService {
                     }
                 },
                 {
-                    relation: 'accountPayableHistories'
+                    relation: 'accountPayableHistories',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'documents',
+                                scope: {
+                                    fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'accountPayableHistoryId']
+                                }
+                            }
+                        ]
+                    }
                 },
                 {
                     relation: 'purchaseOrders',
@@ -249,7 +259,7 @@ export class AccountPayableService {
                     currency: item?.currency,
                     amount: item?.amount,
                     paymentDate: item?.paymentDate,
-                    image: '',
+                    documents: item.documents,
                     status: item?.status,
                 }
             })
