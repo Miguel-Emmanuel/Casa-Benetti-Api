@@ -118,10 +118,10 @@ export class ProjectService {
             return {
                 id,
                 SKU,
-                provider: provider?.name,
+                provider: provider?.name ?? '',
                 providerId,
                 name,
-                brand: brand?.brandName,
+                brand: brand?.brandName ?? '',
                 brandId,
                 price,
                 description: `${line?.name} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
