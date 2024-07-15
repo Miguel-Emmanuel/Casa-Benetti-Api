@@ -59,13 +59,13 @@ export const schemaAssembledProducts = Joi.object({
 
 const products = Joi.object({
     productId: Joi.number().required(),
-    mainMaterial: Joi.string().required(),
+    mainMaterial: Joi.string().allow('').allow(null),
     mainMaterialImg: documents.optional(),
-    mainFinish: Joi.string().required(),
+    mainFinish: Joi.string().allow('').allow(null),
     mainFinishImg: documents.optional(),
-    secondaryMaterial: Joi.string().required(),
+    secondaryMaterial: Joi.string().allow('').allow(null),
     secondaryMaterialImg: documents.optional(),
-    secondaryFinishing: Joi.string().required(),
+    secondaryFinishing: Joi.string().allow('').allow(null),
     secondaryFinishingImag: documents.optional(),
     measureWide: Joi.number().required(),
     measureHigh: Joi.number().required(),
