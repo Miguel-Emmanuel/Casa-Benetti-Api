@@ -75,7 +75,7 @@ export class ProformaService {
                 })
             }
             await this.createDocument(newProforma.id, document, transaction)
-            await this.sendEmailProforma(newProforma.id, document.fileURL);
+            await this.sendEmailProforma(newProforma.id, document.name);
             await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
             return newProforma
@@ -86,12 +86,12 @@ export class ProformaService {
         }
     }
 
-    async sendEmailProforma(proformaId?: number, fileURL?: string) {
+    async sendEmailProforma(proformaId?: number, name?: string) {
 
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
-        if (fileURL) {
-            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}//files//`, '')
+        if (name) {
+            const nameFile = name
             const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
             attachments = [
                 {
@@ -279,7 +279,7 @@ export class ProformaService {
             const oldData = await this.getDataProforma(id);
             await this.proformaRepository.updateById(id, proforma);
             const newData = await this.getDataProforma(id);
-            await this.sendEmailProformaUpdate(id, oldData, newData, newData?.document.fileURL)
+            await this.sendEmailProformaUpdate(id, oldData, newData, newData?.document.name)
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
         } catch (error) {
             return this.responseService.internalServerError(
@@ -328,12 +328,12 @@ export class ProformaService {
         return proforma
     }
 
-    async sendEmailProformaUpdate(proformaId: number, oldData: ProformaWithRelations, newData: ProformaWithRelations, fileURL?: string) {
+    async sendEmailProformaUpdate(proformaId: number, oldData: ProformaWithRelations, newData: ProformaWithRelations, name?: string) {
 
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
-        if (fileURL) {
-            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}//files//`, '')
+        if (name) {
+            const nameFile = name
             const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
             attachments = [
                 {
