@@ -72,7 +72,7 @@ export class CommissionPaymentRecordController {
     async findById(
         @param.path.number('id') id: number,
         @param.filter(CommissionPaymentRecord, {exclude: 'where'}) filter?: FilterExcludingWhere<CommissionPaymentRecord>
-    ): Promise<CommissionPaymentRecord> {
+    ): Promise<Object> {
         return this.commissionPaymentRecordService.findById(id, filter);
     }
 
