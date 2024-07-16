@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import {CommissionPaymentStatus} from '../enums';
 import {schemaCommissionPaymentCreate, schemaCommissionPaymentUpdate} from '../joi.validation.ts/commission.validation';
 import {ResponseServiceBindings} from '../keys';
 import {CommissionPayment, CommissionPaymentCreate, Document} from '../models';
@@ -58,14 +59,26 @@ export class CommissionPaymentService {
     }
 
     async updateById(id: number, commissionPayment: CommissionPaymentCreate,) {
-        await this.findCommissionPayment(id);
+        const commission = await this.findCommissionPayment(id);
+        if (commission.status === CommissionPaymentStatus.PAGADO)
+            throw this.responseService.badRequest("El pago ya fue pagado y no puede actualizarse.");
         await this.validateBodyCommissionUpdate(commissionPayment);
-        const {commissionPaymentRecordId, images} = commissionPayment;
-        await this.findCommissionPaymentRecord(commissionPaymentRecordId);
+        const {commissionPaymentRecordId, images, status, amount} = commissionPayment;
+        const {totalPaid, balance, commissionAmount} = await this.findCommissionPaymentRecord(commissionPaymentRecordId);
+        if (status === CommissionPaymentStatus.PAGADO) {
+            const totalPaidNew = totalPaid + amount;
+            const balanceNew = balance - amount;
+            const percentagePaid = this.calculatePercentagePaid(commissionAmount, totalPaidNew);
+            await this.commissionPaymentRecordRepository.updateById(id, {balance: balanceNew, totalPaid: totalPaidNew, percentagePaid})
+        }
         delete commissionPayment.images;
         await this.commissionPaymentRepository.updateById(id, commissionPayment);
         await this.documents(id, images);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    calculatePercentagePaid(total: number, totalPaid: number) {
+        return (totalPaid / total) * 100;
     }
 
     async deleteById(id: number) {
@@ -78,12 +91,15 @@ export class CommissionPaymentService {
         const commissionPaymentRecord = await this.commissionPaymentRecordRepository.findOne({where: {id}});
         if (!commissionPaymentRecord)
             throw this.responseService.notFound('La comision no existe.');
+        return commissionPaymentRecord
     }
 
     async findCommissionPayment(id: number) {
         const commissionPayment = await this.commissionPaymentRepository.findOne({where: {id}});
         if (!commissionPayment)
             throw this.responseService.notFound('La pago de comision no existe.');
+
+        return commissionPayment;
     }
 
     async validateBodyCommission(data: Omit<CommissionPaymentCreate, 'id'>,) {
