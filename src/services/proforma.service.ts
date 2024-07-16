@@ -91,14 +91,18 @@ export class ProformaService {
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
         if (name) {
-            const nameFile = name
-            const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
-            attachments = [
-                {
-                    filename: 'proforma.pdf',
-                    content
-                }
-            ]
+            try {
+                const nameFile = name
+                const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
+                attachments = [
+                    {
+                        filename: 'proforma.pdf',
+                        content
+                    }
+                ]
+            } catch (error) {
+
+            }
         }
         const proforma = await this.proformaRepository.findById(proformaId, {
             include: [
@@ -333,14 +337,18 @@ export class ProformaService {
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
         if (name) {
-            const nameFile = name
-            const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
-            attachments = [
-                {
-                    filename: 'proforma.pdf',
-                    content
-                }
-            ]
+            try {
+                const nameFile = name
+                const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
+                attachments = [
+                    {
+                        filename: 'proforma.pdf',
+                        content
+                    }
+                ]
+            } catch (error) {
+
+            }
         }
         let objectOld = null;
         let objectNew = null;
