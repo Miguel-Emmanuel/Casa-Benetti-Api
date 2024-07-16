@@ -91,7 +91,7 @@ export class ProformaService {
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
         if (fileURL) {
-            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}/files/`, '')
+            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}//files//`, '')
             const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
             attachments = [
                 {
@@ -333,7 +333,7 @@ export class ProformaService {
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
         if (fileURL) {
-            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}/files/`, '')
+            const nameFile = fileURL.replace(`${process.env.URL_BACKEND}//files//`, '')
             const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
             attachments = [
                 {
