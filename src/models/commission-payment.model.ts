@@ -1,6 +1,8 @@
-import {Entity, model, property} from '@loopback/repository';
+import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {CommissionPaymentStatus} from '../enums';
+import {CommissionPaymentRecord} from './commission-payment-record.model';
 
+//Pago de las comisiones
 @model({
     settings: {
         postgresql: {
@@ -29,10 +31,8 @@ export class CommissionPayment extends Entity {
     })
     paymentDate: Date;
 
-    @property({
-        type: 'number',
-    })
-    commissionPaymentRecordId?: number;
+    @belongsTo(() => CommissionPaymentRecord)
+    commissionPaymentRecordId: number;
 
     //Monto
     @property({
