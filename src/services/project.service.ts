@@ -67,64 +67,68 @@ export class ProjectService {
         return this.projectRepository.count(where);
     }
     async getProducts(projectId: number) {
-        const project = await this.projectRepository.findById(projectId, {
-            include: [
-                {
-                    relation: 'quotation',
-                    scope: {
-                        fields: ['id', 'quotationProducts'],
-                        include: [
-                            {
-                                relation: 'quotationProducts',
-                                scope: {
-                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId'],
-                                    include: [
-                                        {
-                                            relation: 'provider'
-                                        },
-                                        {
-                                            relation: 'product',
-                                            scope: {
-                                                fields: ['id', 'name', 'lineId'],
-                                                include: [
-                                                    {
-                                                        relation: 'line',
-                                                        scope: {
-                                                            fields: ['id', 'name']
+        try {
+            const project = await this.projectRepository.findById(projectId, {
+                include: [
+                    {
+                        relation: 'quotation',
+                        scope: {
+                            fields: ['id', 'quotationProducts'],
+                            include: [
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId'],
+                                        include: [
+                                            {
+                                                relation: 'provider'
+                                            },
+                                            {
+                                                relation: 'product',
+                                                scope: {
+                                                    fields: ['id', 'name', 'lineId'],
+                                                    include: [
+                                                        {
+                                                            relation: 'line',
+                                                            scope: {
+                                                                fields: ['id', 'name']
+                                                            }
                                                         }
-                                                    }
-                                                ]
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                relation: 'brand',
+                                                scope: {
+                                                    fields: ['id', 'brandName']
+                                                }
                                             }
-                                        },
-                                        {
-                                            relation: 'brand',
-                                            scope: {
-                                                fields: ['id', 'brandName']
-                                            }
-                                        }
-                                    ]
+                                        ]
+                                    }
                                 }
-                            }
-                        ]
+                            ]
+                        }
                     }
+                ]
+            });
+            const {quotation} = project;
+            const {quotationProducts} = quotation;
+            return quotationProducts.map(value => {
+                const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider} = value;
+                const {name, brand, line} = product;
+                return {
+                    id,
+                    SKU,
+                    provider: provider?.name,
+                    name,
+                    brand: brand,
+                    price,
+                    description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
                 }
-            ]
-        });
-        const {quotation} = project;
-        const {quotationProducts} = quotation;
-        return quotationProducts.map(value => {
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider} = value;
-            const {name, brand, line} = product;
-            return {
-                id,
-                SKU,
-                provider: provider?.name,
-                name,
-                brand: brand,
-                price,
-                description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
-            }
-        })
+            })
+        } catch (error) {
+            throw this.responseService.notFound(error?.message ?? error)
+        }
     }
 
 
@@ -897,9 +901,17 @@ export class ProjectService {
                 // const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
                 // const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
                 // await this.createAdvancePaymentRecordRepository(accountsReceivable.id, projectId, paymentPercentage, subtotalAmountPaid, iva ?? 0, conversionAmountPaid, proofPaymentType, percentageIva, exchangeRateAmount, exchangeRate, conversionAdvance, paymentType, transaction, documents, paymentDate);
-                const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance, exchangeRateAmount); //importe pagado
+                console.log('conversionAdvance: ', conversionAdvance)
+                console.log('exchangeRateAmount: ', exchangeRateAmount)
+                console.log('percentageIva: ', percentageIva)
+                console.log('total: ', total)
+                const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance || advanceCustomer, exchangeRateAmount || 1); //importe pagado
                 const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                 const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
+                console.log('conversionAmountPaid: ', conversionAmountPaid)
+                console.log('subtotalAmountPaid: ', subtotalAmountPaid)
+                console.log('paymentPercentage: ', paymentPercentage)
+
                 await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, conversionAmountPaid, subtotalAmountPaid, paymentPercentage, projectId, accountsReceivable.id, transaction, documents, paymentDate);
 
             }
