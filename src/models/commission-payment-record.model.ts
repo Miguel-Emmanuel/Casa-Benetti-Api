@@ -1,7 +1,7 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {AdvancePaymentTypeE, CommissionPaymentRecordStatus} from '../enums';
 import {CommissionPayment} from './commission-payment.model';
-import {Project} from './project.model';
+import {Project, ProjectWithRelations} from './project.model';
 import {User, UserWithRelations} from './user.model';
 
 //Registro del pago correspondiente a cada comisión especificada
@@ -127,6 +127,7 @@ export class CommissionPaymentRecord extends Entity {
 export interface CommissionPaymentRecordRelations {
     // describe navigational properties here
     user: UserWithRelations
+    project: ProjectWithRelations
 }
 
 export type CommissionPaymentRecordWithRelations = CommissionPaymentRecord & CommissionPaymentRecordRelations;

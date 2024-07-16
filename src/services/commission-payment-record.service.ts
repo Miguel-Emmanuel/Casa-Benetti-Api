@@ -2,8 +2,10 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {AccessLevelRolE} from '../enums';
+import {ResponseServiceBindings} from '../keys';
 import {CommissionPaymentRecord} from '../models';
 import {CommissionPaymentRecordRepository, ProjectRepository, QuotationRepository} from '../repositories';
+import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class CommissionPaymentRecordService {
@@ -16,6 +18,8 @@ export class CommissionPaymentRecordService {
         public projectRepository: ProjectRepository,
         @repository(QuotationRepository)
         public quotationRepository: QuotationRepository,
+        @inject(ResponseServiceBindings.RESPONSE_SERVICE)
+        public responseService: ResponseService,
     ) { }
 
 
@@ -46,7 +50,13 @@ export class CommissionPaymentRecordService {
         const include: InclusionFilter[] = [
             {
                 relation: 'user',
-            }
+            },
+            {
+                relation: 'project',
+                scope: {
+                    fields: ['id', 'branchId'],
+                }
+            },
         ]
         if (filter?.include)
             filter.include = [
@@ -62,7 +72,7 @@ export class CommissionPaymentRecordService {
 
         const commissions = await this.commissionPaymentRecordRepository.find(filter);
         return commissions.map(value => {
-            const {userName, user, type, projectId, commissionPercentage, commissionAmount, totalPaid, balance, percentagePaid, status, createdAt} = value;
+            const {userName, user, type, projectId, commissionPercentage, commissionAmount, totalPaid, balance, percentagePaid, status, createdAt, project} = value;
             return {
                 createdAt,
                 name: userName ?? `${user?.firstName} ${user?.lastName}`,
@@ -73,13 +83,78 @@ export class CommissionPaymentRecordService {
                 totalPaid,
                 balance,
                 percentagePaid,
-                status
+                status,
+                branchId: project?.branchId
             }
         });
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<CommissionPaymentRecord>) {
-        return this.commissionPaymentRecordRepository.findById(id, filter);
+        const include: InclusionFilter[] = [
+            {
+                relation: 'project',
+                scope: {
+                    fields: ['id', 'quotationId', 'customerId'],
+                    include: [
+                        {
+                            relation: 'quotation',
+                            scope: {
+                                fields: ['id', 'showroomManagerId'],
+                                include: [
+                                    {
+                                        relation: 'showroomManager',
+                                        scope: {
+                                            fields: ['id', 'firstName', 'lastName']
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            relation: 'customer',
+                            scope: {
+                                fields: ['id', 'name', 'lastName', 'secondLastName']
+                            }
+                        },
+                    ]
+                }
+            },
+            {
+                relation: 'user',
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
+        const commission = await this.commissionPaymentRecordRepository.findOne({where: {id}, ...filter});
+        if (!commission)
+            throw this.responseService.notFound('La comision no existe.');
+
+        const {project, projectId, user, userName, type, percentagePaid, totalPaid, commissionAmount, balance, status} = commission;
+        const {quotation, customer} = project;
+        const {showroomManager} = quotation;
+        return {
+            id,
+            showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
+            projectId,
+            customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+            name: userName ?? `${user?.firstName} ${user?.lastName}`,
+            type,
+            percentagePaid,
+            totalPaid,
+            commissionAmount,
+            balance,
+            exchangeRate: commissionAmount * 19.25,
+            status
+        }
     }
 
     async updateById(id: number, commissionPaymentRecord: CommissionPaymentRecord,) {
@@ -88,5 +163,14 @@ export class CommissionPaymentRecordService {
 
     async deleteById(id: number) {
         await this.commissionPaymentRecordRepository.deleteById(id);
+    }
+
+    //
+
+    async findCommissionPaymentRecord(id: number) {
+        const commissionPaymentRecord = await this.commissionPaymentRecordRepository.findOne({where: {id}});
+        if (!commissionPaymentRecord)
+            throw this.responseService.notFound('La comision no existe.');
+        return commissionPaymentRecord
     }
 }
