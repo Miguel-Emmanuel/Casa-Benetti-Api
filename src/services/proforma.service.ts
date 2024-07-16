@@ -75,9 +75,7 @@ export class ProformaService {
                 })
             }
             await this.createDocument(newProforma.id, document, transaction)
-
-            //!IMPORTANTE DECOMENTAR
-            // await this.sendEmailProforma(newProforma.id, document.fileURL);
+            await this.sendEmailProforma(newProforma.id, document.fileURL);
             await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
             return newProforma
@@ -160,6 +158,7 @@ export class ProformaService {
     }
 
     async createDocument(proformaId: number | undefined, document: Document, transaction: any) {
+
         if (proformaId) {
             if (document && !document?.id) {
                 await this.proformaRepository.document(proformaId).create(document, /*{transaction}*/);
@@ -418,8 +417,6 @@ export class ProformaService {
         let newCurrency = ExchangeRateQuotationE.EUR
 
         if (findAccountsReceivable.length === 1) {
-            console.log("entre1", findAccountsReceivable);
-
             totalPaid = findAccountsReceivable[0].totalPaid
             accountsReceivableId = findAccountsReceivable[0].id
         }
@@ -446,9 +443,6 @@ export class ProformaService {
         if (newCurrency === ExchangeRateQuotationE.MXN) {
             advance = quotation.advanceMXN
         }
-
-        console.log("ho", {advance, newCurrency, totalPaid});
-
 
         const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId}, /*{transaction}*/);
 

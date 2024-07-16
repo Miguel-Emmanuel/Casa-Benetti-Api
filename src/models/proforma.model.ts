@@ -7,6 +7,8 @@ import {Document} from './document.model';
 import {Project, ProjectWithRelations} from './project.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
+import {AccountPayable} from './account-payable.model';
+import {PurchaseOrders} from './purchase-orders.model';
 
 @model({
   settings: {
@@ -95,6 +97,11 @@ export class Proforma extends BaseEntity {
   @belongsTo(() => Provider)
   providerId: number;
 
+  @hasOne(() => AccountPayable)
+  accountPayable: AccountPayable;
+
+  @hasOne(() => PurchaseOrders)
+  purchaseOrders: PurchaseOrders;
   @belongsTo(() => Brand)
   brandId: number;
 
