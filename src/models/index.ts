@@ -41,3 +41,4 @@ export * from './provider-brand.model';
 export * from './purchase-orders.model';
 
 export * from './proforma.model';
+export * from './commission-payment.model';
