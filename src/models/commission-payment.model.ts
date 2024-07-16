@@ -1,7 +1,13 @@
 import {Entity, model, property} from '@loopback/repository';
 import {CommissionPaymentStatus} from '../enums';
 
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'commissionPaymentRecord_CommissionPayment' // Nombre de la tabla en PostgreSQL
+        },
+    }
+})
 export class CommissionPayment extends Entity {
     @property({
         type: 'number',
