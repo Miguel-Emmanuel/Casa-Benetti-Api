@@ -897,9 +897,17 @@ export class ProjectService {
                 // const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
                 // const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
                 // await this.createAdvancePaymentRecordRepository(accountsReceivable.id, projectId, paymentPercentage, subtotalAmountPaid, iva ?? 0, conversionAmountPaid, proofPaymentType, percentageIva, exchangeRateAmount, exchangeRate, conversionAdvance, paymentType, transaction, documents, paymentDate);
-                const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance, exchangeRateAmount); //importe pagado
+                console.log('conversionAdvance: ', conversionAdvance)
+                console.log('exchangeRateAmount: ', exchangeRateAmount)
+                console.log('percentageIva: ', percentageIva)
+                console.log('total: ', total)
+                const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance || advanceCustomer, exchangeRateAmount || 1); //importe pagado
                 const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                 const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
+                console.log('conversionAmountPaid: ', conversionAmountPaid)
+                console.log('subtotalAmountPaid: ', subtotalAmountPaid)
+                console.log('paymentPercentage: ', paymentPercentage)
+
                 await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, conversionAmountPaid, subtotalAmountPaid, paymentPercentage, projectId, accountsReceivable.id, transaction, documents, paymentDate);
 
             }
