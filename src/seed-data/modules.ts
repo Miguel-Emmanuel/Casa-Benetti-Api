@@ -36,8 +36,8 @@ export const modulesSeed = [
     categoryName: ModuleCategories.CUENTAS_POR_COBRAR
   },
   {
-    name: 'Ordenes de compra',
-    description: 'Ordenes de compra',
+    name: 'Órdenes de compra',
+    description: 'Órdenes de compra',
     categoryName: ModuleCategories.ORDENES_DE_COMPRA
   },
   {
