@@ -29,6 +29,11 @@ export class CommissionPayment extends Entity {
     })
     paymentDate: Date;
 
+    @property({
+        type: 'number',
+    })
+    commissionPaymentRecordId?: number;
+
     //Monto
     @property({
         type: 'number',
