@@ -67,68 +67,66 @@ export class ProjectService {
         return this.projectRepository.count(where);
     }
     async getProducts(projectId: number) {
-        try {
-            const project = await this.projectRepository.findById(projectId, {
-                include: [
-                    {
-                        relation: 'quotation',
-                        scope: {
-                            fields: ['id', 'quotationProducts'],
-                            include: [
-                                {
-                                    relation: 'quotationProducts',
-                                    scope: {
-                                        fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId'],
-                                        include: [
-                                            {
-                                                relation: 'provider'
-                                            },
-                                            {
-                                                relation: 'product',
-                                                scope: {
-                                                    fields: ['id', 'name', 'lineId'],
-                                                    include: [
-                                                        {
-                                                            relation: 'line',
-                                                            scope: {
-                                                                fields: ['id', 'name']
-                                                            }
+        const project = await this.projectRepository.findById(projectId, {
+            include: [
+                {
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'quotationProducts'],
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId'],
+                                    include: [
+                                        {
+                                            relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                fields: ['id', 'name', 'lineId'],
+                                                include: [
+                                                    {
+                                                        relation: 'line',
+                                                        scope: {
+                                                            fields: ['id', 'name']
                                                         }
-                                                    ]
-                                                }
-                                            },
-                                            {
-                                                relation: 'brand',
-                                                scope: {
-                                                    fields: ['id', 'brandName']
-                                                }
+                                                    }
+                                                ]
                                             }
-                                        ]
-                                    }
+                                        },
+                                        {
+                                            relation: 'brand',
+                                            scope: {
+                                                fields: ['id', 'brandName']
+                                            }
+                                        }
+                                    ]
                                 }
-                            ]
-                        }
+                            }
+                        ]
                     }
-                ]
-            });
-            const {quotation} = project;
-            const {quotationProducts} = quotation;
-            return quotationProducts.map(value => {
-                const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider} = value;
-                const {name, brand, line} = product;
-                return {
-                    id,
-                    SKU,
-                    provider: provider?.name,
-                    name,
-                    brand: brand,
-                    price,
-                    description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
                 }
-            })
-        } catch (error) {
-            throw this.responseService.notFound(error?.message ?? error)
-        }
+            ]
+        });
+        const {quotation} = project;
+        const {quotationProducts} = quotation;
+        return quotationProducts.map(value => {
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand} = value;
+            const {name, line} = product;
+            return {
+                id,
+                SKU,
+                provider: provider?.name ?? '',
+                providerId,
+                name,
+                brand: brand?.brandName ?? '',
+                brandId,
+                price,
+                description: `${line?.name} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
+            }
+        })
     }
 
 
