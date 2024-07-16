@@ -1,10 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
 import fs from "fs/promises";
-import {ExchangeRateQuotationE, PurchaseOrdersStatus, TypeUserE} from '../enums';
+import {CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Document, Proforma, ProformaWithRelations, Quotation} from '../models';
-import {AccountPayableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
+import {AccountPayableRepository, AccountsReceivableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -33,6 +33,8 @@ export class ProformaService {
         public sendgridService: SendgridService,
         @repository(UserRepository)
         public userRepository: UserRepository,
+        @repository(AccountsReceivableRepository)
+        public accountsReceivableRepository: AccountsReceivableRepository,
     ) { }
 
     async create(data: {proforma: Omit<Proforma, 'id'>, document: Document}) {
@@ -74,7 +76,8 @@ export class ProformaService {
             }
             await this.createDocument(newProforma.id, document, transaction)
 
-            await this.sendEmailProforma(newProforma.id, document.fileURL);
+            //!IMPORTANTE DECOMENTAR
+            // await this.sendEmailProforma(newProforma.id, document.fileURL);
             await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
             return newProforma
@@ -382,26 +385,76 @@ export class ProformaService {
         }
     }
 
-    async createAdvancePaymentAccount(proforma: Proforma, proformId: number, transaction: any) {
-        const {projectId, proformaAmount} = proforma
+    async createAdvancePaymentAccount(proforma: Proforma, proformaId: number, transaction: any) {
+        const {projectId} = proforma
         const findQuotation = await this.projectRepository.findById(proforma.projectId, {
             include: [{
                 relation: "quotation",
             }]
         }, /*{transaction}*/)
 
+        //productquote, filtrarlo por provedor y marca, el primer elemento tomo currency,
+        //find proyecto, AccountsReceivable y projectid toimar total pagado, si veo que es mas de 1 filtrar por el currency
 
+        const findQuotationProducts = await this.quotationProductsRepository.findOne({
+            where: {
+                proformaId,
+                providerId: proforma.providerId,
+                brandId: proforma.brandId
+            }
+        })
+
+        if (!findQuotationProducts)
+            throw this.responseService.notFound("No se han encontrado productos relacionados con proforma")
+
+        const findAccountsReceivable = await this.accountsReceivableRepository.find({
+            where: {
+                projectId
+            }
+        })
+        let totalPaid = 0
+        let accountsReceivableId = undefined
+        let newCurrency = ExchangeRateQuotationE.EUR
+
+        if (findAccountsReceivable.length === 1) {
+            console.log("entre1", findAccountsReceivable);
+
+            totalPaid = findAccountsReceivable[0].totalPaid
+            accountsReceivableId = findAccountsReceivable[0].id
+        }
+
+        else if (findAccountsReceivable.length > 1) {
+            const {currency} = findQuotationProducts
+            newCurrency = currency === CurrencyE.USD ? ExchangeRateQuotationE.USD :
+                currency === CurrencyE.PESO_MEXICANO ? ExchangeRateQuotationE.MXN : ExchangeRateQuotationE.EUR
+
+            totalPaid = findAccountsReceivable.find((item) => item.typeCurrency === newCurrency)?.totalPaid ?? 0
+            accountsReceivableId = findAccountsReceivable.find((item) => item.typeCurrency === newCurrency)?.id ?? undefined
+        }
 
         const {quotation} = findQuotation
-        const {id, customerId, proofPaymentQuotations, exchangeRateQuotation, isFractionate, typeFractional} = quotation;
+        const {exchangeRateQuotation, } = quotation;
 
-        const {conversionAdvance, advance, } = this.getPricesQuotation(quotation);
-        console.log("FINDQ", findQuotation);
+        let advance = 0
+        if (newCurrency === ExchangeRateQuotationE.EUR) {
+            advance = quotation.advanceEUR
+        }
+        else if (newCurrency === ExchangeRateQuotationE.USD) {
+            advance = quotation.advanceUSD
+        }
+        if (newCurrency === ExchangeRateQuotationE.MXN) {
+            advance = quotation.advanceMXN
+        }
 
-        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId: proformId}, /*{transaction}*/);
+        console.log("ho", {advance, newCurrency, totalPaid});
 
-        if (conversionAdvance && advance && conversionAdvance >= advance) {
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: proformId}, /*{transaction}*/)
+
+        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId}, /*{transaction}*/);
+
+        //cambiar totalpagado
+        if (advance && totalPaid >= advance) {
+            //guardar el id de accounttspayableid
+            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId}, /*{transaction}*/)
         }
 
 

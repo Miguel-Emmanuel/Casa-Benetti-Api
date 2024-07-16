@@ -1,6 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
 import {AccountPayable} from './account-payable.model';
+import {AccountsReceivable} from './accounts-receivable.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 
 @model({
@@ -46,6 +47,9 @@ export class PurchaseOrders extends Entity {
     default: PurchaseOrdersStatus.NUEVA
   })
   status: PurchaseOrdersStatus;
+
+  @belongsTo(() => AccountsReceivable)
+  accountsReceivableId?: number;
 
   @belongsTo(() => AccountPayable)
   accountPayableId: number;
