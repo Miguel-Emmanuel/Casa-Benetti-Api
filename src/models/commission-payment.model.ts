@@ -1,6 +1,7 @@
-import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {CommissionPaymentStatus} from '../enums';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
+import {Document} from './document.model';
 
 //Pago de las comisiones
 @model({
@@ -33,6 +34,9 @@ export class CommissionPayment extends Entity {
 
     @belongsTo(() => CommissionPaymentRecord)
     commissionPaymentRecordId: number;
+
+    @hasMany(() => Document)
+    documents: Document[];
 
     //Monto
     @property({
