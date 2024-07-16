@@ -693,13 +693,15 @@ export class ProjectService {
 
             for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
                 const element = classificationPercentageMainpms[index];
+                const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage)
                 const body = {
                     userId: mainProjectManagerId,
                     projectId,
                     commissionPercentage: element.commissionPercentage,
-                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage),
+                    commissionAmount,
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                    type: AdvancePaymentTypeE.ARQUITECTO
+                    type: AdvancePaymentTypeE.ARQUITECTO,
+                    balance: commissionAmount
                 }
                 await this.commissionPaymentRecordRepository.create(body, {transaction});
 
@@ -710,13 +712,15 @@ export class ProjectService {
         //Arquitecto
         if (isArchitect === true) {
             const {architectName, commissionPercentageArchitect} = quotation;
+            const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageArchitect)
             const body = {
                 userName: architectName,
                 projectId,
                 commissionPercentage: commissionPercentageArchitect,
-                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageArchitect),
+                commissionAmount,
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                type: AdvancePaymentTypeE.ARQUITECTO
+                type: AdvancePaymentTypeE.ARQUITECTO,
+                balance: commissionAmount
             }
             await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
@@ -724,13 +728,15 @@ export class ProjectService {
         //Cliente referenciado
         if (isReferencedCustomer === true) {
             const {referenceCustomerId, commissionPercentagereferencedCustomer} = quotation;
+            const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentagereferencedCustomer);
             const body = {
                 userId: referenceCustomerId,
                 projectId,
                 commissionPercentage: commissionPercentagereferencedCustomer,
-                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentagereferencedCustomer),
+                commissionAmount,
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO
+                type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO,
+                balance: commissionAmount
             }
             await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
@@ -742,13 +748,15 @@ export class ProjectService {
                 const {classificationPercentageMainpms, userId} = iterator;
                 for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
                     const element = classificationPercentageMainpms[index];
+                    const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage);
                     const body = {
                         userId: userId,
                         projectId,
                         commissionPercentage: element.commissionPercentage,
-                        commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage),
+                        commissionAmount,
                         projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                        type: AdvancePaymentTypeE.PROJECT_MANAGER
+                        type: AdvancePaymentTypeE.PROJECT_MANAGER,
+                        balance: commissionAmount
                     }
                     await this.commissionPaymentRecordRepository.create(body, {transaction});
                 }
@@ -759,13 +767,15 @@ export class ProjectService {
         //Showroom manager
         if (showroomManagerId) {
             const commissionPercentage = 16;
+            const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentage);
             const body = {
                 userId: showroomManagerId,
                 projectId,
                 commissionPercentage: commissionPercentage,
-                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentage),
+                commissionAmount,
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                type: AdvancePaymentTypeE.SHOWROOM_MANAGER
+                type: AdvancePaymentTypeE.SHOWROOM_MANAGER,
+                balance: commissionAmount
             }
             await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
@@ -777,13 +787,15 @@ export class ProjectService {
                 const {classificationPercentageMainpms, userId} = iterator;
                 for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
                     const element = classificationPercentageMainpms[index];
+                    const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage);
                     const body = {
                         userId: userId,
                         projectId,
                         commissionPercentage: element.commissionPercentage,
-                        commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage),
+                        commissionAmount,
                         projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                        type: AdvancePaymentTypeE.PROYECTISTA
+                        type: AdvancePaymentTypeE.PROYECTISTA,
+                        balance: commissionAmount
                     }
                     await this.commissionPaymentRecordRepository.create(body, {transaction});
 

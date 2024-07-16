@@ -1,7 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {AdvancePaymentTypeE, CommissionPaymentStatus} from '../enums';
 import {Project} from './project.model';
-import {User} from './user.model';
+import {User, UserWithRelations} from './user.model';
 
 //Registro del pago correspondiente a cada comisión especificada
 @model({
@@ -58,7 +58,39 @@ export class CommissionPaymentRecord extends Entity {
     })
     commissionAmount: number;
 
-    //Total del proyecto
+    //Total pagado (de la comision)
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+        default: 0
+    })
+    totalPaid: number;
+
+    //Porcentaje pagado (de la comision)
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+        default: 0
+    })
+    percentagePaid: number;
+
+    //Saldo (de la comision)
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    balance: number;
+
+    //Total del proyecto(el valor total de la cotizacion)
     @property({
         type: 'number',
         required: false,
@@ -90,6 +122,7 @@ export class CommissionPaymentRecord extends Entity {
 
 export interface CommissionPaymentRecordRelations {
     // describe navigational properties here
+    user: UserWithRelations
 }
 
 export type CommissionPaymentRecordWithRelations = CommissionPaymentRecord & CommissionPaymentRecordRelations;

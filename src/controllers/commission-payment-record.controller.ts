@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     Filter,
@@ -12,6 +13,7 @@ import {
 import {CommissionPaymentRecord} from '../models';
 import {CommissionPaymentRecordService} from '../services';
 
+@authenticate('jwt')
 export class CommissionPaymentRecordController {
     constructor(
         @service(CommissionPaymentRecordService)
@@ -46,14 +48,14 @@ export class CommissionPaymentRecordController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(CommissionPaymentRecord, {includeRelations: true}),
+                    items: getModelSchemaRef(CommissionPaymentRecord, {includeRelations: false}),
                 },
             },
         },
     })
     async find(
         @param.filter(CommissionPaymentRecord) filter?: Filter<CommissionPaymentRecord>,
-    ): Promise<CommissionPaymentRecord[]> {
+    ): Promise<Object[]> {
         return this.commissionPaymentRecordService.find(filter);
     }
 
@@ -63,7 +65,7 @@ export class CommissionPaymentRecordController {
         description: 'CommissionPaymentRecord model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(CommissionPaymentRecord, {includeRelations: true}),
+                schema: getModelSchemaRef(CommissionPaymentRecord, {includeRelations: false}),
             },
         },
     })
