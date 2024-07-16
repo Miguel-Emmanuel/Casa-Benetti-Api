@@ -1,5 +1,7 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
+import {getJsonSchema} from '@loopback/rest';
 import {CommissionPaymentStatus} from '../enums';
+import {DocumentSchema} from './base/document.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Document} from './document.model';
 
@@ -67,3 +69,15 @@ export interface CommissionPaymentRelations {
 }
 
 export type CommissionPaymentWithRelations = CommissionPayment & CommissionPaymentRelations;
+
+
+export class CommissionPaymentCreate extends CommissionPayment {
+    @property({
+        type: 'array',
+        jsonSchema: {
+            type: 'array',
+            items: getJsonSchema(DocumentSchema)
+        }
+    })
+    images?: DocumentSchema[];
+}

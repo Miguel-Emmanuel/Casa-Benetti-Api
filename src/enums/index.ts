@@ -146,10 +146,13 @@ export enum AdvancePaymentTypeE {
     PROYECTISTA = 'Proyectista',
 }
 
-export enum CommissionPaymentStatus {
+export enum CommissionPaymentRecordStatus {
     PENDIENTE = 'Pendiente',
 }
 
+export enum CommissionPaymentStatus {
+    PENDIENTE = 'Pendiente',
+}
 
 export enum StatusProduct {
     PEDIDO = 'Pedido'
