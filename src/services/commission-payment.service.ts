@@ -61,7 +61,7 @@ export class CommissionPaymentService {
     async updateById(id: number, commissionPayment: CommissionPaymentCreate,) {
         const commission = await this.findCommissionPayment(id);
         if (commission.status === CommissionPaymentStatus.PAGADO)
-            throw this.responseService.badRequest("El pago ya fue pagado y no puede actualizarse.");
+            throw this.responseService.badRequest("El pago ya fue realizado y no puede actualizarse.");
         await this.validateBodyCommissionUpdate(commissionPayment);
         const {commissionPaymentRecordId, images, status, amount} = commissionPayment;
         const {totalPaid, balance, commissionAmount} = await this.findCommissionPaymentRecord(commissionPaymentRecordId);
