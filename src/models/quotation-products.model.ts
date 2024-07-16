@@ -240,6 +240,7 @@ export class QuotationProducts extends Entity {
         postgresql: {
             dataType: 'double precision',
         },
+        default: 0
     })
     percentageDiscountProduct: number;
 
@@ -250,6 +251,7 @@ export class QuotationProducts extends Entity {
         postgresql: {
             dataType: 'double precision',
         },
+        default: 0
     })
     discountProduct: number;
 
