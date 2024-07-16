@@ -250,6 +250,7 @@ export class QuotationProducts extends Entity {
         postgresql: {
             dataType: 'double precision',
         },
+        default: 0
     })
     discountProduct: number;
 
