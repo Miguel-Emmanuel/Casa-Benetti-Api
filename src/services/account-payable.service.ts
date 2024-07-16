@@ -138,7 +138,7 @@ export class AccountPayableService {
         try {
             const findAccountPayable = await this.accountPayableRepository.find(filter)
             return findAccountPayable.map(value => {
-                const {id, proforma, purchaseOrders, total, totalPaid, balance} = value;
+                const {id, proforma, purchaseOrders, total, totalPaid, balance, createdAt} = value;
                 const {provider, projectId, project, branchId} = proforma;
                 const {customerId, customer} = project
                 const {groupId} = customer;
@@ -152,7 +152,8 @@ export class AccountPayableService {
                     branchId,
                     total,
                     totalPaid,
-                    balance
+                    balance,
+                    createdAt
                 }
             });
         } catch (error) {
