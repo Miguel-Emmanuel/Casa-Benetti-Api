@@ -38,3 +38,4 @@ export * from './provider-brand.repository';
 export * from './purchase-orders.repository';
 
 export * from './proforma.repository';
+export * from './commission-payment.repository';

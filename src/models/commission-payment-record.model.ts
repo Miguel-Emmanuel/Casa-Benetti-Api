@@ -1,5 +1,6 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {AdvancePaymentTypeE, CommissionPaymentStatus} from '../enums';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {AdvancePaymentTypeE, CommissionPaymentRecordStatus} from '../enums';
+import {CommissionPayment} from './commission-payment.model';
 import {Project} from './project.model';
 import {User, UserWithRelations} from './user.model';
 
@@ -69,6 +70,9 @@ export class CommissionPaymentRecord extends Entity {
     })
     totalPaid: number;
 
+    @hasMany(() => CommissionPayment)
+    commissionPayments: CommissionPayment[];
+
     //Porcentaje pagado (de la comision)
     @property({
         type: 'number',
@@ -104,9 +108,9 @@ export class CommissionPaymentRecord extends Entity {
     @property({
         type: 'string',
         required: false,
-        default: CommissionPaymentStatus.PENDIENTE
+        default: CommissionPaymentRecordStatus.PENDIENTE
     })
-    status: CommissionPaymentStatus;
+    status: CommissionPaymentRecordStatus;
 
     //Persona de la comision
     @property({
