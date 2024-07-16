@@ -29,3 +29,4 @@ export * from './account-payable.service';
 export * from './purchase-orders.service';
 export * from './proforma.service';
 export * from './account-payable-history.service';
+export * from './commission-payment-record.service';
