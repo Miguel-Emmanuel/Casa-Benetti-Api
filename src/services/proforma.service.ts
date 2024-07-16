@@ -183,6 +183,9 @@ export class ProformaService {
                     fields: ['fileURL', 'name', 'extension', 'id', 'proformaId']
                 }
             },
+            {
+                relation: 'provider',
+            },
 
         ]
         if (filter?.include)
@@ -198,7 +201,7 @@ export class ProformaService {
             };
         try {
             return (await this.proformaRepository.find(filter)).map(value => {
-                const {id, proformaId, brand, proformaDate, proformaAmount, currency, document, projectId} = value;
+                const {id, proformaId, brand, proformaDate, proformaAmount, currency, document, projectId, provider} = value;
                 return {
                     id,
                     proformaId,
@@ -207,7 +210,8 @@ export class ProformaService {
                     proformaAmount,
                     currency,
                     document,
-                    projectId
+                    projectId,
+                    providerName: `${provider?.name}`
                 }
             });
         } catch (error) {
