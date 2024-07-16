@@ -78,7 +78,7 @@ export class ProjectService {
                                 {
                                     relation: 'quotationProducts',
                                     scope: {
-                                        fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId'],
+                                        fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId'],
                                         include: [
                                             {
                                                 relation: 'provider'
