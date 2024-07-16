@@ -35,7 +35,7 @@ export enum ModuleCategories {
     COTIZACIONES = 'Cotizaciones',
     PROYECTOS = 'Proyectos',
     CUENTAS_POR_COBRAR = 'Cuentas por cobrar',
-    ORDENES_DE_COMPRA = 'Ordenes de compra',
+    ORDENES_DE_COMPRA = 'Órdenes de compra',
     CUENTAS_POR_PAGAR = 'Cuentas por pagar',
 }
 
