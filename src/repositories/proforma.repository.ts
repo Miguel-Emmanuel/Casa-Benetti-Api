@@ -3,7 +3,7 @@ import {BelongsToAccessor, DefaultCrudRepository, repository, HasOneRepositoryFa
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Proforma, ProformaRelations, Provider, Brand, Document, Project, Branch, QuotationProducts} from '../models';
+import {Proforma, ProformaRelations, Provider, Brand, Document, Project, Branch, QuotationProducts, AccountPayable, PurchaseOrders} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {ProviderRepository} from './provider.repository';
 import {BrandRepository} from './brand.repository';
@@ -11,6 +11,8 @@ import {DocumentRepository} from './document.repository';
 import {ProjectRepository} from './project.repository';
 import {BranchRepository} from './branch.repository';
 import {QuotationProductsRepository} from './quotation-products.repository';
+import {AccountPayableRepository} from './account-payable.repository';
+import {PurchaseOrdersRepository} from './purchase-orders.repository';
 
 export class ProformaRepository extends DefaultCrudRepository<
   Proforma,
@@ -30,12 +32,20 @@ export class ProformaRepository extends DefaultCrudRepository<
 
   public readonly quotationProducts: HasManyRepositoryFactory<QuotationProducts, typeof Proforma.prototype.id>;
 
+  public readonly accountPayable: HasOneRepositoryFactory<AccountPayable, typeof Proforma.prototype.id>;
+
+  public readonly purchaseOrders: HasOneRepositoryFactory<PurchaseOrders, typeof Proforma.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
-    public operationHook: Getter<OperationHook>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>,
+    public operationHook: Getter<OperationHook>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('AccountPayableRepository') protected accountPayableRepositoryGetter: Getter<AccountPayableRepository>, @repository.getter('PurchaseOrdersRepository') protected purchaseOrdersRepositoryGetter: Getter<PurchaseOrdersRepository>,
   ) {
     super(Proforma, dataSource);
+    this.purchaseOrders = this.createHasOneRepositoryFactoryFor('purchaseOrders', purchaseOrdersRepositoryGetter);
+    this.registerInclusionResolver('purchaseOrders', this.purchaseOrders.inclusionResolver);
+    this.accountPayable = this.createHasOneRepositoryFactoryFor('accountPayable', accountPayableRepositoryGetter);
+    this.registerInclusionResolver('accountPayable', this.accountPayable.inclusionResolver);
     this.quotationProducts = this.createHasManyRepositoryFactoryFor('quotationProducts', quotationProductsRepositoryGetter,);
     this.registerInclusionResolver('quotationProducts', this.quotationProducts.inclusionResolver);
     this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);

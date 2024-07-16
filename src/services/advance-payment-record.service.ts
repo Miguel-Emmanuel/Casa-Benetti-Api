@@ -1,11 +1,11 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
-import {AdvancePaymentStatusE, ExchangeRateQuotationE} from '../enums';
+import {AdvancePaymentStatusE, CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus} from '../enums';
 import {schameCreateAdvancePayment, schameCreateAdvancePaymentUpdate} from '../joi.validation.ts/advance-payment-record.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AdvancePaymentRecord, AdvancePaymentRecordCreate, Quotation} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
-import {AccountsReceivableRepository, AdvancePaymentRecordRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationRepository, UserRepository} from '../repositories';
+import {AccountsReceivableRepository, AdvancePaymentRecordRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -27,6 +27,10 @@ export class AdvancePaymentRecordService {
         public quotationRepository: QuotationRepository,
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
+        @repository(ProformaRepository)
+        public proformaRepository: ProformaRepository,
     ) { }
 
 
@@ -41,6 +45,7 @@ export class AdvancePaymentRecordService {
 
         delete advancePaymentRecord?.vouchers;
         const advancePaymentRecordRes = await this.advancePaymentRecordRepository.create({...advancePaymentRecord, consecutiveId});
+
         await this.createDocuments(advancePaymentRecordRes.id, vouchers);
         return advancePaymentRecordRes;
     }
@@ -112,10 +117,12 @@ export class AdvancePaymentRecordService {
         if (payment.status === AdvancePaymentStatusE.PAGADO)
             throw this.responseService.badRequest("El cobro ya fue pagado y no puede actualizarse.");
 
-        const {vouchers, status, salesDeviation, projectId} = advancePaymentRecord;
-        const {conversionAmountPaid, accountsReceivable} = payment;
+        const {vouchers, status, salesDeviation} = advancePaymentRecord;
+        const {conversionAmountPaid, accountsReceivable, projectId} = payment;
+
 
         let {totalSale, totalPaid, updatedTotal, typeCurrency} = accountsReceivable;
+
         if (salesDeviation > 0) {
             const updatedTotalNew = totalSale + salesDeviation;
             updatedTotal = updatedTotalNew
@@ -147,18 +154,16 @@ export class AdvancePaymentRecordService {
 
     async createPurchaseOrders(projectId: number, accountsReceivableId: number, totalPaid: number, typeCurrency: string) {
         const findProjectQuotation = await this.findProjectQuotation(projectId)
-        const { } = findProjectQuotation
+
+        const {id: quotationId} = findProjectQuotation.quotation
         const {conversionAdvance} = this.getPricesQuotation(findProjectQuotation.quotation);
 
         if (conversionAdvance && totalPaid >= conversionAdvance) {
-            await this.findProjectProforma(projectId, accountsReceivableId, typeCurrency)
+            await this.findProjectProforma(projectId, accountsReceivableId, quotationId, typeCurrency)
         }
-
-
     }
 
     async findProjectQuotation(id: number) {
-        console.log("PROJECT", id);
 
         const findProjectQuotation = await this.projectRepository.findOne({where: {id}, include: [{relation: "quotation"}]})
         if (!findProjectQuotation)
@@ -166,37 +171,29 @@ export class AdvancePaymentRecordService {
         return findProjectQuotation
     }
 
-    async findProjectProforma(projectId: number, accountsReceivableId: number, typeCurrency: string) {
-        //cotizacion where projectid, includes cotizacionproducti filtrar por currency tomar brand y provider
+    async findProjectProforma(projectId: number, accountsReceivableId: number, quotationId: number, typeCurrency: any) {
+        //cotizacion where projectid, includes cotizacionproducti filtrar por currency tomar brand y provider, proformaid
         //cada ordern de compra guardar el id de cuentas por cobrar (Accounts-receivlables (al padre))
 
-        const findQuotation = await this.projectRepository.findOne({
+        const newCurrency = typeCurrency === ExchangeRateQuotationE.USD ? CurrencyE.USD :
+            typeCurrency === ExchangeRateQuotationE.MXN ? CurrencyE.PESO_MEXICANO : CurrencyE.EURO
+
+
+        const findQuotationProduct = await this.quotationProductsRepository.findOne({
             where: {
-                id: projectId
-            },
-            include: [{relation: "quotation"}]
+                and: [
+                    {quotationId: quotationId},
+                    {currency: newCurrency}
+                ]
+            }
         })
 
+        if (findQuotationProduct && findQuotationProduct.proformaId) {
+            const findProforma = await this.findProforma(findQuotationProduct.proformaId)
 
-        // await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId}, /*{transaction}*/)
-
-        // const findProjectProforma = await this.projectRepository.findOne({
-        //     where: {id: idProject}, include: [{
-        //         relation: "proformas", scope: {
-        //             where: {
-        //                 // brand,
-        //                 // provider
-        //             }
-        //         }
-        //     }]
-        // })
-        // if (!findProjectProforma)
-        //     throw this.responseService.badRequest("El proyecto no existe.");
-        // else if (!findProjectProforma.proformas)
-        //     throw this.responseService.badRequest("La proforma no existe.");
-
-
-        // return findProjectProforma
+            if (findProforma && findProforma?.accountPayable && !findProforma?.purchaseOrders)
+                await this.purchaseOrdersRepository.create({accountPayableId: findProforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: findQuotationProduct.proformaId, accountsReceivableId}, /*{transaction}*/)
+        }
     }
 
     async findAdvancePayment(id: number) {
@@ -204,6 +201,10 @@ export class AdvancePaymentRecordService {
         if (!advancePaymentRecord)
             throw this.responseService.badRequest("Cobro no existe.");
         return advancePaymentRecord;
+    }
+    async findProforma(id: number) {
+        const findProforma = await this.proformaRepository.findOne({where: {id}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]});
+        return findProforma;
     }
 
     async findAccountReceivable(id: number) {
