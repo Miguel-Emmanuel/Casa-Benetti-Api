@@ -37,7 +37,7 @@ export class AdvancePaymentRecordController {
                 'application/json': {
                     schema: getModelSchemaRef(AdvancePaymentRecordCreate, {
                         title: 'NewAdvancePaymentRecord',
-                        exclude: ['id', 'consecutiveId', 'projectId', 'createdAt', 'status'],
+                        exclude: ['id', 'consecutiveId', 'createdAt', 'status'],
                     }),
                 },
             },
