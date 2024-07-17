@@ -77,7 +77,7 @@ export class ProjectService {
                             {
                                 relation: 'quotationProducts',
                                 scope: {
-                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId'],
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId', 'proformaPrice'],
                                     include: [
                                         {
                                             relation: 'provider'
@@ -113,7 +113,7 @@ export class ProjectService {
         const {quotation} = project;
         const {quotationProducts} = quotation;
         return quotationProducts.map(value => {
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand} = value;
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice} = value;
             const {name, line} = product;
             return {
                 id,
@@ -125,6 +125,7 @@ export class ProjectService {
                 brandId,
                 price,
                 description: `${line?.name} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
+                proformaPrice: proformaPrice ?? null
             }
         })
     }

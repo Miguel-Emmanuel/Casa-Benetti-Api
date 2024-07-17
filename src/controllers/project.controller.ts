@@ -126,6 +126,9 @@ export class ProjectController {
                         brandId: {
                             type: 'string'
                         },
+                        proformaPrice: {
+                            type: 'string'
+                        },
                     }
                 }
             },

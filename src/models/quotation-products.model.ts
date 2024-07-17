@@ -109,30 +109,45 @@ export class QuotationProducts extends Entity {
     //Medidas (ancho)
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     measureWide: number;
 
     //Medidas (alto)
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     measureHigh: number;
 
     //Medidas (profundidad)
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     measureDepth: number;
 
     //Medidas (circuferencia)
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     measureCircumference: number;
 
     //Peso
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     weight: number;
 
@@ -164,6 +179,9 @@ export class QuotationProducts extends Entity {
     //Costo Origen (precio de lista)
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     originCost: number;
 
@@ -193,6 +211,16 @@ export class QuotationProducts extends Entity {
         },
     })
     price: number;
+
+    //Precio proforma
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    proformaPrice: number;
 
     //Descuento porcentaje maximo
     @property({
