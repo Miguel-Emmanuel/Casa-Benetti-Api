@@ -447,7 +447,7 @@ export class QuotationService {
                     delete element.mainFinishImg;
                     delete element.secondaryMaterialImg;
                     delete element.secondaryFinishingImag;
-                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId});
+                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
                     await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                     await this.createDocumentMainFinish(response.id, mainFinishImg);
                     await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
