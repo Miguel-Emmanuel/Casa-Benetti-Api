@@ -65,17 +65,17 @@ export class ProformaService {
             if (!document)
                 return this.responseService.badRequest('¡Oh, no! Debes subir un documento de Proforma');
 
-            const newProforma = await this.proformaRepository.create({...proforma, branchId: findProject.branchId, }, /*{transaction}*/);
+            const newProforma = await this.proformaRepository.create({...proforma, branchId: findProject.branchId, }, {transaction});
 
             if (findQuotationProducts.length > 0) {
                 findQuotationProducts.map(async (item) => {
                     await this.quotationProductsRepository.updateById(item.id, {
                         proformaId: newProforma.id
-                    }, /*{transaction}*/)
+                    }, {transaction})
                 })
             }
             await this.createDocument(newProforma.id, document, transaction)
-            await this.sendEmailProforma(newProforma.id, document.name);
+            await this.sendEmailProforma(newProforma.id, document.name, transaction);
             await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
             return newProforma
@@ -86,7 +86,7 @@ export class ProformaService {
         }
     }
 
-    async sendEmailProforma(proformaId?: number, name?: string) {
+    async sendEmailProforma(proformaId?: number, name?: string, transaction?: any) {
 
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
@@ -133,7 +133,7 @@ export class ProformaService {
                     }
                 },
             ]
-        })
+        }, {transaction})
         const {projectId, project, provider, brand, proformaDate, proformaAmount, currency} = proforma
         const {customer} = project
         const option = {
@@ -165,9 +165,9 @@ export class ProformaService {
 
         if (proformaId) {
             if (document && !document?.id) {
-                await this.proformaRepository.document(proformaId).create(document, /*{transaction}*/);
+                await this.proformaRepository.document(proformaId).create(document, {transaction});
             } else if (document) {
-                await this.documentRepository.updateById(document.id, {...document}, /*{transaction}*/);
+                await this.documentRepository.updateById(document.id, {...document}, {transaction});
             }
         }
     }
@@ -403,7 +403,7 @@ export class ProformaService {
             include: [{
                 relation: "quotation",
             }]
-        }, /*{transaction}*/)
+        }, {transaction})
 
         //productquote, filtrarlo por provedor y marca, el primer elemento tomo currency,
         //find proyecto, AccountsReceivable y projectid toimar total pagado, si veo que es mas de 1 filtrar por el currency
@@ -414,7 +414,7 @@ export class ProformaService {
                 providerId: proforma.providerId,
                 brandId: proforma.brandId
             }
-        })
+        }, {transaction})
 
         if (!findQuotationProducts)
             throw this.responseService.notFound("No se han encontrado productos relacionados con proforma")
@@ -423,7 +423,7 @@ export class ProformaService {
             where: {
                 projectId
             }
-        })
+        }, {transaction})
         let totalPaid = 0
         let accountsReceivableId = undefined
         let newCurrency = ExchangeRateQuotationE.EUR
@@ -456,12 +456,12 @@ export class ProformaService {
             advance = quotation.advanceMXN
         }
 
-        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId}, /*{transaction}*/);
+        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId}, {transaction});
 
         //cambiar totalpagado
         if (advance && totalPaid >= advance) {
             //guardar el id de accounttspayableid
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId}, /*{transaction}*/)
+            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId}, {transaction})
         }
 
 
