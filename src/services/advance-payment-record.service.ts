@@ -35,19 +35,23 @@ export class AdvancePaymentRecordService {
 
 
     async create(advancePaymentRecord: Omit<AdvancePaymentRecordCreate, 'id'>,) {
-        await this.validateBodyAdvancePayment(advancePaymentRecord);
-        const {accountsReceivableId, vouchers} = advancePaymentRecord;
-        const accountsReceivable = await this.findAccountReceivable(accountsReceivableId);
-        const {advancePaymentRecords} = accountsReceivable;
-        let consecutiveId = 1;
-        if (advancePaymentRecords?.length > 0)
-            consecutiveId = advancePaymentRecords[0].consecutiveId + 1
+        try {
+            await this.validateBodyAdvancePayment(advancePaymentRecord);
+            const {accountsReceivableId, vouchers} = advancePaymentRecord;
+            const accountsReceivable = await this.findAccountReceivable(accountsReceivableId);
+            const {advancePaymentRecords} = accountsReceivable;
+            let consecutiveId = 1;
+            if (advancePaymentRecords?.length > 0)
+                consecutiveId = advancePaymentRecords[0].consecutiveId + 1
 
-        delete advancePaymentRecord?.vouchers;
-        const advancePaymentRecordRes = await this.advancePaymentRecordRepository.create({...advancePaymentRecord, consecutiveId});
+            delete advancePaymentRecord?.vouchers;
+            const advancePaymentRecordRes = await this.advancePaymentRecordRepository.create({...advancePaymentRecord, consecutiveId});
 
-        await this.createDocuments(advancePaymentRecordRes.id, vouchers);
-        return advancePaymentRecordRes;
+            await this.createDocuments(advancePaymentRecordRes.id, vouchers);
+            return advancePaymentRecordRes;
+        } catch (error) {
+            throw this.responseService.badRequest(error.message ?? error);
+        }
     }
 
     async createDocuments(advancePaymentRecordId: number, documents?: DocumentSchema[]) {
