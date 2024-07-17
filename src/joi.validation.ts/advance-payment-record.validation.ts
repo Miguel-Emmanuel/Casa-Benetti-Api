@@ -16,6 +16,7 @@ export const schameCreateAdvancePayment = Joi.object({
         'any.only': `La moneda de pago debe ser igual a uno de los valores permitidos.`
     }).required(),
     parity: Joi.number().required(),
+    projectId: Joi.number().required(),
     percentageIva: Joi.number().required(),
     accountsReceivableId: Joi.number().required(),
     currencyApply: Joi.string().required(),
