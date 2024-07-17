@@ -140,7 +140,7 @@ export class PurchaseOrdersService {
                             {
                                 relation: 'quotationProducts',
                                 scope: {
-                                    fields: ['id', 'productId'],
+                                    fields: ['id', 'productId', 'proformaId'],
                                     include: [
                                         {
                                             relation: 'product',
