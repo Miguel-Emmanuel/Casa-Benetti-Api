@@ -40,7 +40,7 @@ export class CommissionPaymentService {
             {
                 relation: 'documents',
                 scope: {
-                    fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'commissionPaymentId']
+                    fields: ['createdAt', 'fileURL', 'name', 'extension', 'commissionPaymentId']
                 }
             }
         ]
@@ -55,7 +55,31 @@ export class CommissionPaymentService {
                     ...include
                 ]
             };
-        return this.commissionPaymentRepository.findById(id, filter);
+        const findCommissionPayment = await this.commissionPaymentRepository.findById(id, {
+            fields: ["id", "paymentDate", "amount", "status"],
+            ...filter,
+        });
+
+        const arrayDocuments = findCommissionPayment?.documents
+            ? findCommissionPayment.documents.map((document) => {
+                return {
+                    id: document.id,
+                    createdAt: document.createdAt,
+                    fileURL: document.fileURL,
+                    name: document.name,
+                    extension: document.extension,
+                };
+            })
+            : [];
+
+        const {documents, ...data} = findCommissionPayment
+
+        const value: any = {
+            ...data,
+            documents: arrayDocuments
+        }
+
+        return value
     }
 
     async updateById(id: number, commissionPayment: CommissionPaymentCreate,) {
