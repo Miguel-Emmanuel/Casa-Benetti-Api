@@ -250,7 +250,7 @@ export class ProductController {
         },
     })
     async updateProforma(
-        @param.path.number('productQuotationId') id: number,
+        @param.path.number('productQuotationId') productQuotationId: number,
         @requestBody({
             content: {
                 'application/json': {
@@ -267,7 +267,7 @@ export class ProductController {
         })
         body: {price: number},
     ): Promise<void> {
-        await this.productService.updateProforma(id, body);
+        await this.productService.updateProforma(productQuotationId, body);
     }
 
 }
