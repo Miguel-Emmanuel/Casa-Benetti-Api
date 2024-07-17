@@ -103,11 +103,7 @@ export class ProductService {
         if (!quotationProduct)
             throw this.responseService.badRequest('El producto de cotizacion no existe.');
 
-        const productProvider = await this.productProviderRepository.findOne({where: {providerId: quotationProduct.providerId, productId: quotationProduct.productId}})
-        if (!productProvider)
-            throw this.responseService.badRequest('El provedor cotizacion no existe.');
-
-        await this.productProviderRepository.updateById(productProvider.id, {originCost: body.price});
+        await this.quotationProductsRepository.updateById(quotationProduct.id, {proformaPrice: body.price});
 
         // await this.findByIdProduct(id);
         // await this.validateBodyProforma(body);
