@@ -45,4 +45,9 @@ export const modulesSeed = [
     description: 'Cuentas por pagar',
     categoryName: ModuleCategories.CUENTAS_POR_PAGAR
   },
+  {
+    name: 'Comisiones',
+    description: 'Comisiones',
+    categoryName: ModuleCategories.COMISIONES
+  },
 ];

@@ -118,124 +118,128 @@ export class PurchaseOrdersService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<PurchaseOrders>) {
-        const include: InclusionFilter[] = [
-            {
-                relation: 'proforma',
-                scope: {
-                    include: [
-                        {
-                            relation: 'provider',
-                            scope: {
-                                fields: ['id', 'name']
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'proforma',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'provider',
+                                scope: {
+                                    fields: ['id', 'name']
+                                }
                             }
-                        }
-                        ,
-                        {
-                            relation: 'brand',
-                            scope: {
-                                fields: ['id', 'brandName']
-                            }
-                        },
-                        {
-                            relation: 'quotationProducts',
-                            scope: {
-                                fields: ['id', 'productId'],
-                                include: [
-                                    {
-                                        relation: 'product',
-                                        scope: {
-                                            fields: ['id', 'lineId', 'document'],
-                                            include: [
-                                                {
-                                                    relation: 'line',
-                                                    scope: {
-                                                        fields: ['id', 'name'],
+                            ,
+                            {
+                                relation: 'brand',
+                                scope: {
+                                    fields: ['id', 'brandName']
+                                }
+                            },
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    fields: ['id', 'productId', 'proformaId'],
+                                    include: [
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                fields: ['id', 'lineId', 'document'],
+                                                include: [
+                                                    {
+                                                        relation: 'line',
+                                                        scope: {
+                                                            fields: ['id', 'name'],
+                                                        }
+                                                    },
+                                                    {
+                                                        relation: 'document',
+                                                        scope: {
+                                                            fields: ['id', 'fileURL'],
+                                                        }
                                                     }
-                                                },
-                                                {
-                                                    relation: 'document',
-                                                    scope: {
-                                                        fields: ['id', 'fileURL'],
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                relation: 'project',
+                                scope: {
+                                    fields: ['id', 'customerId', 'quotationId'],
+                                    include: [
+                                        {
+                                            relation: 'customer',
+                                            scope: {
+                                                fields: ['id', 'name', 'lastName', 'secondLastName']
+                                            }
+                                        },
+                                        {
+                                            relation: 'quotation',
+                                            scope: {
+                                                fields: ['id', 'mainProjectManagerId'],
+                                                include: [
+                                                    {
+                                                        relation: 'mainProjectManager',
+                                                        scope: {
+                                                            fields: ['id', 'firstName', 'lastName']
+                                                        }
                                                     }
-                                                }
-                                            ]
+                                                ]
+                                            }
                                         }
-                                    }
-                                ]
+                                    ]
+                                }
                             }
-                        },
-                        {
-                            relation: 'project',
-                            scope: {
-                                fields: ['id', 'customerId', 'quotationId'],
-                                include: [
-                                    {
-                                        relation: 'customer',
-                                        scope: {
-                                            fields: ['id', 'name', 'lastName', 'secondLastName']
-                                        }
-                                    },
-                                    {
-                                        relation: 'quotation',
-                                        scope: {
-                                            fields: ['id', 'mainProjectManagerId'],
-                                            include: [
-                                                {
-                                                    relation: 'mainProjectManager',
-                                                    scope: {
-                                                        fields: ['id', 'firstName', 'lastName']
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    ]
+                        ]
+                    }
                 }
-            }
-        ]
-        if (filter?.include)
-            filter.include = [
-                ...filter.include,
-                ...include
             ]
-        else
-            filter = {
-                ...filter, include: [
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
                     ...include
                 ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+            const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
+            const {createdAt, proforma, status, accountPayableId, proformaId} = purchaseOrders;
+            const {provider, brand, quotationProducts, project} = proforma;
+            const {customer, quotation} = project
+            const {mainProjectManager} = quotation
+            return {
+                id,
+                createdAt,
+                provider,
+                brand,
+                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                accountPayableId,
+                status,
+                proformaId,
+                date: 'Aun estamos trabajando en calcular la fecha.',
+                quotationProducts: quotationProducts.map((value: QuotationProductsWithRelations) => {
+                    const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, originCode, model, quantity} = value;
+                    const {line, name, document} = product;
+                    return {
+                        SKU,
+                        image: document?.fileURL,
+                        model,
+                        description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
+                        originCode,
+                        quantity
+                    }
+                })
             };
-        const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
-        const {createdAt, proforma, status, accountPayableId, proformaId} = purchaseOrders;
-        const {provider, brand, quotationProducts, project} = proforma;
-        const {customer, quotation} = project
-        const {mainProjectManager} = quotation
-        return {
-            id,
-            createdAt,
-            provider,
-            brand,
-            customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-            mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
-            accountPayableId,
-            status,
-            proformaId,
-            date: 'Aun estamos trabajando en calcular la fecha.',
-            quotationProducts: quotationProducts.map((value: QuotationProductsWithRelations) => {
-                const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, originCode, model, quantity} = value;
-                const {line, name, document} = product;
-                return {
-                    SKU,
-                    image: document?.fileURL,
-                    model,
-                    description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
-                    originCode,
-                    quantity
-                }
-            })
-        };
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error);
+        }
     }
 
     async downloadPurchaseOrder(purchaseOrderId: number) {

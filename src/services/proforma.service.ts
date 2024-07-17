@@ -271,7 +271,7 @@ export class ProformaService {
             await this.findByIdProvider(proforma.providerId)
             await this.findByIdProject(proforma.projectId)
             await this.findByIdBrand(proforma.brandId)
-            const findProviderBrand = await this.findProviderBrand(proforma)
+            const findProviderBrand = await this.findProviderBrandUpdate(id, proforma)
 
             if (findProviderBrand)
                 return this.responseService.badRequest('¡Oh, no! Ya hay un registro con esta marca y proveedor, revisa por favor e intenta de nuevo.');
@@ -547,6 +547,19 @@ export class ProformaService {
         const {projectId, providerId, brandId} = proforma
         const findProviderBrand = await this.proformaRepository.findOne({
             where: {
+                projectId,
+                providerId,
+                brandId,
+            }
+        })
+        return findProviderBrand ? true : false
+    }
+
+    async findProviderBrandUpdate(id: number, proforma: Proforma): Promise<boolean> {
+        const {projectId, providerId, brandId} = proforma
+        const findProviderBrand = await this.proformaRepository.findOne({
+            where: {
+                id: {neq: id},
                 projectId,
                 providerId,
                 brandId,
