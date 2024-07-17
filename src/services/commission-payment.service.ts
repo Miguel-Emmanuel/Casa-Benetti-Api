@@ -40,7 +40,7 @@ export class CommissionPaymentService {
             {
                 relation: 'documents',
                 scope: {
-                    fields: ['createdAt', 'fileURL', 'name', 'extension', 'commissionPaymentId']
+                    fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'commissionPaymentId']
                 }
             }
         ]
