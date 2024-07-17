@@ -38,15 +38,15 @@ export class ProformaService {
     ) { }
 
     async create(data: {proforma: Omit<Proforma, 'id'>, document: Document}) {
+        const transaction = await this.projectRepository.dataSource.beginTransaction(IsolationLevel.SERIALIZABLE);
         try {
-            const transaction = await this.projectRepository.dataSource.beginTransaction(IsolationLevel.SERIALIZABLE);
             const {proforma, document} = data
 
             const findProject = await this.projectRepository.findById(proforma.projectId, {
                 include: [{
                     relation: "quotation",
                 }]
-            })
+            }, {transaction})
 
             const findQuotationProducts = await this.quotationProductsRepository.find({
                 where: {
@@ -54,7 +54,7 @@ export class ProformaService {
                     providerId: proforma.providerId,
                     brandId: proforma.brandId
                 }
-            })
+            }, {transaction})
 
 
             const findProviderBrand = await this.findProviderBrand(proforma)
@@ -78,8 +78,10 @@ export class ProformaService {
             await this.sendEmailProforma(newProforma.id, document.name, transaction);
             await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
-            return newProforma
+            await transaction.commit()
+            return {newProforma}
         } catch (error) {
+            transaction.rollback()
             return this.responseService.internalServerError(
                 error.message ? error.message : error
             );
@@ -151,14 +153,16 @@ export class ProformaService {
                 currency,
             }
         }
+        const emails = []
         for (let index = 0; index < users.length; index++) {
             const element = users[index];
-            const optionsDynamic = {
-                to: element.email,
-                ...option,
-            };
-            await this.sendgridService.sendNotification(optionsDynamic);
+            emails.push(element.email)
         }
+        const optionsDynamic = {
+            to: emails,
+            ...option,
+        };
+        await this.sendgridService.sendNotification(optionsDynamic);
     }
 
     async createDocument(proformaId: number | undefined, document: Document, transaction: any) {
