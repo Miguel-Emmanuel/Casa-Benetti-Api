@@ -235,7 +235,7 @@ export class ProductController {
         return this.productService.activateDeactivate(id, body);
     }
 
-    @patch('/products/proforma/{id}')
+    @patch('/products/proforma/{productQuotationId}')
     @response(201, {
         description: 'customer model instance',
         content: {
@@ -250,7 +250,7 @@ export class ProductController {
         },
     })
     async updateProforma(
-        @param.path.number('id') id: number,
+        @param.path.number('productQuotationId') productQuotationId: number,
         @requestBody({
             content: {
                 'application/json': {
@@ -267,7 +267,7 @@ export class ProductController {
         })
         body: {price: number},
     ): Promise<void> {
-        await this.productService.updateProforma(id, body);
+        await this.productService.updateProforma(productQuotationId, body);
     }
 
 }

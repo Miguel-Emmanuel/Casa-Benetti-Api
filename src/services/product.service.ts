@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AssembledProducts, Document, Product, ProductCreate, ProductProvider} from '../models';
-import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductProviderRepository, ProductRepository, ProviderRepository, UserRepository} from '../repositories';
+import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductProviderRepository, ProductRepository, ProviderRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -31,7 +31,9 @@ export class ProductService {
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
         @repository(ProductProviderRepository)
-        public productProviderRepository: ProductProviderRepository
+        public productProviderRepository: ProductProviderRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository
     ) { }
 
     async create(data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
@@ -89,7 +91,24 @@ export class ProductService {
         }
     }
 
+    /**
+     * Actualizar precio proforma
+     * @param id
+     * @param body
+     * @returns
+     */
     async updateProforma(id: number, body: {price: number}) {
+        await this.validateBodyProforma(body);
+        const quotationProduct = await this.quotationProductsRepository.findOne({where: {id}})
+        if (!quotationProduct)
+            throw this.responseService.badRequest('El producto de cotizacion no existe.');
+
+        const productProvider = await this.productProviderRepository.findOne({where: {providerId: quotationProduct.providerId, productId: quotationProduct.productId}})
+        if (!productProvider)
+            throw this.responseService.badRequest('El provedor cotizacion no existe.');
+
+        await this.productProviderRepository.updateById(productProvider.id, {originCost: body.price});
+
         // await this.findByIdProduct(id);
         // await this.validateBodyProforma(body);
         // await this.productRepository.updateById(id, {listPrice: body.price});
