@@ -72,8 +72,9 @@ export class CommissionPaymentRecordService {
 
         const commissions = await this.commissionPaymentRecordRepository.find(filter);
         return commissions.map(value => {
-            const {userName, user, type, projectId, commissionPercentage, commissionAmount, totalPaid, balance, percentagePaid, status, createdAt, project} = value;
+            const {userName, user, type, projectId, commissionPercentage, commissionAmount, totalPaid, balance, percentagePaid, status, createdAt, project, id} = value;
             return {
+                id,
                 createdAt,
                 name: userName ?? `${user?.firstName} ${user?.lastName}`,
                 type,
