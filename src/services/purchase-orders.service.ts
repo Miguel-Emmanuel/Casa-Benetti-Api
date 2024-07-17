@@ -140,7 +140,6 @@ export class PurchaseOrdersService {
                             {
                                 relation: 'quotationProducts',
                                 scope: {
-                                    fields: ['id', 'productId', 'proformaId'],
                                     include: [
                                         {
                                             relation: 'product',
@@ -215,6 +214,8 @@ export class PurchaseOrdersService {
             const {mainProjectManager} = quotation
             return {
                 id,
+                projectId: project?.id,
+                productionEndDate: null,
                 createdAt,
                 provider,
                 brand,
@@ -231,7 +232,7 @@ export class PurchaseOrdersService {
                         SKU,
                         image: document?.fileURL,
                         model,
-                        description: `${line?.name} ${name} ${mainMaterial} ${mainFinish} ${secondaryMaterial} ${secondaryFinishing} ${measureWide}`,
+                        description: `${line?.name} ${name} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
                         originCode,
                         quantity
                     }
