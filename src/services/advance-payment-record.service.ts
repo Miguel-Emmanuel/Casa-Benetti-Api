@@ -160,9 +160,9 @@ export class AdvancePaymentRecordService {
         const findProjectQuotation = await this.findProjectQuotation(projectId)
 
         const {id: quotationId} = findProjectQuotation.quotation
-        const {conversionAdvance} = this.getPricesQuotation(findProjectQuotation.quotation);
+        const {advance} = this.getPricesQuotation(findProjectQuotation.quotation);
 
-        if (conversionAdvance && totalPaid >= conversionAdvance) {
+        if (advance && totalPaid >= advance) {
             await this.findProjectProforma(projectId, accountsReceivableId, quotationId, typeCurrency)
         }
     }
