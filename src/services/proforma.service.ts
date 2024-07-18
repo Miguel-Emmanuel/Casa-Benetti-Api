@@ -460,7 +460,7 @@ export class ProformaService {
             advance = quotation.advanceMXN
         }
 
-        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId}, {transaction});
+        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
 
         //cambiar totalpagado
         if (advance && totalPaid >= advance) {
