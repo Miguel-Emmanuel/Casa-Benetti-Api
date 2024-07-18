@@ -200,3 +200,9 @@ export enum ProformaCurrencyE {
     USD = 'Dolar',
     PESO_MEXICANO = 'Peso Mexicano',
 }
+
+export enum ConvertCurrencyToEUR {
+    EURO = 1,
+    USD = 0.92,
+    MXN = 0.051,
+}
