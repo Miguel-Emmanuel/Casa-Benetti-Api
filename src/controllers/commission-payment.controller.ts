@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     Filter,
@@ -16,6 +17,7 @@ import {
 import {CommissionPayment, CommissionPaymentCreate} from '../models';
 import {CommissionPaymentService} from '../services';
 
+@authenticate('jwt')
 export class CommissionPaymentController {
     constructor(
         @service()
@@ -96,7 +98,7 @@ export class CommissionPaymentController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(CommissionPaymentCreate, {partial: true, exclude: ['id', 'commissionPaymentRecordId']}),
+                    schema: getModelSchemaRef(CommissionPaymentCreate, {partial: true, exclude: ['id']}),
                 },
             },
         })
