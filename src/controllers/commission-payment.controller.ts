@@ -98,7 +98,7 @@ export class CommissionPaymentController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(CommissionPaymentCreate, {partial: true, exclude: ['id', 'commissionPaymentRecordId']}),
+                    schema: getModelSchemaRef(CommissionPaymentCreate, {partial: true, exclude: ['id']}),
                 },
             },
         })
