@@ -969,6 +969,7 @@ export class QuotationService {
     }
 
     calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
+        //CAMBIAR TIPO DE MONEDA URGENTE
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
             let bodyMXN = {};
