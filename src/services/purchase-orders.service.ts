@@ -89,7 +89,22 @@ export class PurchaseOrdersService {
                             scope: {
                                 fields: ['id', "quantity", "proformaId",]
                             }
-                        }]
+                        },
+                        {
+                            relation: 'project',
+                            scope: {
+                                fields: ['id', 'quotationId'],
+                                include: [
+                                    {
+                                        relation: 'quotation',
+                                        scope: {
+                                            fields: ['id', 'closingDate']
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
                 }
             }
         ]
@@ -106,14 +121,16 @@ export class PurchaseOrdersService {
             };
         return (await this.purchaseOrdersRepository.find(filter)).map(value => {
             const {id, proforma, status} = value;
-            const {provider, brand, quotationProducts, projectId} = proforma;
+            const {provider, brand, quotationProducts, projectId, project} = proforma;
+            const {quotation} = project
             return {
                 id,
                 projectId,
                 provider: `${provider.name}`,
                 brand: `${brand?.brandName}`,
                 quantity: quotationProducts?.length ?? 0,
-                status
+                status,
+                closingDate: quotation?.closingDate
             }
         });
     }

@@ -5,6 +5,7 @@ import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {convertToMoney} from '../helpers/convertMoney';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
@@ -402,13 +403,15 @@ export class ProjectService {
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
+            const reference = `${referenceCustomer?.firstName ?? ""} ${referenceCustomer?.lastName ?? ""}`
+            const referenceCustomerName = reference.trim() === "" ? "-" : reference
             const properties: any = {
                 "logo": logo,
                 "customerName": `${customer?.name} ${customer?.lastName}`,
                 "quotationId": quotationId,
                 "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
-                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "referenceCustomer": referenceCustomerName,
                 "products": productsTemplate,
                 subtotal,
                 percentageAdditionalDiscount: percentageAdditionalDiscount ?? 0,
@@ -417,9 +420,9 @@ export class ProjectService {
                 iva,
                 total,
                 advance,
-                advanceCustomer,
-                conversionAdvance,
-                balance,
+                advanceCustomer: convertToMoney(advanceCustomer ?? 0),
+                conversionAdvance: convertToMoney(conversionAdvance ?? 0),
+                balance: convertToMoney(balance ?? 0),
                 exchangeRate,
                 percentageAdvance,
                 emailPM: mainProjectManager?.email
@@ -457,13 +460,15 @@ export class ProjectService {
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
+            const reference = `${referenceCustomer?.firstName ?? ""} ${referenceCustomer?.lastName ?? ""}`
+            const referenceCustomerName = reference.trim() === "" ? "-" : reference
             const properties: any = {
                 "logo": logo,
                 "customerName": `${customer?.name} ${customer?.lastName}`,
                 "quotationId": quotationId,
                 "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
-                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "referenceCustomer": referenceCustomerName,
                 "products": prodcutsArray,
             }
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`

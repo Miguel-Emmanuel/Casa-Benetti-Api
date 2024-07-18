@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ExchangeRateE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
 import {AccountPayableHistoryRepository, AccountPayableRepository, DocumentRepository} from '../repositories';
@@ -22,6 +23,12 @@ export class AccountPayableHistoryService {
     async create(accountPayableHistory: Omit<AccountPayableHistoryCreate, 'id'>,) {
         const {accountPayableId, images} = accountPayableHistory;
         const accountPayable = await this.findAccountPayable(accountPayableId);
+        if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
+            const newAmount = this.convertCurrencyToEUR(accountPayableHistory.amount, accountPayableHistory.currency)
+            const newTotalPaid = accountPayable.totalPaid + newAmount
+            const newBalance = accountPayable.balance - newAmount
+            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: newBalance})
+        }
         delete accountPayableHistory.images;
         const accountPayableHistoryRes = await this.accountPayableHistoryRepository.create({...accountPayableHistory, providerId: accountPayable.proforma?.providerId});
         await this.createDocument(accountPayableHistoryRes.id, images);
@@ -56,9 +63,20 @@ export class AccountPayableHistoryService {
         return this.accountPayableHistoryRepository.findById(id, filter);
     }
     async updateById(id: number, accountPayableHistory: AccountPayableHistoryCreate,) {
-        const {accountPayableId, images} = accountPayableHistory;
-        await this.findAccountPayableHistory(id);
-        await this.findAccountPayable(accountPayableId);
+        const {accountPayableId, images, status} = accountPayableHistory;
+        const findAccountPayableHistory = await this.findAccountPayableHistory(id);
+        if (findAccountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO)
+            throw this.responseService.badRequest("El pago ya fue realizado y no puede actualizarse.");
+
+        const {totalPaid, balance} = await this.findAccountPayable(accountPayableId);
+
+        if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
+            const newAmount = this.convertCurrencyToEUR(accountPayableHistory.amount, accountPayableHistory.currency)
+            const newTotalPaid = totalPaid + newAmount
+            const newBalance = balance - newAmount
+            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: newBalance})
+        }
+
         delete accountPayableHistory.images;
         await this.createDocument(id, images);
         await this.accountPayableHistoryRepository.updateById(id, accountPayableHistory);
@@ -102,5 +120,14 @@ export class AccountPayableHistoryService {
         if (!account)
             throw this.responseService.notFound("La cuenta por pagar no se ha encontrado.")
         return account;
+    }
+
+    convertCurrencyToEUR(amount: number, currency: ExchangeRateE): number {
+        if (currency === ExchangeRateE.MXN)
+            return amount * ConvertCurrencyToEUR.MXN
+        else if (currency === ExchangeRateE.USD)
+            return amount * ConvertCurrencyToEUR.USD
+        else
+            return amount * ConvertCurrencyToEUR.EURO
     }
 }
