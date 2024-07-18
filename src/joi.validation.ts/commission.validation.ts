@@ -17,6 +17,7 @@ export const schemaCommissionPaymentCreate = Joi.object({
 
 export const schemaCommissionPaymentUpdate = Joi.object({
     paymentDate: Joi.date().required(),
+    commissionPaymentRecordId: Joi.number().required(),
     status: Joi.string().valid(...Object.values(CommissionPaymentStatus)).messages({
         'any.only': `El estatus de pago debe ser igual a uno de los valores permitidos.`
     }),
