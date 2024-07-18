@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
-import {Filter, FilterExcludingWhere, InclusionFilter, repository, Where} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import dayjs from 'dayjs';
@@ -87,7 +87,7 @@ export class PurchaseOrdersService {
                         {
                             relation: 'quotationProducts',
                             scope: {
-                                fields: ['id']
+                                fields: ['id', "quantity", "proformaId",]
                             }
                         }]
                 }
@@ -106,9 +106,10 @@ export class PurchaseOrdersService {
             };
         return (await this.purchaseOrdersRepository.find(filter)).map(value => {
             const {id, proforma, status} = value;
-            const {provider, brand, quotationProducts} = proforma;
+            const {provider, brand, quotationProducts, projectId} = proforma;
             return {
                 id,
+                projectId,
                 provider: `${provider.name}`,
                 brand: `${brand?.brandName}`,
                 quantity: quotationProducts?.length ?? 0,
