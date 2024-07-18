@@ -93,7 +93,7 @@ export class CommissionPaymentService {
             const totalPaidNew = totalPaid + amount;
             const balanceNew = balance - amount;
             const percentagePaid = this.calculatePercentagePaid(commissionAmount, totalPaidNew);
-            await this.commissionPaymentRecordRepository.updateById(id, {balance: balanceNew, totalPaid: totalPaidNew, percentagePaid})
+            await this.commissionPaymentRecordRepository.updateById(commissionPaymentRecordId, {balance: balanceNew, totalPaid: totalPaidNew, percentagePaid})
         }
         delete commissionPayment.images;
         await this.commissionPaymentRepository.updateById(id, commissionPayment);
