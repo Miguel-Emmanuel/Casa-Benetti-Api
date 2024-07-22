@@ -337,17 +337,27 @@ export class QuotationService {
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product) {
-                const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag, document} = element
                 delete element.mainMaterialImg;
                 delete element.mainFinishImg;
                 delete element.secondaryMaterialImg;
                 delete element.secondaryFinishingImag;
+                delete element.document;
                 const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
+                await this.createDocumentProduct(response.productId, document)
                 await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                 await this.createDocumentMainFinish(response.id, mainFinishImg);
                 await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
                 await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImag);
             }
+        }
+    }
+
+    async createDocumentProduct(productId: number, document?: DocumentSchema) {
+        if (document && !document?.id) {
+            await this.productRepository.document(productId).create(document);
+        } else if (document) {
+            await this.documentRepository.updateById(document.id, {...document});
         }
     }
 
@@ -441,25 +451,27 @@ export class QuotationService {
             if (product) {
                 const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
                 if (findQuotationP) {
-                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag, document} = element
                     delete element.mainMaterialImg;
                     delete element.mainFinishImg;
                     delete element.secondaryMaterialImg;
                     delete element.secondaryFinishingImag;
-                    console.log('element:_ ', element)
-                    console.log('findQuotationP:_ ', findQuotationP.id)
+                    delete element.document;
                     await this.quotationProductsRepository.updateById(findQuotationP.id, element);
+                    await this.createDocumentProduct(findQuotationP.productId, document)
                     await this.createDocumentMainMaterial(findQuotationP.id, mainMaterialImg)
                     await this.createDocumentMainFinish(findQuotationP.id, mainFinishImg);
                     await this.createDocumentSecondaryMaterial(findQuotationP.id, secondaryMaterialImg);
                     await this.createDocumentSecondaryFinishingImage(findQuotationP.id, secondaryFinishingImag);
                 } else {
-                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag, document} = element
                     delete element.mainMaterialImg;
                     delete element.mainFinishImg;
                     delete element.secondaryMaterialImg;
                     delete element.secondaryFinishingImag;
+                    delete element.document;
                     const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
+                    await this.createDocumentProduct(response.productId, document)
                     await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                     await this.createDocumentMainFinish(response.id, mainFinishImg);
                     await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
