@@ -458,7 +458,16 @@ export class QuotationService {
                     delete element.secondaryMaterialImg;
                     delete element.secondaryFinishingImag;
                     delete element.document;
-                    await this.quotationProductsRepository.updateById(findQuotationP.id, element);
+                    let dateReservationDays, isNotificationSent;
+                    if (findQuotationP?.dateReservationDays && element?.reservationDays) {
+                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days');
+                        isNotificationSent = true;
+                    } else if (!findQuotationP?.dateReservationDays && element?.reservationDays) {
+                        dateReservationDays = dayjs().add(element?.reservationDays, 'days');
+                        isNotificationSent = true;
+                    }
+                    element.isNotificationSent = element?.reservationDays ? false : undefined
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, {...element, dateReservationDays, isNotificationSent});
                     await this.createDocumentProduct(findQuotationP.productId, document)
                     await this.createDocumentMainMaterial(findQuotationP.id, mainMaterialImg)
                     await this.createDocumentMainFinish(findQuotationP.id, mainFinishImg);
