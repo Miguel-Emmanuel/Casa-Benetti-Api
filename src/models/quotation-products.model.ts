@@ -1,6 +1,6 @@
 import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
-import {CurrencyE, QuotationProductStatusE} from '../enums';
+import {CurrencyE, QuotationProductStatusE, TypeSaleE} from '../enums';
 import {DocumentSchema} from './base/document.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
@@ -57,6 +57,16 @@ export class QuotationProducts extends Entity {
 
     @belongsTo(() => Product)
     productId: number;
+
+    //Tipo de venta/prestamo
+    @property({
+        type: 'string',
+        jsonSchema: {
+            enum: [...Object.values(TypeSaleE)]
+        }
+    })
+    typeSaleE: TypeSaleE;
+
 
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************
 

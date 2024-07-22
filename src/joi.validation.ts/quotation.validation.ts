@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
+import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeSaleE} from '../enums';
 
 export const documents = Joi.object({
     id: Joi.number(),
@@ -90,6 +90,9 @@ const products = Joi.object({
     subtotalDiscount: Joi.number().required(),
     location: Joi.string().allow('').allow(null),
     assembledProducts: Joi.array().items(schemaAssembledProducts).optional().allow(null),
+    typeSaleE: Joi.string().valid(...Object.values(TypeSaleE)).messages({
+        'any.only': `El tipo debe ser igual a uno de los valores permitidos.`
+    }).optional(),
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({
