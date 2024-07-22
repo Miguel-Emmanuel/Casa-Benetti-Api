@@ -3,7 +3,7 @@ import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeArticleE, TypeCommisionE} from '../enums';
-import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsById, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
@@ -439,9 +439,18 @@ export class QuotationService {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product) {
                 const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
-                if (findQuotationP)
+                if (findQuotationP) {
+                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
+                    delete element.mainMaterialImg;
+                    delete element.mainFinishImg;
+                    delete element.secondaryMaterialImg;
+                    delete element.secondaryFinishingImag;
                     await this.quotationProductsRepository.updateById(findQuotationP.id, element);
-                else {
+                    await this.createDocumentMainMaterial(findQuotationP.id, mainMaterialImg)
+                    await this.createDocumentMainFinish(findQuotationP.id, mainFinishImg);
+                    await this.createDocumentSecondaryMaterial(findQuotationP.id, secondaryMaterialImg);
+                    await this.createDocumentSecondaryFinishingImage(findQuotationP.id, secondaryFinishingImag);
+                } else {
                     const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag} = element
                     delete element.mainMaterialImg;
                     delete element.mainFinishImg;
@@ -652,7 +661,39 @@ export class QuotationService {
             {
                 relation: 'products',
                 scope: {
-                    include: ['quotationProducts', 'brand', 'document', 'line']
+                    include: [
+                        {
+                            relation: 'quotationProducts',
+                            scope: {
+                                include: [
+                                    {
+                                        relation: 'mainMaterialImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                    {
+                                        relation: 'mainFinishImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                    {
+                                        relation: 'secondaryMaterialImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                    {
+                                        relation: 'secondaryFinishingImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                ]
+                            }
+                        }
+                        , 'brand', 'document', 'line']
                 }
 
             },
@@ -710,7 +751,7 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         const quotation = await this.quotationRepository.findById(id, filter);
-        const products: ProductsById[] = [];
+        const products: any[] = [];
         const projectManagers: ProjectManagersById[] = [];
         const designers: DesignersById[] = [];
         for (const iterator of quotation?.products ?? []) {
@@ -727,6 +768,11 @@ export class QuotationService {
                 percentageMaximumDiscount: iterator.quotationProducts.percentageMaximumDiscount,
                 maximumDiscount: iterator.quotationProducts.maximumDiscount,
                 subtotal: iterator.quotationProducts.subtotal,
+                mainMaterialImage: iterator.quotationProducts?.mainMaterialImage,
+                mainFinishImage: iterator.quotationProducts?.mainFinishImage,
+                secondaryMaterialImage: iterator.quotationProducts?.secondaryMaterialImage,
+                secondaryFinishingImage: iterator.quotationProducts?.secondaryFinishingImage,
+
             })
         }
 
