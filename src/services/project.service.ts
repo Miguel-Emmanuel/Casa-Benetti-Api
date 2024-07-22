@@ -381,9 +381,11 @@ export class ProjectService {
 
 
     async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]});
-        const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]}, {transaction});
+        const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+        console.log("QUOTATIONCUSTOMER", quotation);
+
 
         let productsTemplate = [];
         for (const product of products) {
@@ -403,7 +405,7 @@ export class ProjectService {
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
-            const reference = `${referenceCustomer?.firstName ?? ""} ${referenceCustomer?.lastName ?? ""}`
+            const reference = `${project?.reference ?? ""}`
             const referenceCustomerName = reference.trim() === "" ? "-" : reference
             const properties: any = {
                 "logo": logo,
@@ -438,8 +440,10 @@ export class ProjectService {
     }
 
     async createPdfToProvider(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
-        const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]}, {transaction});
+        const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
+        console.log("QUOTATION", quotation);
+
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
         let prodcutsArray = [];
@@ -460,8 +464,10 @@ export class ProjectService {
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
-            const reference = `${referenceCustomer?.firstName ?? ""} ${referenceCustomer?.lastName ?? ""}`
+            const reference = `${project?.reference ?? ""}`
             const referenceCustomerName = reference.trim() === "" ? "-" : reference
+            console.log("REFERENCE", {reference, referenceCustomerName});
+
             const properties: any = {
                 "logo": logo,
                 "customerName": `${customer?.name} ${customer?.lastName}`,
