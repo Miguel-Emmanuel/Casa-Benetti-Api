@@ -90,9 +90,10 @@ const products = Joi.object({
     subtotalDiscount: Joi.number().required(),
     location: Joi.string().allow('').allow(null),
     assembledProducts: Joi.array().items(schemaAssembledProducts).optional().allow(null),
-    typeSaleE: Joi.string().valid(...Object.values(TypeSaleE)).messages({
+    typeSale: Joi.string().valid(...Object.values(TypeSaleE)).messages({
         'any.only': `El tipo debe ser igual a uno de los valores permitidos.`
     }).optional(),
+    isMoneySection: Joi.boolean().optional(),
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({

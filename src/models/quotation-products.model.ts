@@ -58,15 +58,17 @@ export class QuotationProducts extends Entity {
     @belongsTo(() => Product)
     productId: number;
 
-    //Tipo de venta/prestamo
+    //Venta o prestamo
     @property({
         type: 'string',
-        jsonSchema: {
-            enum: [...Object.values(TypeSaleE)]
-        }
     })
-    typeSaleE: TypeSaleE;
+    typeSale?: TypeSaleE;
 
+    //10 % de apartado
+    @property({
+        type: 'boolean',
+    })
+    isMoneySection?: boolean;
 
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************
 
