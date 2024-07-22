@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
+import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
@@ -75,7 +76,7 @@ export class ProformaService {
                 })
             }
             await this.createDocument(newProforma.id, document, transaction)
-            await this.sendEmailProforma(newProforma.id, document.name, transaction);
+            await this.sendEmailProforma(newProforma.id, document.fileURL, transaction);
             await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
 
             await transaction.commit()
@@ -88,18 +89,20 @@ export class ProformaService {
         }
     }
 
-    async sendEmailProforma(proformaId?: number, name?: string, transaction?: any) {
+    async sendEmailProforma(proformaId?: number, fileURL?: string, transaction?: any) {
 
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
-        if (name) {
+        if (fileURL && fileURL.includes('/files/')) {
             try {
-                const nameFile = name
-                const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
+                const nameFile = fileURL.replace(`${process.env.URL_BACKEND}//files//`, '')
+                const content = `${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
                 attachments = [
                     {
-                        filename: 'proforma.pdf',
-                        content
+                        content: content,
+                        filename: "proforma.pdf",
+                        type: "application/pdf",
+                        disposition: "attachment"
                     }
                 ]
             } catch (error) {
@@ -111,7 +114,7 @@ export class ProformaService {
                 {
                     relation: 'project',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId'],
+                        fields: ['id', 'customerId', 'quotationId', 'projectId'],
                         include: [
                             {
                                 relation: 'customer',
@@ -136,19 +139,19 @@ export class ProformaService {
                 },
             ]
         }, {transaction})
-        const {projectId, project, provider, brand, proformaDate, proformaAmount, currency} = proforma
+        const {projectId, project, provider, brand, proformaDate, proformaAmount, currency, proformaId: proId} = proforma
         const {customer} = project
         const option = {
             templateId: SendgridTemplates.NEW_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.NEW_PROFORMA.subject,
-                projectId,
+                projectId: project.projectId,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                proformaId,
+                proformaId: proId,
                 providerName: provider.name,
                 brandName: brand.brandName,
-                proformaDate,
+                proformaDate: dayjs(proformaDate).format('DD/MM/YYYY'),
                 amount: proformaAmount,
                 currency,
             }
@@ -287,7 +290,7 @@ export class ProformaService {
             const oldData = await this.getDataProforma(id);
             await this.proformaRepository.updateById(id, proforma);
             const newData = await this.getDataProforma(id);
-            await this.sendEmailProformaUpdate(id, oldData, newData, newData?.document.name)
+            await this.sendEmailProformaUpdate(id, oldData, newData, newData?.document.fileURL)
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
         } catch (error) {
             return this.responseService.internalServerError(
@@ -308,7 +311,7 @@ export class ProformaService {
                 {
                     relation: 'project',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId'],
+                        fields: ['id', 'customerId', 'quotationId', 'projectId'],
                         include: [
                             {
                                 relation: 'customer',
@@ -336,21 +339,25 @@ export class ProformaService {
         return proforma
     }
 
-    async sendEmailProformaUpdate(proformaId: number, oldData: ProformaWithRelations, newData: ProformaWithRelations, name?: string) {
+    async sendEmailProformaUpdate(proformaId: number, oldData: ProformaWithRelations, newData: ProformaWithRelations, fileURL?: string) {
 
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
-        if (name) {
+        if (fileURL && fileURL.includes('/files/')) {
             try {
-                const nameFile = name
-                const content = `data:application/pdf;base64,${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
+                const nameFile = fileURL.replace(`${process.env.URL_BACKEND}//files//`, '')
+                const content = `${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
                 attachments = [
                     {
-                        filename: 'proforma.pdf',
-                        content
+                        content: content,
+                        filename: "proforma.pdf",
+                        type: "application/pdf",
+                        disposition: "attachment"
                     }
                 ]
+                console.log('attachments: ', attachments)
             } catch (error) {
+                console.log('error: ', error)
 
             }
         }
@@ -377,16 +384,16 @@ export class ProformaService {
                 currencyNew: currency,
             }
         }
-        const {projectId, project} = oldData;
+        const {projectId, project, proformaId: proId} = oldData;
         const {customer} = project
         const option = {
             templateId: SendgridTemplates.UPDATE_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.UPDATE_PROFORMA.subject,
-                projectId,
+                projectId: project.projectId,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                proformaId,
+                proformaId: proId,
                 ...objectOld,
                 ...objectNew
             }

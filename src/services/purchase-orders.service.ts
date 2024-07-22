@@ -250,7 +250,7 @@ export class PurchaseOrdersService {
                         SKU,
                         image: document?.fileURL,
                         model,
-                        description: `${line?.name} ${name} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
+                        description: `${line?.name ?? ''} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
                         originCode,
                         quantity
                     }
