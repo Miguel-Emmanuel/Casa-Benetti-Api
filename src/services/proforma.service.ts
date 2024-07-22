@@ -355,7 +355,6 @@ export class ProformaService {
                         disposition: "attachment"
                     }
                 ]
-                console.log('attachments: ', attachments)
             } catch (error) {
                 console.log('error: ', error)
 
@@ -368,7 +367,7 @@ export class ProformaService {
             objectOld = {
                 providerNameOld: provider.name,
                 brandNameOld: brand.brandName,
-                proformaDateOld: proformaDate,
+                proformaDateOld: dayjs(proformaDate).format('DD/MM/YYYY'),
                 amountOld: proformaAmount,
                 currencyOld: currency,
             }
@@ -379,7 +378,7 @@ export class ProformaService {
             objectNew = {
                 providerNameNew: provider.name,
                 brandNameNew: brand.brandName,
-                proformaDateNew: proformaDate,
+                proformaDateNew: dayjs(proformaDate).format('DD/MM/YYYY'),
                 amountNew: proformaAmount,
                 currencyNew: currency,
             }
