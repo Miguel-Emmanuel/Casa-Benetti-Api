@@ -97,6 +97,8 @@ const products = Joi.object({
     reservationDays: Joi.number().allow(null).optional(),
     loanInitialDate: Joi.date().allow(null).optional(),
     loanEndDate: Joi.date().allow(null).optional(),
+    document: documents.optional(),
+
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({
