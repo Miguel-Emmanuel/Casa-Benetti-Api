@@ -768,10 +768,10 @@ export class QuotationService {
                 percentageMaximumDiscount: iterator.quotationProducts.percentageMaximumDiscount,
                 maximumDiscount: iterator.quotationProducts.maximumDiscount,
                 subtotal: iterator.quotationProducts.subtotal,
-                mainMaterialImage: iterator.quotationProducts?.mainMaterialImage,
-                mainFinishImage: iterator.quotationProducts?.mainFinishImage,
-                secondaryMaterialImage: iterator.quotationProducts?.secondaryMaterialImage,
-                secondaryFinishingImage: iterator.quotationProducts?.secondaryFinishingImage,
+                mainMaterialImage: iterator.quotationProducts?.mainMaterialImage ?? null,
+                mainFinishImage: iterator.quotationProducts?.mainFinishImage ?? null,
+                secondaryMaterialImage: iterator.quotationProducts?.secondaryMaterialImage ?? null,
+                secondaryFinishingImage: iterator.quotationProducts?.secondaryFinishingImage ?? null,
 
             })
         }
