@@ -71,9 +71,9 @@ export class QuotationProducts extends Entity {
 
     //Dias de reservacion
     @property({
-        type: 'string',
+        type: 'number',
     })
-    reservationDays: string;
+    reservationDays: number;
 
     //Fecha de reservacion
     @property({

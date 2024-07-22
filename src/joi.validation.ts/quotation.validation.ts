@@ -93,10 +93,10 @@ const products = Joi.object({
     typeSale: Joi.string().valid(...Object.values(TypeSaleE)).messages({
         'any.only': `El tipo debe ser igual a uno de los valores permitidos.`
     }).optional(),
-    isMoneySection: Joi.boolean().optional(),
-    reservationDays: Joi.number().optional(),
-    loanInitialDate: Joi.date().optional(),
-    loanEndDate: Joi.date().optional(),
+    isMoneySection: Joi.boolean().allow(null).optional(),
+    reservationDays: Joi.number().allow(null).optional(),
+    loanInitialDate: Joi.date().allow(null).optional(),
+    loanEndDate: Joi.date().allow(null).optional(),
 })
 
 const schemaMainProjectManagerCommissions = Joi.object({
