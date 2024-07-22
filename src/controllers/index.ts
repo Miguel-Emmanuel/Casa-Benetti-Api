@@ -38,3 +38,4 @@ export * from './account-payable-proforma.controller';
 export * from './product-provider.controller';
 export * from './commission-payment-record.controller';
 export * from './commission-payment.controller';
+export * from './quotation-products-quotation.controller';

@@ -7,6 +7,7 @@ import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
+import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
     settings: {
@@ -50,10 +51,8 @@ export class QuotationProducts extends Entity {
     })
     createdAt: Date;
 
-    @property({
-        type: 'number',
-    })
-    quotationId?: number;
+    @belongsTo(() => Quotation)
+    quotationId: number;
 
     @belongsTo(() => Product)
     productId: number;
@@ -407,6 +406,7 @@ export interface QuotationProductsRelations {
     product: ProductWithRelations,
     provider: ProviderWithRelations
     brand: BrandWithRelations
+    quotation: QuotationWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;
