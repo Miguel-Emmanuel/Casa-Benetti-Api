@@ -97,7 +97,7 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'boolean',
     })
-    isNotificationSent?: boolean;
+    isNotificationSent?: boolean | null;
 
 
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************

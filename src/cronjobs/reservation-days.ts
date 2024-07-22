@@ -20,29 +20,18 @@ export class ResertvationDayCronJob extends CronJob {
             onTick: async () => {
                 await this.notifyCustomer();
             },
-            cronTime: '*/5 * * * * *',
+            // cronTime: '*/5 * * * * *',
+            cronTime: '0 0 * * *',
             start: true,
         });
     }
 
     async notifyCustomer() {
-        console.log('START CRON JOB')
         const lastDay = dayjs();
         const startDay = lastDay.startOf("day").toDate();
         const endDay = lastDay.endOf("day").toDate();
-        console.log('startDay: ', startDay)
-        console.log('endDay: ', endDay)
-
         const quotationProducts = await this.quotationProductsRepository.find({
             where: {
-                or: [
-                    {
-                        isNotificationSent: false
-                    },
-                    {
-                        isNotificationSent: undefined
-                    }
-                ],
                 and: [
                     {
                         dateReservationDays: {
@@ -54,6 +43,16 @@ export class ResertvationDayCronJob extends CronJob {
                             lte: endDay
                         }
                     },
+                    {
+                        or: [
+                            {
+                                isNotificationSent: false
+                            },
+                            {
+                                isNotificationSent: {eq: null}
+                            }
+                        ]
+                    }
                 ]
             },
             include: [
@@ -79,10 +78,9 @@ export class ResertvationDayCronJob extends CronJob {
                     }
                 }
             ],
-            fields: ['id', 'quotationId', 'reservationDays', 'dateReservationDays']
+            fields: ['id', 'quotationId', 'reservationDays', 'dateReservationDays', 'productId']
 
         });
-        console.log('quotationProducts: ', quotationProducts.length)
         for (const quotationProduct of quotationProducts) {
             const {quotation, product, dateReservationDays} = quotationProduct;
             const {customer} = quotation;
@@ -93,7 +91,7 @@ export class ResertvationDayCronJob extends CronJob {
                 dynamicTemplateData: {
                     subject: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.subject,
                     customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                    productName: `${product.name}`,
+                    productName: `${product?.name}`,
                     dateReservationDays: dayjs(dateReservationDays).format('DD/MM/YYYY')
                 }
             };
@@ -101,6 +99,15 @@ export class ResertvationDayCronJob extends CronJob {
             await this.quotationProductsRepository.updateById(quotationProduct?.id, {isNotificationSent: true});
 
         }
+        const options = {
+            to: 'waldo@whathecode.com',
+            templateId: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.subject,
+                productName: `TEST PARA SABER LA HORA ${dayjs().format('DD/MM/YYYY')}`,
+            }
+        };
+        await this.sendgridService.sendNotification(options);
 
     }
 
