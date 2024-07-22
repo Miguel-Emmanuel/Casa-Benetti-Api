@@ -1,12 +1,13 @@
 import {Getter, inject} from '@loopback/core';
 import {BelongsToAccessor, DefaultCrudRepository, HasOneRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {Brand, Document, Product, Proforma, Provider, QuotationProducts, QuotationProductsRelations} from '../models';
+import {Brand, Document, Product, Proforma, Provider, QuotationProducts, QuotationProductsRelations, Quotation} from '../models';
 import {BrandRepository} from './brand.repository';
 import {DocumentRepository} from './document.repository';
 import {ProductRepository} from './product.repository';
 import {ProformaRepository} from './proforma.repository';
 import {ProviderRepository} from './provider.repository';
+import {QuotationRepository} from './quotation.repository';
 
 export class QuotationProductsRepository extends DefaultCrudRepository<
   QuotationProducts,
@@ -30,11 +31,14 @@ export class QuotationProductsRepository extends DefaultCrudRepository<
 
   public readonly brand: BelongsToAccessor<Brand, typeof QuotationProducts.prototype.id>;
 
+  public readonly quotation: BelongsToAccessor<Quotation, typeof QuotationProducts.prototype.id>;
 
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>
+    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>,
   ) {
     super(QuotationProducts, dataSource);
+    this.quotation = this.createBelongsToAccessorFor('quotation', quotationRepositoryGetter,);
+    this.registerInclusionResolver('quotation', this.quotation.inclusionResolver);
     this.proforma = this.createBelongsToAccessorFor('proforma', proformaRepositoryGetter,);
     this.registerInclusionResolver('proforma', this.proforma.inclusionResolver);
     this.brand = this.createBelongsToAccessorFor('brand', brandRepositoryGetter,);

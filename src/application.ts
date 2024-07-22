@@ -4,7 +4,8 @@ import {
   AuthorizationComponent
 } from '@loopback/authorization';
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import {ApplicationConfig, createBindingFromClass} from '@loopback/core';
+import {CronComponent} from '@loopback/cron';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication, RestBindings} from '@loopback/rest';
 import {
@@ -15,6 +16,7 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import * as dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
+import {ResertvationDayCronJob} from './cronjobs/reservation-days';
 import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
 import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, ExpenseServiceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
@@ -43,6 +45,10 @@ export class BaseApiLb4Application extends BootMixin(
       path: '/explorer',
     });
     this.component(RestExplorerComponent);
+
+
+    this.component(CronComponent);
+    this.add(createBindingFromClass(ResertvationDayCronJob));
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here

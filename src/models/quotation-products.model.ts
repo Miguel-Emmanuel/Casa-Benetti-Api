@@ -7,6 +7,7 @@ import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
+import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
     settings: {
@@ -50,10 +51,8 @@ export class QuotationProducts extends Entity {
     })
     createdAt: Date;
 
-    @property({
-        type: 'number',
-    })
-    quotationId?: number;
+    @belongsTo(() => Quotation)
+    quotationId: number;
 
     @belongsTo(() => Product)
     productId: number;
@@ -72,9 +71,15 @@ export class QuotationProducts extends Entity {
 
     //Dias de reservacion
     @property({
-        type: 'string',
+        type: 'number',
     })
-    reservationDays: string;
+    reservationDays: number;
+
+    //Fecha de reservacion
+    @property({
+        type: 'date',
+    })
+    dateReservationDays: Date;
 
     //Fecha inicial del préstamo
     @property({
@@ -87,6 +92,12 @@ export class QuotationProducts extends Entity {
         type: 'date',
     })
     loanEndDate: Date;
+
+    //Notificacion para dias de reservacion enviada
+    @property({
+        type: 'boolean',
+    })
+    isNotificationSent?: boolean | null;
 
 
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************
@@ -395,6 +406,7 @@ export interface QuotationProductsRelations {
     product: ProductWithRelations,
     provider: ProviderWithRelations
     brand: BrandWithRelations
+    quotation: QuotationWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;
