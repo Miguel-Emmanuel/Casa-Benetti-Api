@@ -70,6 +70,25 @@ export class QuotationProducts extends Entity {
     })
     isMoneySection?: boolean;
 
+    //Dias de reservacion
+    @property({
+        type: 'string',
+    })
+    reservationDays: string;
+
+    //Fecha inicial del préstamo
+    @property({
+        type: 'date',
+    })
+    loanInitialDate: Date;
+
+    //Fecha final del préstamo
+    @property({
+        type: 'date',
+    })
+    loanEndDate: Date;
+
+
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************
 
     //sku
@@ -405,6 +424,12 @@ export class QuotationProductsCreate extends QuotationProducts {
         jsonSchema: getJsonSchema(DocumentSchema)
     })
     secondaryFinishingImag?: DocumentSchema;
+
+    @property({
+        type: 'object',
+        jsonSchema: getJsonSchema(DocumentSchema)
+    })
+    document?: DocumentSchema;
 
     // @property({
     //     type: 'array',
