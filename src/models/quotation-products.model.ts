@@ -79,7 +79,7 @@ export class QuotationProducts extends Entity {
     @property({
         type: 'date',
     })
-    dateReservationDays: Date;
+    dateReservationDays?: Date;
 
     //Fecha inicial del préstamo
     @property({
