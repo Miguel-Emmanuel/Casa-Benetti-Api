@@ -436,6 +436,7 @@ export class QuotationService {
             }
         }
         for (const element of products) {
+
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product) {
                 const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
@@ -445,6 +446,8 @@ export class QuotationService {
                     delete element.mainFinishImg;
                     delete element.secondaryMaterialImg;
                     delete element.secondaryFinishingImag;
+                    console.log('element:_ ', element)
+                    console.log('findQuotationP:_ ', findQuotationP.id)
                     await this.quotationProductsRepository.updateById(findQuotationP.id, element);
                     await this.createDocumentMainMaterial(findQuotationP.id, mainMaterialImg)
                     await this.createDocumentMainFinish(findQuotationP.id, mainFinishImg);
@@ -659,41 +662,42 @@ export class QuotationService {
                 relation: 'customer',
             },
             {
-                relation: 'products',
+                relation: 'quotationProducts',
                 scope: {
                     include: [
                         {
-                            relation: 'quotationProducts',
+                            relation: 'mainMaterialImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'id']
+                            }
+                        },
+                        {
+                            relation: 'mainFinishImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'id']
+                            }
+                        },
+                        {
+                            relation: 'secondaryMaterialImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'id']
+                            }
+                        },
+                        {
+                            relation: 'secondaryFinishingImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'id']
+                            }
+                        },
+                        {
+                            relation: 'product',
                             scope: {
                                 include: [
-                                    {
-                                        relation: 'mainMaterialImage',
-                                        scope: {
-                                            fields: ['fileURL', 'name', 'extension', 'id']
-                                        }
-                                    },
-                                    {
-                                        relation: 'mainFinishImage',
-                                        scope: {
-                                            fields: ['fileURL', 'name', 'extension', 'id']
-                                        }
-                                    },
-                                    {
-                                        relation: 'secondaryMaterialImage',
-                                        scope: {
-                                            fields: ['fileURL', 'name', 'extension', 'id']
-                                        }
-                                    },
-                                    {
-                                        relation: 'secondaryFinishingImage',
-                                        scope: {
-                                            fields: ['fileURL', 'name', 'extension', 'id']
-                                        }
-                                    },
+                                    'brand', 'document', 'line'
                                 ]
                             }
                         }
-                        , 'brand', 'document', 'line']
+                    ]
                 }
 
             },
@@ -754,25 +758,28 @@ export class QuotationService {
         const products: any[] = [];
         const projectManagers: ProjectManagersById[] = [];
         const designers: DesignersById[] = [];
-        for (const iterator of quotation?.products ?? []) {
+        for (const iterator of quotation?.quotationProducts ?? []) {
+            const {line, name, document, brand} = iterator.product;
             products.push({
                 ...iterator,
-                SKU: iterator.quotationProducts?.SKU,
+                SKU: iterator?.SKU,
                 brandName: iterator?.brand?.brandName ?? '',
-                status: iterator.quotationProducts.status,
-                description: `${iterator.line?.name} ${iterator?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measureWide}`,
-                image: iterator?.document ? iterator?.document?.fileURL : '',
-                quantity: iterator.quotationProducts.quantity,
-                percentageDiscountProduct: iterator.quotationProducts.percentageDiscountProduct,
-                discountProduct: iterator.quotationProducts.discountProduct,
-                percentageMaximumDiscount: iterator.quotationProducts.percentageMaximumDiscount,
-                maximumDiscount: iterator.quotationProducts.maximumDiscount,
-                subtotal: iterator.quotationProducts.subtotal,
-                mainMaterialImage: iterator.quotationProducts?.mainMaterialImage ?? null,
-                mainFinishImage: iterator.quotationProducts?.mainFinishImage ?? null,
-                secondaryMaterialImage: iterator.quotationProducts?.secondaryMaterialImage ?? null,
-                secondaryFinishingImage: iterator.quotationProducts?.secondaryFinishingImage ?? null,
-
+                status: iterator.status,
+                description: `${line?.name} ${name} ${iterator.mainMaterial} ${iterator.mainFinish} ${iterator.secondaryMaterial} ${iterator.secondaryFinishing} ${iterator.measureWide}`,
+                image: document ? document?.fileURL : '',
+                quantity: iterator.quantity,
+                percentageDiscountProduct: iterator.percentageDiscountProduct,
+                discountProduct: iterator.discountProduct,
+                percentageMaximumDiscount: iterator.percentageMaximumDiscount,
+                maximumDiscount: iterator.maximumDiscount,
+                subtotal: iterator.subtotal,
+                mainMaterialImage: iterator?.mainMaterialImage ?? null,
+                mainFinishImage: iterator?.mainFinishImage ?? null,
+                secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
+                secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
+                line: line,
+                brand: brand,
+                document: document,
             })
         }
 
