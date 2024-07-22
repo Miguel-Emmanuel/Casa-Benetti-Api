@@ -5,6 +5,7 @@ import {
 } from '@loopback/authorization';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
+import {CronComponent} from '@loopback/cron';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication, RestBindings} from '@loopback/rest';
 import {
@@ -43,6 +44,7 @@ export class BaseApiLb4Application extends BootMixin(
       path: '/explorer',
     });
     this.component(RestExplorerComponent);
+    this.component(CronComponent);
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here

@@ -76,6 +76,12 @@ export class QuotationProducts extends Entity {
     })
     reservationDays: string;
 
+    //Fecha de reservacion
+    @property({
+        type: 'date',
+    })
+    dateReservationDays: Date;
+
     //Fecha inicial del préstamo
     @property({
         type: 'date',
@@ -87,6 +93,12 @@ export class QuotationProducts extends Entity {
         type: 'date',
     })
     loanEndDate: Date;
+
+    //Notificacion para dias de reservacion enviada
+    @property({
+        type: 'boolean',
+    })
+    isNotificationSent?: boolean;
 
 
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************
