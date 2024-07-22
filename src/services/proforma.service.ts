@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
+import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
@@ -136,7 +137,7 @@ export class ProformaService {
                 },
             ]
         }, {transaction})
-        const {projectId, project, provider, brand, proformaDate, proformaAmount, currency} = proforma
+        const {projectId, project, provider, brand, proformaDate, proformaAmount, currency, proformaId: proId} = proforma
         const {customer} = project
         const option = {
             templateId: SendgridTemplates.NEW_PROFORMA.id,
@@ -145,10 +146,10 @@ export class ProformaService {
                 subject: SendgridTemplates.NEW_PROFORMA.subject,
                 projectId,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                proformaId,
+                proformaId: proId,
                 providerName: provider.name,
                 brandName: brand.brandName,
-                proformaDate,
+                proformaDate: dayjs(proformaDate).format('DD/MM/YYYY'),
                 amount: proformaAmount,
                 currency,
             }
