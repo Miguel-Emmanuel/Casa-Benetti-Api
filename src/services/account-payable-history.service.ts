@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ExchangeRateE} from '../enums';
+import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
 import {AccountPayableHistoryRepository, AccountPayableRepository, DocumentRepository} from '../repositories';
@@ -25,7 +25,7 @@ export class AccountPayableHistoryService {
         const {accountPayableId, images} = accountPayableHistory;
         const accountPayable = await this.findAccountPayable(accountPayableId);
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
-            const newAmount = this.convertCurrencyToEUR(accountPayableHistory.amount, accountPayableHistory.currency)
+            const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
             const newTotalPaid = accountPayable.totalPaid + newAmount
             const newBalance = accountPayable.balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
@@ -72,7 +72,7 @@ export class AccountPayableHistoryService {
         const {totalPaid, balance} = await this.findAccountPayable(accountPayableId);
 
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
-            const newAmount = this.convertCurrencyToEUR(accountPayableHistory.amount, accountPayableHistory.currency)
+            const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
             const newTotalPaid = totalPaid + newAmount
             const newBalance = balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
@@ -127,12 +127,41 @@ export class AccountPayableHistoryService {
         return account;
     }
 
-    convertCurrencyToEUR(amount: number, currency: ExchangeRateE): number {
-        if (currency === ExchangeRateE.MXN)
-            return amount * ConvertCurrencyToEUR.MXN
-        else if (currency === ExchangeRateE.USD)
-            return amount * ConvertCurrencyToEUR.USD
-        else
-            return amount * ConvertCurrencyToEUR.EURO
+    async convertCurrency(accountPayableAmount: number, accountPayableCurrency: ExchangeRateE, accountPayableId: number): Promise<number> {
+        const findAccountProforma = await this.accountPayableRepository.findOne({
+            where: {id: accountPayableId},
+            include: [{relation: "proforma"}]
+        })
+
+        let mount = 0
+        if (findAccountProforma && findAccountProforma?.proforma) {
+            const proformaCurrency = findAccountProforma?.proforma?.currency
+            if (proformaCurrency === ProformaCurrencyE.EURO) {
+                if (accountPayableCurrency === ExchangeRateE.MXN)
+                    mount = accountPayableAmount * ConvertCurrencyToEUR.MXN
+                else if (accountPayableCurrency === ExchangeRateE.USD)
+                    mount = accountPayableAmount * ConvertCurrencyToEUR.USD
+                else
+                    mount = accountPayableAmount * ConvertCurrencyToEUR.EURO
+            }
+            else if (proformaCurrency === ProformaCurrencyE.PESO_MEXICANO) {
+                if (accountPayableCurrency === ExchangeRateE.MXN)
+                    mount = accountPayableAmount * ConvertCurrencyToMXN.MXN
+                else if (accountPayableCurrency === ExchangeRateE.USD)
+                    mount = accountPayableAmount * ConvertCurrencyToMXN.USD
+                else
+                    mount = accountPayableAmount * ConvertCurrencyToMXN.EURO
+            }
+            else if (proformaCurrency === ProformaCurrencyE.USD) {
+                if (accountPayableCurrency === ExchangeRateE.MXN)
+                    mount = accountPayableAmount * ConvertCurrencyToUSD.MXN
+                else if (accountPayableCurrency === ExchangeRateE.USD)
+                    mount = accountPayableAmount * ConvertCurrencyToUSD.USD
+                else
+                    mount = accountPayableAmount * ConvertCurrencyToUSD.EURO
+            }
+        }
+        return mount
+
     }
 }
