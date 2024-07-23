@@ -530,6 +530,7 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": referenceCustomerName,
                 "products": prodcutsArray,
+                "type": 'COTIZACION'
             }
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
@@ -556,7 +557,7 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
             }
             for (let index = 0; index < advancePaymentRecord?.length; index++) {
-                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency} = advancePaymentRecord[index];
+                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency, reference} = advancePaymentRecord[index];
                 let letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
                 letterNumber = `${letterNumber} ${this.separeteDecimal(amountPaid)}/100 MN`;
                 const propertiesAdvance: any = {
@@ -568,7 +569,8 @@ export class ProjectService {
                     exchangeRateAmount: parity,
                     paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
                     letterNumber,
-                    consecutiveId: (index + 1)
+                    consecutiveId: (index + 1),
+                    reference
                 }
 
                 const nameFile = `recibo_anticipo_${paymentCurrency}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
@@ -707,10 +709,10 @@ export class ProjectService {
         let projectId = null;
         let reference = null;
         if (previousProject) {
-            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0)}`;
+            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
             reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
         } else {
-            projectId = `${1}${branch?.name?.charAt(0)}`;
+            projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
             reference = `${this.getNumberReference(showroomManager)}`;
         }
 
@@ -720,7 +722,7 @@ export class ProjectService {
     }
 
     getNumberReference(nameShowroom: string, reference?: string) {
-        return reference ? `${reference.match(/\d+/g)!.join('')}${nameShowroom.charAt(0)}` : `1${nameShowroom.charAt(0)}`;
+        return reference ? `${Number(reference.match(/\d+/g)!.join('')) + 1}${nameShowroom.charAt(0).toUpperCase()}` : `1${nameShowroom.charAt(0).toUpperCase()}`;
     }
 
     async changeStatusProductsToPedido(quotationId: number, transaction: any) {
