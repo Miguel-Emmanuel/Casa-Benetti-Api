@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
+import BigNumber from 'bignumber.js';
 import {AdvancePaymentStatusE, CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus} from '../enums';
 import {schameCreateAdvancePayment, schameCreateAdvancePaymentUpdate} from '../joi.validation.ts/advance-payment-record.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -130,7 +131,7 @@ export class AdvancePaymentRecordService {
         if (salesDeviation > 0) {
             const updatedTotalNew = totalSale + salesDeviation;
             updatedTotal = updatedTotalNew
-            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {updatedTotal: updatedTotalNew})
+            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {updatedTotal: this.roundToTwoDecimals(updatedTotalNew)})
         }
 
         if (status && status === AdvancePaymentStatusE.PAGADO) {
@@ -140,7 +141,7 @@ export class AdvancePaymentRecordService {
 
             const balance = totalVenta - conversionAmountPaid;
             const totalPaidNew = totalPaid + conversionAmountPaid;
-            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {balance, totalPaid: totalPaidNew})
+            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {balance: this.roundToTwoDecimals(balance), totalPaid: this.roundToTwoDecimals(totalPaidNew)})
             await this.createPurchaseOrders(projectId, accountsReceivable.id, totalPaidNew, typeCurrency,)
         }
         await this.validateBodyAdvancePaymentUpdate(advancePaymentRecord);
@@ -148,6 +149,10 @@ export class AdvancePaymentRecordService {
         await this.createDocuments(id, vouchers);
         await this.advancePaymentRecordRepository.updateById(id, {...advancePaymentRecord});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
     }
 
     async deleteById(id: number) {
