@@ -230,6 +230,7 @@ export class PurchaseOrdersService {
             const {provider, brand, quotationProducts, project} = proforma;
             const {customer, quotation} = project
             const {mainProjectManager} = quotation
+
             return {
                 id,
                 projectId: project?.id,
@@ -246,11 +247,24 @@ export class PurchaseOrdersService {
                 quotationProducts: quotationProducts.map((value: QuotationProductsWithRelations) => {
                     const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, originCode, model, quantity} = value;
                     const {line, name, document} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing,
+                        measureWide
+                    ];
+
+                    const description = descriptionParts
+                        .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                        .join(' ');  // Únelas con un espacio
                     return {
                         SKU,
                         image: document?.fileURL,
                         model,
-                        description: `${line?.name ?? ''} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
+                        description,
                         originCode,
                         quantity
                     }
