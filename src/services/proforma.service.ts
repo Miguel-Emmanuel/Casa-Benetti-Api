@@ -462,7 +462,7 @@ export class ProformaService {
         }
 
         const {quotation} = findQuotation
-        const {exchangeRateQuotation, } = quotation;
+        const currencyAccountPayable = proforma.currency === ProformaCurrencyE.USD ? ExchangeRateQuotationE.USD : ProformaCurrencyE.PESO_MEXICANO ? ExchangeRateQuotationE.MXN : ExchangeRateQuotationE.EUR
 
         let advance = 0
         if (newCurrency === ExchangeRateQuotationE.EUR) {
@@ -475,7 +475,7 @@ export class ProformaService {
             advance = quotation.advanceMXN
         }
 
-        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
+        const accountsPayable = await this.accountPayableRepository.create({currency: currencyAccountPayable, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
 
         //cambiar totalpagado
         if (advance && totalPaid >= advance) {
