@@ -699,6 +699,10 @@ export class ProjectService {
         return nuevoFolio;
     }
 
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
+    }
+
     async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number, transaction: any) {
         const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
         //ProjectManager principal
@@ -712,7 +716,7 @@ export class ProjectService {
                     userId: mainProjectManagerId,
                     projectId,
                     commissionPercentage: element.commissionPercentage,
-                    commissionAmount,
+                    commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                     projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                     type: AdvancePaymentTypeE.ARQUITECTO,
                     balance: commissionAmount
@@ -731,7 +735,7 @@ export class ProjectService {
                 userName: architectName,
                 projectId,
                 commissionPercentage: commissionPercentageArchitect,
-                commissionAmount,
+                commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.ARQUITECTO,
                 balance: commissionAmount
@@ -747,7 +751,7 @@ export class ProjectService {
                 userId: referenceCustomerId,
                 projectId,
                 commissionPercentage: commissionPercentagereferencedCustomer,
-                commissionAmount,
+                commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO,
                 balance: commissionAmount
@@ -767,7 +771,7 @@ export class ProjectService {
                         userId: userId,
                         projectId,
                         commissionPercentage: element.commissionPercentage,
-                        commissionAmount,
+                        commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                         projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                         type: AdvancePaymentTypeE.PROJECT_MANAGER,
                         balance: commissionAmount
@@ -786,7 +790,7 @@ export class ProjectService {
                 userId: showroomManagerId,
                 projectId,
                 commissionPercentage: commissionPercentage,
-                commissionAmount,
+                commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 type: AdvancePaymentTypeE.SHOWROOM_MANAGER,
                 balance: commissionAmount
@@ -806,7 +810,7 @@ export class ProjectService {
                         userId: userId,
                         projectId,
                         commissionPercentage: element.commissionPercentage,
-                        commissionAmount,
+                        commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                         projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
                         type: AdvancePaymentTypeE.PROYECTISTA,
                         balance: commissionAmount
