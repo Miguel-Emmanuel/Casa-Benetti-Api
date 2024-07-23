@@ -283,6 +283,10 @@ export class ProformaService {
             await this.findByIdProject(proforma.projectId)
             await this.findByIdBrand(proforma.brandId)
             const findProviderBrand = await this.findProviderBrandUpdate(id, proforma)
+            const findProformaAccount = await this.findAccountPayable(id)
+
+            if (findProformaAccount && findProformaAccount?.accountPayable && findProformaAccount?.accountPayable.accountPayableHistories)
+                return this.responseService.badRequest('¡Oh, no! Ya hay un pago registrado, y no es posible modificarlo.');
 
             if (findProviderBrand)
                 return this.responseService.badRequest('¡Oh, no! Ya hay un registro con esta marca y proveedor, revisa por favor e intenta de nuevo.');
@@ -293,6 +297,7 @@ export class ProformaService {
             await this.createDocument(id, document, 'transaction')
             const oldData = await this.getDataProforma(id);
             await this.proformaRepository.updateById(id, proforma);
+            await this.accountPayableUpdate(findProformaAccount?.accountPayable?.id, proforma)
             const newData = await this.getDataProforma(id);
             await this.sendEmailProformaUpdate(id, oldData, newData, newData?.document.fileURL)
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
@@ -457,7 +462,7 @@ export class ProformaService {
         }
 
         const {quotation} = findQuotation
-        const {exchangeRateQuotation, } = quotation;
+        const currencyAccountPayable = proforma.currency === ProformaCurrencyE.USD ? ExchangeRateQuotationE.USD : ProformaCurrencyE.PESO_MEXICANO ? ExchangeRateQuotationE.MXN : ExchangeRateQuotationE.EUR
 
         let advance = 0
         if (newCurrency === ExchangeRateQuotationE.EUR) {
@@ -470,7 +475,7 @@ export class ProformaService {
             advance = quotation.advanceMXN
         }
 
-        const accountsPayable = await this.accountPayableRepository.create({currency: exchangeRateQuotation, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
+        const accountsPayable = await this.accountPayableRepository.create({currency: currencyAccountPayable, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
 
         //cambiar totalpagado
         if (advance && totalPaid >= advance) {
@@ -557,6 +562,19 @@ export class ProformaService {
         }
         return body;
     }
+
+    async findAccountPayable(proformaId: number) {
+        const findProformaAccount = await this.proformaRepository.findOne({
+            where: {
+                id: proformaId
+            },
+            include: [{
+                relation: "accountPayable",
+                scope: {include: [{relation: "accountPayableHistories"}]}
+            }]
+        })
+        return findProformaAccount
+    }
     async findProviderBrand(proforma: Proforma): Promise<boolean> {
         const {projectId, providerId, brandId} = proforma
         const findProviderBrand = await this.proformaRepository.findOne({
@@ -600,5 +618,16 @@ export class ProformaService {
         const brand = await this.brandRepository.findOne({where: {id}});
         if (!brand)
             throw this.responseService.notFound("La marca no se ha encontrado.")
+    }
+
+    async accountPayableUpdate(id: number | undefined, proforma: Proforma) {
+        if (id) {
+            let newCurrency: ExchangeRateQuotationE
+            if (proforma.currency === ProformaCurrencyE.USD) newCurrency = ExchangeRateQuotationE.USD
+            else if (proforma.currency === ProformaCurrencyE.PESO_MEXICANO) newCurrency = ExchangeRateQuotationE.MXN
+            else newCurrency = ExchangeRateQuotationE.EUR
+            await this.accountPayableRepository.updateById(id, {currency: newCurrency, total: proforma.proformaAmount})
+        }
+
     }
 }
