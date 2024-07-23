@@ -556,7 +556,7 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
             }
             for (let index = 0; index < advancePaymentRecord?.length; index++) {
-                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency} = advancePaymentRecord[index];
+                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency, reference} = advancePaymentRecord[index];
                 let letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
                 letterNumber = `${letterNumber} ${this.separeteDecimal(amountPaid)}/100 MN`;
                 const propertiesAdvance: any = {
@@ -568,7 +568,8 @@ export class ProjectService {
                     exchangeRateAmount: parity,
                     paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
                     letterNumber,
-                    consecutiveId: (index + 1)
+                    consecutiveId: (index + 1),
+                    reference
                 }
 
                 const nameFile = `recibo_anticipo_${paymentCurrency}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
