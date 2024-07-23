@@ -149,6 +149,7 @@ export enum AdvancePaymentTypeE {
 
 export enum CommissionPaymentRecordStatus {
     PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
 }
 
 export enum CommissionPaymentStatus {
