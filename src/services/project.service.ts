@@ -721,7 +721,7 @@ export class ProjectService {
     }
 
     getNumberReference(nameShowroom: string, reference?: string) {
-        return reference ? `${reference.match(/\d+/g)!.join('')}${nameShowroom.charAt(0)}` : `1${nameShowroom.charAt(0)}`;
+        return reference ? `${Number(reference.match(/\d+/g)!.join('')) + 1}${nameShowroom.charAt(0).toUpperCase()}` : `1${nameShowroom.charAt(0).toUpperCase()}`;
     }
 
     async changeStatusProductsToPedido(quotationId: number, transaction: any) {
