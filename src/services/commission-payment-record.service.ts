@@ -1,6 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import BigNumber from 'bignumber.js';
 import {AccessLevelRolE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {CommissionPaymentRecord} from '../models';
@@ -166,10 +167,14 @@ export class CommissionPaymentRecordService {
             totalPaid,
             commissionAmount,
             balance,
-            exchangeRate: commissionAmount * 19.25,
+            exchangeRate: this.roundToTwoDecimals(commissionAmount * 19.25),
             status,
             commissionPayments
         }
+    }
+
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
     }
 
     async updateById(id: number, commissionPaymentRecord: CommissionPaymentRecord,) {

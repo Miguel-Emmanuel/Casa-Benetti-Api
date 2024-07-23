@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import BigNumber from 'bignumber.js';
 import {CommissionPaymentStatus} from '../enums';
 import {schemaCommissionPaymentCreate, schemaCommissionPaymentUpdate} from '../joi.validation.ts/commission.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -93,12 +94,16 @@ export class CommissionPaymentService {
             const totalPaidNew = totalPaid + amount;
             const balanceNew = balance - amount;
             const percentagePaid = this.calculatePercentagePaid(commissionAmount, totalPaidNew);
-            await this.commissionPaymentRecordRepository.updateById(commissionPaymentRecordId, {balance: balanceNew, totalPaid: totalPaidNew, percentagePaid})
+            await this.commissionPaymentRecordRepository.updateById(commissionPaymentRecordId, {balance: this.roundToTwoDecimals(balanceNew), totalPaid: this.roundToTwoDecimals(totalPaidNew), percentagePaid: this.roundToTwoDecimals(percentagePaid)})
         }
         delete commissionPayment.images;
         await this.commissionPaymentRepository.updateById(id, commissionPayment);
         await this.documents(id, images);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
     }
 
     calculatePercentagePaid(total: number, totalPaid: number) {

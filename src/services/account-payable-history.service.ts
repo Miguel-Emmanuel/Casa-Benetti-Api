@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import BigNumber from 'bignumber.js';
 import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ExchangeRateE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
@@ -74,13 +75,17 @@ export class AccountPayableHistoryService {
             const newAmount = this.convertCurrencyToEUR(accountPayableHistory.amount, accountPayableHistory.currency)
             const newTotalPaid = totalPaid + newAmount
             const newBalance = balance - newAmount
-            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: newBalance})
+            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
         }
 
         delete accountPayableHistory.images;
         await this.createDocument(id, images);
         await this.accountPayableHistoryRepository.updateById(id, accountPayableHistory);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
     }
     async deleteById(id: number,) {
         await this.accountPayableHistoryRepository.deleteById(id);

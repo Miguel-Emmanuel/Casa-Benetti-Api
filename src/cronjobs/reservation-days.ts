@@ -27,6 +27,7 @@ export class ResertvationDayCronJob extends CronJob {
     }
 
     async notifyCustomer() {
+        console.log('ResertvationDayCronJob')
         const lastDay = dayjs();
         const startDay = lastDay.startOf("day").toDate();
         const endDay = lastDay.endOf("day").toDate();
@@ -99,16 +100,6 @@ export class ResertvationDayCronJob extends CronJob {
             await this.quotationProductsRepository.updateById(quotationProduct?.id, {isNotificationSent: true});
 
         }
-        const options = {
-            to: 'waldo@whathecode.com',
-            templateId: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.id,
-            dynamicTemplateData: {
-                subject: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.subject,
-                productName: `TEST PARA SABER LA HORA ${dayjs().format('DD/MM/YYYY')}`,
-            }
-        };
-        await this.sendgridService.sendNotification(options);
-
     }
 
 }
