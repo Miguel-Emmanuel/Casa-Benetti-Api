@@ -708,10 +708,10 @@ export class ProjectService {
         let projectId = null;
         let reference = null;
         if (previousProject) {
-            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0)}`;
+            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
             reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
         } else {
-            projectId = `${1}${branch?.name?.charAt(0)}`;
+            projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
             reference = `${this.getNumberReference(showroomManager)}`;
         }
 
