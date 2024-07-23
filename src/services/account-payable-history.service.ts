@@ -28,7 +28,7 @@ export class AccountPayableHistoryService {
             const newAmount = this.convertCurrencyToEUR(accountPayableHistory.amount, accountPayableHistory.currency)
             const newTotalPaid = accountPayable.totalPaid + newAmount
             const newBalance = accountPayable.balance - newAmount
-            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: newBalance})
+            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
         }
         delete accountPayableHistory.images;
         const accountPayableHistoryRes = await this.accountPayableHistoryRepository.create({...accountPayableHistory, providerId: accountPayable.proforma?.providerId});
