@@ -327,7 +327,7 @@ export class PurchaseOrdersService {
 
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, } = quotation;
-
+        const reference = `${project?.reference ?? ""}`
         try {
             const properties: any = {
                 "logo": logo,
@@ -335,8 +335,9 @@ export class PurchaseOrdersService {
                 "quotationId": quotationId,
                 "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
-                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "referenceCustomer": reference,
                 "products": prodcutsArray,
+                "type": 'PEDIDO'
             }
             const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'});
             this.response.setHeader('Content-Disposition', `attachment; filename=order_compra.pdf`);
