@@ -26,6 +26,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 type: 'string',
                                 nullable: true
                             },
+                            email: {
+                                type: 'string',
+                                nullable: true
+                            },
                             lastName: {
                                 type: 'string',
                                 nullable: true
