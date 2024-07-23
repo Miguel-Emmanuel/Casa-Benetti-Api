@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus, TypeUserE} from '../enums';
+import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Document, Proforma, ProformaWithRelations, Quotation} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
@@ -152,7 +152,7 @@ export class ProformaService {
                 providerName: provider.name,
                 brandName: brand.brandName,
                 proformaDate: dayjs(proformaDate).format('DD/MM/YYYY'),
-                amount: proformaAmount,
+                amount: this.setCurrencyToAmount(proformaAmount, currency),
                 currency,
             }
         }
@@ -166,6 +166,10 @@ export class ProformaService {
             ...option,
         };
         await this.sendgridService.sendNotification(optionsDynamic);
+    }
+
+    setCurrencyToAmount(proformaAmount: number, currency: ProformaCurrencyE) {
+        return currency === ProformaCurrencyE.EURO ? `${proformaAmount}€` : `$${proformaAmount}`
     }
 
     async createDocument(proformaId: number | undefined, document: Document, transaction: any) {
@@ -368,7 +372,7 @@ export class ProformaService {
                 providerNameOld: provider.name,
                 brandNameOld: brand.brandName,
                 proformaDateOld: dayjs(proformaDate).format('DD/MM/YYYY'),
-                amountOld: proformaAmount,
+                amountOld: this.setCurrencyToAmount(proformaAmount, currency),
                 currencyOld: currency,
             }
         }
@@ -379,7 +383,7 @@ export class ProformaService {
                 providerNameNew: provider.name,
                 brandNameNew: brand.brandName,
                 proformaDateNew: dayjs(proformaDate).format('DD/MM/YYYY'),
-                amountNew: proformaAmount,
+                amountNew: this.setCurrencyToAmount(proformaAmount, currency),
                 currencyNew: currency,
             }
         }
