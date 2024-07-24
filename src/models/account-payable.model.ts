@@ -5,6 +5,7 @@ import {BaseEntity} from './base/base-entity.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {PurchaseOrders} from './purchase-orders.model';
 
+//Cuentas por pagar
 @model({
   settings: {
     postgresql: {
