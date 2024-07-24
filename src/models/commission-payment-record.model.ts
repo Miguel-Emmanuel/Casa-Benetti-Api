@@ -1,7 +1,8 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {AdvancePaymentTypeE, CommissionPaymentStatus} from '../enums';
-import {Project} from './project.model';
-import {User} from './user.model';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {AdvancePaymentTypeE, CommissionPaymentRecordStatus} from '../enums';
+import {CommissionPayment} from './commission-payment.model';
+import {Project, ProjectWithRelations} from './project.model';
+import {User, UserWithRelations} from './user.model';
 
 //Registro del pago correspondiente a cada comisión especificada
 @model({
@@ -58,7 +59,42 @@ export class CommissionPaymentRecord extends Entity {
     })
     commissionAmount: number;
 
-    //Total del proyecto
+    //Total pagado (de la comision)
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+        default: 0
+    })
+    totalPaid: number;
+
+    @hasMany(() => CommissionPayment)
+    commissionPayments: CommissionPayment[];
+
+    //Porcentaje pagado (de la comision)
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+        default: 0
+    })
+    percentagePaid: number;
+
+    //Saldo (de la comision)
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    balance: number;
+
+    //Total del proyecto(el valor total de la cotizacion)
     @property({
         type: 'number',
         required: false,
@@ -72,9 +108,9 @@ export class CommissionPaymentRecord extends Entity {
     @property({
         type: 'string',
         required: false,
-        default: CommissionPaymentStatus.PENDIENTE
+        default: CommissionPaymentRecordStatus.PENDIENTE
     })
-    status: CommissionPaymentStatus;
+    status: CommissionPaymentRecordStatus;
 
     //Persona de la comision
     @property({
@@ -90,6 +126,8 @@ export class CommissionPaymentRecord extends Entity {
 
 export interface CommissionPaymentRecordRelations {
     // describe navigational properties here
+    user: UserWithRelations
+    project: ProjectWithRelations
 }
 
 export type CommissionPaymentRecordWithRelations = CommissionPaymentRecord & CommissionPaymentRecordRelations;

@@ -1,12 +1,5 @@
 import * as Joi from "joi";
-import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE} from '../enums';
-
-const projectManager = Joi.object({
-    userId: Joi.number(),
-    commissionPercentageProjectManager: Joi.number(),
-    classificationId: Joi.number(),
-})
-
+import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeSaleE} from '../enums';
 
 export const documents = Joi.object({
     id: Joi.number(),
@@ -46,32 +39,84 @@ export const schemaProofPaymentQuotationQ = Joi.object({
         'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
     }),
     advanceCustomer: Joi.number().required(),
+    productId: Joi.number(),
+    providerId: Joi.number(),
     conversionAdvance: Joi.number().required(),
     exchangeRateAmount: Joi.number().required(),
     // quotationId: Joi.number().required(),
     images: Joi.array().items(documents).optional(),
 })
+export const schemaAssembledProducts = Joi.object({
+    id: Joi.number(),
+    description: Joi.string().required(),
+    mainMaterial: Joi.string().required(),
+    mainFinish: Joi.string().required(),
+    secondaryMaterial: Joi.string().required(),
+    secondaryFinishing: Joi.string().required(),
+    quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
+    document: documents
+})
 
+const products = Joi.object({
+    productId: Joi.number().required(),
+    mainMaterial: Joi.string().allow('').allow(null),
+    mainMaterialImg: documents.optional(),
+    mainFinish: Joi.string().allow('').allow(null),
+    mainFinishImg: documents.optional(),
+    secondaryMaterial: Joi.string().allow('').allow(null),
+    secondaryMaterialImg: documents.optional(),
+    secondaryFinishing: Joi.string().allow('').allow(null),
+    secondaryFinishingImag: documents.optional(),
+    measureWide: Joi.number().required(),
+    measureHigh: Joi.number().required(),
+    measureDepth: Joi.number().required(),
+    measureCircumference: Joi.number().allow(null),
+    weight: Joi.number().required(),
+    providerId: Joi.number().required(),
+    model: Joi.string().required(),
+    originCode: Joi.string().required(),
+    originCost: Joi.number().required(),
+    currency: Joi.string().valid(...Object.values(CurrencyE)).messages({
+        'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    factor: Joi.number().required(),
+    price: Joi.number().required(),
+    percentageMaximumDiscount: Joi.number().required(),
+    maximumDiscount: Joi.number().required(),
+    quantity: Joi.number().required(),
+    subtotal: Joi.number().required(),
+    percentageDiscountProduct: Joi.number().allow(null),
+    discountProduct: Joi.number().allow(null),
+    subtotalDiscount: Joi.number().required(),
+    location: Joi.string().allow('').allow(null),
+    assembledProducts: Joi.array().items(schemaAssembledProducts).optional().allow(null),
+    typeSale: Joi.string().valid(...Object.values(TypeSaleE)).messages({
+        'any.only': `El tipo debe ser igual a uno de los valores permitidos.`
+    }).optional(),
+    isMoneySection: Joi.boolean().allow(null).optional(),
+    reservationDays: Joi.number().allow(null).optional(),
+    loanInitialDate: Joi.date().allow(null).optional(),
+    loanEndDate: Joi.date().allow(null).optional(),
+    document: documents.optional(),
+
+})
+
+const schemaMainProjectManagerCommissions = Joi.object({
+    classificationId: Joi.number().required(),
+    commissionPercentage: Joi.number().required(),
+    id: Joi.number(),
+})
+
+const projectManager = Joi.object({
+    userId: Joi.number(),
+    projectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
+})
 
 const designer = Joi.object({
     userId: Joi.number(),
-    commissionPercentageDesigner: Joi.number(),
+    commissionPercentageDesigner: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
 })
-const products = Joi.object({
-    productId: Joi.number(),
-    typeSale: Joi.string(),
-    isSeparate: Joi.boolean().required(),
-    percentageSeparate: Joi.number(),
-    reservationDays: Joi.number(),
-    provedorId: Joi.number(),
-    quantity: Joi.number(),
-    percentageDiscountProduct: Joi.number(),
-    discountProduct: Joi.number(),
-    percentageAdditionalDiscount: Joi.number(),
-    additionalDiscount: Joi.number(),
-    subtotal: Joi.number(),
 
-})
 export const schemaCreateQuotition = Joi.object({
     id: Joi.number().allow(null),
     isDraft: Joi.boolean().required(),
@@ -102,11 +147,10 @@ export const schemaCreateQuotition = Joi.object({
     }),
     projectManagers: Joi.array().items(projectManager).optional(),
     designers: Joi.array().items(designer).optional(),
-    products: Joi.array().items(products).optional(),
+    products: Joi.array().items(products).required(),
     quotation: Joi.object({
         mainProjectManagerId: Joi.number().required(),
-        mainProjectManagerClassificationId: Joi.number().allow(null),
-        percentageMainProjectManager: Joi.number().required(),
+        mainProjectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
         commissionPercentageArchitect: Joi.number().allow(null),
         isArchitect: Joi.boolean().allow(null),
         architectName: Joi.string().allow(null).allow(""),
@@ -169,8 +213,6 @@ export const schemaUpdateQuotition = Joi.object({
     products: Joi.array().items(products).optional(),
     quotation: Joi.object({
         mainProjectManagerId: Joi.number().required(),
-        mainProjectManagerClassificationId: Joi.number().allow(null),
-        percentageMainProjectManager: Joi.number().required(),
         commissionPercentageArchitect: Joi.number().allow(null),
         isArchitect: Joi.boolean().allow(null),
         architectName: Joi.string().allow(null).allow(""),

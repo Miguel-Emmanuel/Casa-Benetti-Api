@@ -6,6 +6,7 @@ import {Branch, BranchWithRelations} from './branch.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Document} from './document.model';
+import {Proforma} from './proforma.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -72,6 +73,15 @@ export class Project extends BaseEntity {
     //Registro del pago correspondiente a cada anticipo
     @hasMany(() => AdvancePaymentRecord)
     advancePaymentRecords: AdvancePaymentRecord[];
+
+    @hasMany(() => Proforma)
+    proformas: Proforma[];
+
+    //Referencia
+    @property({
+        type: 'string',
+    })
+    reference: string;
 
     constructor(data?: Partial<Project>) {
         super(data);

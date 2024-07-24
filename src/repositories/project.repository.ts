@@ -3,7 +3,7 @@ import {BelongsToAccessor, repository, HasManyRepositoryFactory, HasOneRepositor
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Project, ProjectRelations, Quotation, AdvancePaymentRecord, CommissionPaymentRecord, Branch, Customer, Document} from '../models';
+import {Project, ProjectRelations, Quotation, AdvancePaymentRecord, CommissionPaymentRecord, Branch, Customer, Document, Proforma} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {QuotationRepository} from './quotation.repository';
 import {SoftCrudRepository} from './soft-delete-entity.repository.base';
@@ -12,6 +12,7 @@ import {CommissionPaymentRecordRepository} from './commission-payment-record.rep
 import {BranchRepository} from './branch.repository';
 import {CustomerRepository} from './customer.repository';
 import {DocumentRepository} from './document.repository';
+import {ProformaRepository} from './proforma.repository';
 
 export class ProjectRepository extends SoftCrudRepository<
   Project,
@@ -37,13 +38,17 @@ export class ProjectRepository extends SoftCrudRepository<
 
   public readonly documents: HasManyRepositoryFactory<Document, typeof Project.prototype.id>;
 
+  public readonly proformas: HasManyRepositoryFactory<Proforma, typeof Project.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
+    @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('AdvancePaymentRecordRepository') protected advancePaymentRecordRepositoryGetter: Getter<AdvancePaymentRecordRepository>, @repository.getter('CommissionPaymentRecordRepository') protected commissionPaymentRecordRepositoryGetter: Getter<CommissionPaymentRecordRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>,
   ) {
     super(Project, dataSource);
+    this.proformas = this.createHasManyRepositoryFactoryFor('proformas', proformaRepositoryGetter,);
+    this.registerInclusionResolver('proformas', this.proformas.inclusionResolver);
     this.documents = this.createHasManyRepositoryFactoryFor('documents', documentRepositoryGetter,);
     this.registerInclusionResolver('documents', this.documents.inclusionResolver);
     this.advanceFile = this.createHasManyRepositoryFactoryFor('advanceFile', documentRepositoryGetter,);

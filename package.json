@@ -58,6 +58,7 @@
     "@loopback/authorization": "^0.15.2",
     "@loopback/boot": "^7.0.2",
     "@loopback/core": "^6.0.2",
+    "@loopback/cron": "^0.12.4",
     "@loopback/repository": "^7.0.2",
     "@loopback/rest": "^14.0.2",
     "@loopback/rest-explorer": "^7.0.2",

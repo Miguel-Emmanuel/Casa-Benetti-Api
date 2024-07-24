@@ -5,9 +5,10 @@ import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {convertToMoney} from '../helpers/convertMoney';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
-import {AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
@@ -42,14 +43,19 @@ export class ProjectService {
         public documentRepository: DocumentRepository,
         @repository(AccountsReceivableRepository)
         public accountsReceivableRepository: AccountsReceivableRepository,
+        @repository(AccountPayableRepository)
+        public accountPayableRepository: AccountPayableRepository,
+        @repository(PurchaseOrdersRepository)
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, transaction);
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
-        await this.createAdvancePaymentRecord(quotation, project.id, transaction)
+        await this.updateSKUProducts(quotationId, project.reference, transaction);
+        await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
         await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
         await this.createPdfToCustomer(quotationId, project.id, transaction);
         await this.createPdfToProvider(quotationId, project.id, transaction);
@@ -61,6 +67,84 @@ export class ProjectService {
     async count(where?: Where<Project>,) {
         return this.projectRepository.count(where);
     }
+    async getProducts(projectId: number) {
+        const project = await this.projectRepository.findById(projectId, {
+            include: [
+                {
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'quotationProducts'],
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId', 'proformaPrice'],
+                                    include: [
+                                        {
+                                            relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                fields: ['id', 'name', 'lineId'],
+                                                include: [
+                                                    {
+                                                        relation: 'line',
+                                                        scope: {
+                                                            fields: ['id', 'name']
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'brand',
+                                            scope: {
+                                                fields: ['id', 'brandName']
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        const {quotation} = project;
+        const {quotationProducts} = quotation;
+        return quotationProducts.map(value => {
+
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice} = value;
+            const {name, line} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                mainMaterial,
+                mainFinish,
+                secondaryMaterial,
+                secondaryFinishing,
+                measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            return {
+                id,
+                SKU,
+                provider: provider?.name ?? '',
+                providerId,
+                name,
+                brand: brand?.brandName ?? '',
+                brandId,
+                price,
+                description,
+                proformaPrice: proformaPrice ?? null
+            }
+        })
+    }
+
 
     async find(filter?: Filter<Project>,) {
         const accessLevel = this.user.accessLevel;
@@ -84,7 +168,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId', 'mainProjectManagerClassificationId'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -121,8 +205,8 @@ export class ProjectService {
             };
         const projects = await this.projectRepository.find(filter);
         return projects.map(value => {
-            const {id, projectId, customer, branch, quotation, status, branchId} = value;
-            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId, mainProjectManagerClassificationId} = quotation;
+            const {id, projectId, customer, branch, quotation, status, branchId, reference} = value;
+            const {mainProjectManager, exchangeRateQuotation, closingDate, mainProjectManagerId} = quotation;
             return {
                 id,
                 projectId,
@@ -134,7 +218,7 @@ export class ProjectService {
                 closingDate,
                 branchId,
                 mainProjectManagerId,
-                mainProjectManagerClassificationId
+                reference
             }
         })
     }
@@ -144,7 +228,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManagerClassificationId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -155,7 +239,7 @@ export class ProjectService {
                         {
                             relation: 'products',
                             scope: {
-                                include: ['brand', 'document', 'mainFinishImage', 'quotationProducts', 'provider', 'secondaryFinishingImage']
+                                include: ['brand', 'document', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
                             }
                         },
                     ]
@@ -195,26 +279,39 @@ export class ProjectService {
                 ]
             };
         const project = await this.projectRepository.findById(id, filter);
-        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents} = project;
+        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
         const {closingDate, products, exchangeRateQuotation} = quotation;
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const productsArray = [];
         for (const iterator of products ?? []) {
+            const descriptionParts = [
+                iterator?.line?.name,
+                iterator?.name,
+                iterator.quotationProducts?.mainMaterial,
+                iterator.quotationProducts?.mainFinish,
+                iterator.quotationProducts?.secondaryMaterial,
+                iterator.quotationProducts?.secondaryFinishing,
+                iterator.quotationProducts?.measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
             productsArray.push({
                 id: iterator?.id,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 brandName: iterator?.brand?.brandName ?? '',
-                description: iterator?.description,
-                price: iterator?.price,
-                listPrice: iterator?.listPrice,
-                factor: iterator?.factor,
+                description,
+                price: iterator?.quotationProducts?.price,
+                listPrice: iterator?.quotationProducts?.originCost,
+                factor: iterator?.quotationProducts?.factor,
                 quantity: iterator?.quotationProducts?.quantity,
-                provider: iterator?.provider?.name,
-                status: iterator?.status,
-                mainFinish: iterator?.mainFinish,
-                mainFinishImage: iterator?.mainFinishImage?.fileURL,
-                secondaryFinishing: iterator?.secondaryFinishing,
-                secondaryFinishingImage: iterator?.secondaryFinishingImage?.fileURL,
+                // provider: iterator?.provider?.name,
+                status: iterator?.quotationProducts?.status,
+                mainFinish: iterator?.quotationProducts?.mainFinish,
+                mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
+                secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
+                secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
             })
         }
         return {
@@ -227,6 +324,7 @@ export class ProjectService {
             products: productsArray,
             advancePaymentRecords,
             exchangeRateQuotation,
+            reference,
             files: {
                 clientQuoteFile: {
                     fileURL: clientQuoteFile?.fileURL,
@@ -310,20 +408,35 @@ export class ProjectService {
 
 
     async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts']}}]});
-        const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]}, {transaction});
+        const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+        console.log("QUOTATIONCUSTOMER", quotation);
+
 
         let productsTemplate = [];
         for (const product of products) {
-            const {brand, status, description, document, mainFinish, mainFinishImage, quotationProducts} = product;
+            const {brand, document, quotationProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing,
+                quotationProducts?.measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
             productsTemplate.push({
                 brandName: brand?.brandName,
-                status,
+                status: quotationProducts?.status,
                 description,
                 image: document?.fileURL ?? defaultImage,
-                mainFinish,
-                mainFinishImage: mainFinishImage?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 percentage: quotationProducts?.percentageDiscountProduct,
                 subtotal: quotationProducts?.subtotal
@@ -332,26 +445,29 @@ export class ProjectService {
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
+            const reference = `${project?.reference ?? ""}`
+            const referenceCustomerName = reference.trim() === "" ? "-" : reference
             const properties: any = {
                 "logo": logo,
                 "customerName": `${customer?.name} ${customer?.lastName}`,
                 "quotationId": quotationId,
                 "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
-                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "referenceCustomer": referenceCustomerName,
                 "products": productsTemplate,
                 subtotal,
-                percentageAdditionalDiscount,
+                percentageAdditionalDiscount: percentageAdditionalDiscount ?? 0,
                 additionalDiscount,
                 percentageIva,
                 iva,
                 total,
                 advance,
-                advanceCustomer,
-                conversionAdvance,
-                balance,
+                advanceCustomer: convertToMoney(advanceCustomer ?? 0),
+                conversionAdvance: convertToMoney(conversionAdvance ?? 0),
+                balance: convertToMoney(balance ?? 0),
                 exchangeRate,
-                percentageAdvance
+                percentageAdvance,
+                emailPM: mainProjectManager?.email
 
             }
             const nameFile = `cotizacion_cliente_${customer?.name}-${customer?.lastName}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
@@ -364,36 +480,57 @@ export class ProjectService {
     }
 
     async createPdfToProvider(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['brand', 'document', 'mainFinishImage', 'quotationProducts', {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
-        const {customer, mainProjectManager, referenceCustomer, products, } = quotation;
-        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]}, {transaction});
+        const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
+        console.log("QUOTATION", quotation);
 
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+        //aqui
         let prodcutsArray = [];
         for (const product of products) {
-            const {brand, status, description, document, mainFinish, mainFinishImage, quotationProducts, typeArticle, assembledProducts, originCode} = product;
+            const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing,
+                quotationProducts?.measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
             prodcutsArray.push({
                 brandName: brand?.brandName,
-                status,
+                status: quotationProducts?.status,
                 description,
                 image: document?.fileURL ?? defaultImage,
-                mainFinish,
-                mainFinishImage: mainFinishImage?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
-                originCode,
+                originCode: quotationProducts?.originCode,
                 assembledProducts: assembledProducts
             })
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
+            const reference = `${project?.reference ?? ""}`
+            const referenceCustomerName = reference.trim() === "" ? "-" : reference
+            console.log("REFERENCE", {reference, referenceCustomerName});
+
             const properties: any = {
                 "logo": logo,
                 "customerName": `${customer?.name} ${customer?.lastName}`,
                 "quotationId": quotationId,
                 "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
-                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "referenceCustomer": referenceCustomerName,
                 "products": prodcutsArray,
+                "type": 'COTIZACION'
             }
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
@@ -420,19 +557,20 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
             }
             for (let index = 0; index < advancePaymentRecord?.length; index++) {
-                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency} = advancePaymentRecord[index];
+                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency, reference} = advancePaymentRecord[index];
                 let letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
                 letterNumber = `${letterNumber} ${this.separeteDecimal(amountPaid)}/100 MN`;
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
                     advanceCustomer: amountPaid,
-                    conversionAdvance: conversionAmountPaid.toFixed(2),
+                    conversionAdvance: conversionAmountPaid ? conversionAmountPaid.toFixed(2) : 0,
                     proofPaymentType: paymentCurrency,
                     paymentType: paymentMethod,
                     exchangeRateAmount: parity,
                     paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
                     letterNumber,
-                    consecutiveId: (index + 1)
+                    consecutiveId: (index + 1),
+                    reference
                 }
 
                 const nameFile = `recibo_anticipo_${paymentCurrency}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
@@ -565,35 +703,98 @@ export class ProjectService {
         return body;
     }
 
-    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, transaction: any) {
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, showroomManager: string, transaction: any) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
+        let reference = null;
         if (previousProject) {
-            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0)}`;
+            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
+            reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
         } else {
-            projectId = `${1}${branch?.name?.charAt(0)}`;
+            projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
+            reference = `${this.getNumberReference(showroomManager)}`;
         }
-        const project = await this.projectRepository.create({...body, projectId}, {transaction});
+
+
+        const project = await this.projectRepository.create({...body, projectId, reference}, {transaction});
         return project;
+    }
+
+    getNumberReference(nameShowroom: string, reference?: string) {
+        return reference ? `${Number(reference.match(/\d+/g)!.join('')) + 1}${nameShowroom.charAt(0).toUpperCase()}` : `1${nameShowroom.charAt(0).toUpperCase()}`;
     }
 
     async changeStatusProductsToPedido(quotationId: number, transaction: any) {
         await this.quotationProductsRepository.updateAll({status: QuotationProductStatusE.PEDIDO}, {quotationId}, {transaction})
     }
 
+    async updateSKUProducts(quotationId: number, reference: string, transaction: any) {
+        const quotationProducts = await this.quotationProductsRepository.find({where: {quotationId}, include: [{relation: 'product', scope: {fields: ['id', 'classificationId']}}]});
+        const folioInitial = '001';
+        for (let index = 0; index < quotationProducts.length; index++) {
+            const {product, id, assembledProducts} = quotationProducts[index];
+            const {classificationId} = product;
+            const SKU = `${reference}-${classificationId}${this.incrementarFolio(folioInitial)}`;
+            if (assembledProducts) {
+                const folioInitialAssembled = '01';
+                for (let index = 0; index < assembledProducts.length; index++) {
+                    const element = assembledProducts[index];
+                    const SKUAssembled = `${SKU}.${this.incrementarFolio(folioInitialAssembled)}`;
+                    element.SKU = SKUAssembled;
+                }
+            }
+            await this.quotationProductsRepository.updateById(id, {SKU, assembledProducts}, {transaction})
+        }
+    }
+
+    incrementarFolio(folioActual: string): string {
+        let numero = parseInt(folioActual, 10);
+        numero++;
+        let nuevoFolio = numero.toString().padStart(folioActual.length, '0');
+        return nuevoFolio;
+    }
+
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
+    }
+
     async createCommissionPaymentRecord(quotation: Quotation, projectId: number, quotationId: number, transaction: any) {
         const {isArchitect, exchangeRateQuotation, isReferencedCustomer, isProjectManager, isDesigner, showroomManagerId} = quotation;
+        //ProjectManager principal
+        if (isArchitect === true) {
+            const {mainProjectManagerId, classificationPercentageMainpms} = quotation;
+
+            for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
+                const element = classificationPercentageMainpms[index];
+                const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage)
+                const body = {
+                    userId: mainProjectManagerId,
+                    projectId,
+                    commissionPercentage: element.commissionPercentage,
+                    commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
+                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                    type: AdvancePaymentTypeE.ARQUITECTO,
+                    balance: commissionAmount
+                }
+                await this.commissionPaymentRecordRepository.create(body, {transaction});
+
+            }
+        }
+
+
         //Arquitecto
         if (isArchitect === true) {
             const {architectName, commissionPercentageArchitect} = quotation;
+            const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageArchitect)
             const body = {
                 userName: architectName,
                 projectId,
                 commissionPercentage: commissionPercentageArchitect,
-                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageArchitect),
+                commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                type: AdvancePaymentTypeE.ARQUITECTO
+                type: AdvancePaymentTypeE.ARQUITECTO,
+                balance: commissionAmount
             }
             await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
@@ -601,62 +802,78 @@ export class ProjectService {
         //Cliente referenciado
         if (isReferencedCustomer === true) {
             const {referenceCustomerId, commissionPercentagereferencedCustomer} = quotation;
+            const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentagereferencedCustomer);
             const body = {
                 userId: referenceCustomerId,
                 projectId,
                 commissionPercentage: commissionPercentagereferencedCustomer,
-                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentagereferencedCustomer),
+                commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO
+                type: AdvancePaymentTypeE.CLIENTE_REFERENCIADO,
+                balance: commissionAmount
             }
             await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Project managers
         if (isProjectManager === true) {
-            const quotationProjectManagers = await this.quotationProjectManagerRepository.find({where: {quotationId}});
+            const quotationProjectManagers = await this.quotationProjectManagerRepository.find({where: {quotationId}, include: ['classificationPercentageMainpms']});
             for (const iterator of quotationProjectManagers) {
-                const {commissionPercentageProjectManager, userId} = iterator;
-                const body = {
-                    userId: userId,
-                    projectId,
-                    commissionPercentage: commissionPercentageProjectManager,
-                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageProjectManager),
-                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                    type: AdvancePaymentTypeE.PROJECT_MANAGER
+                const {classificationPercentageMainpms, userId} = iterator;
+                for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
+                    const element = classificationPercentageMainpms[index];
+                    const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage);
+                    const body = {
+                        userId: userId,
+                        projectId,
+                        commissionPercentage: element.commissionPercentage,
+                        commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
+                        projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                        type: AdvancePaymentTypeE.PROJECT_MANAGER,
+                        balance: commissionAmount
+                    }
+                    await this.commissionPaymentRecordRepository.create(body, {transaction});
                 }
-                await this.commissionPaymentRecordRepository.create(body, {transaction});
+
             }
         }
 
         //Showroom manager
         if (showroomManagerId) {
             const commissionPercentage = 16;
+            const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentage);
             const body = {
                 userId: showroomManagerId,
                 projectId,
                 commissionPercentage: commissionPercentage,
-                commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentage),
+                commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
                 projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                type: AdvancePaymentTypeE.SHOWROOM_MANAGER
+                type: AdvancePaymentTypeE.SHOWROOM_MANAGER,
+                balance: commissionAmount
             }
             await this.commissionPaymentRecordRepository.create(body, {transaction});
         }
 
         //Proyectistas
         if (isDesigner === true) {
-            const QuotationDesigners = await this.quotationDesignerRepository.find({where: {quotationId}});
+            const QuotationDesigners = await this.quotationDesignerRepository.find({where: {quotationId}, include: ['classificationPercentageMainpms']});
             for (const iterator of QuotationDesigners) {
-                const {commissionPercentageDesigner, userId} = iterator;
-                const body = {
-                    userId: userId,
-                    projectId,
-                    commissionPercentage: commissionPercentageDesigner,
-                    commissionAmount: this.calculateCommissionAmount(exchangeRateQuotation, quotation, commissionPercentageDesigner),
-                    projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
-                    type: AdvancePaymentTypeE.PROYECTISTA
+                const {classificationPercentageMainpms, userId} = iterator;
+                for (let index = 0; index < classificationPercentageMainpms?.length; index++) {
+                    const element = classificationPercentageMainpms[index];
+                    const commissionAmount = this.calculateCommissionAmount(exchangeRateQuotation, quotation, element.commissionPercentage);
+                    const body = {
+                        userId: userId,
+                        projectId,
+                        commissionPercentage: element.commissionPercentage,
+                        commissionAmount: this.roundToTwoDecimals(commissionAmount ?? 0),
+                        projectTotal: this.getTotalQuotation(exchangeRateQuotation, quotation),
+                        type: AdvancePaymentTypeE.PROYECTISTA,
+                        balance: commissionAmount
+                    }
+                    await this.commissionPaymentRecordRepository.create(body, {transaction});
+
                 }
-                await this.commissionPaymentRecordRepository.create(body, {transaction});
             }
         }
 
@@ -699,19 +916,19 @@ export class ProjectService {
         }
     }
 
-    async createAdvancePaymentRecord(quotation: Quotation, projectId: number, transaction: any) {
+    async createAdvancePaymentRecord(quotation: Quotation, projectId: number, reference: string, transaction: any) {
         const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id, createdAt, isFractionate, typeFractional} = quotation;
         if (isFractionate) {
             if (typeFractional.EUR == true) {
                 const {totalEUR, ivaEUR} = quotation;
                 const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: totalEUR ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalEUR ?? 0, typeCurrency: ExchangeRateQuotationE.EUR}, {transaction});
                 for (let index = 0; index < proofPaymentQuotations?.length; index++) {
-                    const {paymentDate, paymentType, exchangeRateAmount, exchangeRate, id, documents, proofPaymentType, advanceCustomer} = proofPaymentQuotations[index];
+                    const {paymentDate, paymentType, exchangeRateAmount, exchangeRate, id, documents, conversionAdvance, proofPaymentType, advanceCustomer} = proofPaymentQuotations[index];
                     if (proofPaymentType === ExchangeRateQuotationE.EUR) {
-                        const conversionAmountPaid = this.bigNumberDividedBy(advanceCustomer, exchangeRateAmount); //importe pagado
+                        const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance || advanceCustomer, exchangeRateAmount || 1); //importe pagado
                         const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                         const paymentPercentage = this.calculatePercentage(conversionAmountPaid, totalEUR)
-                        await this.createAdvancePaymentRecordRepository(paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, conversionAmountPaid, subtotalAmountPaid, paymentPercentage, projectId, accountsReceivable.id, transaction, documents, paymentDate);
+                        await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, this.roundToTwoDecimals(conversionAmountPaid), this.roundToTwoDecimals(subtotalAmountPaid), this.roundToTwoDecimals(paymentPercentage), projectId, accountsReceivable.id, transaction, documents, paymentDate);
                     }
                 }
             }
@@ -722,10 +939,10 @@ export class ProjectService {
                 for (let index = 0; index < proofPaymentQuotations?.length; index++) {
                     const {paymentDate, paymentType, exchangeRateAmount, exchangeRate, id, documents, conversionAdvance, proofPaymentType, advanceCustomer} = proofPaymentQuotations[index];
                     if (proofPaymentType === ExchangeRateQuotationE.MXN) {
-                        const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance, exchangeRateAmount); //importe pagado
+                        const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance || advanceCustomer, exchangeRateAmount || 1); //importe pagado
                         const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                         const paymentPercentage = this.calculatePercentage(conversionAmountPaid, totalMXN)
-                        await this.createAdvancePaymentRecordRepository(paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, conversionAmountPaid, subtotalAmountPaid, paymentPercentage, projectId, accountsReceivable.id, transaction, documents, paymentDate);
+                        await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.MXN}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, this.roundToTwoDecimals(conversionAmountPaid), this.roundToTwoDecimals(subtotalAmountPaid), this.roundToTwoDecimals(paymentPercentage), projectId, accountsReceivable.id, transaction, documents, paymentDate);
                     }
 
                 }
@@ -737,10 +954,10 @@ export class ProjectService {
                 for (let index = 0; index < proofPaymentQuotations?.length; index++) {
                     const {paymentDate, paymentType, exchangeRateAmount, exchangeRate, id, documents, conversionAdvance, proofPaymentType, advanceCustomer} = proofPaymentQuotations[index];
                     if (proofPaymentType === ExchangeRateQuotationE.USD) {
-                        const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance, exchangeRateAmount); //importe pagado
+                        const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance || advanceCustomer, exchangeRateAmount || 1); //importe pagado
                         const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                         const paymentPercentage = this.calculatePercentage(conversionAmountPaid, totalUSD)
-                        await this.createAdvancePaymentRecordRepository(paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, conversionAmountPaid, subtotalAmountPaid, paymentPercentage, projectId, accountsReceivable.id, transaction, documents, paymentDate);
+                        await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.USD}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, this.roundToTwoDecimals(conversionAmountPaid), this.roundToTwoDecimals(subtotalAmountPaid), this.roundToTwoDecimals(paymentPercentage), projectId, accountsReceivable.id, transaction, documents, paymentDate);
                     }
 
                 }
@@ -754,17 +971,25 @@ export class ProjectService {
                 // const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
                 // const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
                 // await this.createAdvancePaymentRecordRepository(accountsReceivable.id, projectId, paymentPercentage, subtotalAmountPaid, iva ?? 0, conversionAmountPaid, proofPaymentType, percentageIva, exchangeRateAmount, exchangeRate, conversionAdvance, paymentType, transaction, documents, paymentDate);
-                const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance, exchangeRateAmount); //importe pagado
+                console.log('conversionAdvance: ', conversionAdvance)
+                console.log('exchangeRateAmount: ', exchangeRateAmount)
+                console.log('percentageIva: ', percentageIva)
+                console.log('total: ', total)
+                const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance || advanceCustomer, exchangeRateAmount || 1); //importe pagado
                 const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                 const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
-                await this.createAdvancePaymentRecordRepository(paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, conversionAmountPaid, subtotalAmountPaid, paymentPercentage, projectId, accountsReceivable.id, transaction, documents, paymentDate);
+                console.log('conversionAmountPaid: ', conversionAmountPaid)
+                console.log('subtotalAmountPaid: ', subtotalAmountPaid)
+                console.log('paymentPercentage: ', paymentPercentage)
+
+                await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, this.roundToTwoDecimals(conversionAmountPaid), this.roundToTwoDecimals(subtotalAmountPaid), this.roundToTwoDecimals(paymentPercentage), projectId, accountsReceivable.id, transaction, documents, paymentDate);
 
             }
 
         }
     }
 
-    async createAdvancePaymentRecordRepository(paymentMethod: PaymentTypeProofE, amountPaid: number, paymentCurrency: ExchangeRateE, parity: number, percentageIva: number, currencyApply: ExchangeRateQuotationE, conversionAmountPaid: number, subtotalAmountPaid: number, paymentPercentage: number, projectId: number, accountsReceivableId: number, transaction: any, documents: any, paymentDate: Date | undefined) {
+    async createAdvancePaymentRecordRepository(reference: string, paymentMethod: PaymentTypeProofE, amountPaid: number, paymentCurrency: ExchangeRateE, parity: number, percentageIva: number, currencyApply: ExchangeRateQuotationE, conversionAmountPaid: number, subtotalAmountPaid: number, paymentPercentage: number, projectId: number, accountsReceivableId: number, transaction: any, documents: any, paymentDate: Date | undefined) {
         const body = {
             consecutiveId: 1,
             paymentDate,
@@ -781,7 +1006,8 @@ export class ProjectService {
             paymentPercentage,
             projectId,
             type: TypeAdvancePaymentRecordE.ANTICIPO_PRODUCTO,
-            accountsReceivableId
+            accountsReceivableId,
+            reference
         }
         console.log('body: ', body)
         const advancePaymentRecord = await this.advancePaymentRecordRepository.create(body, {transaction});
@@ -812,6 +1038,11 @@ export class ProjectService {
                     order: ['createdAt ASC'],
                     include: ['documents']
                 }
+            }, {
+                relation: 'classificationPercentageMainpms'
+            },
+            {
+                relation: 'showroomManager'
             }]
         });
         if (!quotation)

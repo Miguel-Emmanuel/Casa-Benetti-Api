@@ -17,7 +17,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {AssembledProducts, Document, Product} from '../models';
+import {AssembledProducts, Document, Product, ProductCreate} from '../models';
 import {ProductService} from '../services';
 
 @authenticate('jwt')
@@ -39,9 +39,9 @@ export class ProductController {
                     schema: {
                         type: 'object',
                         properties: {
-                            product: getModelSchemaRef(Product, {
+                            product: getModelSchemaRef(ProductCreate, {
                                 title: 'NewProduct',
-                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId', 'isActive', 'activateDeactivateComment'],
+                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'organizationId', 'isActive', 'activateDeactivateComment'],
                             }),
                             assembledProducts: {
                                 type: 'array',
@@ -50,7 +50,7 @@ export class ProductController {
                                     properties: {
                                         assembledProduct: getModelSchemaRef(AssembledProducts, {
                                             title: 'AssembledProducts',
-                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId', 'SKU'],
                                         }),
                                         document: {
                                             type: 'object',
@@ -73,55 +73,15 @@ export class ProductController {
                                     extension: {type: 'string'}
                                 }
                             },
-                            mainMaterialImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            mainFinishImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            secondaryMaterialImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            secondaryFinishingImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
                         }
                     },
                 },
             },
         })
         data: {
-            product: Omit<Product, 'id'>,
+            product: Omit<ProductCreate, 'id'>,
             document: Document,
-            assembledProducts: {assembledProduct: AssembledProducts, document: Document}[],
-            mainMaterialImage: Document,
-            mainFinishImage: Document,
-            secondaryMaterialImage: Document,
-            secondaryFinishingImage: Document,
+            assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]
         },
     ): Promise<Product> {
         return this.productService.create(data);
@@ -185,9 +145,9 @@ export class ProductController {
                     schema: {
                         type: 'object',
                         properties: {
-                            product: getModelSchemaRef(Product, {
+                            product: getModelSchemaRef(ProductCreate, {
                                 title: 'NewProduct',
-                                exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'organizationId', 'isActive', 'activateDeactivateComment'],
+                                exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'organizationId', 'isActive', 'activateDeactivateComment'],
                             }),
                             assembledProducts: {
                                 type: 'array',
@@ -195,14 +155,13 @@ export class ProductController {
                                     type: 'object',
                                     properties: {
                                         assembledProduct: getModelSchemaRef(AssembledProducts, {
-                                            title: 'AssembledProductsUpdate',
-                                            exclude: ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
+                                            title: 'AssembledProducts',
+                                            exclude: ['id', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'isDeleted', 'deleteComment', 'productId'],
                                         }),
                                         document: {
                                             type: 'object',
                                             nullable: true,
                                             properties: {
-                                                id: {type: 'number'},
                                                 fileURL: {type: 'string'},
                                                 name: {type: 'string'},
                                                 extension: {type: 'string'}
@@ -215,47 +174,6 @@ export class ProductController {
                                 type: 'object',
                                 nullable: true,
                                 properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            mainMaterialImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            mainFinishImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            secondaryMaterialImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
-                                    fileURL: {type: 'string'},
-                                    name: {type: 'string'},
-                                    extension: {type: 'string'}
-                                }
-                            },
-                            secondaryFinishingImage: {
-                                type: 'object',
-                                nullable: true,
-                                properties: {
-                                    id: {type: 'number'},
                                     fileURL: {type: 'string'},
                                     name: {type: 'string'},
                                     extension: {type: 'string'}
@@ -267,13 +185,9 @@ export class ProductController {
             },
         })
         data: {
-            product: Omit<Product, 'id'>,
+            product: Omit<ProductCreate, 'id'>,
             document: Document,
             assembledProducts: {assembledProduct: AssembledProducts, document: Document}[],
-            mainMaterialImage: Document,
-            mainFinishImage: Document,
-            secondaryMaterialImage: Document,
-            secondaryFinishingImage: Document,
         },
     ): Promise<void> {
         await this.productService.updateById(id, data);
@@ -321,7 +235,7 @@ export class ProductController {
         return this.productService.activateDeactivate(id, body);
     }
 
-    @patch('/products/proforma/{id}')
+    @patch('/products/proforma/{productQuotationId}')
     @response(201, {
         description: 'customer model instance',
         content: {
@@ -336,7 +250,7 @@ export class ProductController {
         },
     })
     async updateProforma(
-        @param.path.number('id') id: number,
+        @param.path.number('productQuotationId') productQuotationId: number,
         @requestBody({
             content: {
                 'application/json': {
@@ -353,6 +267,7 @@ export class ProductController {
         })
         body: {price: number},
     ): Promise<void> {
-        await this.productService.updateProforma(id, body);
+        await this.productService.updateProforma(productQuotationId, body);
     }
+
 }

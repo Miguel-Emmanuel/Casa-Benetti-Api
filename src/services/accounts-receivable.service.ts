@@ -93,6 +93,7 @@ export class AccountsReceivableService {
             const element = advancePaymentRecordsFind[index];
             const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords} = element;
             try {
+                let balanceDetail = totalSale;
                 data.push({
                     today: dayjs().format('DD/MM/YYYY'),
                     projectId,
@@ -106,8 +107,10 @@ export class AccountsReceivableService {
                     totalPercentage: 0,
                     balance,
                     advancePaymentRecords: advancePaymentRecords.map(value => {
+                        balanceDetail = balanceDetail - value.subtotalAmountPaid;
                         return {
                             ...value,
+                            balanceDetail: balanceDetail.toFixed(2),
                             paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
                             amountPaid: value.subtotalAmountPaid.toFixed(2),
                             subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
@@ -136,7 +139,7 @@ export class AccountsReceivableService {
                 {
                     relation: 'quotation',
                     scope: {
-                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD', 'mainProjectManagerId', 'mainProjectManagerClassificationId'],
+                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD', 'mainProjectManagerId'],
                         include: [
                             {
                                 relation: 'showroomManager',

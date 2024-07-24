@@ -2,14 +2,14 @@ import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository'
 import {ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
-import {Classification} from './classification.model';
+import {ClassificationPercentageMainpm} from './classification-percentage-mainpm.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
 import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
-import {QuotationProducts} from './quotation-products.model';
+import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {User, UserWithRelations} from './user.model';
 
@@ -125,6 +125,9 @@ export class Quotation extends BaseEntity {
     @hasMany(() => Product, {through: {model: () => QuotationProducts}})
     products: Product[];
 
+    @hasMany(() => QuotationProducts)
+    quotationProducts: QuotationProductsWithRelations[];
+
     @belongsTo(() => Organization)
     organizationId: number;
 
@@ -164,23 +167,12 @@ export class Quotation extends BaseEntity {
     })
     isFractionate: boolean;
 
-    //Porcentaje de comision project manager principal
-    @property({
-        type: 'number',
-        required: false,
-        postgresql: {
-            dataType: 'double precision',
-        },
-    })
-    percentageMainProjectManager: number;
-
     //Project manager principal
     @belongsTo(() => User)
     mainProjectManagerId: number;
 
-    //Clasificacion del main project manager
-    @belongsTo(() => Classification)
-    mainProjectManagerClassificationId: number;
+    @hasMany(() => ClassificationPercentageMainpm)
+    classificationPercentageMainpms: ClassificationPercentageMainpm[];
 
     //Comprobante de anticipos
     @hasMany(() => ProofPaymentQuotation)

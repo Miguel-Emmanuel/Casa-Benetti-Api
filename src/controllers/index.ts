@@ -26,3 +26,16 @@ export * from './accounts-receivable.controller';
 export * from './advance-payment-record.controller';
 export * from './documents.controller';
 
+export * from './account-payable-history.controller';
+export * from './account-payable.controller';
+export * from './purchase-orders.controller';
+
+export * from './classification-percentage-mainpm.controller';
+export * from './line.controller';
+
+export * from './proforma.controller';
+export * from './account-payable-proforma.controller';
+export * from './product-provider.controller';
+export * from './commission-payment-record.controller';
+export * from './commission-payment.controller';
+export * from './quotation-products-quotation.controller';

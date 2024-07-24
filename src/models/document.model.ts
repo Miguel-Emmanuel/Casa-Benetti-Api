@@ -55,26 +55,6 @@ export class Document extends BaseEntity {
   @property({
     type: 'number',
   })
-  mainMaterialId?: number;
-
-  @property({
-    type: 'number',
-  })
-  mainFinishId?: number;
-
-  @property({
-    type: 'number',
-  })
-  secondaryMaterialId?: number;
-
-  @property({
-    type: 'number',
-  })
-  secondaryFinishingId?: number;
-
-  @property({
-    type: 'number',
-  })
   proofPaymentQuotationId?: number;
 
   @property({
@@ -101,6 +81,41 @@ export class Document extends BaseEntity {
     type: 'number',
   })
   advancePaymentRecordId?: number;
+
+  @property({
+    type: 'number',
+  })
+  mainMaterialId?: number;
+
+  @property({
+    type: 'number',
+  })
+  mainFinishId?: number;
+
+  @property({
+    type: 'number',
+  })
+  secondaryMaterialId?: number;
+
+  @property({
+    type: 'number',
+  })
+  secondaryFinishingId?: number;
+
+  @property({
+    type: 'number',
+  })
+  proformaId?: number;
+
+  @property({
+    type: 'number',
+  })
+  accountPayableHistoryId?: number;
+
+  @property({
+    type: 'number',
+  })
+  commissionPaymentId?: number;
 
   constructor(data?: Partial<Document>) {
     super(data);

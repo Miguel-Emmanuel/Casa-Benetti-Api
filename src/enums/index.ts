@@ -16,6 +16,9 @@ export enum LogModelName {
     QUOTATION = "Quotation",
     ASSEMPLEDPRODUCTS = "AssembledProducts",
     PROJECT = "Project",
+    ACCOUNTPAYABLE = "AccountPayable",
+    PROFORMA = "Proforma",
+    ACCOUNTPAYABLEHISTORY = "AccountPayableHistory",
 }
 
 export enum LogModificationType {
@@ -32,6 +35,9 @@ export enum ModuleCategories {
     COTIZACIONES = 'Cotizaciones',
     PROYECTOS = 'Proyectos',
     CUENTAS_POR_COBRAR = 'Cuentas por cobrar',
+    ORDENES_DE_COMPRA = 'Órdenes de compra',
+    CUENTAS_POR_PAGAR = 'Cuentas por pagar',
+    COMISIONES = 'Comisiones',
 }
 
 export enum TypeUserE {
@@ -141,10 +147,15 @@ export enum AdvancePaymentTypeE {
     PROYECTISTA = 'Proyectista',
 }
 
-export enum CommissionPaymentStatus {
+export enum CommissionPaymentRecordStatus {
     PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
 }
 
+export enum CommissionPaymentStatus {
+    PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
+}
 
 export enum StatusProduct {
     PEDIDO = 'Pedido'
@@ -165,4 +176,44 @@ export enum PaymentTypeProofE {
     EFECTIVO_EXTERNO = 'Efectivo (Externo)',
     TRANSFERENCIA_EXTERNA = 'Transferencia (Cuenta externa)',
     SALDO_FAVOR = 'Saldo a favor',
+}
+
+export enum PurchaseOrdersStatus {
+    NUEVA = 'Nueva',
+    ENVIADA_AL_PROVEDOR = 'Enviada al proveedor',
+    EN_PRODUCCION = 'En producción',
+    FINALIZADA = 'Finalizada',
+    ENTREGA = 'Entregada',
+}
+export enum AccountPayableHistoryStatusE {
+    PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
+}
+
+export enum TypeCommisionE {
+    MAIN_PROJECT_MANAGER = 'Project manager principal',
+    PROJECT_MANAGER = 'Project manager secundario',
+    DESIGNER = 'Proyectista',
+}
+
+export enum ProformaCurrencyE {
+    EURO = 'Euro',
+    USD = 'Dolar',
+    PESO_MEXICANO = 'Peso Mexicano',
+}
+
+export enum ConvertCurrencyToEUR {
+    EURO = 1,
+    USD = 0.92,
+    MXN = 0.051,
+}
+export enum ConvertCurrencyToUSD {
+    USD = 1,
+    EURO = 1.09,
+    MXN = 0.055,
+}
+export enum ConvertCurrencyToMXN {
+    MXN = 1,
+    USD = 18.16,
+    EURO = 19.71,
 }

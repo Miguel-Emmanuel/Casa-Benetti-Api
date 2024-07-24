@@ -1,6 +1,6 @@
 import {RequestBodyObject, ResponseModelOrSpec, getModelSchemaRef} from '@loopback/rest';
 import {ExchangeRateE} from '../enums';
-import {ProofPaymentQuotationCreate} from '../models';
+import {ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export const CreateRequestBody: Partial<RequestBodyObject> = {
     content: {
@@ -113,12 +113,24 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 userId: {
                                     type: 'number'
                                 },
-                                commissionPercentageProjectManager: {
-                                    type: 'number'
+                                projectManagerCommissions: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            classificationId: {
+                                                type: 'number'
+                                            },
+                                            commissionPercentage: {
+                                                type: 'number'
+                                            },
+                                            id: {
+                                                type: 'number'
+                                            },
+
+                                        }
+                                    }
                                 },
-                                classificationId: {
-                                    type: 'number',
-                                }
                             }
                         }
                     },
@@ -131,53 +143,68 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                     type: 'number'
                                 },
                                 commissionPercentageDesigner: {
-                                    type: 'number'
-                                }
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            classificationId: {
+                                                type: 'number'
+                                            },
+                                            commissionPercentage: {
+                                                type: 'number'
+                                            },
+                                            id: {
+                                                type: 'number'
+                                            },
+                                        }
+                                    }
+                                },
                             }
                         }
                     },
                     products: {
                         type: 'array',
-                        items: {
-                            properties: {
-                                productId: {
-                                    type: 'number'
-                                },
-                                typeSale: {
-                                    type: 'string'
-                                },
-                                isSeparate: {
-                                    type: 'boolean'
-                                },
-                                percentageSeparate: {
-                                    type: 'number'
-                                },
-                                reservationDays: {
-                                    type: 'number'
-                                },
-                                provedorId: {
-                                    type: 'number'
-                                },
-                                quantity: {
-                                    type: 'number'
-                                },
-                                percentageDiscountProduct: {
-                                    type: 'number'
-                                },
-                                discountProduct: {
-                                    type: 'number'
-                                },
-                                percentageAdditionalDiscount: {
-                                    type: 'number'
-                                },
-                                additionalDiscount: {
-                                    type: 'number'
-                                },
-                                subtotal: {
-                                    type: 'number'
-                                },
-                            }
-                        }
+                        items: getModelSchemaRef(QuotationProductsCreate, {exclude: ['id', 'createdAt', 'status', 'quotationId', 'SKU', 'brandId', 'proformaId', 'dateReservationDays', 'isNotificationSent']})
+                        // {
+                        //     properties: {
+                        //         productId: {
+                        //             type: 'number'
+                        //         },
+                        //         typeSale: {
+                        //             type: 'string'
+                        //         },
+                        //         isSeparate: {
+                        //             type: 'boolean'
+                        //         },
+                        //         percentageSeparate: {
+                        //             type: 'number'
+                        //         },
+                        //         reservationDays: {
+                        //             type: 'number'
+                        //         },
+                        //         provedorId: {
+                        //             type: 'number'
+                        //         },
+                        //         quantity: {
+                        //             type: 'number'
+                        //         },
+                        //         percentageDiscountProduct: {
+                        //             type: 'number'
+                        //         },
+                        //         discountProduct: {
+                        //             type: 'number'
+                        //         },
+                        //         percentageAdditionalDiscount: {
+                        //             type: 'number'
+                        //         },
+                        //         additionalDiscount: {
+                        //             type: 'number'
+                        //         },
+                        //         subtotal: {
+                        //             type: 'number'
+                        //         },
+                        //     }
+                        // }
                     },
                     quotation: {
                         type: 'object',
@@ -185,11 +212,22 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                             mainProjectManagerId: {
                                 type: 'number',
                             },
-                            mainProjectManagerClassificationId: {
-                                type: 'number',
-                            },
-                            percentageMainProjectManager: {
-                                type: 'number',
+                            mainProjectManagerCommissions: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        classificationId: {
+                                            type: 'number'
+                                        },
+                                        commissionPercentage: {
+                                            type: 'number'
+                                        },
+                                        id: {
+                                            type: 'number'
+                                        },
+                                    }
+                                }
                             },
                             referenceCustomerId: {
                                 type: 'number',
@@ -290,6 +328,10 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
             schema: {
                 type: 'object',
                 properties: {
+                    id: {
+                        type: 'number',
+                        nullable: true
+                    },
                     isDraft: {
                         type: 'boolean'
                     },
@@ -391,12 +433,24 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                 userId: {
                                     type: 'number'
                                 },
-                                commissionPercentageProjectManager: {
-                                    type: 'number'
+                                projectManagerCommissions: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            classificationId: {
+                                                type: 'number'
+                                            },
+                                            commissionPercentage: {
+                                                type: 'number'
+                                            },
+                                            id: {
+                                                type: 'number'
+                                            },
+
+                                        }
+                                    }
                                 },
-                                classificationId: {
-                                    type: 'number',
-                                }
                             }
                         }
                     },
@@ -409,8 +463,22 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                     type: 'number'
                                 },
                                 commissionPercentageDesigner: {
-                                    type: 'number'
-                                }
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            classificationId: {
+                                                type: 'number'
+                                            },
+                                            commissionPercentage: {
+                                                type: 'number'
+                                            },
+                                            id: {
+                                                type: 'number'
+                                            },
+                                        }
+                                    }
+                                },
                             }
                         }
                     },
@@ -463,11 +531,22 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                             mainProjectManagerId: {
                                 type: 'number',
                             },
-                            mainProjectManagerClassificationId: {
-                                type: 'number',
-                            },
-                            percentageMainProjectManager: {
-                                type: 'number',
+                            mainProjectManagerCommissions: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        classificationId: {
+                                            type: 'number'
+                                        },
+                                        commissionPercentage: {
+                                            type: 'number'
+                                        },
+                                        id: {
+                                            type: 'number'
+                                        },
+                                    }
+                                }
                             },
                             referenceCustomerId: {
                                 type: 'number',
@@ -556,7 +635,6 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                         type: 'array',
                         items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt', 'quotationId']})
                     }
-
                 }
             }
         },
@@ -740,12 +818,23 @@ export const QuotationGteByIdResponse: ResponseModelOrSpec = {
                                         projectManagerName: {
                                             type: 'number'
                                         },
-                                        commissionPercentageProjectManager: {
-                                            type: 'number'
+                                        classificationPercentageMainpms: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    classificationId: {
+                                                        type: 'number'
+                                                    },
+                                                    commissionPercentage: {
+                                                        type: 'number'
+                                                    },
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                }
+                                            }
                                         },
-                                        classificationId: {
-                                            type: 'number',
-                                        }
                                     }
                                 }
                             },
@@ -758,7 +847,21 @@ export const QuotationGteByIdResponse: ResponseModelOrSpec = {
                                             type: 'number'
                                         },
                                         commissionPercentageDesigner: {
-                                            type: 'number'
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    classificationId: {
+                                                        type: 'number'
+                                                    },
+                                                    commissionPercentage: {
+                                                        type: 'number'
+                                                    },
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                }
+                                            }
                                         },
                                     }
                                 }

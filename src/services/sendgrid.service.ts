@@ -13,6 +13,18 @@ export const SendgridTemplates = {
   NEW_USER: {
     id: 'd-3baf6b26baa041eab3ca8e8f1e321da1',
     subject: '¡Bienvenido a Casa Benetti!',
+  },
+  NEW_PROFORMA: {
+    id: 'd-a0f920e2e6ea498289a59a3760175a9e',
+    subject: 'Proforma agregada',
+  },
+  UPDATE_PROFORMA: {
+    id: 'd-81dd06348c0e475b8f220232a6b9a67f',
+    subject: 'Proforma actualizada',
+  },
+  NOTIFICATION_RESERVATION_DAY: {
+    id: 'd-cb4feb384a774d05839b0e628534b9f8',
+    subject: 'Notificación de apartado - Benetti Casa',
   }
 };
 
