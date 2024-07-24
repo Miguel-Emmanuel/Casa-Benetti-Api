@@ -1,14 +1,14 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {ProformaCurrencyE} from '../enums';
+import {AccountPayable} from './account-payable.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch} from './branch.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Project, ProjectWithRelations} from './project.model';
 import {Provider, ProviderWithRelations} from './provider.model';
-import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
-import {AccountPayable} from './account-payable.model';
 import {PurchaseOrders} from './purchase-orders.model';
+import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 
 @model({
   settings: {
@@ -50,7 +50,7 @@ export class Proforma extends BaseEntity {
     id: true,
     generated: true,
   })
-  id?: number;
+  id: number;
 
   //Id Profoma
   @property({

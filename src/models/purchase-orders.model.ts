@@ -32,7 +32,7 @@ export class PurchaseOrders extends Entity {
     id: true,
     generated: true,
   })
-  id?: number;
+  id: number;
 
   //Fecha de creacion
   @property({
