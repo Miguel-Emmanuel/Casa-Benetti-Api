@@ -170,6 +170,8 @@ export interface QuotationFindOneResponse {
         regimen: string;
         group: string
         groupId?: number;
+        email: string
+
     },
     products: ProductsById[],
     quotation: {

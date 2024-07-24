@@ -85,19 +85,21 @@ export class ResertvationDayCronJob extends CronJob {
         for (const quotationProduct of quotationProducts) {
             const {quotation, product, dateReservationDays} = quotationProduct;
             const {customer} = quotation;
-            const email = customer?.name;
-            const options = {
-                to: 'waldo@whathecode.com',
-                templateId: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.id,
-                dynamicTemplateData: {
-                    subject: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.subject,
-                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                    productName: `${product?.name}`,
-                    dateReservationDays: dayjs(dateReservationDays).format('DD/MM/YYYY')
-                }
-            };
-            await this.sendgridService.sendNotification(options);
-            await this.quotationProductsRepository.updateById(quotationProduct?.id, {isNotificationSent: true});
+            const email = customer?.email;
+            if (email) {
+                const options = {
+                    to: email,
+                    templateId: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.id,
+                    dynamicTemplateData: {
+                        subject: SendgridTemplates.NOTIFICATION_RESERVATION_DAY.subject,
+                        customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                        productName: `${product?.name}`,
+                        dateReservationDays: dayjs(dateReservationDays).format('DD/MM/YYYY')
+                    }
+                };
+                await this.sendgridService.sendNotification(options);
+                await this.quotationProductsRepository.updateById(quotationProduct?.id, {isNotificationSent: true});
+            }
 
         }
     }
