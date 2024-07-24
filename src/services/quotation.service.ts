@@ -837,7 +837,8 @@ export class QuotationService {
                 businessName: quotation.customer.businessName,
                 regimen: quotation.customer.regimen,
                 group: quotation?.customer?.group?.name,
-                groupId: quotation?.customer?.groupId
+                groupId: quotation?.customer?.groupId,
+                email: quotation?.customer?.email
             },
             products: products,
             quotation: {
