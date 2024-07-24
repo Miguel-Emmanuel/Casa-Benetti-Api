@@ -4,6 +4,7 @@ import {AccountPayable} from './account-payable.model';
 import {AccountsReceivable} from './accounts-receivable.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 
+//Ordenes de compra
 @model({
   settings: {
     postgresql: {
@@ -39,6 +40,12 @@ export class PurchaseOrders extends Entity {
     default: () => new Date(),
   })
   createdAt: Date;
+
+  //Fecha de término de producción
+  @property({
+    type: 'date',
+  })
+  productionEndDate: Date;
 
   //Estatus
   @property({

@@ -7,6 +7,7 @@ import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 
+//Cuentas por pagar (pagos)
 @model({
     settings: {
         postgresql: {

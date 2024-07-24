@@ -9,6 +9,8 @@ export const schemaActivateDeactivateCustomer = Joi.object({
 
 export const schemaCreateCustomer = Joi.object({
     name: Joi.string().required(),
+    // email: Joi.string().required(),
+    email: Joi.string().allow(null).allow(''),
     lastName: Joi.string().allow('').allow(null),
     secondLastName: Joi.string().allow('').allow(null),
     address: Joi.object({

@@ -123,6 +123,7 @@ export const schemaCreateQuotition = Joi.object({
     customer: Joi.object({
         customerId: Joi.number().allow(null),
         name: Joi.string().allow(null).allow(''),
+        email: Joi.string().allow(null).allow(''),
         lastName: Joi.string().allow(null).allow(''),
         secondLastName: Joi.string().allow(null).allow(''),
         address: Joi.object({
