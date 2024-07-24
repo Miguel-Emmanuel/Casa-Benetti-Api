@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js';
 import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
-import {AccountPayableHistoryRepository, AccountPayableRepository, DocumentRepository} from '../repositories';
+import {AccountPayableHistoryRepository, AccountPayableRepository, DocumentRepository, PurchaseOrdersRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -18,6 +18,8 @@ export class AccountPayableHistoryService {
         public responseService: ResponseService,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(PurchaseOrdersRepository)
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
     ) { }
 
 
@@ -69,7 +71,7 @@ export class AccountPayableHistoryService {
         if (findAccountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO)
             throw this.responseService.badRequest("El pago ya fue realizado y no puede actualizarse.");
 
-        const {totalPaid, balance} = await this.findAccountPayable(accountPayableId);
+        const {totalPaid, balance, total} = await this.findAccountPayable(accountPayableId);
 
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
             const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
@@ -82,6 +84,11 @@ export class AccountPayableHistoryService {
         await this.createDocument(id, images);
         await this.accountPayableHistoryRepository.updateById(id, accountPayableHistory);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId: number) {
+        if (totalPaid === total)
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate: new Date()})
     }
 
     roundToTwoDecimals(num: number): number {
@@ -119,6 +126,12 @@ export class AccountPayableHistoryService {
             include: [
                 {
                     relation: 'proforma',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        fields: ['id', 'accountPayableId']
+                    }
                 }
             ]
         })
