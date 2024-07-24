@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {CommissionPaymentStatus} from '../enums';
+import {CommissionPaymentRecordStatus, CommissionPaymentStatus} from '../enums';
 import {schemaCommissionPaymentCreate, schemaCommissionPaymentUpdate} from '../joi.validation.ts/commission.validation';
 import {ResponseServiceBindings} from '../keys';
 import {CommissionPayment, CommissionPaymentCreate, Document} from '../models';
@@ -98,8 +98,17 @@ export class CommissionPaymentService {
         }
         delete commissionPayment.images;
         await this.commissionPaymentRepository.updateById(id, commissionPayment);
+        await this.validatePaidComisionPaymentRecord(commissionPaymentRecordId)
         await this.documents(id, images);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async validatePaidComisionPaymentRecord(commissionPaymentRecordId: number) {
+        const commissionPayments = await this.commissionPaymentRepository.find({where: {commissionPaymentRecordId}});
+        const pagados = commissionPayments.filter(value => value.status == CommissionPaymentStatus.PAGADO);
+        if (pagados.length === commissionPayments.length) {
+            await this.commissionPaymentRecordRepository.updateById(commissionPaymentRecordId, {status: CommissionPaymentRecordStatus.PAGADO});
+        }
     }
 
     roundToTwoDecimals(num: number): number {

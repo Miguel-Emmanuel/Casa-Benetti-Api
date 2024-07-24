@@ -230,6 +230,7 @@ export class PurchaseOrdersService {
             const {provider, brand, quotationProducts, project} = proforma;
             const {customer, quotation} = project
             const {mainProjectManager} = quotation
+
             return {
                 id,
                 projectId: project?.id,
@@ -246,11 +247,24 @@ export class PurchaseOrdersService {
                 quotationProducts: quotationProducts.map((value: QuotationProductsWithRelations) => {
                     const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, originCode, model, quantity} = value;
                     const {line, name, document} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing,
+                        measureWide
+                    ];
+
+                    const description = descriptionParts
+                        .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                        .join(' ');  // Únelas con un espacio
                     return {
                         SKU,
                         image: document?.fileURL,
                         model,
-                        description: `${line?.name ?? ''} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
+                        description,
                         originCode,
                         quantity
                     }
@@ -313,7 +327,7 @@ export class PurchaseOrdersService {
 
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, } = quotation;
-
+        const reference = `${project?.reference ?? ""}`
         try {
             const properties: any = {
                 "logo": logo,
@@ -321,8 +335,9 @@ export class PurchaseOrdersService {
                 "quotationId": quotationId,
                 "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
-                "referenceCustomer": `${referenceCustomer?.firstName} ${referenceCustomer?.lastName}`,
+                "referenceCustomer": reference,
                 "products": prodcutsArray,
+                "type": 'PEDIDO'
             }
             const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'});
             this.response.setHeader('Content-Disposition', `attachment; filename=order_compra.pdf`);

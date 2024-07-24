@@ -149,6 +149,7 @@ export enum AdvancePaymentTypeE {
 
 export enum CommissionPaymentRecordStatus {
     PENDIENTE = 'Pendiente',
+    PAGADO = 'Pagado',
 }
 
 export enum CommissionPaymentStatus {
@@ -205,4 +206,14 @@ export enum ConvertCurrencyToEUR {
     EURO = 1,
     USD = 0.92,
     MXN = 0.051,
+}
+export enum ConvertCurrencyToUSD {
+    USD = 1,
+    EURO = 1.09,
+    MXN = 0.055,
+}
+export enum ConvertCurrencyToMXN {
+    MXN = 1,
+    USD = 18.16,
+    EURO = 19.71,
 }

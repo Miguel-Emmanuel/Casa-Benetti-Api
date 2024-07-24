@@ -4,7 +4,7 @@ import {Customer} from './customer.model';
 import {Project} from './project.model';
 import {Quotation} from './quotation.model';
 
-//Cuentas por cobrar (Tabla padre de cobros)
+//Cuentas por cobrar
 @model({
     settings: {
         postgresql: {

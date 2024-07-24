@@ -6,7 +6,7 @@ import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
 import {Project} from './project.model';
 
-//Registro del pago anticipado (cobro)
+//Cuentas por cobrar (pagos)
 @model({
     settings: {
         postgresql: {

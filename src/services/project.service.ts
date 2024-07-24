@@ -114,8 +114,22 @@ export class ProjectService {
         const {quotation} = project;
         const {quotationProducts} = quotation;
         return quotationProducts.map(value => {
+
             const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice} = value;
             const {name, line} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                mainMaterial,
+                mainFinish,
+                secondaryMaterial,
+                secondaryFinishing,
+                measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
             return {
                 id,
                 SKU,
@@ -125,7 +139,7 @@ export class ProjectService {
                 brand: brand?.brandName ?? '',
                 brandId,
                 price,
-                description: `${line?.name} ${name ?? ''} ${mainMaterial ?? ''} ${mainFinish ?? ''} ${secondaryMaterial ?? ''} ${secondaryFinishing ?? ''} ${measureWide ?? ''}`,
+                description,
                 proformaPrice: proformaPrice ?? null
             }
         })
@@ -270,11 +284,24 @@ export class ProjectService {
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
         const productsArray = [];
         for (const iterator of products ?? []) {
+            const descriptionParts = [
+                iterator?.line?.name,
+                iterator?.name,
+                iterator.quotationProducts?.mainMaterial,
+                iterator.quotationProducts?.mainFinish,
+                iterator.quotationProducts?.secondaryMaterial,
+                iterator.quotationProducts?.secondaryFinishing,
+                iterator.quotationProducts?.measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
             productsArray.push({
                 id: iterator?.id,
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 brandName: iterator?.brand?.brandName ?? '',
-                description: `${iterator.line?.name} ${iterator?.name} ${iterator.quotationProducts.mainMaterial} ${iterator.quotationProducts.mainFinish} ${iterator.quotationProducts.secondaryMaterial} ${iterator.quotationProducts.secondaryFinishing} ${iterator.quotationProducts.measureWide}`,
+                description,
                 price: iterator?.quotationProducts?.price,
                 listPrice: iterator?.quotationProducts?.originCost,
                 factor: iterator?.quotationProducts?.factor,
@@ -390,10 +417,23 @@ export class ProjectService {
         let productsTemplate = [];
         for (const product of products) {
             const {brand, document, quotationProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing,
+                quotationProducts?.measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
             productsTemplate.push({
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
-                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
+                description,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
@@ -449,10 +489,24 @@ export class ProjectService {
         let prodcutsArray = [];
         for (const product of products) {
             const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing,
+                quotationProducts?.measureWide
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
             prodcutsArray.push({
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
-                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
+                description,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
@@ -476,6 +530,7 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": referenceCustomerName,
                 "products": prodcutsArray,
+                "type": 'COTIZACION'
             }
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
@@ -502,7 +557,7 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
             }
             for (let index = 0; index < advancePaymentRecord?.length; index++) {
-                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency} = advancePaymentRecord[index];
+                const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency, reference} = advancePaymentRecord[index];
                 let letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
                 letterNumber = `${letterNumber} ${this.separeteDecimal(amountPaid)}/100 MN`;
                 const propertiesAdvance: any = {
@@ -514,7 +569,8 @@ export class ProjectService {
                     exchangeRateAmount: parity,
                     paymentDate: dayjs(paymentDate).format('DD/MM/YYYY'),
                     letterNumber,
-                    consecutiveId: (index + 1)
+                    consecutiveId: (index + 1),
+                    reference
                 }
 
                 const nameFile = `recibo_anticipo_${paymentCurrency}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
@@ -653,10 +709,10 @@ export class ProjectService {
         let projectId = null;
         let reference = null;
         if (previousProject) {
-            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0)}`;
+            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
             reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
         } else {
-            projectId = `${1}${branch?.name?.charAt(0)}`;
+            projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
             reference = `${this.getNumberReference(showroomManager)}`;
         }
 
@@ -666,7 +722,7 @@ export class ProjectService {
     }
 
     getNumberReference(nameShowroom: string, reference?: string) {
-        return reference ? `${reference.match(/\d+/g)!.join('')}${nameShowroom.charAt(0)}` : `1${nameShowroom.charAt(0)}`;
+        return reference ? `${Number(reference.match(/\d+/g)!.join('')) + 1}${nameShowroom.charAt(0).toUpperCase()}` : `1${nameShowroom.charAt(0).toUpperCase()}`;
     }
 
     async changeStatusProductsToPedido(quotationId: number, transaction: any) {
