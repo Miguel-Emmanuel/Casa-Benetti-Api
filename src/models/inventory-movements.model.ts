@@ -1,5 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {InventoryMovementsTypeE} from '../enums';
+import {Project} from './project.model';
 
 @model()
 export class InventoryMovements extends Entity {
@@ -21,6 +22,10 @@ export class InventoryMovements extends Entity {
         type: 'number',
     })
     quantity: number;
+
+    //Relacion a proyecto
+    @belongsTo(() => Project)
+    projectId: number;
 
     //Tipo (entrada/salida)
     @property({
