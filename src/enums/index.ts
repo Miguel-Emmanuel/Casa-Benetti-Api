@@ -223,3 +223,13 @@ export enum InventoryMovementsTypeE {
     ENTRADA = 'Entrada',
     SALIDA = 'Salida',
 }
+
+
+
+export enum InventoriesReasonE {
+    DESCARGA_CONTENEDOR = 'Descarga de contenedor',
+    DESCARGA_RECOLECCION = 'Descarga de recolección',
+    REPARACION = 'Reparación',
+    PRESTAMO = 'Préstamo',
+    DEVOLUCION = 'Devolución',
+}

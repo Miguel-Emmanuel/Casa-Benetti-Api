@@ -1,5 +1,5 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
-import {InventoryMovementsTypeE} from '../enums';
+import {InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
 import {Project} from './project.model';
 
 @model()
@@ -32,6 +32,24 @@ export class InventoryMovements extends Entity {
         type: 'string',
     })
     type: InventoryMovementsTypeE;
+
+    //Motivo
+    @property({
+        type: 'string',
+    })
+    reason: InventoriesReasonE;
+
+    //Número de contenedor
+    @property({
+        type: 'string',
+    })
+    containerNumber: string;
+
+    //Número de recoleccion
+    @property({
+        type: 'string',
+    })
+    collectionNumber: string;
 
     constructor(data?: Partial<InventoryMovements>) {
         super(data);
