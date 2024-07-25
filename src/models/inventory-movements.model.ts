@@ -84,6 +84,12 @@ export class InventoryMovements extends Entity {
     })
     destinationBranchId: number;
 
+    //Bodega destino
+    @property({
+        type: 'number',
+    })
+    destinationWarehouseId: number;
+
     //Comentario
     @property({
         type: 'string',

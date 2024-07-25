@@ -248,4 +248,5 @@ export interface IssueDataI {
     comment: string;
     containerNumber: string;
     destinationBranchId: number;
+    destinationWarehouseId: number;
 }

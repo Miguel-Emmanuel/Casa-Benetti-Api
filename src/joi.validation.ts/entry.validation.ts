@@ -34,4 +34,5 @@ export const schemaCreateIssue = Joi.object({
     comment: Joi.string().required(),
     collectionNumber: Joi.when('reason', {is: InventoriesIssueE.CONTENEDOR, then: Joi.string().required()}),
     destinationBranchId: Joi.when('reason', {is: InventoriesIssueE.REASIGNAR, then: Joi.string().required()}),
+    destinationWarehouseId: Joi.when('reason', {is: InventoriesIssueE.REASIGNAR, then: Joi.string().required()}),
 })

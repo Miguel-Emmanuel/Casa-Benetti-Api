@@ -134,6 +134,10 @@ export class InventoryMovementsController {
                                 type: 'number',
                                 nullable: true
                             },
+                            destinationWarehouseId: {
+                                type: 'number',
+                                nullable: true
+                            },
                         }
                     }
                 },
