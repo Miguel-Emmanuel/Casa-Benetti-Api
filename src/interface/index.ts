@@ -1,4 +1,4 @@
-import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address, Document, ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export interface ProjectManagers {
@@ -223,4 +223,30 @@ export interface AssembledProductsE {
     secondaryFinishing: string;
     quantity: number;
     isActive: boolean;
+}
+
+
+export interface EntryDataI {
+    reasonEntry: InventoriesReasonE;
+    containerNumber: string;
+    collectionNumber: string;
+    products: {quotationProductsId: number}[];
+    branchId: number;
+    warehouseId: number;
+    projectId: number;
+    quotationProductsId: number;
+    quantity: number;
+    comment: string;
+}
+
+export interface IssueDataI {
+    reasonIssue: InventoriesIssueE;
+    branchId: number;
+    warehouseId: number;
+    quotationProductsId: number;
+    quantity: number;
+    comment: string;
+    containerNumber: string;
+    destinationBranchId: number;
+    destinationWarehouseId: number;
 }

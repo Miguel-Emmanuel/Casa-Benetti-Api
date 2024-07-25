@@ -42,3 +42,5 @@ export * from './purchase-orders.model';
 
 export * from './proforma.model';
 export * from './commission-payment.model';
+export * from './inventories.model';
+export * from './inventory-movements.model';

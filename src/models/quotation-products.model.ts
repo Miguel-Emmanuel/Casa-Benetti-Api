@@ -293,6 +293,16 @@ export class QuotationProducts extends Entity {
     })
     quantity: number;
 
+    //Cantidad del producto que ya existe en inventario
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+        default: 0
+    })
+    stock: number;
+
     //Subtotal
     @property({
         type: 'number',

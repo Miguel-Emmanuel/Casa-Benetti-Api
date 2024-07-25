@@ -98,6 +98,7 @@ export enum TypeSaleE {
 
 export enum QuotationProductStatusE {
     PEDIDO = 'Pedido',
+    TRANSITO_NACIONAL = 'Transito Nacional',
 }
 
 
@@ -216,4 +217,28 @@ export enum ConvertCurrencyToMXN {
     MXN = 1,
     USD = 18.16,
     EURO = 19.71,
+}
+
+
+export enum InventoryMovementsTypeE {
+    ENTRADA = 'Entrada',
+    SALIDA = 'Salida',
+}
+
+
+
+export enum InventoriesReasonE {
+    DESCARGA_CONTENEDOR = 'Descarga de contenedor',
+    DESCARGA_RECOLECCION = 'Descarga de recolección',
+    REPARACION = 'Reparación',
+    PRESTAMO = 'Préstamo',
+    DEVOLUCION = 'Devolución',
+}
+
+
+export enum InventoriesIssueE {
+    REASIGNAR = 'Reasignar',
+    ENTREGA_CLIENTE = 'Entrega a cliente',
+    CONTENEDOR = 'Contenedor',
+    OTRO = 'Otro',
 }

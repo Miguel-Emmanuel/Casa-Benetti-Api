@@ -53,7 +53,9 @@ export async function migrate(args: string[]) {
       'PurchaseOrders',
       'AccountPayableHistory',
       'ClassificationPercentageMainpm',
-      'CommissionPayment'
+      'CommissionPayment',
+      'Inventories',
+      'InventoryMovements'
     ],
   });
 
