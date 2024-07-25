@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {QuotationProducts} from './quotation-products.model';
 
 @model()
 export class Inventories extends Entity {
@@ -21,9 +22,7 @@ export class Inventories extends Entity {
     stock: number;
 
     //Producto
-    @property({
-        type: 'number',
-    })
+    @belongsTo(() => QuotationProducts)
     quotationProductsId: number;
 
     //Sucursal/showrooms
