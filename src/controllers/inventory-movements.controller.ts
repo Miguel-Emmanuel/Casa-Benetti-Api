@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     repository
@@ -9,11 +8,12 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {EntryDataI} from '../interface';
 import {InventoryMovements} from '../models';
 import {InventoryMovementsRepository} from '../repositories';
 import {InventoryMovementsService} from '../services';
 
-@authenticate('jwt')
+// @authenticate('jwt')
 export class InventoryMovementsController {
     constructor(
         @repository(InventoryMovementsRepository)
@@ -31,16 +31,67 @@ export class InventoryMovementsController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(InventoryMovements, {
-                        title: 'NewInventoryMovements',
-                        exclude: ['id'],
-                    }),
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            reason: {
+                                type: 'string',
+                            },
+                            //Descarga contenedor, Descarga recolección
+                            containerNumber: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            collectionNumber: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            products: {
+                                type: 'array',
+                                nullable: true,
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        quotationProductsId: {
+                                            type: 'number'
+                                        }
+                                    }
+                                }
+                            },
+                            //Reparacion, Préstamo o Devolución
+                            branchId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            warehouseId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            projectId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            quotationProductsId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            quantity: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            comment: {
+                                type: 'string',
+                                nullable: true
+                            },
+
+                        }
+                    }
                 },
             },
         })
-        inventoryMovements: Omit<InventoryMovements, 'id'>,
-    ): Promise<InventoryMovements> {
-        return this.inventoryMovementsService.entry(inventoryMovements);
+        data: EntryDataI,
+    ): Promise<any> {
+        return this.inventoryMovementsService.entry(data);
     }
 
     // @get('/inventory-movements/count')

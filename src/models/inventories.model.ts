@@ -49,6 +49,7 @@ export class Inventories extends Entity {
     //Cantidad real del producto
     @property({
         type: 'number',
+        default: 0
     })
     stock: number;
 

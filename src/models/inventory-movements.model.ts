@@ -51,6 +51,9 @@ export class InventoryMovements extends Entity {
     //Tipo (entrada/salida)
     @property({
         type: 'string',
+        jsonSchema: {
+            enum: [...Object.values(InventoryMovementsTypeE)],
+        },
     })
     type: InventoryMovementsTypeE;
 
@@ -60,8 +63,17 @@ export class InventoryMovements extends Entity {
     //Motivo
     @property({
         type: 'string',
+        jsonSchema: {
+            enum: [...Object.values(InventoriesReasonE)],
+        },
     })
     reason: InventoriesReasonE;
+
+    //Comentario
+    @property({
+        type: 'string',
+    })
+    comment: string;
 
     //Número de contenedor
     @property({
