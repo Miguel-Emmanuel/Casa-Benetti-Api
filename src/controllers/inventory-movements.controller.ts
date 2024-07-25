@@ -8,7 +8,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {EntryDataI} from '../interface';
+import {EntryDataI, IssueDataI} from '../interface';
 import {InventoryMovements} from '../models';
 import {InventoryMovementsRepository} from '../repositories';
 import {InventoryMovementsService} from '../services';
@@ -34,7 +34,7 @@ export class InventoryMovementsController {
                     schema: {
                         type: 'object',
                         properties: {
-                            reason: {
+                            reasonEntry: {
                                 type: 'string',
                             },
                             //Descarga contenedor, Descarga recolección
@@ -92,6 +92,56 @@ export class InventoryMovementsController {
         data: EntryDataI,
     ): Promise<any> {
         return this.inventoryMovementsService.entry(data);
+    }
+
+    @post('/inventory-movements/issue')
+    @response(200, {
+        description: 'InventoryMovements model instance',
+        content: {'application/json': {schema: getModelSchemaRef(InventoryMovements)}},
+    })
+    async issue(
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            branchId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            warehouseId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            quotationProductsId: {
+                                type: 'number',
+                            },
+                            quantity: {
+                                type: 'number',
+                            },
+                            reasonIssue: {
+                                type: 'string',
+                            },
+                            comment: {
+                                type: 'string',
+                            },
+                            containerNumber: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            destinationBranchId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                        }
+                    }
+                },
+            },
+        })
+        data: IssueDataI,
+    ): Promise<any> {
+        return this.inventoryMovementsService.issue(data);
     }
 
     // @get('/inventory-movements/count')

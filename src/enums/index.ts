@@ -98,6 +98,7 @@ export enum TypeSaleE {
 
 export enum QuotationProductStatusE {
     PEDIDO = 'Pedido',
+    TRANSITO_NACIONAL = 'Transito Nacional',
 }
 
 
@@ -232,4 +233,12 @@ export enum InventoriesReasonE {
     REPARACION = 'Reparación',
     PRESTAMO = 'Préstamo',
     DEVOLUCION = 'Devolución',
+}
+
+
+export enum InventoriesIssueE {
+    REASIGNAR = 'Reasignar',
+    ENTREGA_CLIENTE = 'Entrega a cliente',
+    CONTENEDOR = 'Contenedor',
+    OTRO = 'Otro',
 }

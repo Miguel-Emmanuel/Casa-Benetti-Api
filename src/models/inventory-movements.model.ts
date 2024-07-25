@@ -1,5 +1,5 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
-import {InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
+import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
 import {Inventories} from './inventories.model';
 import {Project} from './project.model';
 
@@ -60,14 +60,29 @@ export class InventoryMovements extends Entity {
     @belongsTo(() => Inventories)
     inventoriesId: number;
 
-    //Motivo
+    //Motivo Entrad
     @property({
         type: 'string',
         jsonSchema: {
             enum: [...Object.values(InventoriesReasonE)],
         },
     })
-    reason: InventoriesReasonE;
+    reasonEntry: InventoriesReasonE;
+
+    //Motivo Salida
+    @property({
+        type: 'string',
+        jsonSchema: {
+            enum: [...Object.values(InventoriesIssueE)],
+        },
+    })
+    reasonIssue: InventoriesIssueE;
+
+    //Sucursal destino
+    @property({
+        type: 'number',
+    })
+    destinationBranchId: number;
 
     //Comentario
     @property({
