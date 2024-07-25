@@ -115,7 +115,7 @@ export class ProjectService {
         const {quotationProducts} = quotation;
         return quotationProducts.map(value => {
 
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice} = value;
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
             const {name, line} = product;
             const descriptionParts = [
                 line?.name,
@@ -123,13 +123,22 @@ export class ProjectService {
                 mainMaterial,
                 mainFinish,
                 secondaryMaterial,
-                secondaryFinishing,
-                measureWide
+                secondaryFinishing
             ];
+            const measuresParts = [
+                measureWide ? `Ancho: ${measureWide}` : "",
+                measureHigh ? `Alto: ${measureHigh}` : "",
+                measureDepth ? `Prof: ${measureDepth}` : "",
+                measureCircumference ? `Circ: ${measureCircumference}` : ""
+            ];
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
 
             const description = descriptionParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
+
             return {
                 id,
                 SKU,
@@ -140,6 +149,7 @@ export class ProjectService {
                 brandId,
                 price,
                 description,
+                measures,
                 proformaPrice: proformaPrice ?? null
             }
         })
@@ -290,11 +300,19 @@ export class ProjectService {
                 iterator.quotationProducts?.mainMaterial,
                 iterator.quotationProducts?.mainFinish,
                 iterator.quotationProducts?.secondaryMaterial,
-                iterator.quotationProducts?.secondaryFinishing,
-                iterator.quotationProducts?.measureWide
+                iterator.quotationProducts?.secondaryFinishing
+            ];
+            const measuresParts = [
+                iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
+                iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
+                iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
+                iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
             ];
 
             const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measures = measuresParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
             productsArray.push({
@@ -302,6 +320,7 @@ export class ProjectService {
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 brandName: iterator?.brand?.brandName ?? '',
                 description,
+                measures,
                 price: iterator?.quotationProducts?.price,
                 listPrice: iterator?.quotationProducts?.originCost,
                 factor: iterator?.quotationProducts?.factor,
@@ -423,17 +442,26 @@ export class ProjectService {
                 quotationProducts?.mainMaterial,
                 quotationProducts?.mainFinish,
                 quotationProducts?.secondaryMaterial,
-                quotationProducts?.secondaryFinishing,
-                quotationProducts?.measureWide
+                quotationProducts?.secondaryFinishing
             ];
 
             const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
             productsTemplate.push({
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
                 description,
+                measures,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
@@ -495,11 +523,20 @@ export class ProjectService {
                 quotationProducts?.mainMaterial,
                 quotationProducts?.mainFinish,
                 quotationProducts?.secondaryMaterial,
-                quotationProducts?.secondaryFinishing,
-                quotationProducts?.measureWide
+                quotationProducts?.secondaryFinishing
             ];
 
             const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
 
@@ -507,6 +544,7 @@ export class ProjectService {
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
                 description,
+                measures,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
