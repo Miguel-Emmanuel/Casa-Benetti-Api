@@ -3,7 +3,27 @@ import {InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
 import {Inventories} from './inventories.model';
 import {Project} from './project.model';
 
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'inventories_InventoryMovements' // Nombre de la tabla en PostgreSQL
+        },
+        foreignKeys: {
+            fk_project_projectid: {
+                name: 'fk_project_projectid',
+                entity: 'Project',
+                entityKey: 'id',
+                foreignKey: 'projectid',
+            },
+            fk_inventories_inventoriesid: {
+                name: 'fk_inventories_inventoriesid',
+                entity: 'Inventories',
+                entityKey: 'id',
+                foreignKey: 'inventoriesid',
+            },
+        }
+    }
+})
 export class InventoryMovements extends Entity {
     @property({
         type: 'number',
