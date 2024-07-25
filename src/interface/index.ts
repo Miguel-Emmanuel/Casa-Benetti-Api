@@ -29,6 +29,7 @@ export interface Products {
 export interface Customer {
     customerId: number;
     name: string;
+    email: string;
     lastName: string;
     secondLastName: string;
     address?: Address;
@@ -169,6 +170,8 @@ export interface QuotationFindOneResponse {
         regimen: string;
         group: string
         groupId?: number;
+        email: string
+
     },
     products: ProductsById[],
     quotation: {
