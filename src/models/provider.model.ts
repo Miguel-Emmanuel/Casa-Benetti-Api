@@ -154,11 +154,11 @@ export class Provider extends BaseEntity {
     @hasMany(() => Brand, {through: {model: () => ProviderBrand}})
     brands: Brand[];
 
-    //condición anticipado
+    //condición anticipado porcentaje
     @property({
         type: 'number',
     })
-    anticipatedCondition?: number;
+    advanceConditionPercentage?: number;
 
     constructor(data?: Partial<Provider>) {
         super(data);

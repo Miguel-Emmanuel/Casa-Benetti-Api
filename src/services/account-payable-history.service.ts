@@ -1,10 +1,11 @@
-import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
 import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
-import {AccountPayableHistoryRepository, AccountPayableRepository, DocumentRepository, PurchaseOrdersRepository} from '../repositories';
+import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository} from '../repositories';
+import {CalculateScheledDateService} from './calculate-scheled-date.service';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -20,6 +21,12 @@ export class AccountPayableHistoryService {
         public documentRepository: DocumentRepository,
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ProviderRepository)
+        public providerRepository: ProviderRepository,
+        @service()
+        public calculateScheledDateService: CalculateScheledDateService,
+        @repository(BrandRepository)
+        public brandRepository: BrandRepository,
     ) { }
 
 
@@ -71,13 +78,14 @@ export class AccountPayableHistoryService {
         if (findAccountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO)
             throw this.responseService.badRequest("El pago ya fue realizado y no puede actualizarse.");
 
-        const {totalPaid, balance, total} = await this.findAccountPayable(accountPayableId);
+        const {totalPaid, balance, total, purchaseOrders, proforma} = await this.findAccountPayable(accountPayableId);
 
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
             const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
-            const newTotalPaid = totalPaid + newAmount
+            const newTotalPaid = this.roundToTwoDecimals(totalPaid + newAmount)
             const newBalance = balance - newAmount
-            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
+            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders.id, proforma.id, proforma.brandId)
         }
 
         delete accountPayableHistory.images;
@@ -86,10 +94,19 @@ export class AccountPayableHistoryService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
-    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId: number) {
-        if (totalPaid === total)
-            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate: new Date()})
+    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId?: number, providerId?: number, brandId?: number) {
+        let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
+        advanceConditionPercentage = advanceConditionPercentage ?? 100;
+        const porcentage = ((totalPaid / total) * 100);
+        if (porcentage >= advanceConditionPercentage) {
+            let {productionTime} = await this.brandRepository.findById(brandId);
+            let scheduledDate = new Date();
+            const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate})
+        }
     }
+
+
 
     roundToTwoDecimals(num: number): number {
         return Number(new BigNumber(num).toFixed(2));
