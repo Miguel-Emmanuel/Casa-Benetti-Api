@@ -1,5 +1,7 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {Branch} from './branch.model';
 import {QuotationProducts} from './quotation-products.model';
+import {Warehouse} from './warehouse.model';
 
 @model()
 export class Inventories extends Entity {
@@ -26,17 +28,12 @@ export class Inventories extends Entity {
     quotationProductsId: number;
 
     //Sucursal/showrooms
-    @property({
-        type: 'number',
-    })
-    branchId?: number;
+    @belongsTo(() => Warehouse)
+    warehouseId: number;
 
     //Bodega/Warehouse
-    @property({
-        type: 'number',
-    })
-    warehouseId?: number;
-
+    @belongsTo(() => Branch)
+    branchId: number;
 
     constructor(data?: Partial<Inventories>) {
         super(data);
