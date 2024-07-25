@@ -4,7 +4,7 @@ import BigNumber from 'bignumber.js';
 import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
-import {AccountPayableHistoryRepository, AccountPayableRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository} from '../repositories';
+import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository} from '../repositories';
 import {CalculateScheledDateService} from './calculate-scheled-date.service';
 import {ResponseService} from './response.service';
 
@@ -24,7 +24,9 @@ export class AccountPayableHistoryService {
         @repository(ProviderRepository)
         public providerRepository: ProviderRepository,
         @service()
-        public calculateScheledDateService: CalculateScheledDateService
+        public calculateScheledDateService: CalculateScheledDateService,
+        @repository(BrandRepository)
+        public brandRepository: BrandRepository,
     ) { }
 
 
@@ -80,10 +82,10 @@ export class AccountPayableHistoryService {
 
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
             const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
-            const newTotalPaid = totalPaid + newAmount
+            const newTotalPaid = this.roundToTwoDecimals(totalPaid + newAmount)
             const newBalance = balance - newAmount
-            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders.id, proforma.id)
+            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders.id, proforma.id, proforma.brandId)
         }
 
         delete accountPayableHistory.images;
@@ -92,16 +94,19 @@ export class AccountPayableHistoryService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
-    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId: number, providerId: number) {
-        if (totalPaid === total) {
-            const {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
-            if (advanceConditionPercentage) {
-                let scheduledDate = new Date();
-                const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, advanceConditionPercentage)
-                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate})
-            }
+    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId?: number, providerId?: number, brandId?: number) {
+        let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
+        advanceConditionPercentage = advanceConditionPercentage ?? 100;
+        const porcentage = ((totalPaid / total) * 100);
+        if (porcentage >= advanceConditionPercentage) {
+            let {productionTime} = await this.brandRepository.findById(brandId);
+            let scheduledDate = new Date();
+            const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate})
         }
     }
+
+
 
     roundToTwoDecimals(num: number): number {
         return Number(new BigNumber(num).toFixed(2));

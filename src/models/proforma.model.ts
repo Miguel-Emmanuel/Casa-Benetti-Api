@@ -50,7 +50,7 @@ export class Proforma extends BaseEntity {
     id: true,
     generated: true,
   })
-  id: number;
+  id?: number;
 
   //Id Profoma
   @property({
