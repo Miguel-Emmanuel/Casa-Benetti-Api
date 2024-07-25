@@ -1,5 +1,6 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
+import {Inventories} from './inventories.model';
 import {Project} from './project.model';
 
 @model()
@@ -32,6 +33,9 @@ export class InventoryMovements extends Entity {
         type: 'string',
     })
     type: InventoryMovementsTypeE;
+
+    @belongsTo(() => Inventories)
+    inventoriesId: number;
 
     //Motivo
     @property({

@@ -1,10 +1,11 @@
 import {inject, Getter} from '@loopback/core';
-import {DefaultCrudRepository, repository, BelongsToAccessor} from '@loopback/repository';
+import {DefaultCrudRepository, repository, BelongsToAccessor, HasManyRepositoryFactory} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {Inventories, InventoriesRelations, QuotationProducts, Branch, Warehouse} from '../models';
+import {Inventories, InventoriesRelations, QuotationProducts, Branch, Warehouse, InventoryMovements} from '../models';
 import {QuotationProductsRepository} from './quotation-products.repository';
 import {BranchRepository} from './branch.repository';
 import {WarehouseRepository} from './warehouse.repository';
+import {InventoryMovementsRepository} from './inventory-movements.repository';
 
 export class InventoriesRepository extends DefaultCrudRepository<
   Inventories,
@@ -18,10 +19,14 @@ export class InventoriesRepository extends DefaultCrudRepository<
 
   public readonly warehouse: BelongsToAccessor<Warehouse, typeof Inventories.prototype.id>;
 
+  public readonly inventoryMovements: HasManyRepositoryFactory<InventoryMovements, typeof Inventories.prototype.id>;
+
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('WarehouseRepository') protected warehouseRepositoryGetter: Getter<WarehouseRepository>,
+    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('WarehouseRepository') protected warehouseRepositoryGetter: Getter<WarehouseRepository>, @repository.getter('InventoryMovementsRepository') protected inventoryMovementsRepositoryGetter: Getter<InventoryMovementsRepository>,
   ) {
     super(Inventories, dataSource);
+    this.inventoryMovements = this.createHasManyRepositoryFactoryFor('inventoryMovements', inventoryMovementsRepositoryGetter,);
+    this.registerInclusionResolver('inventoryMovements', this.inventoryMovements.inclusionResolver);
     this.warehouse = this.createBelongsToAccessorFor('warehouse', warehouseRepositoryGetter,);
     this.registerInclusionResolver('warehouse', this.warehouse.inclusionResolver);
     this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);

@@ -1,5 +1,6 @@
-import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {Branch} from './branch.model';
+import {InventoryMovements} from './inventory-movements.model';
 import {QuotationProducts} from './quotation-products.model';
 import {Warehouse} from './warehouse.model';
 
@@ -27,6 +28,9 @@ export class Inventories extends Entity {
     //Producto
     @belongsTo(() => QuotationProducts)
     quotationProductsId: number;
+
+    @hasMany(() => InventoryMovements)
+    inventoryMovements: InventoryMovements[];
 
     //Sucursal/showrooms
     @belongsTo(() => Warehouse)
