@@ -18,6 +18,7 @@ export class Inventories extends Entity {
     })
     createdAt: Date;
 
+    //Cantidad real del producto
     @property({
         type: 'number',
     })

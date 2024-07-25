@@ -217,3 +217,9 @@ export enum ConvertCurrencyToMXN {
     USD = 18.16,
     EURO = 19.71,
 }
+
+
+export enum InventoryMovementsTypeE {
+    ENTRADA = 'Entrada',
+    SALIDA = 'Salida',
+}
