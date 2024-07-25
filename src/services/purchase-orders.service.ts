@@ -245,7 +245,7 @@ export class PurchaseOrdersService {
                 proformaId,
                 date: 'Aun estamos trabajando en calcular la fecha.',
                 quotationProducts: quotationProducts.map((value: QuotationProductsWithRelations) => {
-                    const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, originCode, model, quantity} = value;
+                    const {SKU, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, originCode, model, quantity, measureWide, measureHigh, measureDepth, measureCircumference} = value;
                     const {line, name, document} = product;
                     const descriptionParts = [
                         line?.name,
@@ -253,11 +253,19 @@ export class PurchaseOrdersService {
                         mainMaterial,
                         mainFinish,
                         secondaryMaterial,
-                        secondaryFinishing,
-                        measureWide
+                        secondaryFinishing
                     ];
 
                     const description = descriptionParts
+                        .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                        .join(' ');  // Únelas con un espacio
+                    const measuresParts = [
+                        measureWide ? `Ancho: ${measureWide}` : "",
+                        measureHigh ? `Alto: ${measureHigh}` : "",
+                        measureDepth ? `Prof: ${measureDepth}` : "",
+                        measureCircumference ? `Circ: ${measureCircumference}` : ""
+                    ];
+                    const measures = measuresParts
                         .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                         .join(' ');  // Únelas con un espacio
                     return {
@@ -265,6 +273,7 @@ export class PurchaseOrdersService {
                         image: document?.fileURL,
                         model,
                         description,
+                        measures,
                         originCode,
                         quantity
                     }
@@ -288,7 +297,10 @@ export class PurchaseOrdersService {
                     {
                         include: [
                             {
-                                relation: 'product'
+                                relation: 'product',
+                                scope: {
+                                    include: [{relation: "brand"}, {relation: "document"}]
+                                }
                             }
                         ]
                     }
@@ -303,21 +315,46 @@ export class PurchaseOrdersService {
 
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         const {quotationProducts, project} = proforma
+
         //aqui
         let prodcutsArray = [];
+        console.log("quotationProduct", quotationProducts);
+
         for (const quotationProduct of quotationProducts) {
             const {product} = quotationProduct;
             const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProduct?.mainMaterial,
+                quotationProduct?.mainFinish,
+                quotationProduct?.secondaryMaterial,
+                quotationProduct?.secondaryFinishing
+            ];
+            const measuresParts = [
+                quotationProduct?.measureWide ? `Ancho: ${quotationProduct?.measureWide}` : "",
+                quotationProduct?.measureHigh ? `Alto: ${quotationProduct?.measureHigh}` : "",
+                quotationProduct?.measureDepth ? `Prof: ${quotationProduct?.measureDepth}` : "",
+                quotationProduct?.measureCircumference ? `Circ: ${quotationProduct?.measureCircumference}` : ""
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
             prodcutsArray.push({
                 brandName: brand?.brandName,
-                status: quotationProducts?.status,
-                description: `${line?.name} ${name} ${quotationProducts?.mainMaterial} ${quotationProducts?.mainFinish} ${quotationProducts?.secondaryMaterial} ${quotationProducts?.secondaryFinishing} ${quotationProducts?.measureWide}`,
+                status: quotationProduct?.status,
+                description,
+                measures,
                 image: document?.fileURL ?? defaultImage,
-                mainFinish: quotationProducts?.mainFinish,
-                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
-                quantity: quotationProducts?.quantity,
+                mainFinish: quotationProduct?.mainFinish,
+                mainFinishImage: quotationProduct?.mainFinishImage?.fileURL ?? defaultImage,
+                quantity: quotationProduct?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
-                originCode: quotationProducts?.originCode,
+                originCode: quotationProduct?.originCode,
                 assembledProducts: assembledProducts
             })
         }
