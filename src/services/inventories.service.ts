@@ -68,7 +68,8 @@ export class InventoriesService {
                 ];
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 const findWarehouse = warehouseArray.findIndex(value => value.id === warehouseId)
-                if (findWarehouse) {
+                console.log('findWarehouse: ', findWarehouse)
+                if (findWarehouse !== -1) {
                     warehouseArray[findWarehouse].products.push({
                         id,
                         name,
@@ -122,7 +123,7 @@ export class InventoriesService {
                 ];
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 const findShowroom = showroomArray.findIndex(value => value.id === branchId);
-                if (findShowroom) {
+                if (findShowroom !== -1) {
                     showroomArray[findShowroom].products.push({
                         id,
                         name,
