@@ -63,6 +63,7 @@ export class InventoriesService {
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 warehouse.push({
                     id,
+                    name,
                     sku: SKU,
                     stock,
                     image: document?.fileURL ?? null,
@@ -88,6 +89,9 @@ export class InventoriesService {
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 branch.push({
                     id,
+                    name,
+                    sku: SKU,
+                    stock,
                     image: document?.fileURL ?? null,
                     classificationId,
                     lineId,
