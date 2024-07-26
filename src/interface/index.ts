@@ -233,7 +233,7 @@ export interface EntryDataI {
     products: {quotationProductsId: number}[];
     branchId: number;
     warehouseId: number;
-    projectId: number;
+    projectId: string;
     quotationProductsId: number;
     quantity: number;
     comment: string;
