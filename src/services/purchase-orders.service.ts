@@ -301,6 +301,9 @@ export class PurchaseOrdersService {
                                 scope: {
                                     include: [{relation: "brand"}, {relation: "document"}]
                                 }
+                            },
+                            {
+                                relation: 'mainFinishImage',
                             }
                         ]
                     }
