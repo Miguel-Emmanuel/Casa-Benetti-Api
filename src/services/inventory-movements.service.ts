@@ -51,7 +51,7 @@ export class InventoryMovementsService {
             if (!branchId && !warehouseId)
                 return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
             const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
-            await this.validateDataEntry(projectId, branchId, warehouseId);
+            const project = await this.validateDataEntry(projectId, branchId, warehouseId);
             try {
                 let inventorie: any = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
                 if (!inventorie) {
@@ -60,7 +60,7 @@ export class InventoryMovementsService {
                     const {stock} = inventorie;
                     await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
                 }
-                await this.inventoryMovementsRepository.create({quantity, projectId, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment});
+                await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment});
                 await this.addQuotationProductsToStock(quotationProductsId, quantity, quotationProduct.stock);
             } catch (error) {
                 throw this.responseService.badRequest(error.message ?? error)
@@ -106,7 +106,7 @@ export class InventoryMovementsService {
         return product
     }
 
-    async validateDataEntry(projectId: number, branchId: number, warehouseId: number,) {
+    async validateDataEntry(projectId: string, branchId: number, warehouseId: number,) {
         if (branchId) {
             const branch = await this.branchRepository.findOne({where: {id: branchId}})
             if (!branch)
@@ -118,9 +118,11 @@ export class InventoryMovementsService {
                 throw this.responseService.badRequest('El almacen no existe.')
         }
 
-        const project = await this.projectRepository.findOne({where: {id: projectId}})
+        const project = await this.projectRepository.findOne({where: {projectId}})
         if (!project)
             throw this.responseService.badRequest('El proyecto no existe.')
+
+        return project;
     }
 
     async validateDataIssue(branchId: number, warehouseId: number,) {

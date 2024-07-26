@@ -69,7 +69,7 @@ export class InventoryMovementsController {
                                 nullable: true
                             },
                             projectId: {
-                                type: 'number',
+                                type: 'string',
                                 nullable: true
                             },
                             quotationProductsId: {
