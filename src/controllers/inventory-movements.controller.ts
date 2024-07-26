@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     repository
@@ -13,7 +14,7 @@ import {InventoryMovements} from '../models';
 import {InventoryMovementsRepository} from '../repositories';
 import {InventoryMovementsService} from '../services';
 
-// @authenticate('jwt')
+@authenticate('jwt')
 export class InventoryMovementsController {
     constructor(
         @repository(InventoryMovementsRepository)
@@ -90,7 +91,7 @@ export class InventoryMovementsController {
             },
         })
         data: EntryDataI,
-    ): Promise<any> {
+    ): Promise<Object> {
         return this.inventoryMovementsService.entry(data);
     }
 
@@ -144,7 +145,7 @@ export class InventoryMovementsController {
             },
         })
         data: IssueDataI,
-    ): Promise<any> {
+    ): Promise<Object> {
         return this.inventoryMovementsService.issue(data);
     }
 
