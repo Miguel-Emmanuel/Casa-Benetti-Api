@@ -1,8 +1,8 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
-import {Branch} from './branch.model';
+import {Branch, BranchWithRelations} from './branch.model';
 import {InventoryMovements} from './inventory-movements.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
-import {Warehouse} from './warehouse.model';
+import {Warehouse, WarehouseWithRelations} from './warehouse.model';
 
 @model({
     settings: {
@@ -76,6 +76,8 @@ export class Inventories extends Entity {
 export interface InventoriesRelations {
     // describe navigational properties here
     quotationProducts: QuotationProductsWithRelations
+    warehouse: WarehouseWithRelations
+    branch: BranchWithRelations
 }
 
 export type InventoriesWithRelations = Inventories & InventoriesRelations;

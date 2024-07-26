@@ -250,3 +250,31 @@ export interface IssueDataI {
     destinationBranchId: number;
     destinationWarehouseId: number;
 }
+export interface ProductsInventorieI {
+    id: number
+    name: string,
+    sku: string,
+    stock: number
+    image: string | null,
+    classificationId?: number,
+    lineId?: number,
+    brandId?: number,
+    model: string,
+    originCode: string,
+    boxes: null,
+    description: string,
+    observations: string,
+    assembledProducts: any
+}
+export interface InventorieDataI {
+    id: number,
+    name?: string,
+    products: ProductsInventorieI[]
+}
+// export interface InventoriesWarehouseI {
+//     warehouse: InventorieDataI[],
+// }
+
+// export interface InventoriesShowroomI {
+//     showroom: InventorieDataI[],
+// }
