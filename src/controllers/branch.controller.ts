@@ -66,7 +66,7 @@ export class BranchController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Branch, {includeRelations: true}),
+          items: getModelSchemaRef(Branch, {includeRelations: false}),
         },
       },
     },
@@ -82,7 +82,7 @@ export class BranchController {
     description: 'Branch model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Branch, {includeRelations: true}),
+        schema: getModelSchemaRef(Branch, {includeRelations: false}),
       },
     },
   })
