@@ -1,6 +1,6 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
-import {Inventories} from './inventories.model';
+import {Inventories, InventoriesWithRelations} from './inventories.model';
 import {Project} from './project.model';
 
 @model({
@@ -115,6 +115,7 @@ export class InventoryMovements extends Entity {
 
 export interface InventoryMovementsRelations {
     // describe navigational properties here
+    inventories: InventoriesWithRelations
 }
 
 export type InventoryMovementsWithRelations = InventoryMovements & InventoryMovementsRelations;

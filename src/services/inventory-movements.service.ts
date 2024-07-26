@@ -27,11 +27,6 @@ export class InventoryMovementsService {
     ) { }
 
     async entry(data: EntryDataI) {
-        await this.moventDescarga(data);
-    }
-
-
-    async moventDescarga(data: EntryDataI) {
         await this.validateBodyEntry(data);
         const {reasonEntry} = data
         if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR || reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
@@ -58,7 +53,7 @@ export class InventoryMovementsService {
             const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
             await this.validateDataEntry(projectId, branchId, warehouseId);
             try {
-                let inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
+                let inventorie: any = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
                 if (!inventorie) {
                     inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
                 } else {
