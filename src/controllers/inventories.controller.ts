@@ -50,45 +50,12 @@ export class InventoriesController {
                                     type: 'object',
                                     properties: {
                                         id: {
-                                            type: 'number'
+                                            type: 'string'
                                         },
                                         name: {
-                                            type: 'string'
+                                            type: 'string',
                                         },
-                                        sku: {
-                                            type: 'string'
-                                        },
-                                        stock: {
-                                            type: 'number'
-                                        },
-                                        image: {
-                                            type: 'string'
-                                        },
-                                        classificationId: {
-                                            type: 'number'
-                                        },
-                                        lineId: {
-                                            type: 'number'
-                                        },
-                                        brandId: {
-                                            type: 'number'
-                                        },
-                                        model: {
-                                            type: 'string'
-                                        },
-                                        originCode: {
-                                            type: 'string'
-                                        },
-                                        boxes: {
-                                            type: 'number'
-                                        },
-                                        description: {
-                                            type: 'string'
-                                        },
-                                        observations: {
-                                            type: 'string'
-                                        },
-                                        assembledProducts: {
+                                        products: {
                                             type: 'array',
                                             items: {
                                                 type: 'object',
@@ -96,26 +63,73 @@ export class InventoriesController {
                                                     id: {
                                                         type: 'number'
                                                     },
-                                                    description: {
+                                                    name: {
                                                         type: 'string'
                                                     },
-                                                    mainMaterial: {
+                                                    sku: {
                                                         type: 'string'
                                                     },
-                                                    mainFinish: {
-                                                        type: 'string'
-                                                    },
-                                                    secondaryMaterial: {
-                                                        type: 'string'
-                                                    },
-                                                    secondaryFinishing: {
-                                                        type: 'string'
-                                                    },
-                                                    quantity: {
+                                                    stock: {
                                                         type: 'number'
                                                     },
                                                     image: {
                                                         type: 'string'
+                                                    },
+                                                    classificationId: {
+                                                        type: 'number'
+                                                    },
+                                                    lineId: {
+                                                        type: 'number'
+                                                    },
+                                                    brandId: {
+                                                        type: 'number'
+                                                    },
+                                                    model: {
+                                                        type: 'string'
+                                                    },
+                                                    originCode: {
+                                                        type: 'string'
+                                                    },
+                                                    boxes: {
+                                                        type: 'number'
+                                                    },
+                                                    description: {
+                                                        type: 'string'
+                                                    },
+                                                    observations: {
+                                                        type: 'string'
+                                                    },
+                                                    assembledProducts: {
+                                                        type: 'array',
+                                                        items: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                id: {
+                                                                    type: 'number'
+                                                                },
+                                                                description: {
+                                                                    type: 'string'
+                                                                },
+                                                                mainMaterial: {
+                                                                    type: 'string'
+                                                                },
+                                                                mainFinish: {
+                                                                    type: 'string'
+                                                                },
+                                                                secondaryMaterial: {
+                                                                    type: 'string'
+                                                                },
+                                                                secondaryFinishing: {
+                                                                    type: 'string'
+                                                                },
+                                                                quantity: {
+                                                                    type: 'number'
+                                                                },
+                                                                image: {
+                                                                    type: 'string'
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -123,51 +137,18 @@ export class InventoriesController {
                                     }
                                 }
                             },
-                            branch: {
+                            showroom: {
                                 type: 'array',
                                 items: {
                                     type: 'object',
                                     properties: {
                                         id: {
-                                            type: 'number'
+                                            type: 'string'
                                         },
                                         name: {
-                                            type: 'string'
+                                            type: 'string',
                                         },
-                                        sku: {
-                                            type: 'string'
-                                        },
-                                        stock: {
-                                            type: 'number'
-                                        },
-                                        image: {
-                                            type: 'string'
-                                        },
-                                        classificationId: {
-                                            type: 'number'
-                                        },
-                                        lineId: {
-                                            type: 'number'
-                                        },
-                                        brandId: {
-                                            type: 'number'
-                                        },
-                                        model: {
-                                            type: 'string'
-                                        },
-                                        originCode: {
-                                            type: 'string'
-                                        },
-                                        boxes: {
-                                            type: 'number'
-                                        },
-                                        description: {
-                                            type: 'string'
-                                        },
-                                        observations: {
-                                            type: 'string'
-                                        },
-                                        assembledProducts: {
+                                        products: {
                                             type: 'array',
                                             items: {
                                                 type: 'object',
@@ -175,26 +156,73 @@ export class InventoriesController {
                                                     id: {
                                                         type: 'number'
                                                     },
-                                                    description: {
+                                                    name: {
                                                         type: 'string'
                                                     },
-                                                    mainMaterial: {
+                                                    sku: {
                                                         type: 'string'
                                                     },
-                                                    mainFinish: {
-                                                        type: 'string'
-                                                    },
-                                                    secondaryMaterial: {
-                                                        type: 'string'
-                                                    },
-                                                    secondaryFinishing: {
-                                                        type: 'string'
-                                                    },
-                                                    quantity: {
+                                                    stock: {
                                                         type: 'number'
                                                     },
                                                     image: {
                                                         type: 'string'
+                                                    },
+                                                    classificationId: {
+                                                        type: 'number'
+                                                    },
+                                                    lineId: {
+                                                        type: 'number'
+                                                    },
+                                                    brandId: {
+                                                        type: 'number'
+                                                    },
+                                                    model: {
+                                                        type: 'string'
+                                                    },
+                                                    originCode: {
+                                                        type: 'string'
+                                                    },
+                                                    boxes: {
+                                                        type: 'number'
+                                                    },
+                                                    description: {
+                                                        type: 'string'
+                                                    },
+                                                    observations: {
+                                                        type: 'string'
+                                                    },
+                                                    assembledProducts: {
+                                                        type: 'array',
+                                                        items: {
+                                                            type: 'object',
+                                                            properties: {
+                                                                id: {
+                                                                    type: 'number'
+                                                                },
+                                                                description: {
+                                                                    type: 'string'
+                                                                },
+                                                                mainMaterial: {
+                                                                    type: 'string'
+                                                                },
+                                                                mainFinish: {
+                                                                    type: 'string'
+                                                                },
+                                                                secondaryMaterial: {
+                                                                    type: 'string'
+                                                                },
+                                                                secondaryFinishing: {
+                                                                    type: 'string'
+                                                                },
+                                                                quantity: {
+                                                                    type: 'number'
+                                                                },
+                                                                image: {
+                                                                    type: 'string'
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -202,6 +230,7 @@ export class InventoriesController {
                                     }
                                 }
                             },
+
                         }
                     },
                 },
