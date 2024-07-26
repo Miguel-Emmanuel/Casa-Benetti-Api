@@ -86,13 +86,16 @@ export class ProjectService {
                                         {
                                             relation: 'product',
                                             scope: {
-                                                fields: ['id', 'name', 'lineId'],
+                                                fields: ['id', 'name', 'lineId', 'document'],
                                                 include: [
                                                     {
                                                         relation: 'line',
                                                         scope: {
                                                             fields: ['id', 'name']
                                                         }
+                                                    },
+                                                    {
+                                                        relation: 'document',
                                                     }
                                                 ]
                                             }
@@ -116,7 +119,7 @@ export class ProjectService {
         return quotationProducts.map(value => {
 
             const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
-            const {name, line} = product;
+            const {name, line, document} = product;
             const descriptionParts = [
                 line?.name,
                 name,
@@ -150,7 +153,8 @@ export class ProjectService {
                 price,
                 description,
                 measures,
-                proformaPrice: proformaPrice ?? null
+                proformaPrice: proformaPrice ?? null,
+                image: document?.fileURL
             }
         })
     }
