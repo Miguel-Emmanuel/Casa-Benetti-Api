@@ -48,7 +48,7 @@ export class InventoriesService {
         for (let index = 0; index < inventoryMovements.length; index++) {
             const {inventories, comment} = inventoryMovements[index];
             const {warehouseId, branchId, quotationProducts, } = inventories;
-            const {id, product, model, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, assembledProducts} = quotationProducts;
+            const {id, product, model, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, assembledProducts, SKU, stock} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product
             console.log(assembledProducts)
             if (warehouseId) {
@@ -63,6 +63,8 @@ export class InventoriesService {
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 warehouse.push({
                     id,
+                    sku: SKU,
+                    stock,
                     image: document?.fileURL ?? null,
                     classificationId,
                     lineId,

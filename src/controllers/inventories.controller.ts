@@ -52,6 +52,12 @@ export class InventoriesController {
                                         id: {
                                             type: 'number'
                                         },
+                                        sku: {
+                                            type: 'string'
+                                        },
+                                        stock: {
+                                            type: 'number'
+                                        },
                                         image: {
                                             type: 'string'
                                         },
@@ -120,6 +126,12 @@ export class InventoriesController {
                                     type: 'object',
                                     properties: {
                                         id: {
+                                            type: 'number'
+                                        },
+                                        sku: {
+                                            type: 'string'
+                                        },
+                                        stock: {
                                             type: 'number'
                                         },
                                         image: {
