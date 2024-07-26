@@ -52,6 +52,9 @@ export class InventoriesController {
                                         id: {
                                             type: 'number'
                                         },
+                                        name: {
+                                            type: 'string'
+                                        },
                                         sku: {
                                             type: 'string'
                                         },
@@ -127,6 +130,9 @@ export class InventoriesController {
                                     properties: {
                                         id: {
                                             type: 'number'
+                                        },
+                                        name: {
+                                            type: 'string'
                                         },
                                         sku: {
                                             type: 'string'
