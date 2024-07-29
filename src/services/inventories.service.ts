@@ -324,7 +324,7 @@ export class InventoriesService {
                         relation: 'warehouse'
                     },
                     {
-                        relation: 'branchId'
+                        relation: 'branch'
                     },
                 ]
             });
