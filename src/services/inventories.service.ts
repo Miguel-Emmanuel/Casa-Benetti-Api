@@ -296,11 +296,12 @@ export class InventoriesService {
 
             const {inventories, comment} = inventoryMovements
             const {quotationProducts, id: inventoryId} = inventories;
-            const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, location} = quotationProducts;
+            const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, price} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product;
             const {mainProjectManager, project, customer} = quotation;
             const {reference} = project;
             const {purchaseOrders, currency, proformaAmount} = proforma;
+            console.log(purchaseOrders)
             const descriptionParts = [
                 line?.name,
                 name,
@@ -336,7 +337,9 @@ export class InventoriesService {
                 lineId,
                 brandId,
                 model,
-                purchaseOrderId: purchaseOrders?.id,
+                purchaseOrderId: purchaseOrders?.id ?? null,
+                currency,
+                price,
                 originCode,
                 description,
                 observations: comment,
