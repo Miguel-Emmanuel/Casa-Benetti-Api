@@ -33,6 +33,6 @@ export const schemaCreateIssue = Joi.object({
     quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
     comment: Joi.string().required(),
     collectionNumber: Joi.when('reasonIssue', {is: InventoriesIssueE.CONTENEDOR, then: Joi.string().required()}),
-    destinationBranchId: Joi.when('reasonIssue', {is: InventoriesIssueE.REASIGNAR, then: Joi.number().required()}),
-    destinationWarehouseId: Joi.when('reasonIssue', {is: InventoriesIssueE.REASIGNAR, then: Joi.number().required()}),
+    destinationBranchId: Joi.when('reasonIssue', {is: InventoriesIssueE.REASIGNAR, then: Joi.number().allow(null)}),
+    destinationWarehouseId: Joi.when('reasonIssue', {is: InventoriesIssueE.REASIGNAR, then: Joi.number().allow(null)}),
 })
