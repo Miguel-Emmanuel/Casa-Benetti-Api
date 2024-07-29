@@ -1,14 +1,20 @@
-import { /* inject, */ BindingScope, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {InventoryMovementsTypeE} from '../enums';
 import {InventorieDataI} from '../interface';
-import {InventoryMovementsRepository} from '../repositories';
+import {ResponseServiceBindings} from '../keys';
+import {InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
+import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class InventoriesService {
     constructor(
         @repository(InventoryMovementsRepository)
         public inventoryMovementsRepository: InventoryMovementsRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
+        @inject(ResponseServiceBindings.RESPONSE_SERVICE)
+        public responseService: ResponseService,
     ) { }
 
     async find() {
@@ -53,7 +59,7 @@ export class InventoriesService {
         const warehouseArray: InventorieDataI[] = [];
         const showroomArray: InventorieDataI[] = [];
         for (let index = 0; index < inventoryMovements.length; index++) {
-            const {inventories, comment} = inventoryMovements[index];
+            const {inventories, comment, id: inventoryMovementId} = inventoryMovements[index];
             const {warehouseId, branchId, quotationProducts, branch, warehouse} = inventories;
             const {id, product, model, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, assembledProducts, SKU, stock} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product
@@ -84,7 +90,8 @@ export class InventoriesService {
                         boxes: null,
                         description,
                         observations: comment,
-                        assembledProducts
+                        assembledProducts,
+                        inventoryMovementId
                     })
                 } else {
                     warehouseArray.push(
@@ -106,7 +113,8 @@ export class InventoriesService {
                                     boxes: null,
                                     description,
                                     observations: comment,
-                                    assembledProducts
+                                    assembledProducts,
+                                    inventoryMovementId
                                 }
                             ]
                         }
@@ -138,7 +146,8 @@ export class InventoriesService {
                         boxes: null,
                         description,
                         observations: comment,
-                        assembledProducts
+                        assembledProducts,
+                        inventoryMovementId
                     })
                 } else {
                     showroomArray.push(
@@ -160,7 +169,8 @@ export class InventoriesService {
                                     boxes: null,
                                     description,
                                     observations: comment,
-                                    assembledProducts
+                                    assembledProducts,
+                                    inventoryMovementId
                                 }
                             ]
                         }
@@ -173,6 +183,147 @@ export class InventoriesService {
             showroom: showroomArray,
 
         };
+    }
+
+    async getDetailProduct(inventoryMovementId: number) {
+        const inventoryMovements = await this.inventoryMovementsRepository.findOne({
+            where: {id: inventoryMovementId},
+            include: [
+                {
+                    relation: 'inventories',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'document'
+                                                    },
+                                                    {
+                                                        relation: 'line'
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'quotation',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'mainProjectManager'
+                                                    },
+                                                    {
+                                                        relation: 'project'
+                                                    },
+                                                    {
+                                                        relation: 'customer'
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'purchaseOrders'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        // const quotationProduct = await this.quotationProductsRepository.findOne({
+        //     where: {id},
+        //     include: [
+        //         {
+        //             relation: 'product',
+        //             scope: {
+        //                 include: [
+        //                     {
+        //                         relation: 'document'
+        //                     },
+        //                     {
+        //                         relation: 'line'
+        //                     }
+        //                 ]
+        //             }
+        //         },
+        //         {
+        //             relation: 'quotation',
+        //             scope: {
+        //                 include: [
+        //                     {
+        //                         relation: 'mainProjectManager'
+        //                     },
+        //                     {
+        //                         relation: 'project'
+        //                     },
+        //                     {
+        //                         relation: 'customer'
+        //                     }
+        //                 ]
+        //             }
+        //         },
+        //         {
+        //             relation: 'proforma',
+        //             scope: {
+        //                 include: [
+        //                     {
+        //                         relation: 'purchaseOrders'
+        //                     }
+        //                 ]
+        //             }
+        //         }
+        //     ]
+        // });
+        if (!inventoryMovements)
+            throw this.responseService.badRequest("Producto no encontrado.")
+
+        const {inventories, comment} = inventoryMovements
+        const {quotationProducts} = inventories;
+        const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id} = quotationProducts;
+        const {document, classificationId, lineId, brandId, line, name} = product;
+        const {mainProjectManager, project, customer} = quotation;
+        const {reference} = project;
+        const {purchaseOrders} = proforma;
+        const descriptionParts = [
+            line?.name,
+            name,
+            mainMaterial,
+            mainFinish,
+            secondaryMaterial,
+            secondaryFinishing
+        ];
+        const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+        return {
+            id,
+            image: document?.fileURL ?? null,
+            SKU,
+            mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+            reference,
+            customer: `${customer?.name} ${customer?.lastName ?? ''}`,
+            status,
+            classificationId,
+            lineId,
+            brandId,
+            model,
+            purchaseOrderId: purchaseOrders?.id,
+            originCode,
+            description,
+            observations: comment,
+        }
     }
 
 }

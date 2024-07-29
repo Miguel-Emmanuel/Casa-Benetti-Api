@@ -5,7 +5,7 @@ import {DocumentSchema} from './base/document.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
-import {Proforma} from './proforma.model';
+import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
@@ -417,6 +417,7 @@ export interface QuotationProductsRelations {
     provider: ProviderWithRelations
     brand: BrandWithRelations
     quotation: QuotationWithRelations
+    proforma: ProformaWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;

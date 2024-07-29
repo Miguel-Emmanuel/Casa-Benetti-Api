@@ -38,6 +38,7 @@ export enum ModuleCategories {
     ORDENES_DE_COMPRA = 'Órdenes de compra',
     CUENTAS_POR_PAGAR = 'Cuentas por pagar',
     COMISIONES = 'Comisiones',
+    INVENTARIOS = 'Inventarios',
 }
 
 export enum TypeUserE {
