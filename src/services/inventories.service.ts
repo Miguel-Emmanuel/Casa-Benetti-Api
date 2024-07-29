@@ -1,14 +1,20 @@
-import { /* inject, */ BindingScope, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {InventoryMovementsTypeE} from '../enums';
 import {InventorieDataI} from '../interface';
-import {InventoryMovementsRepository} from '../repositories';
+import {ResponseServiceBindings} from '../keys';
+import {InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
+import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class InventoriesService {
     constructor(
         @repository(InventoryMovementsRepository)
         public inventoryMovementsRepository: InventoryMovementsRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
+        @inject(ResponseServiceBindings.RESPONSE_SERVICE)
+        public responseService: ResponseService,
     ) { }
 
     async find() {
@@ -173,6 +179,49 @@ export class InventoriesService {
             showroom: showroomArray,
 
         };
+    }
+
+    async getDetailProduct(id: number) {
+        const quotationProduct = await this.quotationProductsRepository.findOne({
+            where: {id},
+            include: [
+                {
+                    relation: 'product',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'document'
+                            },
+                            {
+                                relation: 'line'
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'quotation',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'mainProjectManager'
+                            },
+                        ]
+                    }
+                }
+            ]
+        });
+        if (!quotationProduct)
+            throw this.responseService.badRequest("Producto no encontrado.")
+
+        const {product, SKU, quotation} = quotationProduct;
+        const {document} = product;
+        const {mainProjectManager} = quotation;
+        return {
+            id,
+            image: document?.fileURL ?? null,
+            SKU,
+            mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`
+        }
     }
 
 }

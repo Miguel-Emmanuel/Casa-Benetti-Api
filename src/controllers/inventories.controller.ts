@@ -1,6 +1,7 @@
 import {service} from '@loopback/core';
 import {
     get,
+    param,
     response
 } from '@loopback/rest';
 import {InventoriesService} from '../services';
@@ -240,6 +241,110 @@ export class InventoriesController {
     async find(
     ): Promise<Object> {
         return this.inventoriesService.find();
+    }
+
+    @get('/inventories/{id}/product')
+    @response(200, {
+        description: 'Array of Inventories model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'string'
+                        },
+                        name: {
+                            type: 'string',
+                        },
+                        products: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    id: {
+                                        type: 'number'
+                                    },
+                                    name: {
+                                        type: 'string'
+                                    },
+                                    sku: {
+                                        type: 'string'
+                                    },
+                                    stock: {
+                                        type: 'number'
+                                    },
+                                    image: {
+                                        type: 'string'
+                                    },
+                                    classificationId: {
+                                        type: 'number'
+                                    },
+                                    lineId: {
+                                        type: 'number'
+                                    },
+                                    brandId: {
+                                        type: 'number'
+                                    },
+                                    model: {
+                                        type: 'string'
+                                    },
+                                    originCode: {
+                                        type: 'string'
+                                    },
+                                    boxes: {
+                                        type: 'number'
+                                    },
+                                    description: {
+                                        type: 'string'
+                                    },
+                                    observations: {
+                                        type: 'string'
+                                    },
+                                    assembledProducts: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'object',
+                                            properties: {
+                                                id: {
+                                                    type: 'number'
+                                                },
+                                                description: {
+                                                    type: 'string'
+                                                },
+                                                mainMaterial: {
+                                                    type: 'string'
+                                                },
+                                                mainFinish: {
+                                                    type: 'string'
+                                                },
+                                                secondaryMaterial: {
+                                                    type: 'string'
+                                                },
+                                                secondaryFinishing: {
+                                                    type: 'string'
+                                                },
+                                                quantity: {
+                                                    type: 'number'
+                                                },
+                                                image: {
+                                                    type: 'string'
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        },
+    })
+    async getDetailProduct(
+        @param.path.number('id') id: number,
+    ): Promise<Object> {
+        return this.inventoriesService.getDetailProduct(id);
     }
 
     // @get('/inventories/{id}')

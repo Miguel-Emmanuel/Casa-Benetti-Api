@@ -50,4 +50,9 @@ export const modulesSeed = [
     description: 'Comisiones',
     categoryName: ModuleCategories.COMISIONES
   },
+  {
+    name: 'Inventarios',
+    description: 'Inventarios',
+    categoryName: ModuleCategories.INVENTARIOS
+  },
 ];
