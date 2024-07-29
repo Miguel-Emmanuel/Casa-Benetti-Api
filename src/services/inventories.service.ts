@@ -1,9 +1,9 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {InventoryMovementsTypeE} from '../enums';
+import {ConvertCurrencyToEUR, InventoryMovementsTypeE, ProformaCurrencyE} from '../enums';
 import {InventorieDataI} from '../interface';
 import {ResponseServiceBindings} from '../keys';
-import {InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
+import {InventoriesRepository, InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -15,6 +15,8 @@ export class InventoriesService {
         public quotationProductsRepository: QuotationProductsRepository,
         @inject(ResponseServiceBindings.RESPONSE_SERVICE)
         public responseService: ResponseService,
+        @repository(InventoriesRepository)
+        public inventoriesRepository: InventoriesRepository,
     ) { }
 
     async find() {
@@ -186,144 +188,184 @@ export class InventoriesService {
     }
 
     async getDetailProduct(inventoryMovementId: number) {
-        const inventoryMovements = await this.inventoryMovementsRepository.findOne({
-            where: {id: inventoryMovementId},
-            include: [
-                {
-                    relation: 'inventories',
-                    scope: {
-                        include: [
-                            {
-                                relation: 'quotationProducts',
-                                scope: {
-                                    include: [
-                                        {
-                                            relation: 'product',
-                                            scope: {
-                                                include: [
-                                                    {
-                                                        relation: 'document'
-                                                    },
-                                                    {
-                                                        relation: 'line'
-                                                    }
-                                                ]
+        try {
+            const inventoryMovements = await this.inventoryMovementsRepository.findOne({
+                where: {id: inventoryMovementId},
+                include: [
+                    {
+                        relation: 'inventories',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'product',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'document'
+                                                        },
+                                                        {
+                                                            relation: 'line'
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                relation: 'quotation',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'mainProjectManager'
+                                                        },
+                                                        {
+                                                            relation: 'project'
+                                                        },
+                                                        {
+                                                            relation: 'customer'
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                relation: 'proforma',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'purchaseOrders'
+                                                        }
+                                                    ]
+                                                }
                                             }
-                                        },
-                                        {
-                                            relation: 'quotation',
-                                            scope: {
-                                                include: [
-                                                    {
-                                                        relation: 'mainProjectManager'
-                                                    },
-                                                    {
-                                                        relation: 'project'
-                                                    },
-                                                    {
-                                                        relation: 'customer'
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        {
-                                            relation: 'proforma',
-                                            scope: {
-                                                include: [
-                                                    {
-                                                        relation: 'purchaseOrders'
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    ]
+                                        ]
+                                    }
                                 }
-                            }
-                        ]
+                            ]
+                        }
                     }
-                }
-            ]
-        });
-        // const quotationProduct = await this.quotationProductsRepository.findOne({
-        //     where: {id},
-        //     include: [
-        //         {
-        //             relation: 'product',
-        //             scope: {
-        //                 include: [
-        //                     {
-        //                         relation: 'document'
-        //                     },
-        //                     {
-        //                         relation: 'line'
-        //                     }
-        //                 ]
-        //             }
-        //         },
-        //         {
-        //             relation: 'quotation',
-        //             scope: {
-        //                 include: [
-        //                     {
-        //                         relation: 'mainProjectManager'
-        //                     },
-        //                     {
-        //                         relation: 'project'
-        //                     },
-        //                     {
-        //                         relation: 'customer'
-        //                     }
-        //                 ]
-        //             }
-        //         },
-        //         {
-        //             relation: 'proforma',
-        //             scope: {
-        //                 include: [
-        //                     {
-        //                         relation: 'purchaseOrders'
-        //                     }
-        //                 ]
-        //             }
-        //         }
-        //     ]
-        // });
-        if (!inventoryMovements)
-            throw this.responseService.badRequest("Producto no encontrado.")
+                ]
+            });
+            // const quotationProduct = await this.quotationProductsRepository.findOne({
+            //     where: {id},
+            //     include: [
+            //         {
+            //             relation: 'product',
+            //             scope: {
+            //                 include: [
+            //                     {
+            //                         relation: 'document'
+            //                     },
+            //                     {
+            //                         relation: 'line'
+            //                     }
+            //                 ]
+            //             }
+            //         },
+            //         {
+            //             relation: 'quotation',
+            //             scope: {
+            //                 include: [
+            //                     {
+            //                         relation: 'mainProjectManager'
+            //                     },
+            //                     {
+            //                         relation: 'project'
+            //                     },
+            //                     {
+            //                         relation: 'customer'
+            //                     }
+            //                 ]
+            //             }
+            //         },
+            //         {
+            //             relation: 'proforma',
+            //             scope: {
+            //                 include: [
+            //                     {
+            //                         relation: 'purchaseOrders'
+            //                     }
+            //                 ]
+            //             }
+            //         }
+            //     ]
+            // });
+            if (!inventoryMovements)
+                throw this.responseService.badRequest("Producto no encontrado.")
 
-        const {inventories, comment} = inventoryMovements
-        const {quotationProducts} = inventories;
-        const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id} = quotationProducts;
-        const {document, classificationId, lineId, brandId, line, name} = product;
-        const {mainProjectManager, project, customer} = quotation;
-        const {reference} = project;
-        const {purchaseOrders} = proforma;
-        const descriptionParts = [
-            line?.name,
-            name,
-            mainMaterial,
-            mainFinish,
-            secondaryMaterial,
-            secondaryFinishing
-        ];
-        const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
-        return {
-            id,
-            image: document?.fileURL ?? null,
-            SKU,
-            mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
-            reference,
-            customer: `${customer?.name} ${customer?.lastName ?? ''}`,
-            status,
-            classificationId,
-            lineId,
-            brandId,
-            model,
-            purchaseOrderId: purchaseOrders?.id,
-            originCode,
-            description,
-            observations: comment,
+            const {inventories, comment} = inventoryMovements
+            const {quotationProducts, id: inventoryId} = inventories;
+            const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, location} = quotationProducts;
+            const {document, classificationId, lineId, brandId, line, name} = product;
+            const {mainProjectManager, project, customer} = quotation;
+            const {reference} = project;
+            const {purchaseOrders, currency, proformaAmount} = proforma;
+            const descriptionParts = [
+                line?.name,
+                name,
+                mainMaterial,
+                mainFinish,
+                secondaryMaterial,
+                secondaryFinishing
+            ];
+            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+
+            const inventoriesNEQ = await this.inventoriesRepository.find({
+                where: {quotationProductsId: id},
+                include: [
+                    {
+                        relation: 'quotationProducts',
+                        scope: {
+                        }
+                    }
+                ]
+            });
+
+
+            return {
+                id,
+                image: document?.fileURL ?? null,
+                SKU,
+                mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                reference,
+                customer: `${customer?.name} ${customer?.lastName ?? ''}`,
+                status,
+                classificationId,
+                lineId,
+                brandId,
+                model,
+                purchaseOrderId: purchaseOrders?.id,
+                originCode,
+                description,
+                observations: comment,
+                cost: this.calculateCost(currency, proformaAmount),
+                inventories: inventoriesNEQ.map(value => {
+                    const {branchId, warehouseId, stock, quotationProducts} = value;
+                    return {
+                        branchId,
+                        warehouseId,
+                        stock,
+                        cost: (quotationProducts.price * stock)
+                    }
+                })
+            }
+        } catch (error) {
+            if (error?.message.includes("'proforma' as it is undefined."))
+                throw this.responseService.badRequest("El producto no se encuntra con alguna proforma.")
+
+            throw this.responseService.badRequest(error?.message ?? error)
         }
+    }
+
+    calculateCost(currency: ProformaCurrencyE, proformaAmount: number) {
+        if (currency === ProformaCurrencyE.PESO_MEXICANO)
+            return proformaAmount * ConvertCurrencyToEUR.MXN
+
+        if (currency === ProformaCurrencyE.USD)
+            return proformaAmount * ConvertCurrencyToEUR.USD
+
+        return proformaAmount;
     }
 
 }
