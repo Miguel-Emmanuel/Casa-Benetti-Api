@@ -243,7 +243,7 @@ export class InventoriesController {
         return this.inventoriesService.find();
     }
 
-    @get('/inventories/{id}/product')
+    @get('/inventories/{inventoryMovementId}/product')
     @response(200, {
         description: 'Array of Inventories model instances',
         content: {
@@ -342,9 +342,9 @@ export class InventoriesController {
         },
     })
     async getDetailProduct(
-        @param.path.number('id') id: number,
+        @param.path.number('inventoryMovementId') inventoryMovementId: number,
     ): Promise<Object> {
-        return this.inventoriesService.getDetailProduct(id);
+        return this.inventoriesService.getDetailProduct(inventoryMovementId);
     }
 
     // @get('/inventories/{id}')
