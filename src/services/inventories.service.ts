@@ -1,6 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {ConvertCurrencyToEUR, InventoryMovementsTypeE, ProformaCurrencyE} from '../enums';
+import {ConvertCurrencyToEUR, CurrencyE, InventoryMovementsTypeE} from '../enums';
 import {InventorieDataI} from '../interface';
 import {ResponseServiceBindings} from '../keys';
 import {InventoriesRepository, InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
@@ -296,11 +296,11 @@ export class InventoriesService {
 
             const {inventories, comment} = inventoryMovements
             const {quotationProducts, id: inventoryId} = inventories;
-            const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, price} = quotationProducts;
+            const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, price, currency} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product;
             const {mainProjectManager, project, customer} = quotation;
             const {reference} = project;
-            const {purchaseOrders, currency, proformaAmount} = proforma;
+            const {purchaseOrders, proformaAmount} = proforma;
             console.log(purchaseOrders)
             const descriptionParts = [
                 line?.name,
@@ -319,11 +319,17 @@ export class InventoriesService {
                         relation: 'quotationProducts',
                         scope: {
                         }
-                    }
+                    },
+                    {
+                        relation: 'warehouse'
+                    },
+                    {
+                        relation: 'branchId'
+                    },
                 ]
             });
 
-
+            const calculateCost = this.calculateCost(currency, proformaAmount)
             return {
                 id,
                 image: document?.fileURL ?? null,
@@ -339,16 +345,17 @@ export class InventoriesService {
                 model,
                 purchaseOrderId: purchaseOrders?.id ?? null,
                 currency,
-                price,
                 originCode,
                 description,
                 observations: comment,
-                cost: this.calculateCost(currency, proformaAmount),
+                cost: price,
+                costPerUnity: calculateCost.amount,
+                parity: calculateCost.parity,
                 inventories: inventoriesNEQ.map(value => {
-                    const {branchId, warehouseId, stock, quotationProducts} = value;
+                    const {branchId, warehouseId, stock, quotationProducts, warehouse, branch} = value;
                     return {
-                        branchId,
-                        warehouseId,
+                        branchName: branch?.name,
+                        warehouseName: warehouse?.name,
                         stock,
                         cost: (quotationProducts.price * stock)
                     }
@@ -362,14 +369,14 @@ export class InventoriesService {
         }
     }
 
-    calculateCost(currency: ProformaCurrencyE, proformaAmount: number) {
-        if (currency === ProformaCurrencyE.PESO_MEXICANO)
-            return proformaAmount * ConvertCurrencyToEUR.MXN
+    calculateCost(currency: CurrencyE, proformaAmount: number) {
+        if (currency === CurrencyE.PESO_MEXICANO)
+            return {amount: proformaAmount * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
 
-        if (currency === ProformaCurrencyE.USD)
-            return proformaAmount * ConvertCurrencyToEUR.USD
+        if (currency === CurrencyE.USD)
+            return {amount: proformaAmount * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
 
-        return proformaAmount;
+        return {amount: proformaAmount, parity: ConvertCurrencyToEUR.EURO}
     }
 
 }
