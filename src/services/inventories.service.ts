@@ -328,8 +328,9 @@ export class InventoriesService {
                 image: document?.fileURL ?? null,
                 SKU,
                 mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
-                reference,
+                customerSKU: reference,
                 customer: `${customer?.name} ${customer?.lastName ?? ''}`,
+                customerId: customer?.id,
                 status,
                 classificationId,
                 lineId,
@@ -351,8 +352,8 @@ export class InventoriesService {
                 })
             }
         } catch (error) {
-            if (error?.message.includes("'proforma' as it is undefined."))
-                throw this.responseService.badRequest("El producto no se encuntra con alguna proforma.")
+            if (error?.message.includes("'proforma' as it is undefined.") || error?.message.includes("'project' as it is undefined."))
+                throw this.responseService.badRequest("El producto no se encuentra con alguna proforma/proyecto.")
 
             throw this.responseService.badRequest(error?.message ?? error)
         }
