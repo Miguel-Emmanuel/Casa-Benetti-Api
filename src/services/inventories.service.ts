@@ -296,7 +296,7 @@ export class InventoriesService {
 
             const {inventories, comment} = inventoryMovements
             const {quotationProducts, id: inventoryId} = inventories;
-            const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, price, currency} = quotationProducts;
+            const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, price, currency, originCost} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product;
             const {mainProjectManager, project, customer} = quotation;
             const {reference} = project;
@@ -351,6 +351,7 @@ export class InventoriesService {
                 cost: price,
                 costPerUnity: calculateCost.amount,
                 parity: calculateCost.parity,
+                originCost,
                 inventories: inventoriesNEQ.map(value => {
                     const {branchId, warehouseId, stock, quotationProducts, warehouse, branch} = value;
                     return {
