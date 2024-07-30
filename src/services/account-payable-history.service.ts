@@ -1,10 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus} from '../enums';
+import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
-import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
-import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository} from '../repositories';
+import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
+import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {CalculateScheledDateService} from './calculate-scheled-date.service';
 import {ResponseService} from './response.service';
 
@@ -27,6 +27,8 @@ export class AccountPayableHistoryService {
         public calculateScheledDateService: CalculateScheledDateService,
         @repository(BrandRepository)
         public brandRepository: BrandRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository
     ) { }
 
 
@@ -85,7 +87,8 @@ export class AccountPayableHistoryService {
             const newTotalPaid = this.roundToTwoDecimals(totalPaid + newAmount)
             const newBalance = balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders.id, proforma.id, proforma.brandId)
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
+            await this.settleAccountPayable(newTotalPaid, total, purchaseOrders.id);
         }
 
         delete accountPayableHistory.images;
@@ -94,8 +97,7 @@ export class AccountPayableHistoryService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
-    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId?: number, providerId?: number, brandId?: number) {
-        const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId)
+    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrder: PurchaseOrders, providerId?: number, brandId?: number) {
         if (!purchaseOrder.productionEndDate) {
             let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
             advanceConditionPercentage = advanceConditionPercentage ?? 100;
@@ -104,12 +106,41 @@ export class AccountPayableHistoryService {
                 let {productionTime} = await this.brandRepository.findById(brandId);
                 let scheduledDate = new Date();
                 const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
-                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate, status: PurchaseOrdersStatus.EN_PRODUCCION})
+                await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, status: PurchaseOrdersStatus.EN_PRODUCCION})
             }
         }
-        if (totalPaid === total)
-            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION})
 
+    }
+
+    async settleAccountPayable(totalPaid: number, total: number, purchaseOrderId?: number) {
+        if (totalPaid === total) {
+            const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId, {
+                include: [
+                    {
+                        relation: 'proforma',
+                        scope: {
+                            fields: ['id', 'quotationProducts'],
+                            include: [
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        fields: ['id', 'proformaId']
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            })
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION})
+            const {proforma} = purchaseOrder
+            const {quotationProducts} = proforma;
+            for (let index = 0; index < quotationProducts.length; index++) {
+                const element = quotationProducts[index];
+                await this.quotationProductsRepository.updateById(element.id, {status: QuotationProductStatusE.RECOLECCION})
+            }
+            //Coreeo
+        }
     }
 
 
@@ -153,7 +184,7 @@ export class AccountPayableHistoryService {
                 {
                     relation: 'purchaseOrders',
                     scope: {
-                        fields: ['id', 'accountPayableId']
+                        fields: ['id', 'accountPayableId', 'productionEndDate']
                     }
                 }
             ]
