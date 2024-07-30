@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE} from '../enums';
+import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
 import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository} from '../repositories';
@@ -95,15 +95,21 @@ export class AccountPayableHistoryService {
     }
 
     async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId?: number, providerId?: number, brandId?: number) {
-        let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
-        advanceConditionPercentage = advanceConditionPercentage ?? 100;
-        const porcentage = ((totalPaid / total) * 100);
-        if (porcentage >= advanceConditionPercentage) {
-            let {productionTime} = await this.brandRepository.findById(brandId);
-            let scheduledDate = new Date();
-            const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
-            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate})
+        const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId)
+        if (!purchaseOrder.productionEndDate) {
+            let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
+            advanceConditionPercentage = advanceConditionPercentage ?? 100;
+            const porcentage = ((totalPaid / total) * 100);
+            if (porcentage >= advanceConditionPercentage) {
+                let {productionTime} = await this.brandRepository.findById(brandId);
+                let scheduledDate = new Date();
+                const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate, status: PurchaseOrdersStatus.EN_PRODUCCION})
+            }
         }
+        if (totalPaid === total)
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION})
+
     }
 
 
