@@ -1,10 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, QuotationProductStatusE} from '../enums';
+import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
 import {ResponseServiceBindings} from '../keys';
-import {BranchRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
+import {BranchRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -23,7 +23,9 @@ export class InventoryMovementsService {
         @repository(WarehouseRepository)
         public warehouseRepository: WarehouseRepository,
         @repository(ProjectRepository)
-        public projectRepository: ProjectRepository
+        public projectRepository: ProjectRepository,
+        @repository(PurchaseOrdersRepository)
+        public purchaseOrdersRepository: PurchaseOrdersRepository
     ) { }
 
     async entry(data: EntryDataI) {
@@ -62,11 +64,47 @@ export class InventoryMovementsService {
                 }
                 await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment});
                 await this.addQuotationProductsToStock(quotationProductsId, quantity, quotationProduct.stock);
+                await this.validateWareHouseMexicoAndItalia(quotationProductsId, warehouseId)
             } catch (error) {
                 throw this.responseService.badRequest(error.message ?? error)
             }
         }
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async validateWareHouseMexicoAndItalia(quotationProductsId: number, warehouseId?: number) {
+        if (warehouseId) {
+            const warehouse = await this.warehouseRepository.findOne({where: {id: warehouseId}})
+            if (warehouse) {
+                switch (warehouse.name) {
+                    case 'México':
+                        await this.processValidateWareHouseMexicoAndItalia(quotationProductsId, PurchaseOrdersStatus.BODEGA_INTERNACIONAL, warehouseId);
+                        break;
+                    case 'Italia':
+                        await this.processValidateWareHouseMexicoAndItalia(quotationProductsId, PurchaseOrdersStatus.BODEGA_NACIONAL, warehouseId);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    async processValidateWareHouseMexicoAndItalia(quotationProductsId: number, status: PurchaseOrdersStatus, warehouseId?: number,) {
+        const quotationProduct = await this.quotationProductsRepository.findById(quotationProductsId);
+        const quotationProducts = await this.quotationProductsRepository.find({where: {proformaId: quotationProduct.proformaId}});
+        let countInventorie = 0;
+        for (let index = 0; index < quotationProducts.length; index++) {
+            const element = quotationProducts[index];
+            const inventorie = await this.inventoriesRepository.findOne({where: {warehouseId, quotationProductsId: element.id}})
+            if (inventorie)
+                countInventorie += 1;
+        }
+        if (countInventorie === quotationProducts.length) {
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {proformaId: quotationProduct.proformaId}})
+            await this.purchaseOrdersRepository.updateById(purchaseOrder?.id, {status})
+        }
     }
 
     async issue(data: IssueDataI) {

@@ -1,12 +1,13 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE} from '../enums';
-import {ResponseServiceBindings} from '../keys';
-import {AccountPayableHistory, AccountPayableHistoryCreate, Document} from '../models';
-import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository} from '../repositories';
+import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE, TypeUserE} from '../enums';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
+import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
+import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {CalculateScheledDateService} from './calculate-scheled-date.service';
 import {ResponseService} from './response.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AccountPayableHistoryService {
@@ -27,6 +28,12 @@ export class AccountPayableHistoryService {
         public calculateScheledDateService: CalculateScheledDateService,
         @repository(BrandRepository)
         public brandRepository: BrandRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
     ) { }
 
 
@@ -85,7 +92,8 @@ export class AccountPayableHistoryService {
             const newTotalPaid = this.roundToTwoDecimals(totalPaid + newAmount)
             const newBalance = balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders.id, proforma.id, proforma.brandId)
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
+            await this.settleAccountPayable(newTotalPaid, total, purchaseOrders.id);
         }
 
         delete accountPayableHistory.images;
@@ -94,16 +102,64 @@ export class AccountPayableHistoryService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
-    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrderId?: number, providerId?: number, brandId?: number) {
-        let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
-        advanceConditionPercentage = advanceConditionPercentage ?? 100;
-        const porcentage = ((totalPaid / total) * 100);
-        if (porcentage >= advanceConditionPercentage) {
-            let {productionTime} = await this.brandRepository.findById(brandId);
-            let scheduledDate = new Date();
-            const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
-            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {productionEndDate})
+    async validateProductionEndDate(totalPaid: number, total: number, purchaseOrder: PurchaseOrders, providerId?: number, brandId?: number) {
+        if (!purchaseOrder.productionEndDate) {
+            let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
+            advanceConditionPercentage = advanceConditionPercentage ?? 100;
+            const porcentage = ((totalPaid / total) * 100);
+            if (porcentage >= advanceConditionPercentage) {
+                let {productionTime} = await this.brandRepository.findById(brandId);
+                let scheduledDate = new Date();
+                const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
+                await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, status: PurchaseOrdersStatus.EN_PRODUCCION})
+            }
         }
+
+    }
+
+    async settleAccountPayable(totalPaid: number, total: number, purchaseOrderId?: number) {
+        if (totalPaid === total) {
+            const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId, {
+                include: [
+                    {
+                        relation: 'proforma',
+                        scope: {
+                            fields: ['id', 'quotationProducts'],
+                            include: [
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        fields: ['id', 'proformaId']
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            })
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION})
+            const {proforma} = purchaseOrder
+            const {quotationProducts} = proforma;
+            for (let index = 0; index < quotationProducts.length; index++) {
+                const element = quotationProducts[index];
+                await this.quotationProductsRepository.updateById(element.id, {status: QuotationProductStatusE.RECOLECCION})
+            }
+            await this.notifyLogistics(purchaseOrder.id);
+        }
+    }
+
+    async notifyLogistics(purchaseOrderId?: number) {
+        const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+        const emails = users.map(value => value.email);
+        const options = {
+            to: emails,
+            templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
+                purchaseOrderId
+            }
+        };
+        await this.sendgridService.sendNotification(options);
     }
 
 
@@ -147,7 +203,7 @@ export class AccountPayableHistoryService {
                 {
                     relation: 'purchaseOrders',
                     scope: {
-                        fields: ['id', 'accountPayableId']
+                        fields: ['id', 'accountPayableId', 'productionEndDate']
                     }
                 }
             ]
