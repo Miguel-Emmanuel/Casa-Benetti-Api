@@ -180,11 +180,24 @@ export enum PaymentTypeProofE {
     SALDO_FAVOR = 'Saldo a favor',
 }
 
+// export enum PurchaseOrdersStatus {
+//     NUEVA = 'Nueva',
+//     ENVIADA_AL_PROVEDOR = 'Enviada al proveedor',
+//     EN_PRODUCCION = 'En producción',
+//     FINALIZADA = 'Finalizada',
+//     ENTREGA = 'Entregada',
+// }
 export enum PurchaseOrdersStatus {
     NUEVA = 'Nueva',
     ENVIADA_AL_PROVEDOR = 'Enviada al proveedor',
     EN_PRODUCCION = 'En producción',
-    FINALIZADA = 'Finalizada',
+    EN_RECOLECCION = 'En recoleccion',
+    BODEGA_INTERNACIONAL = 'Bodega Internacional',
+    TRANSITO_INTERNACIONAL = 'Transito internacional',
+    PROCESO_ADUANA = 'Proceso Aduana',
+    BODEGA_NACIONAL = 'Bodega nacional',
+    TRANSITO_NACIONAL = 'Transito nacional',
+    ENTREGA_PARCIAL = 'Entrega parcial',
     ENTREGA = 'Entregada',
 }
 export enum AccountPayableHistoryStatusE {
