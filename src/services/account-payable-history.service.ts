@@ -1,12 +1,13 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
-import {ResponseServiceBindings} from '../keys';
+import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE, TypeUserE} from '../enums';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
-import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
+import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {CalculateScheledDateService} from './calculate-scheled-date.service';
 import {ResponseService} from './response.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AccountPayableHistoryService {
@@ -28,7 +29,11 @@ export class AccountPayableHistoryService {
         @repository(BrandRepository)
         public brandRepository: BrandRepository,
         @repository(QuotationProductsRepository)
-        public quotationProductsRepository: QuotationProductsRepository
+        public quotationProductsRepository: QuotationProductsRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
     ) { }
 
 
@@ -139,8 +144,22 @@ export class AccountPayableHistoryService {
                 const element = quotationProducts[index];
                 await this.quotationProductsRepository.updateById(element.id, {status: QuotationProductStatusE.RECOLECCION})
             }
-            //Coreeo
+            await this.notifyLogistics(purchaseOrder.id);
         }
+    }
+
+    async notifyLogistics(purchaseOrderId?: number) {
+        const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+        const emails = users.map(value => value.email);
+        const options = {
+            to: emails,
+            templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
+                purchaseOrderId
+            }
+        };
+        await this.sendgridService.sendNotification(options);
     }
 
 
