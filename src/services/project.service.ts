@@ -4,11 +4,11 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation} from '../models';
-import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
@@ -47,6 +47,8 @@ export class ProjectService {
         public accountPayableRepository: AccountPayableRepository,
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ProformaRepository)
+        public proformaRepository: ProformaRepository
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -255,6 +257,48 @@ export class ProjectService {
         })
     }
 
+
+    async getDeliveryBeValidated(id: number) {
+        const proformas = await this.proformaRepository.find({
+            where: {projectId: id}, include: [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        where: {
+                            or: [
+                                {
+                                    status: PurchaseOrdersStatus.BODEGA_NACIONAL
+                                },
+                                {
+                                    status: PurchaseOrdersStatus.ENTREGA_PARCIAL
+                                },
+                            ]
+                        },
+
+                    }
+                },
+                {
+                    relation: 'quotationProducts',
+                    scope: {
+                        where: {
+                            or: [
+                                {
+                                    status: QuotationProductStatusE.PEDIDO
+                                },
+                                {
+                                    status: QuotationProductStatusE.PEDIDO
+                                },
+                            ]
+                        },
+                    }
+                }
+            ]
+        })
+        for (let index = 0; index < proformas.length; index++) {
+            const element = proformas[index];
+
+        }
+    }
 
     async find(filter?: Filter<Project>,) {
         const accessLevel = this.user.accessLevel;
