@@ -59,6 +59,7 @@ export class UserController {
                                         isProjectManager: {type: 'boolean'},
                                         isShowroomManager: {type: 'boolean'},
                                         isDesigner: {type: 'boolean'},
+                                        isLogistics: {type: 'boolean'},
                                     }
                                 },
                                 userData: {
@@ -98,6 +99,7 @@ export class UserController {
                                     isProjectManager: {type: 'boolean'},
                                     isShowroomManager: {type: 'boolean'},
                                     isDesigner: {type: 'boolean'},
+                                    isLogistics: {type: 'boolean'},
                                 }
                             },
                             userData: {
@@ -171,6 +173,7 @@ export class UserController {
                                         isProjectManager: {type: 'boolean'},
                                         isShowroomManager: {type: 'boolean'},
                                         isDesigner: {type: 'boolean'},
+                                        isLogistics: {type: 'boolean'},
                                     }
                                 },
                                 userData: {
@@ -208,6 +211,7 @@ export class UserController {
                                     isProjectManager: {type: 'boolean'},
                                     isShowroomManager: {type: 'boolean'},
                                     isDesigner: {type: 'boolean'},
+                                    isLogistics: {type: 'boolean'},
                                 }
                             },
                             userData: {
