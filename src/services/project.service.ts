@@ -266,15 +266,15 @@ export class ProjectService {
                     scope: {
                         where: {
                             or: [
-                                // {
-                                //     status: PurchaseOrdersStatus.BODEGA_NACIONAL
-                                // },
-                                // {
-                                //     status: PurchaseOrdersStatus.ENTREGA_PARCIAL
-                                // },
                                 {
-                                    status: PurchaseOrdersStatus.NUEVA
+                                    status: PurchaseOrdersStatus.BODEGA_NACIONAL
                                 },
+                                {
+                                    status: PurchaseOrdersStatus.ENTREGA_PARCIAL
+                                },
+                                // {
+                                //     status: PurchaseOrdersStatus.NUEVA
+                                // },
 
                             ]
                         },
@@ -286,20 +286,27 @@ export class ProjectService {
                     scope: {
                         include: [
                             {
-                                relation: 'product'
+                                relation: 'product',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'document'
+                                        }
+                                    ]
+                                }
                             }
                         ],
                         where: {
                             or: [
-                                // {
-                                //     status: QuotationProductStatusE.BODEGA_NACIONAL
-                                // },
-                                // {
-                                //     status: QuotationProductStatusE.SHOWROOM
-                                // },
                                 {
-                                    status: QuotationProductStatusE.PEDIDO
+                                    status: QuotationProductStatusE.BODEGA_NACIONAL
                                 },
+                                {
+                                    status: QuotationProductStatusE.SHOWROOM
+                                },
+                                // {
+                                //     status: QuotationProductStatusE.PEDIDO
+                                // },
                             ]
                         },
                     }
@@ -313,15 +320,22 @@ export class ProjectService {
             purchaseOrdersRes.push({
                 id: purchaseOrderId,
                 products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                    const {id, product} = value;
+                    const {id, product, SKU} = value;
+                    const {document} = product;
                     return {
                         id,
-                        name: product?.name
+                        name: product?.name,
+                        SKU,
+                        image: document?.fileURL
                     }
                 })
             })
         }
         return purchaseOrdersRes;
+
+    }
+
+    async postDeliveryRequest(data: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
 
     }
 
