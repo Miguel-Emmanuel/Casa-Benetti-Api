@@ -250,23 +250,32 @@ export class ProjectController {
             content: {
                 'application/json': {
                     schema: {
-                        type: 'array',
-                        items: {
-                            type: 'object',
-                            properties: {
-                                id: {
-                                    type: 'number'
-                                },
-                                products: {
-                                    type: 'array',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            id: {
-                                                type: 'number'
-                                            },
-                                            isSelected: {
-                                                type: 'boolean'
+                        type: 'object',
+                        properties: {
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    isSelected: {
+                                                        type: 'boolean'
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -277,7 +286,7 @@ export class ProjectController {
                 },
             },
         })
-        data: {id: number, products: {id: number, isSelected: boolean}[]}[]
+        data: {deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}
     ): Promise<any> {
         return this.projectService.postDeliveryRequest(data);
     }

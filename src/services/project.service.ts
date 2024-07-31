@@ -335,7 +335,7 @@ export class ProjectService {
 
     }
 
-    async postDeliveryRequest(data: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
+    async postDeliveryRequest(data: {deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
 
     }
 
