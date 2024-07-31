@@ -343,6 +343,7 @@ export class ProjectService {
         const {projectId, purchaseOrders, deliveryDay} = data;
         await this.findByIdProject(projectId);
 
+        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId})
         for (let index = 0; index < purchaseOrders.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
             for (let index = 0; index < products.length; index++) {
@@ -352,7 +353,6 @@ export class ProjectService {
             }
             const searchSelected = products.filter(value => value.isSelected === true);
 
-            const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId})
 
             if (products.length === searchSelected.length)
                 await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA, deliveryRequestId: deliveryRequestCreate.id})
