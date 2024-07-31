@@ -19,6 +19,12 @@ export class DeliveryRequest extends Entity {
     })
     createdAt?: Date;
 
+    //Dia de entrega
+    @property({
+        type: 'date',
+    })
+    deliveryDay: Date;
+
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrders[];
 

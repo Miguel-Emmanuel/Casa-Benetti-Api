@@ -9,7 +9,7 @@ import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
@@ -49,7 +49,9 @@ export class ProjectService {
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
         @repository(ProformaRepository)
-        public proformaRepository: ProformaRepository
+        public proformaRepository: ProformaRepository,
+        @repository(DeliveryRequestRepository)
+        public deliveryRequestRepository: DeliveryRequestRepository
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -338,9 +340,26 @@ export class ProjectService {
 
     async postDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         await this.validateBodyDeliveryRequest(data);
-        const {projectId} = data;
+        const {projectId, purchaseOrders, deliveryDay} = data;
         await this.findByIdProject(projectId);
 
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const {products, id: purchaseOrderId} = purchaseOrders[index];
+            for (let index = 0; index < products.length; index++) {
+                const {id, isSelected} = products[index];
+                if (isSelected)
+                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO})
+            }
+            const searchSelected = products.filter(value => value.isSelected === true);
+
+            const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId})
+
+            if (products.length === searchSelected.length)
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA, deliveryRequestId: deliveryRequestCreate.id})
+            else
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: deliveryRequestCreate.id})
+        }
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
     async validateBodyDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
