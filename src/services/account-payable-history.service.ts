@@ -93,7 +93,7 @@ export class AccountPayableHistoryService {
             const newBalance = balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
             await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
-            await this.settleAccountPayable(newTotalPaid, total, purchaseOrders.id);
+            await this.settleAccountPayable(newTotalPaid, total, accountPayableId, purchaseOrders.id);
         }
 
         delete accountPayableHistory.images;
@@ -117,7 +117,7 @@ export class AccountPayableHistoryService {
 
     }
 
-    async settleAccountPayable(totalPaid: number, total: number, purchaseOrderId?: number) {
+    async settleAccountPayable(totalPaid: number, total: number, accountPayableId: number, purchaseOrderId?: number) {
         if (totalPaid === total) {
             const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId, {
                 include: [
@@ -137,7 +137,8 @@ export class AccountPayableHistoryService {
                     }
                 ]
             })
-            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION})
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION, isPaid: true})
+            await this.accountPayableRepository.updateById(accountPayableId, {isPaid: true})
             const {proforma} = purchaseOrder
             const {quotationProducts} = proforma;
             for (let index = 0; index < quotationProducts.length; index++) {

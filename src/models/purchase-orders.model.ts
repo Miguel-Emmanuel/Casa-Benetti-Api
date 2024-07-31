@@ -56,6 +56,13 @@ export class PurchaseOrders extends Entity {
   })
   status: PurchaseOrdersStatus;
 
+  //Esta pagado
+  @property({
+    type: 'boolean',
+    default: false
+  })
+  isPaid: boolean;
+
   @belongsTo(() => DeliveryRequest)
   deliveryRequestId: number;
 
