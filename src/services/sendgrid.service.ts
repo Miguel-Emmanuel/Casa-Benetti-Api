@@ -25,7 +25,11 @@ export const SendgridTemplates = {
   NOTIFICATION_RESERVATION_DAY: {
     id: 'd-cb4feb384a774d05839b0e628534b9f8',
     subject: 'Notificación de apartado - Benetti Casa',
-  }
+  },
+  NOTIFICATION_LOGISTIC: {
+    id: 'd-98d95a388046498f85bb62c395e2eb6b',
+    subject: 'Nueva orden de compra a recolectar',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})

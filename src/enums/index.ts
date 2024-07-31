@@ -100,6 +100,9 @@ export enum TypeSaleE {
 export enum QuotationProductStatusE {
     PEDIDO = 'Pedido',
     TRANSITO_NACIONAL = 'Transito Nacional',
+    RECOLECCION = 'Recoleccion',
+    BODEGA_NACIONAL = 'Bodega nacional',
+    SHOWROOM = 'Showroom',
 }
 
 

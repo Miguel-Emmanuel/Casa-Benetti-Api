@@ -189,6 +189,45 @@ export class ProjectController {
         return this.projectService.getProductsInventories(projectId);
     }
 
+    @get('/projects/{id}/delivery-be-validated')
+    @response(200, {
+        description: 'Project model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        name: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        },
+    })
+    async getDeliveryBeValidated(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.projectService.getDeliveryBeValidated(id);
+    }
+
     @patch('/projects/{id}')
     @response(204, {
         description: 'Project PATCH success',
