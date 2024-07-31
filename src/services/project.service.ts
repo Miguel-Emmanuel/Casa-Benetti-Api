@@ -296,6 +296,9 @@ export class ProjectService {
                                         include: [
                                             {
                                                 relation: 'document'
+                                            },
+                                            {
+                                                relation: 'line'
                                             }
                                         ]
                                     }
@@ -320,14 +323,26 @@ export class ProjectService {
                 const {purchaseOrders, quotationProducts} = proformas[index];
                 if (purchaseOrders) {
                     const {id: purchaseOrderId} = purchaseOrders;
+
+
+
                     purchaseOrdersRes.push({
                         id: purchaseOrderId,
                         products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                            const {id, product, SKU} = value;
-                            const {document} = product;
+                            const {id, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                             return {
                                 id,
-                                name: product?.name,
+                                description,
                                 SKU,
                                 image: document?.fileURL
                             }
@@ -342,12 +357,12 @@ export class ProjectService {
 
     }
 
-    async postDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+    async postDeliveryRequest(data: {projectId: number, deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         await this.validateBodyDeliveryRequest(data);
-        const {projectId, purchaseOrders, deliveryDay} = data;
+        const {projectId, purchaseOrders, deliveryDay, comment} = data;
         await this.findByIdProject(projectId);
 
-        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId})
+        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment})
         for (let index = 0; index < purchaseOrders.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
             for (let index = 0; index < products.length; index++) {

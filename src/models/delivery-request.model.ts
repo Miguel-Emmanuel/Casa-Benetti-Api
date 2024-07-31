@@ -39,6 +39,12 @@ export class DeliveryRequest extends Entity {
     })
     deliveryDay: Date;
 
+    //Comentario
+    @property({
+        type: 'string',
+    })
+    comment?: string;
+
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrders[];
 

@@ -211,7 +211,7 @@ export class ProjectController {
                                         id: {
                                             type: 'number'
                                         },
-                                        name: {
+                                        description: {
                                             type: 'string'
                                         },
                                         SKU: {
@@ -265,6 +265,10 @@ export class ProjectController {
                                 type: 'string',
                                 format: 'date-time'
                             },
+                            comment: {
+                                type: 'string',
+                                nullable: true
+                            },
                             purchaseOrders: {
                                 type: 'array',
                                 items: {
@@ -295,7 +299,7 @@ export class ProjectController {
                 },
             },
         })
-        data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}
+        data: {projectId: number, deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}
     ): Promise<any> {
         return this.projectService.postDeliveryRequest(data);
     }

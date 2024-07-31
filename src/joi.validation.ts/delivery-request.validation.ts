@@ -14,6 +14,7 @@ const schemaPurchaseOrders = Joi.object({
 export const schemaDeliveryRequest = Joi.object({
     projectId: Joi.number().required(),
     deliveryDay: Joi.date().required(),
+    comment: Joi.string().allow(null),
     purchaseOrders: Joi.array().items(schemaPurchaseOrders).required(),
 })
 
