@@ -204,6 +204,12 @@ export enum PurchaseOrdersStatus {
     ENTREGA_PARCIAL = 'Entrega parcial',
     ENTREGA = 'Entregada',
 }
+
+export enum DeliveryRequestStatusE {
+    POR_VALIDAR = 'Por validar',
+}
+
+
 export enum AccountPayableHistoryStatusE {
     PENDIENTE = 'Pendiente',
     PAGADO = 'Pagado',
