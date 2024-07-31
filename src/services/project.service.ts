@@ -275,15 +275,15 @@ export class ProjectService {
                         scope: {
                             where: {
                                 or: [
-                                    {
-                                        status: PurchaseOrdersStatus.BODEGA_NACIONAL
-                                    },
-                                    {
-                                        status: PurchaseOrdersStatus.ENTREGA_PARCIAL
-                                    },
                                     // {
-                                    //     status: PurchaseOrdersStatus.NUEVA
+                                    //     status: PurchaseOrdersStatus.BODEGA_NACIONAL
                                     // },
+                                    // {
+                                    //     status: PurchaseOrdersStatus.ENTREGA_PARCIAL
+                                    // },
+                                    {
+                                        status: PurchaseOrdersStatus.NUEVA
+                                    },
 
                                 ]
                             },
@@ -307,15 +307,15 @@ export class ProjectService {
                             ],
                             where: {
                                 or: [
-                                    {
-                                        status: QuotationProductStatusE.BODEGA_NACIONAL
-                                    },
-                                    {
-                                        status: QuotationProductStatusE.SHOWROOM
-                                    },
                                     // {
-                                    //     status: QuotationProductStatusE.PEDIDO
+                                    //     status: QuotationProductStatusE.BODEGA_NACIONAL
                                     // },
+                                    // {
+                                    //     status: QuotationProductStatusE.SHOWROOM
+                                    // },
+                                    {
+                                        status: QuotationProductStatusE.PEDIDO
+                                    },
                                 ]
                             },
                         }
@@ -325,20 +325,22 @@ export class ProjectService {
             let purchaseOrdersRes = [];
             for (let index = 0; index < proformas.length; index++) {
                 const {purchaseOrders, quotationProducts} = proformas[index];
-                const {id: purchaseOrderId} = purchaseOrders;
-                purchaseOrdersRes.push({
-                    id: purchaseOrderId,
-                    products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                        const {id, product, SKU} = value;
-                        const {document} = product;
-                        return {
-                            id,
-                            name: product?.name,
-                            SKU,
-                            image: document?.fileURL
-                        }
+                if (purchaseOrders) {
+                    const {id: purchaseOrderId} = purchaseOrders;
+                    purchaseOrdersRes.push({
+                        id: purchaseOrderId,
+                        products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id, product, SKU} = value;
+                            const {document} = product;
+                            return {
+                                id,
+                                name: product?.name,
+                                SKU,
+                                image: document?.fileURL
+                            }
+                        })
                     })
-                })
+                }
             }
             return purchaseOrdersRes;
         } catch (error) {
