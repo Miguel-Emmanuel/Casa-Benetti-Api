@@ -12,6 +12,7 @@ import {
     getModelSchemaRef,
     param,
     patch,
+    post,
     requestBody,
     response
 } from '@loopback/rest';
@@ -226,6 +227,71 @@ export class ProjectController {
         @param.path.number('id') id: number,
     ): Promise<any> {
         return this.projectService.getDeliveryBeValidated(id);
+    }
+
+    @post('/projects/delivery-request')
+    @response(200, {
+        description: 'Project model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {
+                            type: 'string'
+                        }
+                    }
+                }
+            },
+        },
+    })
+    async postDeliveryRequest(
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            projectId: {
+                                type: 'number',
+                            },
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    isSelected: {
+                                                        type: 'boolean'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}
+    ): Promise<any> {
+        return this.projectService.postDeliveryRequest(data);
     }
 
     @patch('/projects/{id}')

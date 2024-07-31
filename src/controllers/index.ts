@@ -42,3 +42,4 @@ export * from './proforma.controller';
 export * from './quotation-products-quotation.controller';
 
 export * from './inventories.controller';
+export * from './delivery-request.controller';
