@@ -214,6 +214,12 @@ export class ProjectController {
                                         name: {
                                             type: 'string'
                                         },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
                                     }
                                 }
                             }
