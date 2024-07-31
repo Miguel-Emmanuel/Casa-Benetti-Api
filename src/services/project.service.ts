@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeUserE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
@@ -13,7 +13,7 @@ import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRe
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
-import {SendgridService} from './sendgrid.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProjectService {
     constructor(
@@ -281,10 +281,6 @@ export class ProjectService {
                                     // {
                                     //     status: PurchaseOrdersStatus.ENTREGA_PARCIAL
                                     // },
-                                    {
-                                        status: PurchaseOrdersStatus.NUEVA
-                                    },
-
                                 ]
                             },
 
@@ -313,9 +309,6 @@ export class ProjectService {
                                     // {
                                     //     status: QuotationProductStatusE.SHOWROOM
                                     // },
-                                    {
-                                        status: QuotationProductStatusE.PEDIDO
-                                    },
                                 ]
                             },
                         }
@@ -373,19 +366,18 @@ export class ProjectService {
         // await this.notifyLogistics();
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
-    // async notifyLogistics(customerName: string) {
-    //     const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
-    //     const emails = users.map(value => value.email);
-    //     const options = {
-    //         to: emails,
-    //         templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
-    //         dynamicTemplateData: {
-    //             subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
-    //             purchaseOrderId
-    //         }
-    //     };
-    //     await this.sendgridService.sendNotification(options);
-    // }
+    async notifyLogistics(customerName: string) {
+        const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+        const emails = users.map(value => value.email);
+        const options = {
+            to: emails,
+            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
+            }
+        };
+        await this.sendgridService.sendNotification(options);
+    }
 
     async validateBodyDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         try {

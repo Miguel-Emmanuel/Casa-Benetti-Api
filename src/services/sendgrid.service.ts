@@ -30,6 +30,10 @@ export const SendgridTemplates = {
     id: 'd-98d95a388046498f85bb62c395e2eb6b',
     subject: 'Nueva orden de compra a recolectar',
   },
+  DELEVIRY_REQUEST_LOGISTIC: {
+    id: 'd-ff891647a8474e13bb91eb4de9229ba6',
+    subject: 'Solicitud de programación de entrega',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})
