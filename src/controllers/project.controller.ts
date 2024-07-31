@@ -195,38 +195,28 @@ export class ProjectController {
         content: {
             'application/json': {
                 schema: {
-                    type: 'object',
-                    properties: {
-                        id: {
-                            type: 'number'
-                        },
-                        provider: {
-                            type: 'string'
-                        },
-                        SKU: {
-                            type: 'string'
-                        },
-                        name: {
-                            type: 'string'
-                        },
-                        brand: {
-                            type: 'string'
-                        },
-                        prices: {
-                            type: 'string'
-                        },
-                        description: {
-                            type: 'string'
-                        },
-                        providerId: {
-                            type: 'string'
-                        },
-                        brandId: {
-                            type: 'string'
-                        },
-                        proformaPrice: {
-                            type: 'string'
-                        },
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        name: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },

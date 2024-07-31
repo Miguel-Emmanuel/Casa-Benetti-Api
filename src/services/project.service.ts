@@ -7,7 +7,7 @@ import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {ResponseServiceBindings} from '../keys';
-import {Project, Quotation} from '../models';
+import {Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
@@ -266,12 +266,16 @@ export class ProjectService {
                     scope: {
                         where: {
                             or: [
+                                // {
+                                //     status: PurchaseOrdersStatus.BODEGA_NACIONAL
+                                // },
+                                // {
+                                //     status: PurchaseOrdersStatus.ENTREGA_PARCIAL
+                                // },
                                 {
-                                    status: PurchaseOrdersStatus.BODEGA_NACIONAL
+                                    status: PurchaseOrdersStatus.NUEVA
                                 },
-                                {
-                                    status: PurchaseOrdersStatus.ENTREGA_PARCIAL
-                                },
+
                             ]
                         },
 
@@ -280,11 +284,19 @@ export class ProjectService {
                 {
                     relation: 'quotationProducts',
                     scope: {
+                        include: [
+                            {
+                                relation: 'product'
+                            }
+                        ],
                         where: {
                             or: [
-                                {
-                                    status: QuotationProductStatusE.PEDIDO
-                                },
+                                // {
+                                //     status: QuotationProductStatusE.BODEGA_NACIONAL
+                                // },
+                                // {
+                                //     status: QuotationProductStatusE.SHOWROOM
+                                // },
                                 {
                                     status: QuotationProductStatusE.PEDIDO
                                 },
@@ -294,10 +306,23 @@ export class ProjectService {
                 }
             ]
         })
+        let purchaseOrdersRes = [];
         for (let index = 0; index < proformas.length; index++) {
-            const element = proformas[index];
-
+            const {purchaseOrders, quotationProducts} = proformas[index];
+            const {id: purchaseOrderId} = purchaseOrders;
+            purchaseOrdersRes.push({
+                id: purchaseOrderId,
+                products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                    const {id, product} = value;
+                    return {
+                        id,
+                        name: product?.name
+                    }
+                })
+            })
         }
+        return purchaseOrdersRes;
+
     }
 
     async find(filter?: Filter<Project>,) {
