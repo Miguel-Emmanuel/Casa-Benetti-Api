@@ -4,7 +4,21 @@ import {Project} from './project.model';
 import {PurchaseOrders} from './purchase-orders.model';
 
 //Solicitud de entrega
-@model()
+@model({
+    settings: {
+        postgresql: {
+            table: 'project_DeliveryRequest' // Nombre de la tabla en PostgreSQL
+        },
+        foreignKeys: {
+            fk_project_projectId: {
+                name: 'fk_project_projectId',
+                entity: 'Project',
+                entityKey: 'id',
+                foreignKey: 'projectid',
+            },
+        }
+    }
+})
 export class DeliveryRequest extends Entity {
     @property({
         type: 'number',
