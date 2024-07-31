@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     Filter,
@@ -12,6 +13,7 @@ import {
 import {DeliveryRequest} from '../models';
 import {DeliveryRequestService} from '../services';
 
+@authenticate('jwt')
 export class DeliveryRequestController {
     constructor(
         @service()

@@ -11,6 +11,12 @@ export class DeliveryRequestService {
     ) { }
 
     async find(filter?: Filter<DeliveryRequest>,) {
+        if (filter?.order) {
+            filter.order = [...filter.order, 'deliveryDay DESC']
+        } else {
+            filter = {...filter, order: ['deliveryDay DESC']};
+        }
+
         return this.deliveryRequestRepository.find(filter);
     }
 

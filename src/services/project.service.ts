@@ -360,7 +360,7 @@ export class ProjectService {
     async postDeliveryRequest(data: {projectId: number, deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         await this.validateBodyDeliveryRequest(data);
         const {projectId, purchaseOrders, deliveryDay, comment} = data;
-        await this.findByIdProject(projectId);
+        const projectRes = await this.findByIdProject(projectId);
 
         const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment})
         for (let index = 0; index < purchaseOrders.length; index++) {
