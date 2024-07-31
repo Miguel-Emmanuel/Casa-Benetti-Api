@@ -7,12 +7,13 @@ import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
-import {ResponseServiceBindings} from '../keys';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
+import {SendgridService} from './sendgrid.service';
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProjectService {
     constructor(
@@ -51,7 +52,11 @@ export class ProjectService {
         @repository(ProformaRepository)
         public proformaRepository: ProformaRepository,
         @repository(DeliveryRequestRepository)
-        public deliveryRequestRepository: DeliveryRequestRepository
+        public deliveryRequestRepository: DeliveryRequestRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -262,79 +267,83 @@ export class ProjectService {
 
 
     async getDeliveryBeValidated(id: number) {
-        const proformas = await this.proformaRepository.find({
-            where: {projectId: id}, include: [
-                {
-                    relation: 'purchaseOrders',
-                    scope: {
-                        where: {
-                            or: [
-                                {
-                                    status: PurchaseOrdersStatus.BODEGA_NACIONAL
-                                },
-                                {
-                                    status: PurchaseOrdersStatus.ENTREGA_PARCIAL
-                                },
-                                // {
-                                //     status: PurchaseOrdersStatus.NUEVA
-                                // },
+        try {
+            const proformas = await this.proformaRepository.find({
+                where: {projectId: id}, include: [
+                    {
+                        relation: 'purchaseOrders',
+                        scope: {
+                            where: {
+                                or: [
+                                    {
+                                        status: PurchaseOrdersStatus.BODEGA_NACIONAL
+                                    },
+                                    {
+                                        status: PurchaseOrdersStatus.ENTREGA_PARCIAL
+                                    },
+                                    // {
+                                    //     status: PurchaseOrdersStatus.NUEVA
+                                    // },
 
-                            ]
-                        },
+                                ]
+                            },
 
-                    }
-                },
-                {
-                    relation: 'quotationProducts',
-                    scope: {
-                        include: [
-                            {
-                                relation: 'product',
-                                scope: {
-                                    include: [
-                                        {
-                                            relation: 'document'
-                                        }
-                                    ]
+                        }
+                    },
+                    {
+                        relation: 'quotationProducts',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'product',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'document'
+                                            }
+                                        ]
+                                    }
                                 }
-                            }
-                        ],
-                        where: {
-                            or: [
-                                {
-                                    status: QuotationProductStatusE.BODEGA_NACIONAL
-                                },
-                                {
-                                    status: QuotationProductStatusE.SHOWROOM
-                                },
-                                // {
-                                //     status: QuotationProductStatusE.PEDIDO
-                                // },
-                            ]
-                        },
+                            ],
+                            where: {
+                                or: [
+                                    {
+                                        status: QuotationProductStatusE.BODEGA_NACIONAL
+                                    },
+                                    {
+                                        status: QuotationProductStatusE.SHOWROOM
+                                    },
+                                    // {
+                                    //     status: QuotationProductStatusE.PEDIDO
+                                    // },
+                                ]
+                            },
+                        }
                     }
-                }
-            ]
-        })
-        let purchaseOrdersRes = [];
-        for (let index = 0; index < proformas.length; index++) {
-            const {purchaseOrders, quotationProducts} = proformas[index];
-            const {id: purchaseOrderId} = purchaseOrders;
-            purchaseOrdersRes.push({
-                id: purchaseOrderId,
-                products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                    const {id, product, SKU} = value;
-                    const {document} = product;
-                    return {
-                        id,
-                        name: product?.name,
-                        SKU,
-                        image: document?.fileURL
-                    }
-                })
+                ]
             })
+            let purchaseOrdersRes = [];
+            for (let index = 0; index < proformas.length; index++) {
+                const {purchaseOrders, quotationProducts} = proformas[index];
+                const {id: purchaseOrderId} = purchaseOrders;
+                purchaseOrdersRes.push({
+                    id: purchaseOrderId,
+                    products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                        const {id, product, SKU} = value;
+                        const {document} = product;
+                        return {
+                            id,
+                            name: product?.name,
+                            SKU,
+                            image: document?.fileURL
+                        }
+                    })
+                })
+            }
+            return purchaseOrdersRes;
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
         }
-        return purchaseOrdersRes;
 
     }
 
@@ -359,8 +368,22 @@ export class ProjectService {
             else
                 await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: deliveryRequestCreate.id})
         }
+        // await this.notifyLogistics();
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
+    // async notifyLogistics(customerName: string) {
+    //     const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+    //     const emails = users.map(value => value.email);
+    //     const options = {
+    //         to: emails,
+    //         templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
+    //         dynamicTemplateData: {
+    //             subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
+    //             purchaseOrderId
+    //         }
+    //     };
+    //     await this.sendgridService.sendNotification(options);
+    // }
 
     async validateBodyDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         try {
