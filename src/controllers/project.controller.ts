@@ -252,6 +252,9 @@ export class ProjectController {
                     schema: {
                         type: 'object',
                         properties: {
+                            projectId: {
+                                type: 'number',
+                            },
                             deliveryDay: {
                                 type: 'string',
                                 format: 'date-time'
