@@ -103,6 +103,7 @@ export enum QuotationProductStatusE {
     RECOLECCION = 'Recoleccion',
     BODEGA_NACIONAL = 'Bodega nacional',
     SHOWROOM = 'Showroom',
+    ENTREGADO = 'Entregado',
 }
 
 
