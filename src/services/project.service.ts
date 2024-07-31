@@ -363,17 +363,40 @@ export class ProjectService {
             else
                 await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: deliveryRequestCreate.id})
         }
-        // await this.notifyLogistics();
+        await this.notifyLogistics(projectId, deliveryDay);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
-    async notifyLogistics(customerName: string) {
+    async notifyLogistics(projectId: number, deliveryDay: string) {
+        const project = await this.projectRepository.findById(projectId, {
+            include: [
+                {
+                    relation: 'customer'
+                },
+                {
+                    relation: 'quotation',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'mainProjectManager'
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         const emails = users.map(value => value.email);
+        const {customer, quotation} = project;
+        const {mainProjectManager} = quotation;
         const options = {
             to: emails,
             templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
             dynamicTemplateData: {
                 subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                projectId: project.projectId,
+                mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                date: dayjs(deliveryDay).format('DD/MM/YYYY')
             }
         };
         await this.sendgridService.sendNotification(options);
