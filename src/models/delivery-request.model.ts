@@ -1,5 +1,6 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {DeliveryRequestStatusE} from '../enums';
+import {Customer} from './customer.model';
 import {Project} from './project.model';
 import {PurchaseOrders} from './purchase-orders.model';
 
@@ -15,6 +16,12 @@ import {PurchaseOrders} from './purchase-orders.model';
                 entity: 'Project',
                 entityKey: 'id',
                 foreignKey: 'projectid',
+            },
+            fk_customer_customerId: {
+                name: 'fk_customer_customerId',
+                entity: 'Customer',
+                entityKey: 'id',
+                foreignKey: 'customerid',
             },
         }
     }
@@ -47,6 +54,9 @@ export class DeliveryRequest extends Entity {
 
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrders[];
+
+    @belongsTo(() => Customer)
+    customerId: number;
 
     @belongsTo(() => Project)
     projectId: number;

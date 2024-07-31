@@ -362,7 +362,7 @@ export class ProjectService {
         const {projectId, purchaseOrders, deliveryDay, comment} = data;
         const projectRes = await this.findByIdProject(projectId);
 
-        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment})
+        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment, customerId: projectRes.customerId})
         for (let index = 0; index < purchaseOrders.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
             for (let index = 0; index < products.length; index++) {
@@ -698,6 +698,8 @@ export class ProjectService {
         const project = await this.projectRepository.findOne({where: {id}});
         if (!project)
             throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        return project;
     }
 
 
