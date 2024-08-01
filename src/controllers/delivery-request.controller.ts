@@ -7,6 +7,8 @@ import {
 import {
     get,
     param,
+    patch,
+    requestBody,
     response
 } from '@loopback/rest';
 import {DeliveryRequest} from '../models';
@@ -127,6 +129,73 @@ export class DeliveryRequestController {
         @param.filter(DeliveryRequest, {exclude: 'where'}) filter?: FilterExcludingWhere<DeliveryRequest>
     ): Promise<Object> {
         return this.deliveryRequestService.findById(id, filter);
+    }
+
+    @patch('/delivery-requests/{id}')
+    @response(200, {
+        description: 'Project DeliveryRequest instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {
+                            type: 'string'
+                        }
+                    }
+                }
+            },
+        },
+    })
+    async postDeliveryRequest(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            comment: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    isSelected: {
+                                                        type: 'boolean'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}
+    ): Promise<any> {
+        return this.deliveryRequestService.patch(id, data);
     }
 
     // @patch('/delivery-requests/{id}')

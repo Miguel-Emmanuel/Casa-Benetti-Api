@@ -19,3 +19,10 @@ export const schemaDeliveryRequest = Joi.object({
 })
 
 
+
+
+export const schemaDeliveryRequestPatch = Joi.object({
+    deliveryDay: Joi.date().required(),
+    comment: Joi.string().allow(null),
+    purchaseOrders: Joi.array().items(schemaPurchaseOrders).required(),
+})

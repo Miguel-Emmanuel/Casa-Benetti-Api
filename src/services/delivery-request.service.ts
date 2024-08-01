@@ -1,5 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import {DeliveryRequestStatusE} from '../enums';
+import {schemaDeliveryRequestPatch} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings} from '../keys';
 import {DeliveryRequest, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {DeliveryRequestRepository} from '../repositories';
@@ -161,9 +163,35 @@ export class DeliveryRequestService {
         }
     }
 
+    async patch(id: number, data: {deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        const deliveryRequest = await this.validateDeloveryRequestById(id);
+        await this.validateBodyDeliveryRequestPatch(data);
+        if (deliveryRequest.status !== DeliveryRequestStatusE.POR_VALIDAR && deliveryRequest.status !== DeliveryRequestStatusE.RECHAZADA)
+            throw this.responseService.badRequest("Solicitud de entrega no puede ser actualizada.");
+
+        const {comment, deliveryDay} = data
+        await this.deliveryRequestRepository.updateById(id, {comment, deliveryDay})
+
+    }
+
+    async validateBodyDeliveryRequestPatch(data: {deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        try {
+            await schemaDeliveryRequestPatch.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
     async validateDeloveryRequestById(id: number,) {
         const deliveryRequest = await this.deliveryRequestRepository.findOne({where: {id}});
         if (!deliveryRequest)
             throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
+        return deliveryRequest;
     }
 }
