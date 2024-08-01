@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import {DeliveryRequestStatusE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {schemaDeliveryRequestPatch} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
-import {DeliveryRequest, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {DeliveryRequest, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {DeliveryRequestRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
@@ -48,7 +48,12 @@ export class DeliveryRequestService {
                             scope: {
                                 include: [
                                     {
-                                        relation: 'quotationProducts'
+                                        relation: 'quotationProducts',
+                                        scope: {
+                                            where: {
+                                                status: QuotationProductStatusE.ENTREGADO
+                                            }
+                                        }
                                     }
                                 ]
                             }
@@ -199,33 +204,142 @@ export class DeliveryRequestService {
 
 
             const {purchaseOrders, deliveryDay, status} = deliveryRequest;
-            const {proforma} = purchaseOrders;
-            const {quotationProducts} = proforma;
             return {
                 id,
                 deliveryDay,
                 status,
                 feedback: null,
-                products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
-                    const {document, line, name} = product;
-                    const descriptionParts = [
-                        line?.name,
-                        name,
-                        mainMaterial,
-                        mainFinish,
-                        secondaryMaterial,
-                        secondaryFinishing
-                    ];
-                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                    const {id: purchaseOrderid, proforma} = value;
+                    const {quotationProducts} = proforma;
                     return {
-                        id: productId,
-                        SKU,
-                        image: document?.fileURL,
-                        description,
-                        isSelected: statusProduct === QuotationProductStatusE.ENTREGADO ? true : false
+                        id: purchaseOrderid,
+                        products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                                isSelected: statusProduct === QuotationProductStatusE.ENTREGADO ? true : false
+                            }
+                        })
                     }
-                })
+                }),
+            };
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async findByIdLogistic(id: number, filter?: FilterExcludingWhere<DeliveryRequest>) {
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'customer',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                where: {
+                                                    status: QuotationProductStatusE.ENTREGADO
+                                                },
+                                                include: [
+                                                    {
+                                                        relation: 'product',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ],
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+
+            const deliveryRequest = await this.deliveryRequestRepository.findOne({where: {id}, ...filter});
+            if (!deliveryRequest)
+                throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
+
+
+            const {purchaseOrders, deliveryDay, status, customer, projectId} = deliveryRequest;
+            const {proforma} = purchaseOrders;
+            const {quotationProducts} = proforma;
+            return {
+                id: projectId,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customerAddress: customer?.address,
+                quantity: quotationProducts?.length,
+                deliveryDay,
+                status,
+                purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                    const {id: purchaseOrderid, proforma} = value;
+                    const {quotationProducts} = proforma;
+                    return {
+                        id: purchaseOrderid,
+                        products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                                isSelected: statusProduct === QuotationProductStatusE.ENTREGADO ? true : false
+                            }
+                        })
+                    }
+                }),
             };
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);
