@@ -6,7 +6,6 @@ import {
 } from '@loopback/repository';
 import {
     get,
-    getModelSchemaRef,
     param,
     response
 } from '@loopback/rest';
@@ -82,17 +81,51 @@ export class DeliveryRequestController {
 
     @get('/delivery-requests/{id}')
     @response(200, {
-        description: 'DeliveryRequest model instance',
+        description: 'Array of DeliveryRequest model instances',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(DeliveryRequest, {includeRelations: false}),
+                schema: {
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'number'
+                        },
+                        deliveryDay: {
+                            type: 'string',
+                            format: 'date-time'
+                        },
+                        status: {
+                            type: 'string'
+                        },
+                        products: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    id: {
+                                        type: 'number'
+                                    },
+                                    SKU: {
+                                        type: 'string'
+                                    },
+                                    image: {
+                                        type: 'string'
+                                    },
+                                    description: {
+                                        type: 'string'
+                                    },
+                                }
+                            }
+                        }
+                    }
+                },
             },
         },
     })
     async findById(
         @param.path.number('id') id: number,
         @param.filter(DeliveryRequest, {exclude: 'where'}) filter?: FilterExcludingWhere<DeliveryRequest>
-    ): Promise<DeliveryRequest> {
+    ): Promise<Object> {
         return this.deliveryRequestService.findById(id, filter);
     }
 
