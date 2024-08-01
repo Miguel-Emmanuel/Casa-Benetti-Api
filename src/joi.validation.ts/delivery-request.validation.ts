@@ -1,4 +1,5 @@
 import * as Joi from "joi";
+import {DeliveryRequestStatusE} from '../enums';
 
 
 const schemaProducts = Joi.object({
@@ -19,3 +20,18 @@ export const schemaDeliveryRequest = Joi.object({
 })
 
 
+
+
+export const schemaDeliveryRequestPatch = Joi.object({
+    deliveryDay: Joi.date().required(),
+    comment: Joi.string().allow(null),
+    purchaseOrders: Joi.array().items(schemaPurchaseOrders).required(),
+})
+
+
+export const schemaDeliveryRequestPatchStatus = Joi.object({
+    status: Joi.string().valid(DeliveryRequestStatusE.PROGRAMADA, DeliveryRequestStatusE.RECHAZADA).messages({
+        'any.only': `El status debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    reason: Joi.when('status', {is: [DeliveryRequestStatusE.RECHAZADA], then: Joi.string().required(), otherwise: Joi.forbidden()}),
+})

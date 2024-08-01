@@ -7,8 +7,11 @@ import {
 import {
     get,
     param,
+    patch,
+    requestBody,
     response
 } from '@loopback/rest';
+import {DeliveryRequestStatusE} from '../enums';
 import {DeliveryRequest} from '../models';
 import {DeliveryRequestService} from '../services';
 
@@ -79,6 +82,44 @@ export class DeliveryRequestController {
         return this.deliveryRequestService.find(filter);
     }
 
+    @get('/delivery-requests/logistic')
+    @response(200, {
+        description: 'Array of DeliveryRequest model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            customerName: {
+                                type: 'string'
+                            },
+                            quantity: {
+                                type: 'number'
+                            },
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async findLogistic(
+        @param.filter(DeliveryRequest) filter?: Filter<DeliveryRequest>,
+    ): Promise<Object[]> {
+        return this.deliveryRequestService.findLogistic(filter);
+    }
+
     @get('/delivery-requests/{id}')
     @response(200, {
         description: 'Array of DeliveryRequest model instances',
@@ -97,7 +138,7 @@ export class DeliveryRequestController {
                         status: {
                             type: 'string'
                         },
-                        products: {
+                        purchaseOrders: {
                             type: 'array',
                             items: {
                                 type: 'object',
@@ -105,18 +146,32 @@ export class DeliveryRequestController {
                                     id: {
                                         type: 'number'
                                     },
-                                    SKU: {
-                                        type: 'string'
-                                    },
-                                    image: {
-                                        type: 'string'
-                                    },
-                                    description: {
-                                        type: 'string'
-                                    },
+                                    products: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'object',
+                                            properties: {
+                                                id: {
+                                                    type: 'number'
+                                                },
+                                                SKU: {
+                                                    type: 'string'
+                                                },
+                                                image: {
+                                                    type: 'string'
+                                                },
+                                                description: {
+                                                    type: 'string'
+                                                },
+                                                isSelected: {
+                                                    type: 'boolean'
+                                                },
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        },
                     }
                 },
             },
@@ -127,6 +182,185 @@ export class DeliveryRequestController {
         @param.filter(DeliveryRequest, {exclude: 'where'}) filter?: FilterExcludingWhere<DeliveryRequest>
     ): Promise<Object> {
         return this.deliveryRequestService.findById(id, filter);
+    }
+
+    @get('/delivery-requests/{id}/logistic')
+    @response(200, {
+        description: 'Array of DeliveryRequest model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'number'
+                        },
+                        customerName: {
+                            type: 'string'
+                        },
+                        customerAddress: {
+                            type: 'string'
+                        },
+                        quantity: {
+                            type: 'number'
+                        },
+                        deliveryDay: {
+                            type: 'string',
+                            format: 'date-time'
+                        },
+                        status: {
+                            type: 'string'
+                        },
+                        purchaseOrders: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    id: {
+                                        type: 'number'
+                                    },
+                                    products: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'object',
+                                            properties: {
+                                                id: {
+                                                    type: 'number'
+                                                },
+                                                SKU: {
+                                                    type: 'string'
+                                                },
+                                                image: {
+                                                    type: 'string'
+                                                },
+                                                description: {
+                                                    type: 'string'
+                                                },
+                                                isSelected: {
+                                                    type: 'boolean'
+                                                },
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+        },
+    })
+    async findByIdLogistic(
+        @param.path.number('id') id: number,
+        @param.filter(DeliveryRequest, {exclude: 'where'}) filter?: FilterExcludingWhere<DeliveryRequest>
+    ): Promise<Object> {
+        return this.deliveryRequestService.findByIdLogistic(id, filter);
+    }
+
+    @patch('/delivery-requests/{id}/status')
+    @response(204, {
+        description: 'DeliveryRequest order PATCH success PROGRAMADA and RECHAZADA',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async updateDeliveryRequest(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            status: {
+                                type: 'string'
+                            },
+                            reason: {
+                                type: 'string',
+                                nullable: true
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {status: DeliveryRequestStatusE, reason?: string},
+    ): Promise<void> {
+        await this.deliveryRequestService.updateDeliveryRequest(id, data);
+    }
+
+    @patch('/delivery-requests/{id}')
+    @response(200, {
+        description: 'Project DeliveryRequest instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {
+                            type: 'string'
+                        }
+                    }
+                }
+            },
+        },
+    })
+    async postDeliveryRequest(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            comment: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    isSelected: {
+                                                        type: 'boolean'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}
+    ): Promise<any> {
+        return this.deliveryRequestService.patch(id, data);
     }
 
     // @patch('/delivery-requests/{id}')

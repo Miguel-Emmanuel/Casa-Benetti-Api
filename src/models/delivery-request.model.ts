@@ -53,7 +53,7 @@ export class DeliveryRequest extends Entity {
     comment?: string;
 
     @hasMany(() => PurchaseOrders)
-    purchaseOrders: PurchaseOrders[];
+    purchaseOrders: PurchaseOrdersWithRelations[];
 
     @belongsTo(() => Customer)
     customerId: number;
