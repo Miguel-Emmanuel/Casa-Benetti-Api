@@ -49,14 +49,34 @@ export class DeliveryRequestController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(DeliveryRequest, {includeRelations: true}),
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            customerName: {
+                                type: 'string'
+                            },
+                            quantity: {
+                                type: 'number'
+                            },
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                        }
+                    },
                 },
             },
         },
     })
     async find(
         @param.filter(DeliveryRequest) filter?: Filter<DeliveryRequest>,
-    ): Promise<DeliveryRequest[]> {
+    ): Promise<Object[]> {
         return this.deliveryRequestService.find(filter);
     }
 
@@ -65,7 +85,7 @@ export class DeliveryRequestController {
         description: 'DeliveryRequest model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(DeliveryRequest, {includeRelations: true}),
+                schema: getModelSchemaRef(DeliveryRequest, {includeRelations: false}),
             },
         },
     })

@@ -1,8 +1,8 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {DeliveryRequestStatusE} from '../enums';
-import {Customer} from './customer.model';
-import {Project} from './project.model';
-import {PurchaseOrders} from './purchase-orders.model';
+import {Customer, CustomerWithRelations} from './customer.model';
+import {Project, ProjectWithRelations} from './project.model';
+import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
 
 //Solicitud de entrega
 @model({
@@ -76,6 +76,9 @@ export class DeliveryRequest extends Entity {
 
 export interface DeliveryRequestRelations {
     // describe navigational properties here
+    customer: CustomerWithRelations
+    project: ProjectWithRelations
+    purchaseOrders: PurchaseOrdersWithRelations
 }
 
 export type DeliveryRequestWithRelations = DeliveryRequest & DeliveryRequestRelations;
