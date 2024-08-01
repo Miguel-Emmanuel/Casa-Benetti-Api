@@ -34,6 +34,10 @@ export const SendgridTemplates = {
     id: 'd-ff891647a8474e13bb91eb4de9229ba6',
     subject: 'Solicitud de programación de entrega',
   },
+  DELEVIRY_REQUEST_LOGISTIC_REJECTED: {
+    id: 'd-7973474c38fa459fb1560eac8264261e',
+    subject: 'Solicitud de entrega rechazada',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})

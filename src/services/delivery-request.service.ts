@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
 import {DeliveryRequestStatusE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
-import {schemaDeliveryRequestPatch} from '../joi.validation.ts/delivery-request.validation';
+import {schemaDeliveryRequestPatch, schemaDeliveryRequestPatchStatus} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {DeliveryRequest, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {DeliveryRequestRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
@@ -346,6 +346,17 @@ export class DeliveryRequestService {
         }
     }
 
+    async updateDeliveryRequest(id: number, data: {status: DeliveryRequestStatusE, reason?: string},) {
+        await this.validateDeloveryRequestById(id);
+        await this.validateBodyDeliveryRequestPatchStatus(data);
+        const {status} = data;
+        await this.deliveryRequestRepository.updateById(id, {status})
+        if (status === DeliveryRequestStatusE.RECHAZADA)
+            await this.notifyLogisticsRejected(id);
+
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
     async patch(id: number, data: {deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         const deliveryRequest = await this.validateDeloveryRequestById(id);
         await this.validateBodyDeliveryRequestPatch(data);
@@ -372,6 +383,32 @@ export class DeliveryRequestService {
         }
         await this.notifyLogistics(deliveryRequest.projectId, deliveryDay);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async notifyLogisticsRejected(id: number) {
+        const delivery = await this.deliveryRequestRepository.findById(id, {
+            include: [
+                {
+                    relation: 'project',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotation'
+                            }
+                        ]
+                    }
+                }
+            ]
+        })
+        const email = delivery?.project?.quotation?.mainProjectManagerId;
+        const options = {
+            to: email,
+            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.subject,
+            }
+        };
+        await this.sendgridService.sendNotification(options);
     }
 
     async notifyLogistics(projectId: number, deliveryDay: string) {
@@ -413,6 +450,20 @@ export class DeliveryRequestService {
     async validateBodyDeliveryRequestPatch(data: {deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         try {
             await schemaDeliveryRequestPatch.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateBodyDeliveryRequestPatchStatus(data: {status: string, reason?: string}) {
+        try {
+            await schemaDeliveryRequestPatchStatus.validateAsync(data);
         }
         catch (err) {
             const {details} = err;

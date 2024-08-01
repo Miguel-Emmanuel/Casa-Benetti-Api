@@ -11,6 +11,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {DeliveryRequestStatusE} from '../enums';
 import {DeliveryRequest} from '../models';
 import {DeliveryRequestService} from '../services';
 
@@ -254,6 +255,45 @@ export class DeliveryRequestController {
         @param.filter(DeliveryRequest, {exclude: 'where'}) filter?: FilterExcludingWhere<DeliveryRequest>
     ): Promise<Object> {
         return this.deliveryRequestService.findByIdLogistic(id, filter);
+    }
+
+    @patch('/delivery-requests/{id}/status')
+    @response(204, {
+        description: 'DeliveryRequest order PATCH success PROGRAMADA and RECHAZADA',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async updateDeliveryRequest(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            status: {
+                                type: 'string'
+                            },
+                            reason: {
+                                type: 'string',
+                                nullable: true
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {status: DeliveryRequestStatusE, reason?: string},
+    ): Promise<void> {
+        await this.deliveryRequestService.updateDeliveryRequest(id, data);
     }
 
     @patch('/delivery-requests/{id}')
