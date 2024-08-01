@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE, TypeUserE} from '../enums';
+import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
 import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
@@ -150,7 +150,7 @@ export class AccountPayableHistoryService {
     }
 
     async notifyLogistics(purchaseOrderId?: number) {
-        const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+        const users = await this.userRepository.find({where: {isLogistics: true}})
         const emails = users.map(value => value.email);
         const options = {
             to: emails,

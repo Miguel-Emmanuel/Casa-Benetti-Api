@@ -207,6 +207,10 @@ export enum PurchaseOrdersStatus {
 
 export enum DeliveryRequestStatusE {
     POR_VALIDAR = 'Por validar',
+    PROGRAMADA = 'Programada',
+    ENTREGA_PARCIAL = 'Entrega parcial',
+    ENTREGA_COMPLETA = 'Entrega completa',
+    RECHAZADA = 'Rechazada',
 }
 
 

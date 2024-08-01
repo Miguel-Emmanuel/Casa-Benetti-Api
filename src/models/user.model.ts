@@ -177,6 +177,13 @@ export class User extends BaseEntity {
   })
   isDesigner?: boolean;
 
+  //Es logistica
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  isLogistics?: boolean;
+
   // @hasOne(() => QuotationProjectManager)
   // quotationProjectManager: QuotationProjectManager;
 

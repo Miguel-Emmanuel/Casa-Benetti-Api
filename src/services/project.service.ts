@@ -4,7 +4,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeUserE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
@@ -360,9 +360,9 @@ export class ProjectService {
     async postDeliveryRequest(data: {projectId: number, deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         await this.validateBodyDeliveryRequest(data);
         const {projectId, purchaseOrders, deliveryDay, comment} = data;
-        await this.findByIdProject(projectId);
+        const projectRes = await this.findByIdProject(projectId);
 
-        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment})
+        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment, customerId: projectRes.customerId})
         for (let index = 0; index < purchaseOrders.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
             for (let index = 0; index < products.length; index++) {
@@ -399,7 +399,7 @@ export class ProjectService {
                 }
             ]
         });
-        const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+        const users = await this.userRepository.find({where: {isLogistics: true}})
         const emails = users.map(value => value.email);
         const {customer, quotation} = project;
         const {mainProjectManager} = quotation;
@@ -698,6 +698,8 @@ export class ProjectService {
         const project = await this.projectRepository.findOne({where: {id}});
         if (!project)
             throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        return project;
     }
 
 
