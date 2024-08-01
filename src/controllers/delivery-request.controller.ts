@@ -116,6 +116,9 @@ export class DeliveryRequestController {
                                     description: {
                                         type: 'string'
                                     },
+                                    isSelected: {
+                                        type: 'boolean'
+                                    },
                                 }
                             }
                         }

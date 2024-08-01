@@ -1,11 +1,13 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
-import {DeliveryRequestStatusE} from '../enums';
+import dayjs from 'dayjs';
+import {DeliveryRequestStatusE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {schemaDeliveryRequestPatch} from '../joi.validation.ts/delivery-request.validation';
-import {ResponseServiceBindings} from '../keys';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {DeliveryRequest, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {DeliveryRequestRepository} from '../repositories';
+import {DeliveryRequestRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class DeliveryRequestService {
@@ -14,6 +16,16 @@ export class DeliveryRequestService {
         public deliveryRequestRepository: DeliveryRequestRepository,
         @inject(ResponseServiceBindings.RESPONSE_SERVICE)
         public responseService: ResponseService,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
+        @repository(PurchaseOrdersRepository)
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService,
     ) { }
 
     async find(filter?: Filter<DeliveryRequest>,) {
@@ -139,7 +151,7 @@ export class DeliveryRequestService {
                 status,
                 feedback: null,
                 products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing} = value;
+                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
                     const {document, line, name} = product;
                     const descriptionParts = [
                         line?.name,
@@ -155,6 +167,7 @@ export class DeliveryRequestService {
                         SKU,
                         image: document?.fileURL,
                         description,
+                        isSelected: statusProduct === QuotationProductStatusE.ENTREGADO ? true : false
                     }
                 })
             };
@@ -169,9 +182,62 @@ export class DeliveryRequestService {
         if (deliveryRequest.status !== DeliveryRequestStatusE.POR_VALIDAR && deliveryRequest.status !== DeliveryRequestStatusE.RECHAZADA)
             throw this.responseService.badRequest("Solicitud de entrega no puede ser actualizada.");
 
-        const {comment, deliveryDay} = data
-        await this.deliveryRequestRepository.updateById(id, {comment, deliveryDay})
+        const {comment, deliveryDay, purchaseOrders} = data
+        await this.deliveryRequestRepository.updateById(id, {comment, deliveryDay});
 
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const {products, id: purchaseOrderId} = purchaseOrders[index];
+            for (let index = 0; index < products.length; index++) {
+                const {id, isSelected} = products[index];
+                if (isSelected)
+                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO})
+            }
+            const searchSelected = products.filter(value => value.isSelected === true);
+
+
+            if (products.length === searchSelected.length)
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA, deliveryRequestId: id})
+            else
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: id})
+        }
+        await this.notifyLogistics(deliveryRequest.projectId, deliveryDay);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async notifyLogistics(projectId: number, deliveryDay: string) {
+        const project = await this.projectRepository.findById(projectId, {
+            include: [
+                {
+                    relation: 'customer'
+                },
+                {
+                    relation: 'quotation',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'mainProjectManager'
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        const users = await this.userRepository.find({where: {isLogistics: true}})
+        const emails = users.map(value => value.email);
+        const {customer, quotation} = project;
+        const {mainProjectManager} = quotation;
+        const options = {
+            to: emails,
+            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                projectId: project.projectId,
+                mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                date: dayjs(deliveryDay).format('DD/MM/YYYY')
+            }
+        };
+        await this.sendgridService.sendNotification(options);
     }
 
     async validateBodyDeliveryRequestPatch(data: {deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
