@@ -81,6 +81,44 @@ export class DeliveryRequestController {
         return this.deliveryRequestService.find(filter);
     }
 
+    @get('/delivery-requests/logistic')
+    @response(200, {
+        description: 'Array of DeliveryRequest model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            customerName: {
+                                type: 'string'
+                            },
+                            quantity: {
+                                type: 'number'
+                            },
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async findLogistic(
+        @param.filter(DeliveryRequest) filter?: Filter<DeliveryRequest>,
+    ): Promise<Object[]> {
+        return this.deliveryRequestService.findLogistic(filter);
+    }
+
     @get('/delivery-requests/{id}')
     @response(200, {
         description: 'Array of DeliveryRequest model instances',
