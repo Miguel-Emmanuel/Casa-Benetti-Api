@@ -132,7 +132,7 @@ export class DeliveryRequestService {
 
         const deliveryRequest = await this.deliveryRequestRepository.find(filter)
         return deliveryRequest.map(value => {
-            const {id, customer, purchaseOrders, deliveryDay, status} = value;
+            const {id, customer, purchaseOrders, deliveryDay, status, comment} = value;
             const {proforma} = purchaseOrders;
             const {quotationProducts} = proforma;
             return {
@@ -140,7 +140,8 @@ export class DeliveryRequestService {
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 quantity: quotationProducts?.length ?? 0,
                 deliveryDay,
-                status
+                status,
+                comment
             }
         });
     }
