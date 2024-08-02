@@ -408,6 +408,70 @@ export class DeliveryRequestController {
         return this.deliveryRequestService.patch(id, data);
     }
 
+    @patch('/delivery-requests/{id}/feedback')
+    @response(204, {
+        description: 'DeliveryRequest order PATCH success',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async setFeedback(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            status: {
+                                type: 'string'
+                            },
+                            feedbackComment: {
+                                type: 'string',
+                                nullable: true
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    isSelected: {
+                                                        type: 'boolean'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]},
+    ): Promise<void> {
+        await this.deliveryRequestService.setFeedback(id, data);
+    }
+
     // @patch('/delivery-requests/{id}')
     // @response(204, {
     //     description: 'DeliveryRequest PATCH success',
