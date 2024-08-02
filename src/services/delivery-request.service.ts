@@ -237,6 +237,9 @@ export class DeliveryRequestService {
         try {
             const include: InclusionFilter[] = [
                 {
+                    relation: 'documents',
+                },
+                {
                     relation: 'customer',
                 },
                 {
@@ -291,12 +294,20 @@ export class DeliveryRequestService {
                 throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
 
 
-            const {purchaseOrders, deliveryDay, status, comment} = deliveryRequest;
+            const {purchaseOrders, deliveryDay, status, comment, feedbackComment, documents} = deliveryRequest;
             return {
                 id,
                 deliveryDay,
                 status,
-                feedback: null,
+                feedback: {
+                    feedbackComment,
+                    documents: documents?.map(value => {
+                        const {id, fileURL, name, extension, createdAt} = value;
+                        return {
+                            id, fileURL, name, extension, createdAt
+                        }
+                    }) ?? []
+                },
                 comment,
                 purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
