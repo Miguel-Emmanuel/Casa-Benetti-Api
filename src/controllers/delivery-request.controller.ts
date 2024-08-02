@@ -108,6 +108,9 @@ export class DeliveryRequestController {
                             status: {
                                 type: 'string'
                             },
+                            comment: {
+                                type: 'string'
+                            },
                         }
                     },
                 },
