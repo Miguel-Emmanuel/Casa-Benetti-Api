@@ -108,9 +108,6 @@ export class DeliveryRequestController {
                             status: {
                                 type: 'string'
                             },
-                            comment: {
-                                type: 'string'
-                            },
                         }
                     },
                 },
@@ -139,6 +136,9 @@ export class DeliveryRequestController {
                             format: 'date-time'
                         },
                         status: {
+                            type: 'string'
+                        },
+                        comment: {
                             type: 'string'
                         },
                         purchaseOrders: {
@@ -212,6 +212,9 @@ export class DeliveryRequestController {
                             format: 'date-time'
                         },
                         status: {
+                            type: 'string'
+                        },
+                        comment: {
                             type: 'string'
                         },
                         purchaseOrders: {

@@ -90,60 +90,63 @@ export class DeliveryRequestService {
     }
 
     async findLogistic(filter?: Filter<DeliveryRequest>,) {
-        if (filter?.order) {
-            filter.order = [...filter.order, 'deliveryDay DESC']
-        } else {
-            filter = {...filter, order: ['deliveryDay DESC']};
-        }
-
-        const include: InclusionFilter[] = [
-            {
-                relation: 'customer',
-            },
-            {
-                relation: 'purchaseOrders',
-                scope: {
-                    include: [
-                        {
-                            relation: 'proforma',
-                            scope: {
-                                include: [
-                                    {
-                                        relation: 'quotationProducts'
-                                    }
-                                ]
-                            }
-                        }
-                    ]
-                }
+        try {
+            if (filter?.order) {
+                filter.order = [...filter.order, 'deliveryDay DESC']
+            } else {
+                filter = {...filter, order: ['deliveryDay DESC']};
             }
-        ]
-        if (filter?.include)
-            filter.include = [
-                ...filter.include,
-                ...include
+
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'customer',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts'
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
             ]
-        else
-            filter = {
-                ...filter, include: [
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
                     ...include
                 ]
-            }
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                }
 
-        const deliveryRequest = await this.deliveryRequestRepository.find(filter)
-        return deliveryRequest.map(value => {
-            const {id, customer, purchaseOrders, deliveryDay, status, comment} = value;
-            const {proforma} = purchaseOrders;
-            const {quotationProducts} = proforma;
-            return {
-                id,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                quantity: quotationProducts?.length ?? 0,
-                deliveryDay,
-                status,
-                comment
-            }
-        });
+            const deliveryRequest = await this.deliveryRequestRepository.find(filter)
+            return deliveryRequest.map(value => {
+                const {id, customer, purchaseOrders, deliveryDay, status} = value;
+                const {proforma} = purchaseOrders;
+                const {quotationProducts} = proforma;
+                return {
+                    id,
+                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    quantity: quotationProducts?.length ?? 0,
+                    deliveryDay,
+                    status,
+                }
+            });
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<DeliveryRequest>) {
@@ -204,12 +207,13 @@ export class DeliveryRequestService {
                 throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
 
 
-            const {purchaseOrders, deliveryDay, status} = deliveryRequest;
+            const {purchaseOrders, deliveryDay, status, comment} = deliveryRequest;
             return {
                 id,
                 deliveryDay,
                 status,
                 feedback: null,
+                comment,
                 purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
@@ -304,7 +308,7 @@ export class DeliveryRequestService {
                 throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
 
 
-            const {purchaseOrders, deliveryDay, status, customer, projectId} = deliveryRequest;
+            const {purchaseOrders, deliveryDay, status, customer, projectId, comment} = deliveryRequest;
             const {proforma} = purchaseOrders;
             const {quotationProducts} = proforma;
             return {
@@ -314,6 +318,7 @@ export class DeliveryRequestService {
                 quantity: quotationProducts?.length,
                 deliveryDay,
                 status,
+                comment,
                 purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
