@@ -78,7 +78,7 @@ export interface DeliveryRequestRelations {
     // describe navigational properties here
     customer: CustomerWithRelations
     project: ProjectWithRelations
-    purchaseOrders: PurchaseOrdersWithRelations
+    purchaseOrders: PurchaseOrdersWithRelations[]
 }
 
 export type DeliveryRequestWithRelations = DeliveryRequest & DeliveryRequestRelations;

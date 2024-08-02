@@ -77,12 +77,17 @@ export class DeliveryRequestService {
         const deliveryRequest = await this.deliveryRequestRepository.find(filter)
         return deliveryRequest.map(value => {
             const {id, customer, purchaseOrders, deliveryDay, status} = value;
-            const {proforma} = purchaseOrders;
-            const {quotationProducts} = proforma;
+            let quantity = 0;
+            for (let index = 0; index < purchaseOrders.length; index++) {
+                const element = purchaseOrders[index];
+                const {proforma} = element;
+                const {quotationProducts} = proforma;
+                quantity += quotationProducts?.length ?? 0
+            }
             return {
                 id,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                quantity: quotationProducts?.length ?? 0,
+                quantity,
                 deliveryDay,
                 status
             }
@@ -134,12 +139,17 @@ export class DeliveryRequestService {
             const deliveryRequest = await this.deliveryRequestRepository.find(filter)
             return deliveryRequest.map(value => {
                 const {id, customer, purchaseOrders, deliveryDay, status} = value;
-                const {proforma} = purchaseOrders;
-                const {quotationProducts} = proforma;
+                let quantity = 0;
+                for (let index = 0; index < purchaseOrders.length; index++) {
+                    const element = purchaseOrders[index];
+                    const {proforma} = element;
+                    const {quotationProducts} = proforma;
+                    quantity += quotationProducts?.length ?? 0
+                }
                 return {
                     id,
                     customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                    quantity: quotationProducts?.length ?? 0,
+                    quantity,
                     deliveryDay,
                     status,
                 }
