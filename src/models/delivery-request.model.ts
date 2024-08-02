@@ -52,6 +52,12 @@ export class DeliveryRequest extends Entity {
     })
     comment?: string;
 
+    //Comentario de retroalimentacion
+    @property({
+        type: 'string',
+    })
+    feedbackComment?: string;
+
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrdersWithRelations[];
 

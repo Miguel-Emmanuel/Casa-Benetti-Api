@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
 import {DeliveryRequestStatusE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
-import {schemaDeliveryRequestPatch, schemaDeliveryRequestPatchStatus} from '../joi.validation.ts/delivery-request.validation';
+import {schemaDeliveryRequestPatch, schemaDeliveryRequestPatchFeedback, schemaDeliveryRequestPatchStatus} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {DeliveryRequest, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {DeliveryRequestRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
@@ -160,7 +160,8 @@ export class DeliveryRequestService {
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 quantity,
                 deliveryDay,
-                status
+                status,
+                purchaseOrders: purchaseOrders.map(value => value.id)
             }
         });
     }
@@ -448,6 +449,31 @@ export class DeliveryRequestService {
 
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
+    async setFeedback(id: number, data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        await this.validateDeloveryRequestById(id);
+        await this.validateBodyDeliveryRequestPatchFeedback(data);
+        const {status, feedbackComment, purchaseOrders} = data;
+        await this.deliveryRequestRepository.updateById(id, {status, feedbackComment})
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const {products, id: purchaseOrderId} = purchaseOrders[index];
+            for (let index = 0; index < products.length; index++) {
+                const {id, isSelected} = products[index];
+                if (isSelected)
+                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO})
+            }
+            const searchSelected = products.filter(value => value.isSelected === true);
+
+
+            if (products.length === searchSelected.length)
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA, deliveryRequestId: id})
+            else
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: id})
+        }
+        if (status === DeliveryRequestStatusE.RECHAZADA)
+            await this.notifyLogisticsRejected(id);
+
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
 
     async patch(id: number, data: {deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
         const deliveryRequest = await this.validateDeloveryRequestById(id);
@@ -556,6 +582,20 @@ export class DeliveryRequestService {
     async validateBodyDeliveryRequestPatchStatus(data: {status: string, reason?: string}) {
         try {
             await schemaDeliveryRequestPatchStatus.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateBodyDeliveryRequestPatchFeedback(data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        try {
+            await schemaDeliveryRequestPatchFeedback.validateAsync(data);
         }
         catch (err) {
             const {details} = err;

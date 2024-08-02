@@ -35,3 +35,12 @@ export const schemaDeliveryRequestPatchStatus = Joi.object({
     }).required(),
     reason: Joi.when('status', {is: [DeliveryRequestStatusE.RECHAZADA], then: Joi.string().required(), otherwise: Joi.forbidden()}),
 })
+
+
+export const schemaDeliveryRequestPatchFeedback = Joi.object({
+    status: Joi.string().valid(DeliveryRequestStatusE.PROGRAMADA, DeliveryRequestStatusE.RECHAZADA, DeliveryRequestStatusE.ENTREGA_PARCIAL, DeliveryRequestStatusE.ENTREGA_COMPLETA).messages({
+        'any.only': `El status debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    feedbackComment: Joi.string().required(),
+    purchaseOrders: Joi.array().items(schemaPurchaseOrders).required(),
+})
