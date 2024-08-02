@@ -118,7 +118,7 @@ export class AccountPayableHistoryService {
     }
 
     async settleAccountPayable(totalPaid: number, total: number, accountPayableId: number, purchaseOrderId?: number) {
-        if (totalPaid === total) {
+        if (totalPaid >= total) {
             const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId, {
                 include: [
                     {
