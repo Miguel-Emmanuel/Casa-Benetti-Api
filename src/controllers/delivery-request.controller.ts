@@ -461,13 +461,24 @@ export class DeliveryRequestController {
                                         }
                                     }
                                 }
+                            },
+                            documents: {
+                                type: 'array',
+                                items: {
+                                    properties: {
+                                        id: {type: 'number'},
+                                        fileURL: {type: 'string'},
+                                        name: {type: 'string'},
+                                        extension: {type: 'string'}
+                                    }
+                                }
                             }
                         }
                     }
                 },
             },
         })
-        data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]},
+        data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], documents: {fileURL: string, name: string, extension: string, id?: number}[]},
     ): Promise<void> {
         await this.deliveryRequestService.setFeedback(id, data);
     }
