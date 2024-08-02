@@ -1,6 +1,7 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {DeliveryRequestStatusE} from '../enums';
 import {Customer, CustomerWithRelations} from './customer.model';
+import {Document} from './document.model';
 import {Project, ProjectWithRelations} from './project.model';
 import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
 
@@ -60,6 +61,9 @@ export class DeliveryRequest extends Entity {
 
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrdersWithRelations[];
+
+    @hasMany(() => Document)
+    documents: Document[];
 
     @belongsTo(() => Customer)
     customerId: number;
