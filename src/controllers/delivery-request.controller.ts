@@ -82,6 +82,45 @@ export class DeliveryRequestController {
         return this.deliveryRequestService.find(filter);
     }
 
+    @get('/delivery-requests/project/{projectId}')
+    @response(200, {
+        description: 'Array of DeliveryRequest model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            customerName: {
+                                type: 'string'
+                            },
+                            quantity: {
+                                type: 'number'
+                            },
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async findByProjectiD(
+        @param.path.number('projectId') projectId: number,
+        @param.filter(DeliveryRequest) filter?: Filter<DeliveryRequest>,
+    ): Promise<Object[]> {
+        return this.deliveryRequestService.findByProjectiD(projectId, filter);
+    }
+
     @get('/delivery-requests/logistic')
     @response(200, {
         description: 'Array of DeliveryRequest model instances',
