@@ -319,13 +319,18 @@ export class DeliveryRequestService {
 
 
             const {purchaseOrders, deliveryDay, status, customer, projectId, comment} = deliveryRequest;
-            const {proforma} = purchaseOrders;
-            const {quotationProducts} = proforma;
+            let quantity = 0;
+            for (let index = 0; index < purchaseOrders.length; index++) {
+                const element = purchaseOrders[index];
+                const {proforma} = element;
+                const {quotationProducts} = proforma;
+                quantity += quotationProducts?.length ?? 0
+            }
             return {
                 id: projectId,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 customerAddress: customer?.address,
-                quantity: quotationProducts?.length,
+                quantity,
                 deliveryDay,
                 status,
                 comment,
