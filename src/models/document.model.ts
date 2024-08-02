@@ -117,6 +117,11 @@ export class Document extends BaseEntity {
   })
   commissionPaymentId?: number;
 
+  @property({
+    type: 'number',
+  })
+  deliveryRequestId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }

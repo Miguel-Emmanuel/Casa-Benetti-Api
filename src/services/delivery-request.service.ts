@@ -5,7 +5,7 @@ import {DeliveryRequestStatusE, PurchaseOrdersStatus, QuotationProductStatusE} f
 import {schemaDeliveryRequestPatch, schemaDeliveryRequestPatchFeedback, schemaDeliveryRequestPatchStatus} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {DeliveryRequest, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {DeliveryRequestRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
+import {DeliveryRequestRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -26,6 +26,8 @@ export class DeliveryRequestService {
         public userRepository: UserRepository,
         @inject(SendgridServiceBindings.SENDGRID_SERVICE)
         public sendgridService: SendgridService,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository,
     ) { }
 
     async find(filter?: Filter<DeliveryRequest>,) {
@@ -235,6 +237,9 @@ export class DeliveryRequestService {
         try {
             const include: InclusionFilter[] = [
                 {
+                    relation: 'documents',
+                },
+                {
                     relation: 'customer',
                 },
                 {
@@ -289,12 +294,20 @@ export class DeliveryRequestService {
                 throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
 
 
-            const {purchaseOrders, deliveryDay, status, comment} = deliveryRequest;
+            const {purchaseOrders, deliveryDay, status, comment, feedbackComment, documents} = deliveryRequest;
             return {
                 id,
                 deliveryDay,
                 status,
-                feedback: null,
+                feedback: {
+                    feedbackComment,
+                    documents: documents?.map(value => {
+                        const {id, fileURL, name, extension, createdAt} = value;
+                        return {
+                            id, fileURL, name, extension, createdAt
+                        }
+                    }) ?? []
+                },
                 comment,
                 purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
@@ -449,10 +462,10 @@ export class DeliveryRequestService {
 
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
-    async setFeedback(id: number, data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+    async setFeedback(id: number, data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         await this.validateDeloveryRequestById(id);
         await this.validateBodyDeliveryRequestPatchFeedback(data);
-        const {status, feedbackComment, purchaseOrders} = data;
+        const {status, feedbackComment, purchaseOrders, documents} = data;
         await this.deliveryRequestRepository.updateById(id, {status, feedbackComment})
         for (let index = 0; index < purchaseOrders.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
@@ -472,6 +485,7 @@ export class DeliveryRequestService {
         if (status === DeliveryRequestStatusE.RECHAZADA)
             await this.notifyLogisticsRejected(id);
 
+        await this.createDocument(id, documents)
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
@@ -593,7 +607,7 @@ export class DeliveryRequestService {
         }
     }
 
-    async validateBodyDeliveryRequestPatchFeedback(data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+    async validateBodyDeliveryRequestPatchFeedback(data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         try {
             await schemaDeliveryRequestPatchFeedback.validateAsync(data);
         }
@@ -604,6 +618,19 @@ export class DeliveryRequestService {
             if (message.includes('is required') || message.includes('is not allowed to be empty'))
                 throw this.responseService.unprocessableEntity(`${key} es requerido.`)
             throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async createDocument(deliveryRequestId: number, documents?: {fileURL: string, name: string, extension: string, id?: number}[]) {
+        if (documents) {
+            for (let index = 0; index < documents?.length; index++) {
+                const element = documents[index];
+                if (element && !element?.id) {
+                    await this.deliveryRequestRepository.documents(deliveryRequestId).create(element);
+                } else if (element) {
+                    await this.documentRepository.updateById(element.id, {...element});
+                }
+            }
         }
     }
 

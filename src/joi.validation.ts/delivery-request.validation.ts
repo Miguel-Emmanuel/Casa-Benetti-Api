@@ -19,7 +19,12 @@ export const schemaDeliveryRequest = Joi.object({
     purchaseOrders: Joi.array().items(schemaPurchaseOrders).required(),
 })
 
-
+export const documents = Joi.object({
+    id: Joi.number(),
+    fileURL: Joi.string().required(),
+    name: Joi.string().required(),
+    extension: Joi.string().required(),
+})
 
 
 export const schemaDeliveryRequestPatch = Joi.object({
@@ -43,4 +48,5 @@ export const schemaDeliveryRequestPatchFeedback = Joi.object({
     }).required(),
     feedbackComment: Joi.string().required(),
     purchaseOrders: Joi.array().items(schemaPurchaseOrders).required(),
+    documents: Joi.array().items(documents).optional(),
 })
