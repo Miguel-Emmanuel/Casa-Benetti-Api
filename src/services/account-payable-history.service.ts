@@ -40,11 +40,16 @@ export class AccountPayableHistoryService {
     async create(accountPayableHistory: Omit<AccountPayableHistoryCreate, 'id'>,) {
         const {accountPayableId, images} = accountPayableHistory;
         const accountPayable = await this.findAccountPayable(accountPayableId);
+
+        const {total, purchaseOrders, proforma} = accountPayable;
+
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
             const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
             const newTotalPaid = accountPayable.totalPaid + newAmount
             const newBalance = accountPayable.balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
+            await this.settleAccountPayable(newTotalPaid, total, accountPayableId, purchaseOrders.id);
         }
         delete accountPayableHistory.images;
         const accountPayableHistoryRes = await this.accountPayableHistoryRepository.create({...accountPayableHistory, providerId: accountPayable.proforma?.providerId});
