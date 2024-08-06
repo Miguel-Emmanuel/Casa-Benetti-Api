@@ -35,3 +35,4 @@ export * from './calculate-scheled-date.service';
 export * from './inventory-movements.service';
 export * from './inventories.service';
 export * from './delivery-request.service';
+export * from './collection.service';
