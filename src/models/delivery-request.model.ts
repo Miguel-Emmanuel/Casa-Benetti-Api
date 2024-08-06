@@ -59,6 +59,12 @@ export class DeliveryRequest extends Entity {
     })
     feedbackComment?: string;
 
+    //Razon de rechazo
+    @property({
+        type: 'string',
+    })
+    reasonRejected?: string;
+
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrdersWithRelations[];
 

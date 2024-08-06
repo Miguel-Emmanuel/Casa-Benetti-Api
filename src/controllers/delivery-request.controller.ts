@@ -180,6 +180,9 @@ export class DeliveryRequestController {
                         comment: {
                             type: 'string'
                         },
+                        reasonRejected: {
+                            type: 'string'
+                        },
                         purchaseOrders: {
                             type: 'array',
                             items: {

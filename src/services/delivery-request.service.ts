@@ -294,7 +294,7 @@ export class DeliveryRequestService {
                 throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
 
 
-            const {purchaseOrders, deliveryDay, status, comment, feedbackComment, documents} = deliveryRequest;
+            const {purchaseOrders, deliveryDay, status, comment, feedbackComment, documents, reasonRejected} = deliveryRequest;
             return {
                 id,
                 deliveryDay,
@@ -309,6 +309,7 @@ export class DeliveryRequestService {
                     }) ?? []
                 },
                 comment,
+                reasonRejected,
                 purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
@@ -455,8 +456,8 @@ export class DeliveryRequestService {
     async updateDeliveryRequest(id: number, data: {status: DeliveryRequestStatusE, reason?: string},) {
         await this.validateDeloveryRequestById(id);
         await this.validateBodyDeliveryRequestPatchStatus(data);
-        const {status} = data;
-        await this.deliveryRequestRepository.updateById(id, {status})
+        const {status, reason} = data;
+        await this.deliveryRequestRepository.updateById(id, {status, reasonRejected: reason})
         if (status === DeliveryRequestStatusE.RECHAZADA)
             await this.notifyLogisticsRejected(id);
 
