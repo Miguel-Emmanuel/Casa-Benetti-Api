@@ -425,4 +425,52 @@ export class PurchaseOrdersService {
     async deleteById(id: number) {
         await this.purchaseOrdersRepository.deleteById(id);
     }
+
+    async earringsCollect() {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'proforma',
+                scope: {
+                    include: [
+                        {
+                            relation: 'quotationProducts',
+                        },
+                        {
+                            relation: 'provider'
+                        },
+                        {
+                            relation: 'brand'
+                        }
+                    ]
+                }
+            }
+        ]
+        const purchaseOrders = await this.purchaseOrdersRepository.find({
+            where: {
+                and: [
+                    {
+                        status: PurchaseOrdersStatus.EN_RECOLECCION
+                    },
+                    {
+                        collectionId: {eq: null}
+                    }
+                ]
+            }, include: [...include]
+        })
+
+        return purchaseOrders.map(value => {
+            const {id: purchaseOrderid, proforma, productionEndDate} = value;
+            const {proformaId, provider, brand, quotationProducts} = proforma;
+            const {name} = provider;
+            const {brandName} = brand;
+            return {
+                id: purchaseOrderid,
+                proformaId,
+                provider: name,
+                brand: brandName,
+                quantity: quotationProducts?.length ?? 0,
+                productionEndDate
+            }
+        })
+    }
 }
