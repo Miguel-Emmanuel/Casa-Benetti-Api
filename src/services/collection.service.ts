@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, FilterExcludingWhere, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import {schemaCollectionCreate} from '../joi.validation.ts/collection.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Collection} from '../models';
@@ -20,14 +20,54 @@ export class CollectionService {
     async create(collection: {destination: string, dateCollection: Date, purchaseOrders: number[]}) {
         await this.validateCollectionBody(collection)
         const {purchaseOrders, ...body} = collection;
-        return this.collectionRepository.create(body);
+        const collectionRes = await this.collectionRepository.create(body);
+        await this.relationCollectionToPurchaseOrders(collectionRes.id, purchaseOrders);
+        return collectionRes
     }
 
     async find(filter?: Filter<Collection>,) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'purchaseOrders',
+                scope: {
+                    fields: ['id', 'collectionId']
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         return this.collectionRepository.find(filter);
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Collection>) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'purchaseOrders',
+                scope: {
+                    fields: ['id', 'collectionId']
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         return this.collectionRepository.findById(id, filter);
     }
 
@@ -36,6 +76,15 @@ export class CollectionService {
     }
 
     //
+
+    async relationCollectionToPurchaseOrders(collectionId: number, purchaseOrders: number[]) {
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const element = purchaseOrders[index];
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {id: element}});
+            if (purchaseOrder)
+                await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {collectionId})
+        }
+    }
 
     async validateCollectionBody(collection: {destination: string, dateCollection: Date, purchaseOrders: number[]}) {
         try {

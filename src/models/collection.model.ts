@@ -23,7 +23,7 @@ export class Collection extends Entity {
         id: true,
         generated: true,
     })
-    id?: number;
+    id: number;
 
     //Destino
     @property({
