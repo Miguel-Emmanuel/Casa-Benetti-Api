@@ -8,7 +8,6 @@ import {
     get,
     getModelSchemaRef,
     param,
-    patch,
     post,
     requestBody,
     response
@@ -136,23 +135,23 @@ export class CollectionController {
         return this.collectionService.findById(id, filter);
     }
 
-    @patch('/collections/{id}')
-    @response(204, {
-        description: 'Collection PATCH success',
-    })
-    async updateById(
-        @param.path.number('id') id: number,
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(Collection, {partial: true}),
-                },
-            },
-        })
-        collection: Collection,
-    ): Promise<void> {
-        await this.collectionService.updateById(id, collection);
-    }
+    // @patch('/collections/{id}')
+    // @response(204, {
+    //     description: 'Collection PATCH success',
+    // })
+    // async updateById(
+    //     @param.path.number('id') id: number,
+    //     @requestBody({
+    //         content: {
+    //             'application/json': {
+    //                 schema: getModelSchemaRef(Collection, {partial: true}),
+    //             },
+    //         },
+    //     })
+    //     collection: Collection,
+    // ): Promise<void> {
+    //     await this.collectionService.updateById(id, collection);
+    // }
 
     // @del('/collections/{id}')
     // @response(204, {
