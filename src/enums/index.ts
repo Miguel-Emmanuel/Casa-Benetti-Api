@@ -270,3 +270,9 @@ export enum InventoriesIssueE {
     CONTENEDOR = 'Contenedor',
     OTRO = 'Otro',
 }
+
+
+export enum CollectionDestinationE {
+    BODEGA_INTERNACIONAL = 'Bodega Internacional',
+    CONTENEDOR = 'Contenedor',
+}
