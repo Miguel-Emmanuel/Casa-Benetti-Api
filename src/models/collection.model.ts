@@ -1,4 +1,5 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, hasMany, model, property} from '@loopback/repository';
+import {PurchaseOrders} from './purchase-orders.model';
 
 //Programar recolección
 @model({
@@ -29,6 +30,9 @@ export class Collection extends Entity {
         type: 'string',
     })
     destination: string;
+
+    @hasMany(() => PurchaseOrders)
+    purchaseOrders: PurchaseOrders[];
 
     //Fecha de recoleccion
     @property({
