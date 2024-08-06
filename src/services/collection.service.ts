@@ -21,34 +21,27 @@ export class CollectionService {
     async earringsCollect() {
         const include: InclusionFilter[] = [
             {
-                relation: 'purchaseOrders',
+                relation: 'proforma',
                 scope: {
                     include: [
                         {
-                            relation: 'proforma',
+                            relation: 'quotationProducts',
                             scope: {
                                 include: [
                                     {
-                                        relation: 'quotationProducts',
+                                        relation: 'product',
                                         scope: {
                                             include: [
                                                 {
-                                                    relation: 'product',
-                                                    scope: {
-                                                        include: [
-                                                            {
-                                                                relation: 'document'
-                                                            },
-                                                            {
-                                                                relation: 'line'
-                                                            }
-                                                        ]
-                                                    }
+                                                    relation: 'document'
+                                                },
+                                                {
+                                                    relation: 'line'
                                                 }
-                                            ],
+                                            ]
                                         }
                                     }
-                                ]
+                                ],
                             }
                         }
                     ]
@@ -62,7 +55,7 @@ export class CollectionService {
                         status: PurchaseOrdersStatus.EN_RECOLECCION
                     },
                     {
-                        collectionId: {eq: undefined}
+                        collectionId: {eq: null}
                     }
                 ]
             }, include: [...include]
