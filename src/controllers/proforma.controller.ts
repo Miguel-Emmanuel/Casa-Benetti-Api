@@ -140,7 +140,7 @@ export class ProformaController {
         description: 'Proforma model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Proforma, {includeRelations: true}),
+                schema: getModelSchemaRef(Proforma, {includeRelations: false}),
             },
         },
     })

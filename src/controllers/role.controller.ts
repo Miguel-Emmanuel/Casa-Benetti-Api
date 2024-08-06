@@ -146,7 +146,7 @@ export class RoleController {
           'application/json': {
             schema: {
               type: 'array',
-              items: getModelSchemaRef(Role, {includeRelations: true}),
+              items: getModelSchemaRef(Role, {includeRelations: false}),
             },
           },
         },
@@ -174,7 +174,7 @@ export class RoleController {
         description: 'Role model instance',
         content: {
           'application/json': {
-            schema: getModelSchemaRef(Role, {includeRelations: true}),
+            schema: getModelSchemaRef(Role, {includeRelations: false}),
           },
         },
       },

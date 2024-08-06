@@ -70,7 +70,7 @@ export class ExpenseController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Expense, {includeRelations: true}),
+          items: getModelSchemaRef(Expense, {includeRelations: false}),
         },
       },
     },
@@ -86,7 +86,7 @@ export class ExpenseController {
     description: 'Expense model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Expense, {includeRelations: true}),
+        schema: getModelSchemaRef(Expense, {includeRelations: false}),
       },
     },
   })

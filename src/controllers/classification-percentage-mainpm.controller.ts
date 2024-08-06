@@ -53,7 +53,7 @@ export class ClassificationPercentageMainpmController {
     //         'application/json': {
     //             schema: {
     //                 type: 'array',
-    //                 items: getModelSchemaRef(ClassificationPercentageMainpm, {includeRelations: true}),
+    //                 items: getModelSchemaRef(ClassificationPercentageMainpm, {includeRelations: false}),
     //             },
     //         },
     //     },
@@ -70,7 +70,7 @@ export class ClassificationPercentageMainpmController {
     //     description: 'ClassificationPercentageMainpm model instance',
     //     content: {
     //         'application/json': {
-    //             schema: getModelSchemaRef(ClassificationPercentageMainpm, {includeRelations: true}),
+    //             schema: getModelSchemaRef(ClassificationPercentageMainpm, {includeRelations: false}),
     //         },
     //     },
     // })

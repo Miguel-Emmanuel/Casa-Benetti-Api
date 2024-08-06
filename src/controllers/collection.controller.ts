@@ -23,6 +23,43 @@ export class CollectionController {
         public collectionService: CollectionService
     ) { }
 
+    @get('/collections/earrings-collect')
+    @response(200, {
+        description: 'Array of Collection model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            customerName: {
+                                type: 'string'
+                            },
+                            quantity: {
+                                type: 'number'
+                            },
+                            deliveryDay: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async earringsCollect(
+    ): Promise<Object[]> {
+        return this.collectionService.earringsCollect();
+    }
+
     @post('/collections')
     @response(200, {
         description: 'Collection model instance',
@@ -65,7 +102,7 @@ export class CollectionController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(Collection, {includeRelations: true}),
+                    items: getModelSchemaRef(Collection, {includeRelations: false}),
                 },
             },
         },
@@ -81,7 +118,7 @@ export class CollectionController {
         description: 'Collection model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Collection, {includeRelations: true}),
+                schema: getModelSchemaRef(Collection, {includeRelations: false}),
             },
         },
     })
