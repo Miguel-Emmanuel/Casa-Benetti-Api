@@ -43,3 +43,4 @@ export * from './quotation-products-quotation.controller';
 
 export * from './inventories.controller';
 export * from './delivery-request.controller';
+export * from './collection.controller';

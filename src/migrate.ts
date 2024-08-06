@@ -56,7 +56,8 @@ export async function migrate(args: string[]) {
       'CommissionPayment',
       'Inventories',
       'InventoryMovements',
-      'DeliveryRequest'
+      'DeliveryRequest',
+      'Collection'
     ],
   });
 
