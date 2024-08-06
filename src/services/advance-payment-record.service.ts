@@ -135,11 +135,12 @@ export class AdvancePaymentRecordService {
         }
 
         if (status && status === AdvancePaymentStatusE.PAGADO) {
+            const {balance: balanceOld} = await this.accountsReceivableRepository.findById(accountsReceivable.id);
             let totalVenta = totalSale;
             if (updatedTotal > 0)
                 totalVenta = updatedTotal;
 
-            const balance = totalVenta - conversionAmountPaid;
+            const balance = balanceOld - conversionAmountPaid;
             const totalPaidNew = totalPaid + conversionAmountPaid;
             await this.accountsReceivableRepository.updateById(accountsReceivable.id, {balance: this.roundToTwoDecimals(balance), totalPaid: this.roundToTwoDecimals(totalPaidNew)})
             await this.createPurchaseOrders(projectId, accountsReceivable.id, totalPaidNew, typeCurrency,)
