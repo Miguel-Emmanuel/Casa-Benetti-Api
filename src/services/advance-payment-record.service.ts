@@ -1,7 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AdvancePaymentStatusE, CurrencyE, ExchangeRateQuotationE, PurchaseOrdersStatus} from '../enums';
+import {AdvancePaymentStatusE, CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus} from '../enums';
 import {schameCreateAdvancePayment, schameCreateAdvancePaymentUpdate} from '../joi.validation.ts/advance-payment-record.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AdvancePaymentRecord, AdvancePaymentRecordCreate, Quotation} from '../models';
@@ -169,7 +169,8 @@ export class AdvancePaymentRecordService {
         const {advance} = this.getPricesQuotation(findProjectQuotation.quotation);
 
         if (advance && totalPaid >= advance) {
-            await this.findProjectProforma(projectId, accountsReceivableId, quotationId, typeCurrency)
+            // await this.findProjectProforma(projectId, accountsReceivableId, quotationId, typeCurrency)
+            await this.createPurchaseOrderPaid(projectId, accountsReceivableId, quotationId, typeCurrency);
         }
     }
 
@@ -179,6 +180,39 @@ export class AdvancePaymentRecordService {
         if (!findProjectQuotation)
             throw this.responseService.badRequest("El proyecto no existe.");
         return findProjectQuotation
+    }
+
+    async createPurchaseOrderPaid(projectId: number, accountsReceivableId: number, quotationId: number, typeCurrency: string) {
+        /**
+         * Buscar dentro de cotizacion para sabes si es isFractionate
+         * Si no es fraccionada
+         * entonces buscares con un find las proformas donde el projectId
+         * despues de consultar cada proforma traero su cuenta por pagar y buscare si la cuenta por pagar ya tiene una orden de compra, si no le voy a crear una
+         *
+         * Si es fraccionada
+         * entonces tomare el typeCurrency de account-receible (cuenta por cobrar)
+         * buscares con un find las proformas donde el projectId y el currency sea igual a typeCurrency de account-receible
+         * me traera solo una proforma y su accoun payable (cuenta por pagar)
+         * despues de consultar cada proforma traero su cuenta por pagar y buscare si la cuenta por pagar ya tiene una orden de compra, si no le voy a crear una
+         */
+
+        const quotation = await this.quotationRepository.findById(quotationId);
+        if (quotation.isFractionate) {
+            // const cuentaPorCobrar = await this.accountsReceivableRepository.findOne({where: {quotationId: quotation.id, typeCurrency}});
+            const proforma = await this.proformaRepository.findOne({where: {projectId, currency: typeCurrency === ExchangeRateQuotationE.EUR ? ProformaCurrencyE.EURO : typeCurrency === ExchangeRateQuotationE.MXN ? ProformaCurrencyE.PESO_MEXICANO : ProformaCurrencyE.USD}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
+            if (proforma && proforma?.accountPayable && !proforma?.purchaseOrders) {
+                await this.purchaseOrdersRepository.create({accountPayableId: proforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: proforma.id, accountsReceivableId}, /*{transaction}*/)
+            }
+        } else {
+            const proformas = await this.proformaRepository.find({where: {projectId}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
+            for (let index = 0; index < proformas.length; index++) {
+                const element = proformas[index];
+                if (element && element?.accountPayable && !element?.purchaseOrders) {
+                    await this.purchaseOrdersRepository.create({accountPayableId: element.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: element.id, accountsReceivableId}, /*{transaction}*/)
+                }
+            }
+        }
+
     }
 
     async findProjectProforma(projectId: number, accountsReceivableId: number, quotationId: number, typeCurrency: any) {
