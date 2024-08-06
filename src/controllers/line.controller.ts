@@ -61,7 +61,7 @@ export class LineController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(Line, {includeRelations: true}),
+                    items: getModelSchemaRef(Line, {includeRelations: false}),
                 },
             },
         },
@@ -77,7 +77,7 @@ export class LineController {
         description: 'Line model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Line, {includeRelations: true}),
+                schema: getModelSchemaRef(Line, {includeRelations: false}),
             },
         },
     })

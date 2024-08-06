@@ -68,7 +68,7 @@ export class BrandController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(Brand, {includeRelations: true}),
+                    items: getModelSchemaRef(Brand, {includeRelations: false}),
                 },
             },
         },
@@ -84,7 +84,7 @@ export class BrandController {
         description: 'Brand model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Brand, {includeRelations: true}),
+                schema: getModelSchemaRef(Brand, {includeRelations: false}),
             },
         },
     })

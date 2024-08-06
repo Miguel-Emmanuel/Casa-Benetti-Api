@@ -69,7 +69,7 @@ export class GroupController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Group, {includeRelations: true}),
+          items: getModelSchemaRef(Group, {includeRelations: false}),
         },
       },
     },
@@ -85,7 +85,7 @@ export class GroupController {
     description: 'Group model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Group, {includeRelations: true}),
+        schema: getModelSchemaRef(Group, {includeRelations: false}),
       },
     },
   })

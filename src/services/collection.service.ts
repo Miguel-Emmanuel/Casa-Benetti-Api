@@ -1,8 +1,9 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import {PurchaseOrdersStatus} from '../enums';
 import {schemaCollectionCreate} from '../joi.validation.ts/collection.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Collection} from '../models';
+import {Collection, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {CollectionRepository, PurchaseOrdersRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -16,6 +17,77 @@ export class CollectionService {
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
     ) { }
+
+    async earringsCollect() {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'proforma',
+                scope: {
+                    include: [
+                        {
+                            relation: 'quotationProducts',
+                            scope: {
+                                include: [
+                                    {
+                                        relation: 'product',
+                                        scope: {
+                                            include: [
+                                                {
+                                                    relation: 'document'
+                                                },
+                                                {
+                                                    relation: 'line'
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ],
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        const purchaseOrders = await this.purchaseOrdersRepository.find({
+            where: {
+                and: [
+                    {
+                        status: PurchaseOrdersStatus.EN_RECOLECCION
+                    },
+                    {
+                        collectionId: {eq: null}
+                    }
+                ]
+            }, include: [...include]
+        })
+
+        return purchaseOrders.map(value => {
+            const {id: purchaseOrderid, proforma} = value;
+            const {quotationProducts} = proforma;
+            return {
+                id: purchaseOrderid,
+                products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                    const {document, line, name} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing
+                    ];
+                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                    return {
+                        id: productId,
+                        SKU,
+                        image: document?.fileURL,
+                        description,
+                    }
+                })
+            }
+        })
+    }
 
     async create(collection: {destination: string, dateCollection: Date, purchaseOrders: number[]}) {
         await this.validateCollectionBody(collection)

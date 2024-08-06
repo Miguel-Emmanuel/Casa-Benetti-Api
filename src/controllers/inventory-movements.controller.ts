@@ -167,7 +167,7 @@ export class InventoryMovementsController {
     //         'application/json': {
     //             schema: {
     //                 type: 'array',
-    //                 items: getModelSchemaRef(InventoryMovements, {includeRelations: true}),
+    //                 items: getModelSchemaRef(InventoryMovements, {includeRelations: false}),
     //             },
     //         },
     //     },
@@ -183,7 +183,7 @@ export class InventoryMovementsController {
     //     description: 'InventoryMovements model instance',
     //     content: {
     //         'application/json': {
-    //             schema: getModelSchemaRef(InventoryMovements, {includeRelations: true}),
+    //             schema: getModelSchemaRef(InventoryMovements, {includeRelations: false}),
     //         },
     //     },
     // })

@@ -352,7 +352,7 @@ export class InventoriesController {
     //     description: 'Inventories model instance',
     //     content: {
     //         'application/json': {
-    //             schema: getModelSchemaRef(Inventories, {includeRelations: true}),
+    //             schema: getModelSchemaRef(Inventories, {includeRelations: false}),
     //         },
     //     },
     // })
