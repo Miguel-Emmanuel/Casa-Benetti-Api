@@ -36,19 +36,26 @@ export class CollectionController {
                             id: {
                                 type: 'number'
                             },
-                            customerName: {
-                                type: 'string'
-                            },
-                            quantity: {
-                                type: 'number'
-                            },
-                            deliveryDay: {
-                                type: 'string',
-                                format: 'date-time'
-                            },
-                            status: {
-                                type: 'string'
-                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
+                                        description: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
                         }
                     },
                 },
