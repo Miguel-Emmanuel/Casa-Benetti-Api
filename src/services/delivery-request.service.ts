@@ -214,7 +214,7 @@ export class DeliveryRequestService {
             return deliveryRequest.map(value => {
                 const {id, customer, purchaseOrders, deliveryDay, status} = value;
                 let quantity = 0;
-                for (let index = 0; index < purchaseOrders.length; index++) {
+                for (let index = 0; index < purchaseOrders?.length; index++) {
                     const element = purchaseOrders[index];
                     const {proforma} = element;
                     const {quotationProducts} = proforma;
