@@ -421,12 +421,12 @@ export class DeliveryRequestService {
                 deliveryDay,
                 status,
                 comment,
-                purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
                     return {
                         id: purchaseOrderid,
-                        products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                        products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                             const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
                             const {document, line, name} = product;
                             const descriptionParts = [
