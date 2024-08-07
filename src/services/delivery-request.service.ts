@@ -212,7 +212,7 @@ export class DeliveryRequestService {
 
             const deliveryRequest = await this.deliveryRequestRepository.find(filter)
             return deliveryRequest.map(value => {
-                const {id, customer, purchaseOrders, deliveryDay, status} = value;
+                const {id, customer, purchaseOrders, deliveryDay, status, createdAt} = value;
                 let quantity = 0;
                 for (let index = 0; index < purchaseOrders?.length; index++) {
                     const element = purchaseOrders[index];
@@ -226,6 +226,7 @@ export class DeliveryRequestService {
                     quantity,
                     deliveryDay,
                     status,
+                    createdAt
                 }
             });
         } catch (error) {
