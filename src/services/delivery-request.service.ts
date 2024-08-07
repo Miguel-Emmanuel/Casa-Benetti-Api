@@ -80,7 +80,7 @@ export class DeliveryRequestService {
         return deliveryRequest.map(value => {
             const {id, customer, purchaseOrders, deliveryDay, status} = value;
             let quantity = 0;
-            for (let index = 0; index < purchaseOrders.length; index++) {
+            for (let index = 0; index < purchaseOrders?.length; index++) {
                 const element = purchaseOrders[index];
                 const {proforma} = element;
                 const {quotationProducts} = proforma;
@@ -151,7 +151,7 @@ export class DeliveryRequestService {
         return deliveryRequest.map(value => {
             const {id, customer, purchaseOrders, deliveryDay, status} = value;
             let quantity = 0;
-            for (let index = 0; index < purchaseOrders.length; index++) {
+            for (let index = 0; index < purchaseOrders?.length; index++) {
                 const element = purchaseOrders[index];
                 const {proforma} = element;
                 const {quotationProducts} = proforma;
@@ -406,7 +406,7 @@ export class DeliveryRequestService {
 
             const {purchaseOrders, deliveryDay, status, customer, projectId, comment} = deliveryRequest;
             let quantity = 0;
-            for (let index = 0; index < purchaseOrders.length; index++) {
+            for (let index = 0; index < purchaseOrders?.length; index++) {
                 const element = purchaseOrders[index];
                 const {proforma} = element;
                 const {quotationProducts} = proforma;
@@ -472,7 +472,7 @@ export class DeliveryRequestService {
         await this.validateBodyDeliveryRequestPatchFeedback(data);
         const {status, feedbackComment, purchaseOrders, documents} = data;
         await this.deliveryRequestRepository.updateById(id, {status, feedbackComment})
-        for (let index = 0; index < purchaseOrders.length; index++) {
+        for (let index = 0; index < purchaseOrders?.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
             for (let index = 0; index < products.length; index++) {
                 const {id, isSelected} = products[index];
@@ -503,7 +503,7 @@ export class DeliveryRequestService {
         const {comment, deliveryDay, purchaseOrders} = data
         await this.deliveryRequestRepository.updateById(id, {comment, deliveryDay});
 
-        for (let index = 0; index < purchaseOrders.length; index++) {
+        for (let index = 0; index < purchaseOrders?.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
             for (let index = 0; index < products.length; index++) {
                 const {id, isSelected} = products[index];
