@@ -1,5 +1,6 @@
 import {Entity, hasMany, model, property} from '@loopback/repository';
 import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
+import {Document} from './document.model';
 
 //Programar recolección
 @model({
@@ -34,12 +35,20 @@ export class Collection extends Entity {
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrdersWithRelations[];
 
+
     //Fecha de recoleccion
+  @hasMany(() => Document)
+  documents: Document[];
     @property({
         type: 'date',
     })
     dateCollection: Date
 
+    //Número de contenedor
+    @property({
+        type: 'string',
+    })
+    containerNumber: string;
 
     constructor(data?: Partial<Collection>) {
         super(data);

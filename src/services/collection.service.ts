@@ -1,10 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
-import {PurchaseOrdersStatus} from '../enums';
-import {schemaCollectionCreate} from '../joi.validation.ts/collection.validation';
+import {CollectionDestinationE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
+import {schemaCollectionCreate, schemaCollectionPatchFeedback} from '../joi.validation.ts/collection.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Collection, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {CollectionRepository, PurchaseOrdersRepository} from '../repositories';
+import {Collection, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {CollectionRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -16,6 +16,10 @@ export class CollectionService {
         public responseService: ResponseService,
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
     ) { }
 
     async earringsCollect() {
@@ -147,26 +151,90 @@ export class CollectionService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Collection>) {
-        const include: InclusionFilter[] = [
-            {
-                relation: 'purchaseOrders',
-                scope: {
-                    fields: ['id', 'collectionId']
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'product',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ],
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 }
-            }
-        ]
-        if (filter?.include)
-            filter.include = [
-                ...filter.include,
-                ...include
             ]
-        else
-            filter = {
-                ...filter, include: [
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
                     ...include
                 ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+            const collection = await this.collectionRepository.findById(id, filter);
+            const {purchaseOrders, destination, dateCollection} = collection;
+            return {
+                id,
+                destination,
+                dateCollection,
+                purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                    const {id: purchaseOrderid, proforma} = value;
+                    const {quotationProducts} = proforma;
+                    return {
+                        id: purchaseOrderid,
+                        products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                            }
+                        })
+                    }
+                }),
             };
-        return this.collectionRepository.findById(id, filter);
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
     async updateById(id: number, collection: Collection,) {
@@ -195,6 +263,105 @@ export class CollectionService {
             if (message.includes('is required') || message.includes('is not allowed to be empty'))
                 throw this.responseService.unprocessableEntity(`${key} es requerido.`)
             throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateCollectionById(id: number,) {
+        const collection = await this.collectionRepository.findOne({where: {id}});
+        if (!collection)
+            throw this.responseService.badRequest("Recoleccion no encontrada.")
+        return collection;
+    }
+
+    async validateBodyCollectionPatchFeedback(data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+        try {
+            await schemaCollectionPatchFeedback.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async setFeedback(id: number, data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+        await this.validateCollectionById(id);
+        await this.validateBodyCollectionPatchFeedback(data);
+        const {containerNumber, documents, destination, dateCollection} = data;
+        await this.collectionRepository.updateById(id, {containerNumber, destination, dateCollection})
+        await this.createDocument(id, documents);
+        await this.validaIfContainer(id, destination);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async validaIfContainer(collectionId: number, destination: CollectionDestinationE) {
+        if (destination === CollectionDestinationE.CONTENEDOR) {
+            const collection = await this.collectionRepository.findById(collectionId, {
+                include: [
+                    {
+                        relation: 'purchaseOrders',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'proforma',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'quotationProducts',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'product',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'document'
+                                                                    },
+                                                                    {
+                                                                        relation: 'line'
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ],
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            });
+            const {purchaseOrders} = collection;
+            for (let index = 0; index < purchaseOrders?.length; index++) {
+                const element = purchaseOrders[index];
+                const {id: purchaseOrderid, proforma} = element;
+                const {quotationProducts} = proforma;
+                await this.purchaseOrdersRepository.updateById(purchaseOrderid, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL});
+                for (let index = 0; index < quotationProducts?.length; index++) {
+                    const element = quotationProducts[index];
+                    const {id: quotationProductId} = element;
+                    await this.quotationProductsRepository.updateById(quotationProductId, {status: QuotationProductStatusE.TRANSITO_INTERNACIONAL});
+                }
+            }
+        }
+    }
+
+    async createDocument(collectionId: number, documents?: {fileURL: string, name: string, extension: string, id?: number}[]) {
+        if (documents) {
+            for (let index = 0; index < documents?.length; index++) {
+                const element = documents[index];
+                if (element && !element?.id) {
+                    await this.collectionRepository.documents(collectionId).create(element);
+                } else if (element) {
+                    await this.documentRepository.updateById(element.id, {...element});
+                }
+            }
         }
     }
 }
