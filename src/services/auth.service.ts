@@ -239,7 +239,7 @@ export class AuthService {
     const module = await this.moduleRepository.findOne({
       where: {name: body.module},
     })
-
+    console.log('module: ', module)
     if (!module) return this.responseService.forbbiden("No se ha encontrado el modulo")
 
     let roleModule: any;
@@ -263,7 +263,14 @@ export class AuthService {
         })
       }
 
-      if (!roleModule) return this.responseService.forbbiden("No se han encontrado modulos")
+      // if (!roleModule) return this.responseService.forbbiden("No se han encontrado modulos")
+      if (!roleModule) {
+        roleModule.create = false;
+        roleModule.update = false;
+        roleModule.del = false;
+        roleModule.read = false;
+
+      }
 
       return roleModule;
     } catch (error) {
