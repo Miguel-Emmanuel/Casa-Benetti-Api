@@ -39,6 +39,7 @@ export enum ModuleCategories {
     CUENTAS_POR_PAGAR = 'Cuentas por pagar',
     COMISIONES = 'Comisiones',
     INVENTARIOS = 'Inventarios',
+    LOGISTICA = 'Logística',
 }
 
 export enum TypeUserE {

@@ -55,4 +55,9 @@ export const modulesSeed = [
     description: 'Inventarios',
     categoryName: ModuleCategories.INVENTARIOS
   },
+  {
+    name: 'Logística',
+    description: 'Logística',
+    categoryName: ModuleCategories.LOGISTICA
+  },
 ];

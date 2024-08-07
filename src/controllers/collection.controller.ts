@@ -115,7 +115,7 @@ export class CollectionController {
     })
     async find(
         @param.filter(Collection) filter?: Filter<Collection>,
-    ): Promise<Collection[]> {
+    ): Promise<Object[]> {
         return this.collectionService.find(filter);
     }
 

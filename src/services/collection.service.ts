@@ -98,26 +98,52 @@ export class CollectionService {
     }
 
     async find(filter?: Filter<Collection>,) {
-        const include: InclusionFilter[] = [
-            {
-                relation: 'purchaseOrders',
-                scope: {
-                    fields: ['id', 'collectionId']
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        fields: ['id', 'collectionId', 'proformaId'],
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    fields: ['id', 'providerId'],
+                                    include: [
+                                        {
+                                            relation: 'provider'
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 }
-            }
-        ]
-        if (filter?.include)
-            filter.include = [
-                ...filter.include,
-                ...include
             ]
-        else
-            filter = {
-                ...filter, include: [
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
                     ...include
                 ]
-            };
-        return this.collectionRepository.find(filter);
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+
+            const collectios = await this.collectionRepository.find(filter);
+            return collectios.map(value => {
+                const {id, dateCollection, purchaseOrders} = value;
+                return {
+                    id,
+                    dateCollection,
+                    providers: purchaseOrders.map(value => value?.proforma?.provider?.name)?.join(', ')
+                }
+            })
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Collection>) {
