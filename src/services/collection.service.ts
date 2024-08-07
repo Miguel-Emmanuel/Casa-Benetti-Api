@@ -180,6 +180,12 @@ export class CollectionService {
                                                     }
                                                 ],
                                             }
+                                        },
+                                        {
+                                            relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'brand'
                                         }
                                     ]
                                 }
@@ -206,10 +212,17 @@ export class CollectionService {
                 destination,
                 dateCollection,
                 purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
-                    const {id: purchaseOrderid, proforma} = value;
-                    const {quotationProducts} = proforma;
+                    const {id: purchaseOrderid, proforma, productionEndDate} = value;
+                    const {proformaId, provider, brand, quotationProducts} = proforma;
+                    const {name} = provider;
+                    const {brandName} = brand;
                     return {
                         id: purchaseOrderid,
+                        proformaId,
+                        provider: name,
+                        brand: brandName,
+                        quantity: quotationProducts?.length ?? 0,
+                        productionEndDate,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                             const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
                             const {document, line, name} = product;
