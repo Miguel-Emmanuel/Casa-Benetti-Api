@@ -454,14 +454,18 @@ export class DeliveryRequestService {
     }
 
     async updateDeliveryRequest(id: number, data: {status: DeliveryRequestStatusE, reason?: string},) {
-        await this.validateDeloveryRequestById(id);
-        await this.validateBodyDeliveryRequestPatchStatus(data);
-        const {status, reason} = data;
-        await this.deliveryRequestRepository.updateById(id, {status, reasonRejected: reason})
-        if (status === DeliveryRequestStatusE.RECHAZADA)
-            await this.notifyLogisticsRejected(id);
+        try {
+            await this.validateDeloveryRequestById(id);
+            await this.validateBodyDeliveryRequestPatchStatus(data);
+            const {status, reason} = data;
+            await this.deliveryRequestRepository.updateById(id, {status, reasonRejected: reason})
+            if (status === DeliveryRequestStatusE.RECHAZADA)
+                await this.notifyLogisticsRejected(id);
 
-        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+            return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+        } catch (error) {
+            return this.responseService.badRequest(error?.message ?? error);
+        }
     }
     async setFeedback(id: number, data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         await this.validateDeloveryRequestById(id);
