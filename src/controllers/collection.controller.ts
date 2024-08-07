@@ -8,10 +8,12 @@ import {
     get,
     getModelSchemaRef,
     param,
+    patch,
     post,
     requestBody,
     response
 } from '@loopback/rest';
+import {CollectionDestinationE} from '../enums';
 import {Collection} from '../models';
 import {CollectionService} from '../services';
 
@@ -131,8 +133,63 @@ export class CollectionController {
     async findById(
         @param.path.number('id') id: number,
         @param.filter(Collection, {exclude: 'where'}) filter?: FilterExcludingWhere<Collection>
-    ): Promise<Collection> {
+    ): Promise<Object> {
         return this.collectionService.findById(id, filter);
+    }
+
+
+    @patch('/collections/{id}/feedback')
+    @response(204, {
+        description: 'collections order PATCH success',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async setFeedback(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            containerNumber: {
+                                type: 'string',
+                                nullable: true,
+                            },
+                            destination: {
+                                type: 'string',
+                            },
+                            dateCollection: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            documents: {
+                                type: 'array',
+                                items: {
+                                    properties: {
+                                        id: {type: 'number'},
+                                        fileURL: {type: 'string'},
+                                        name: {type: 'string'},
+                                        extension: {type: 'string'}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]},
+    ): Promise<void> {
+        await this.collectionService.setFeedback(id, data);
     }
 
     // @patch('/collections/{id}')
