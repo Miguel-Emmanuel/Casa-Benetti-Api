@@ -523,29 +523,33 @@ export class DeliveryRequestService {
     }
 
     async notifyLogisticsRejected(id: number) {
-        const delivery = await this.deliveryRequestRepository.findById(id, {
-            include: [
-                {
-                    relation: 'project',
-                    scope: {
-                        include: [
-                            {
-                                relation: 'quotation'
-                            }
-                        ]
+        try {
+            const delivery = await this.deliveryRequestRepository.findById(id, {
+                include: [
+                    {
+                        relation: 'project',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'quotation'
+                                }
+                            ]
+                        }
                     }
+                ]
+            })
+            const email = delivery?.project?.quotation?.mainProjectManagerId;
+            const options = {
+                to: email,
+                templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.subject,
                 }
-            ]
-        })
-        const email = delivery?.project?.quotation?.mainProjectManagerId;
-        const options = {
-            to: email,
-            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.id,
-            dynamicTemplateData: {
-                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.subject,
-            }
-        };
-        await this.sendgridService.sendNotification(options);
+            };
+            await this.sendgridService.sendNotification(options);
+        } catch (error) {
+
+        }
     }
 
     async notifyLogistics(projectId: number, deliveryDay: string) {
