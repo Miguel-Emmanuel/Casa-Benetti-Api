@@ -530,14 +530,21 @@ export class DeliveryRequestService {
                     scope: {
                         include: [
                             {
-                                relation: 'quotation'
+                                relation: 'quotation',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'mainProjectManager'
+                                        }
+                                    ]
+                                }
                             }
                         ]
                     }
                 }
             ]
         })
-        const email = delivery?.project?.quotation?.mainProjectManagerId;
+        const email = delivery?.project?.quotation?.mainProjectManager?.email;
         const options = {
             to: email,
             templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.id,
@@ -545,8 +552,6 @@ export class DeliveryRequestService {
                 subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.subject,
             }
         };
-        return this.responseService.ok({message: options});
-
         await this.sendgridService.sendNotification(options);
     }
 
