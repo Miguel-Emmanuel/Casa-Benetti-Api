@@ -137,12 +137,12 @@ export class CollectionService {
                 };
 
             const collectios = await this.collectionRepository.find(filter);
-            return collectios.map(value => {
+            return collectios?.map(value => {
                 const {id, dateCollection, purchaseOrders} = value;
                 return {
                     id,
                     dateCollection,
-                    providers: purchaseOrders.map(value => value?.proforma?.provider?.name)?.join(', ')
+                    providers: purchaseOrders?.map(value => value?.proforma?.provider?.name)?.join(', ')
                 }
             })
         } catch (error) {
