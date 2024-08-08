@@ -3,7 +3,7 @@ import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopba
 import {CollectionDestinationE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {schemaCollectionCreate, schemaCollectionPatchFeedback} from '../joi.validation.ts/collection.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Collection, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {Collection, CollectionWithRelations, PurchaseOrders, PurchaseOrdersRelations, PurchaseOrdersWithRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {CollectionRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -52,15 +52,18 @@ export class CollectionService {
                 }
             }
         ]
+        const and: any = [
+            {
+                status: PurchaseOrdersStatus.EN_RECOLECCION
+            },
+            {
+                collectionId: {eq: null}
+            }
+        ]
         const purchaseOrders = await this.purchaseOrdersRepository.find({
             where: {
                 and: [
-                    {
-                        status: PurchaseOrdersStatus.EN_RECOLECCION
-                    },
-                    {
-                        collectionId: {eq: null}
-                    }
+                    ...and
                 ]
             }, include: [...include]
         })
@@ -96,6 +99,7 @@ export class CollectionService {
     async create(collection: {destination: string, dateCollection: Date, purchaseOrders: number[]}) {
         await this.validateCollectionBody(collection)
         const {purchaseOrders, ...body} = collection;
+        await this.validatePurchaseOrderas(purchaseOrders)
         const collectionRes = await this.collectionRepository.create(body);
         await this.relationCollectionToPurchaseOrders(collectionRes.id, purchaseOrders);
         return collectionRes
@@ -105,6 +109,7 @@ export class CollectionService {
         await this.validateCollectionById(id);
         await this.validateCollectionBody(collection)
         const {purchaseOrders, ...body} = collection;
+        await this.validatePurchaseOrderas(purchaseOrders)
         await this.collectionRepository.updateById(id, body);
         await this.relationCollectionToPurchaseOrders(id, purchaseOrders);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
@@ -146,12 +151,12 @@ export class CollectionService {
                 };
 
             const collectios = await this.collectionRepository.find(filter);
-            return collectios?.map(value => {
+            return collectios?.map((value: CollectionWithRelations) => {
                 const {id, dateCollection, purchaseOrders} = value;
                 return {
                     id,
                     dateCollection,
-                    providers: purchaseOrders?.map(value => value?.proforma?.provider?.name)?.join(', ')
+                    providers: purchaseOrders?.map((value: PurchaseOrdersWithRelations) => value?.proforma?.provider?.name)?.join(', ')
                 }
             })
         } catch (error) {
@@ -261,10 +266,22 @@ export class CollectionService {
 
     //
 
+    async validatePurchaseOrderas(purchaseOrders: number[]) {
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const element = purchaseOrders[index];
+            const where: any = {id: element, collectionId: {eq: null}}
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
+            console
+            if (!purchaseOrder)
+                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una recoleccion: ${element}`)
+        }
+    }
+
     async relationCollectionToPurchaseOrders(collectionId: number, purchaseOrders: number[]) {
         for (let index = 0; index < purchaseOrders.length; index++) {
             const element = purchaseOrders[index];
-            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {id: element}});
+            const where: any = {id: element, collectionId: {eq: null}}
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
             if (purchaseOrder)
                 await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {collectionId})
         }
