@@ -445,15 +445,18 @@ export class PurchaseOrdersService {
                 }
             }
         ]
+        const and: any = [
+            {
+                status: PurchaseOrdersStatus.EN_RECOLECCION
+            },
+            {
+                collectionId: {eq: null}
+            }
+        ]
         const purchaseOrders = await this.purchaseOrdersRepository.find({
             where: {
                 and: [
-                    {
-                        status: PurchaseOrdersStatus.EN_RECOLECCION
-                    },
-                    {
-                        collectionId: {eq: null}
-                    }
+                    ...and
                 ]
             }, include: [...include]
         })

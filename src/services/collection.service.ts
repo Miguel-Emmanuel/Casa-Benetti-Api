@@ -52,15 +52,18 @@ export class CollectionService {
                 }
             }
         ]
+        const and: any = [
+            {
+                status: PurchaseOrdersStatus.EN_RECOLECCION
+            },
+            {
+                collectionId: {eq: null}
+            }
+        ]
         const purchaseOrders = await this.purchaseOrdersRepository.find({
             where: {
                 and: [
-                    {
-                        status: PurchaseOrdersStatus.EN_RECOLECCION
-                    },
-                    {
-                        collectionId: {eq: null}
-                    }
+                    ...and
                 ]
             }, include: [...include]
         })
@@ -266,7 +269,9 @@ export class CollectionService {
     async validatePurchaseOrderas(purchaseOrders: number[]) {
         for (let index = 0; index < purchaseOrders.length; index++) {
             const element = purchaseOrders[index];
-            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {id: element, collectionId: {eq: null}}});
+            const where: any = {id: element, collectionId: {eq: null}}
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
+            console
             if (!purchaseOrder)
                 throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una recoleccion: ${element}`)
         }
@@ -275,7 +280,8 @@ export class CollectionService {
     async relationCollectionToPurchaseOrders(collectionId: number, purchaseOrders: number[]) {
         for (let index = 0; index < purchaseOrders.length; index++) {
             const element = purchaseOrders[index];
-            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {id: element, collectionId: {eq: null}}});
+            const where: any = {id: element, collectionId: {eq: null}}
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
             if (purchaseOrder)
                 await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {collectionId})
         }

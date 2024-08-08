@@ -65,7 +65,7 @@ export class PurchaseOrders extends Entity {
   isPaid: boolean;
 
   @belongsTo(() => Collection)
-  collectionId?: number | null;
+  collectionId?: number;
 
   @belongsTo(() => DeliveryRequest)
   deliveryRequestId: number;
