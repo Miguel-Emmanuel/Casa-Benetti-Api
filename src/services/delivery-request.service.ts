@@ -97,75 +97,79 @@ export class DeliveryRequestService {
     }
 
     async findByProjectiD(projectId: number, filter?: Filter<DeliveryRequest>,) {
-        if (filter?.order) {
-            filter.order = [...filter.order, 'deliveryDay DESC']
-        } else {
-            filter = {...filter, order: ['deliveryDay DESC']};
-        }
-        if (filter?.where) {
-            filter.where = {...filter.where, projectId}
-        } else {
-            filter = {...filter, where: {projectId}};
-        }
+        try {
+            if (filter?.order) {
+                filter.order = [...filter.order, 'deliveryDay DESC']
+            } else {
+                filter = {...filter, order: ['deliveryDay DESC']};
+            }
+            if (filter?.where) {
+                filter.where = {...filter.where, projectId}
+            } else {
+                filter = {...filter, where: {projectId}};
+            }
 
-        const include: InclusionFilter[] = [
-            {
-                relation: 'customer',
-            },
-            {
-                relation: 'purchaseOrders',
-                scope: {
-                    include: [
-                        {
-                            relation: 'proforma',
-                            scope: {
-                                include: [
-                                    {
-                                        relation: 'quotationProducts',
-                                        scope: {
-                                            where: {
-                                                status: QuotationProductStatusE.ENTREGADO
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'customer',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                where: {
+                                                    status: QuotationProductStatusE.ENTREGADO
+                                                }
                                             }
                                         }
-                                    }
-                                ]
+                                    ]
+                                }
                             }
-                        }
-                    ]
+                        ]
+                    }
                 }
-            }
-        ]
-        if (filter?.include)
-            filter.include = [
-                ...filter.include,
-                ...include
             ]
-        else
-            filter = {
-                ...filter, include: [
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
                     ...include
                 ]
-            }
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                }
 
-        const deliveryRequest = await this.deliveryRequestRepository.find(filter)
-        return deliveryRequest.map(value => {
-            const {id, customer, purchaseOrders, deliveryDay, status} = value;
-            let quantity = 0;
-            for (let index = 0; index < purchaseOrders?.length; index++) {
-                const element = purchaseOrders[index];
-                const {proforma} = element;
-                const {quotationProducts} = proforma;
-                quantity += quotationProducts?.length ?? 0
-            }
-            return {
-                id,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                quantity,
-                deliveryDay,
-                status,
-                purchaseOrders: purchaseOrders.map(value => value.id)
-            }
-        });
+            const deliveryRequest = await this.deliveryRequestRepository.find(filter)
+            return deliveryRequest?.map(value => {
+                const {id, customer, purchaseOrders, deliveryDay, status} = value;
+                let quantity = 0;
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const element = purchaseOrders[index];
+                    const {proforma} = element;
+                    const {quotationProducts} = proforma;
+                    quantity += quotationProducts?.length ?? 0
+                }
+                return {
+                    id,
+                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    quantity,
+                    deliveryDay,
+                    status,
+                    purchaseOrders: purchaseOrders.map(value => value.id)
+                }
+            });
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
     async findLogistic(filter?: Filter<DeliveryRequest>,) {
