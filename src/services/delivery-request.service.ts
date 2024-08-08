@@ -449,7 +449,7 @@ export class DeliveryRequestService {
                                 description,
                                 isSelected: statusProduct === QuotationProductStatusE.ENTREGADO ? true : false
                             }
-                        })
+                        }) ?? []
                     }
                 }),
             };
