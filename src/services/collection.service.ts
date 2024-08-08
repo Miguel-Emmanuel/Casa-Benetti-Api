@@ -101,6 +101,15 @@ export class CollectionService {
         return collectionRes
     }
 
+    async updateById(id: number, collection: {destination: string, dateCollection: Date, purchaseOrders: number[]}) {
+        await this.validateCollectionById(id);
+        await this.validateCollectionBody(collection)
+        const {purchaseOrders, ...body} = collection;
+        await this.collectionRepository.updateById(id, body);
+        await this.relationCollectionToPurchaseOrders(id, purchaseOrders);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
     async find(filter?: Filter<Collection>,) {
         try {
             const include: InclusionFilter[] = [
@@ -248,10 +257,6 @@ export class CollectionService {
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error)
         }
-    }
-
-    async updateById(id: number, collection: Collection,) {
-        await this.collectionRepository.updateById(id, collection);
     }
 
     //

@@ -103,6 +103,42 @@ export class CollectionController {
         return this.collectionService.create(collection);
     }
 
+    @patch('/collections/{id}')
+    @response(200, {
+        description: 'Collection model instance',
+        content: {'application/json': {schema: getModelSchemaRef(Collection)}},
+    })
+    async updateById(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            destination: {
+                                type: 'string',
+                            },
+                            dateCollection: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'number'
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        collection: {destination: string, dateCollection: Date, purchaseOrders: number[]}
+    ): Promise<Object> {
+        return this.collectionService.updateById(id, collection);
+    }
+
     @get('/collections')
     @response(200, {
         description: 'Array of Collection model instances',
