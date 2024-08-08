@@ -289,6 +289,12 @@ export class CollectionService {
     }
 
     async relationCollectionToPurchaseOrders(collectionId: number, purchaseOrders: number[]) {
+        const purchaseOrdersOld = await this.purchaseOrdersRepository.find({where: {collectionId}});
+        const idOld = purchaseOrdersOld.map(value => value.id);
+        for (let index = 0; index < idOld?.length; index++) {
+            const element = idOld[index];
+            await this.purchaseOrdersRepository.updateById(element, {collectionId: undefined})
+        }
         for (let index = 0; index < purchaseOrders.length; index++) {
             const element = purchaseOrders[index];
             const where: any = {id: element, collectionId: {eq: null}}
