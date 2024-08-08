@@ -109,7 +109,7 @@ export class CollectionService {
         await this.validateCollectionById(id);
         await this.validateCollectionBody(collection)
         const {purchaseOrders, ...body} = collection;
-        await this.validatePurchaseOrderas(purchaseOrders)
+        await this.validatePurchaseOrderasPatch(purchaseOrders)
         await this.collectionRepository.updateById(id, body);
         await this.relationCollectionToPurchaseOrders(id, purchaseOrders);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
