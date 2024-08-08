@@ -164,7 +164,7 @@ export class DeliveryRequestService {
                     quantity,
                     deliveryDay,
                     status,
-                    purchaseOrders: purchaseOrders.map(value => value.id)
+                    purchaseOrders: purchaseOrders?.map(value => value.id)
                 }
             });
         } catch (error) {
