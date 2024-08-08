@@ -277,6 +277,17 @@ export class CollectionService {
         }
     }
 
+    async validatePurchaseOrderasPatch(purchaseOrders: number[]) {
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const element = purchaseOrders[index];
+            const where: any = {id: {neq: element}, collectionId: {eq: null}}
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
+            console
+            if (!purchaseOrder)
+                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una recoleccion: ${element}`)
+        }
+    }
+
     async relationCollectionToPurchaseOrders(collectionId: number, purchaseOrders: number[]) {
         for (let index = 0; index < purchaseOrders.length; index++) {
             const element = purchaseOrders[index];
