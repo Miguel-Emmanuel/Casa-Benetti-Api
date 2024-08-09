@@ -60,4 +60,19 @@ export const modulesSeed = [
     description: 'Logística',
     categoryName: ModuleCategories.LOGISTICA
   },
+  {
+    name: 'Recolecciones',
+    description: 'Recolecciones',
+    categoryName: ModuleCategories.LOGISTICA
+  },
+  {
+    name: 'Contenedores',
+    description: 'Contenedores',
+    categoryName: ModuleCategories.LOGISTICA
+  },
+  {
+    name: 'Entregas',
+    description: 'Entregas',
+    categoryName: ModuleCategories.LOGISTICA
+  },
 ];
