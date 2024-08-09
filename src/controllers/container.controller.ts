@@ -87,10 +87,48 @@ export class ContainerController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Container, {
-                        partial: true,
-                        exclude: ['createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment', 'status'],
-                    }),
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            pedimento: {
+                                type: 'string'
+                            },
+                            containerNumber: {
+                                type: 'string'
+                            },
+                            invoiceNumber: {
+                                type: 'string'
+                            },
+                            grossWeight: {
+                                type: 'string'
+                            },
+                            numberBoxes: {
+                                type: 'number'
+                            },
+                            measures: {
+                                type: 'string'
+                            },
+                            ETDDate: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            ETADate: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                            documents: {
+                                type: 'array',
+                                items: {
+                                    properties: {
+                                        id: {type: 'number'},
+                                        fileURL: {type: 'string'},
+                                        name: {type: 'string'},
+                                        extension: {type: 'string'}
+                                    }
+                                }
+                            }
+                        }
+                    }
                 },
             },
         })
