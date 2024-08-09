@@ -24,28 +24,24 @@ export class Container extends BaseEntity {
     //Pedimiento
     @property({
         type: 'string',
-        required: true,
     })
     pedimento: string;
 
     //Número de contenedor
     @property({
         type: 'string',
-        required: true,
     })
     containerNumber: string;
 
     //Número de factura
     @property({
         type: 'string',
-        required: true,
     })
     invoiceNumber: string;
 
     //Peso bruto
     @property({
         type: 'string',
-        required: true,
     })
     grossWeight: string;
 
@@ -58,28 +54,24 @@ export class Container extends BaseEntity {
     //No. de cajas o bultos
     @property({
         type: 'number',
-        required: true,
     })
     numberBoxes: number;
 
     //Medidas
     @property({
         type: 'string',
-        required: true,
     })
     measures: string;
 
     //Fecha ETD
     @property({
         type: 'date',
-        required: true,
     })
     ETDDate: string;
 
     //Fecha ETA
     @property({
         type: 'date',
-        required: true,
     })
     ETADate: string;
 

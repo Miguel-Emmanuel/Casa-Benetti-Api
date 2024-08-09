@@ -44,6 +44,43 @@ export class QuotationProducts extends Entity {
     })
     id: number;
 
+    //Número de factura
+    @property({
+        type: 'string',
+    })
+    invoiceNumber?: string;
+
+    //Peso bruto
+    @property({
+        type: 'string',
+    })
+    grossWeight: string;
+
+    //Peso neto
+    @property({
+        type: 'string',
+    })
+    netWeight?: string;
+
+    //No. de cajas o bultos
+    @property({
+        type: 'number',
+    })
+    numberBoxes: number;
+
+    //Descripcion del pedimiento
+    @property({
+        type: 'string',
+    })
+    descriptionPedimiento?: string;
+
+    //NOM NOM 004, NOM 050
+    @property({
+        type: 'array',
+        itemType: 'string'
+    })
+    NOMS?: string[];
+
     //Fecha de creacion
     @property({
         type: 'date',

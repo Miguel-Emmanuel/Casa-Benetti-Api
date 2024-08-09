@@ -108,6 +108,9 @@ export class ContainerController {
                             measures: {
                                 type: 'string'
                             },
+                            status: {
+                                type: 'string'
+                            },
                             ETDDate: {
                                 type: 'string',
                                 format: 'date-time'
@@ -126,7 +129,51 @@ export class ContainerController {
                                         extension: {type: 'string'}
                                     }
                                 }
-                            }
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    invoiceNumber: {
+                                                        type: 'string'
+                                                    },
+                                                    grossWeight: {
+                                                        type: 'string'
+                                                    },
+                                                    netWeight: {
+                                                        type: 'string'
+                                                    },
+                                                    numberBoxes: {
+                                                        type: 'number'
+                                                    },
+                                                    descriptionPedimiento: {
+                                                        type: 'string'
+                                                    },
+                                                    NOMS: {
+                                                        type: 'array',
+                                                        items: {
+                                                            type: 'string'
+                                                        }
+                                                    },
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
                         }
                     }
                 },

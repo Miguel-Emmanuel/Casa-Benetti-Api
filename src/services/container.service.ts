@@ -29,6 +29,10 @@ export class ContainerService {
         }
     }
 
+    async updateById(id: number, container: Container,) {
+        await this.containerRepository.updateById(id, container);
+    }
+
     async find(filter?: Filter<Container>,) {
         const containers = await this.containerRepository.find(filter);
         return containers.map(value => {
@@ -151,10 +155,6 @@ export class ContainerService {
             throw this.responseService.badRequest("El contenedor no existe.");
 
         return container;
-    }
-
-    async updateById(id: number, container: Container,) {
-        await this.containerRepository.updateById(id, container);
     }
 
 
