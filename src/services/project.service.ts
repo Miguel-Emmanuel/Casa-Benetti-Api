@@ -361,7 +361,7 @@ export class ProjectService {
         await this.validateBodyDeliveryRequest(data);
         const {projectId, purchaseOrders, deliveryDay, comment} = data;
         const projectRes = await this.findByIdProject(projectId);
-
+        await this.validatePurchaseOrderas(purchaseOrders);
         const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment, customerId: projectRes.customerId})
         for (let index = 0; index < purchaseOrders.length; index++) {
             const {products, id: purchaseOrderId} = purchaseOrders[index];
@@ -380,6 +380,16 @@ export class ProjectService {
         }
         await this.notifyLogistics(projectId, deliveryDay);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async validatePurchaseOrderas(purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const element = purchaseOrders[index];
+            const where: any = {id: element, deliveryRequestId: {eq: null}}
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
+            if (!purchaseOrder)
+                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una recoleccion: ${element}`)
+        }
     }
     async notifyLogistics(projectId: number, deliveryDay: string) {
         const project = await this.projectRepository.findById(projectId, {
