@@ -278,3 +278,10 @@ export enum CollectionDestinationE {
     BODEGA_INTERNACIONAL = 'Bodega Internacional',
     CONTENEDOR = 'Contenedor',
 }
+
+
+export enum ContainerStatus {
+    NUEVO = 'Nuevo',
+    EN_TRANSITO = 'En tránsito',
+    ENTREGADO = 'Entregado',
+}

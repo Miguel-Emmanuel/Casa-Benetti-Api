@@ -1,11 +1,13 @@
 import * as Joi from "joi";
+import {ContainerStatus} from '../enums';
 
-export const schemaActivateDeactivateCustomer = Joi.object({
-    activateDeactivateComment: Joi.string().required()
+
+export const documents = Joi.object({
+    id: Joi.number(),
+    fileURL: Joi.string().required(),
+    name: Joi.string().required(),
+    extension: Joi.string().required(),
 })
-
-
-
 export const schemaCreateContainer = Joi.object({
     pedimento: Joi.string().allow(null).allow(''),
     containerNumber: Joi.string().required(),
@@ -15,7 +17,21 @@ export const schemaCreateContainer = Joi.object({
     measures: Joi.string().allow('').allow(null),
     ETDDate: Joi.date().allow(null),
     ETADate: Joi.date().allow(null),
+    docs: Joi.array().items(documents).optional(),
 })
 
 
-
+export const schemaUpdateContainer = Joi.object({
+    pedimento: Joi.string().allow(null).allow(''),
+    containerNumber: Joi.string().required(),
+    invoiceNumber: Joi.string().allow('').allow(null),
+    grossWeight: Joi.string().allow('').allow(null),
+    numberBoxes: Joi.number().allow(null),
+    measures: Joi.string().allow('').allow(null),
+    ETDDate: Joi.date().allow(null),
+    ETADate: Joi.date().allow(null),
+    docs: Joi.array().items(documents).optional(),
+    status: Joi.string().valid(...Object.values(ContainerStatus)).messages({
+        'any.only': `El estatus de pago debe ser igual a uno de los valores permitidos.`
+    }),
+})

@@ -13,7 +13,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {Container} from '../models';
+import {Container, ContainerCreate} from '../models';
 import {ContainerService} from '../services';
 
 @authenticate('jwt')
@@ -32,14 +32,14 @@ export class ContainerController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Container, {
+                    schema: getModelSchemaRef(ContainerCreate, {
                         title: 'NewContainer',
                         exclude: ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment'],
                     }),
                 },
             },
         })
-        container: Omit<Container, 'id'>,
+        container: Omit<ContainerCreate, 'id'>,
     ): Promise<Container> {
         return this.containerService.create(container);
     }

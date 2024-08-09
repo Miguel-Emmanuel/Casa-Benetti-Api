@@ -1,5 +1,9 @@
-import {model, property} from '@loopback/repository';
+import {hasMany, model, property} from '@loopback/repository';
+import {getJsonSchema} from '@loopback/rest';
+import {ContainerStatus} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
+import {DocumentSchema} from './base/document.model';
+import {Document} from './document.model';
 
 @model({
     settings: {
@@ -44,6 +48,9 @@ export class Container extends BaseEntity {
     })
     grossWeight: string;
 
+    @hasMany(() => Document)
+    documents: Document[];
+
     //No. de cajas o bultos
     @property({
         type: 'number',
@@ -72,6 +79,13 @@ export class Container extends BaseEntity {
     })
     ETADate: string;
 
+    //Status
+    @property({
+        type: 'string',
+        default: ContainerStatus.NUEVO
+    })
+    status: ContainerStatus;
+
 
     constructor(data?: Partial<Container>) {
         super(data);
@@ -83,3 +97,15 @@ export interface ContainerRelations {
 }
 
 export type ContainerWithRelations = Container & ContainerRelations;
+
+
+export class ContainerCreate extends Container {
+    @property({
+        type: 'array',
+        jsonSchema: {
+            type: 'array',
+            items: getJsonSchema(DocumentSchema)
+        }
+    })
+    docs: DocumentSchema[];
+}
