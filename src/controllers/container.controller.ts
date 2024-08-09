@@ -51,7 +51,7 @@ export class ContainerController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(Container, {includeRelations: true}),
+                    items: getModelSchemaRef(Container, {includeRelations: false}),
                 },
             },
         },
@@ -67,14 +67,14 @@ export class ContainerController {
         description: 'Container model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Container, {includeRelations: true}),
+                schema: getModelSchemaRef(Container, {includeRelations: false}),
             },
         },
     })
     async findById(
         @param.path.number('id') id: number,
         @param.filter(Container, {exclude: 'where'}) filter?: FilterExcludingWhere<Container>
-    ): Promise<Container> {
+    ): Promise<Object> {
         return this.containerService.findById(id, filter);
     }
 
@@ -87,7 +87,10 @@ export class ContainerController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(Container, {partial: true}),
+                    schema: getModelSchemaRef(Container, {
+                        partial: true,
+                        exclude: ['createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment', 'status'],
+                    }),
                 },
             },
         })

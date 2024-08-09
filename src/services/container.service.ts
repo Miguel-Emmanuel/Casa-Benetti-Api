@@ -1,8 +1,8 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, FilterExcludingWhere, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import {schemaCreateContainer} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Container, ContainerCreate, Document} from '../models';
+import {Container, ContainerCreate, Document, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {ContainerRepository, DocumentRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -49,7 +49,108 @@ export class ContainerService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Container>) {
-        return this.containerRepository.findById(id, filter);
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+            const container = await this.containerRepository.findById(id, filter);
+            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection} = container;
+            return {
+                pedimento,
+                containerNumber,
+                grossWeight,
+                numberBoxes,
+                measures,
+                status,
+                purchaseOrders: collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                    const {id: purchaseOrderid, proforma} = value;
+                    const {quotationProducts} = proforma;
+                    return {
+                        id: purchaseOrderid,
+                        products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                            }
+                        })
+                    }
+                }) : [],
+            }
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
+    }
+
+    async validateContainerById(id: number) {
+        const container = await this.containerRepository.findOne({where: {id}});
+        if (!container)
+            throw this.responseService.badRequest("El contenedor no existe.");
+
+        return container;
     }
 
     async updateById(id: number, container: Container,) {

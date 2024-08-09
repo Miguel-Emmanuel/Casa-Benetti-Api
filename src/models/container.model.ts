@@ -3,7 +3,7 @@ import {getJsonSchema} from '@loopback/rest';
 import {ContainerStatus} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {DocumentSchema} from './base/document.model';
-import {Collection} from './collection.model';
+import {Collection, CollectionWithRelations} from './collection.model';
 import {Document} from './document.model';
 
 @model({
@@ -53,7 +53,7 @@ export class Container extends BaseEntity {
     documents: Document[];
 
     @hasOne(() => Collection)
-    collection: Collection;
+    collection: CollectionWithRelations;
 
     //No. de cajas o bultos
     @property({
