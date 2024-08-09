@@ -385,10 +385,10 @@ export class ProjectService {
     async validatePurchaseOrderas(purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
         for (let index = 0; index < purchaseOrders.length; index++) {
             const element = purchaseOrders[index];
-            const where: any = {id: element, deliveryRequestId: {eq: null}}
+            const where: any = {id: element.id, deliveryRequestId: {eq: null}}
             const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
             if (!purchaseOrder)
-                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una solicitud de entrega: ${element}`)
+                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una solicitud de entrega: ${element.id}`)
         }
     }
     async notifyLogistics(projectId: number, deliveryDay: string) {
