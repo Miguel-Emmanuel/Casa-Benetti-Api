@@ -388,7 +388,7 @@ export class ProjectService {
             const where: any = {id: element, deliveryRequestId: {eq: null}}
             const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
             if (!purchaseOrder)
-                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una recoleccion: ${element}`)
+                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una solicitud de entrega: ${element}`)
         }
     }
     async notifyLogistics(projectId: number, deliveryDay: string) {
