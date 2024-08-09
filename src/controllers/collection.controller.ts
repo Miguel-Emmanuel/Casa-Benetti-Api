@@ -196,8 +196,8 @@ export class CollectionController {
                     schema: {
                         type: 'object',
                         properties: {
-                            containerId: {
-                                type: 'number',
+                            containerNumber: {
+                                type: 'string',
                                 nullable: true,
                             },
                             destination: {
@@ -223,7 +223,7 @@ export class CollectionController {
                 },
             },
         })
-        data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]},
+        data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]},
     ): Promise<void> {
         await this.collectionService.setFeedback(id, data);
     }

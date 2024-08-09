@@ -48,13 +48,13 @@ export class Collection extends Entity {
     dateCollection: Date
 
     @belongsTo(() => Container)
-    containerId: number;
+    containerId?: number;
 
-    // //Número de contenedor
-    // @property({
-    //     type: 'string',
-    // })
-    // containerNumber: string;
+    //Número de contenedor
+    @property({
+        type: 'string',
+    })
+    containerNumber: string;
 
     constructor(data?: Partial<Collection>) {
         super(data);
