@@ -34,7 +34,7 @@ export class ContainerController {
                 'application/json': {
                     schema: getModelSchemaRef(ContainerCreate, {
                         title: 'NewContainer',
-                        exclude: ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment'],
+                        exclude: ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment', 'status'],
                     }),
                 },
             },
@@ -58,7 +58,7 @@ export class ContainerController {
     })
     async find(
         @param.filter(Container) filter?: Filter<Container>,
-    ): Promise<Container[]> {
+    ): Promise<Object[]> {
         return this.containerService.find(filter);
     }
 

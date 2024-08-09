@@ -325,7 +325,7 @@ export class CollectionService {
         return collection;
     }
 
-    async validateBodyCollectionPatchFeedback(data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+    async validateBodyCollectionPatchFeedback(data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         try {
             await schemaCollectionPatchFeedback.validateAsync(data);
         }
@@ -339,11 +339,11 @@ export class CollectionService {
         }
     }
 
-    async setFeedback(id: number, data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+    async setFeedback(id: number, data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         await this.validateCollectionById(id);
         await this.validateBodyCollectionPatchFeedback(data);
-        const {containerNumber, documents, destination, dateCollection} = data;
-        await this.collectionRepository.updateById(id, {containerNumber, destination, dateCollection})
+        const {containerId, documents, destination, dateCollection} = data;
+        await this.collectionRepository.updateById(id, {containerId, destination, dateCollection})
         await this.createDocument(id, documents);
         await this.validaIfContainer(id, destination);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});

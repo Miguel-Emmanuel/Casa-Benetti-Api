@@ -30,7 +30,22 @@ export class ContainerService {
     }
 
     async find(filter?: Filter<Container>,) {
-        return this.containerRepository.find(filter);
+        const containers = await this.containerRepository.find(filter);
+        return containers.map(value => {
+            const {id, pedimento, containerNumber, invoiceNumber, grossWeight, numberBoxes, measures, ETADate, ETDDate, status} = value;
+            return {
+                id,
+                pedimento,
+                containerNumber,
+                invoiceNumber,
+                grossWeight,
+                numberBoxes,
+                measures,
+                ETADate,
+                ETDDate,
+                status
+            }
+        })
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Container>) {
