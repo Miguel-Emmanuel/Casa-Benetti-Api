@@ -43,3 +43,4 @@ export * from './inventories.repository';
 export * from './inventory-movements.repository';
 export * from './delivery-request.repository';
 export * from './collection.repository';
+export * from './container.repository';

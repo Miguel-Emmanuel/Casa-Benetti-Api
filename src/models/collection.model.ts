@@ -1,4 +1,5 @@
-import {Entity, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
+import {Container} from './container.model';
 import {Document} from './document.model';
 import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
 
@@ -36,6 +37,7 @@ export class Collection extends Entity {
     purchaseOrders: PurchaseOrders[];
 
 
+
     //Fecha de recoleccion
     @hasMany(() => Document)
     documents: Document[];
@@ -44,6 +46,9 @@ export class Collection extends Entity {
         type: 'date',
     })
     dateCollection: Date
+
+    @belongsTo(() => Container)
+    containerId?: number;
 
     //Número de contenedor
     @property({
