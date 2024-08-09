@@ -421,6 +421,7 @@ export class DeliveryRequestService {
                 id: projectId,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 customerAddress: customer?.address,
+                addressDescription: customer?.addressDescription,
                 quantity,
                 deliveryDay,
                 status,
