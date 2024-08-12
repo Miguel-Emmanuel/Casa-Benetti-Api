@@ -78,23 +78,28 @@ export class InventoriesService {
                 const findWarehouse = warehouseArray.findIndex(value => value.id === warehouseId)
                 console.log('findWarehouse: ', findWarehouse)
                 if (findWarehouse !== -1) {
-                    warehouseArray[findWarehouse].products.push({
-                        id,
-                        name,
-                        sku: SKU,
-                        stock,
-                        image: document?.fileURL ?? null,
-                        classificationId,
-                        lineId,
-                        brandId,
-                        model,
-                        originCode,
-                        boxes: null,
-                        description,
-                        observations: comment,
-                        assembledProducts,
-                        inventoryMovementId
-                    })
+                    // warehouseArray[findWarehouse].products.push({
+                    //     id,
+                    //     name,
+                    //     sku: SKU,
+                    //     stock,
+                    //     image: document?.fileURL ?? null,
+                    //     classificationId,
+                    //     lineId,
+                    //     brandId,
+                    //     model,
+                    //     originCode,
+                    //     boxes: null,
+                    //     description,
+                    //     observations: comment,
+                    //     assembledProducts,
+                    //     inventoryMovementId
+                    // })
+                    const productOld = warehouseArray[findWarehouse].products[0];
+                    warehouseArray[findWarehouse].products[0] = {
+                        ...productOld,
+                        stock: productOld.stock + stock
+                    }
                 } else {
                     warehouseArray.push(
                         {
