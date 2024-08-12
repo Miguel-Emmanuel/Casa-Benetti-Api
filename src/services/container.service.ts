@@ -109,7 +109,7 @@ export class ContainerService {
                     ]
                 };
             const container = await this.containerRepository.findById(id, filter);
-            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection} = container;
+            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection, arrivalDate, shippingDate, ETDDate, ETADate} = container;
             return {
                 pedimento,
                 containerNumber,
@@ -117,13 +117,17 @@ export class ContainerService {
                 numberBoxes,
                 measures,
                 status,
+                arrivalDate: arrivalDate ?? 'Pendiente',
+                shippingDate: shippingDate ?? 'Pendiente',
+                ETDDate: ETDDate ?? 'Pendiente',
+                ETADate: ETADate ?? 'Pendiente',
                 purchaseOrders: collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
                     return {
                         id: purchaseOrderid,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing} = value;
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS} = value;
                             const {document, line, name} = product;
                             const descriptionParts = [
                                 line?.name,
@@ -139,6 +143,11 @@ export class ContainerService {
                                 SKU,
                                 image: document?.fileURL,
                                 description,
+                                invoiceNumber,
+                                grossWeight,
+                                netWeight,
+                                numberBoxes,
+                                NOMS
                             }
                         })
                     }
