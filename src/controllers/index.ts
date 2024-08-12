@@ -33,9 +33,15 @@ export * from './purchase-orders.controller';
 export * from './classification-percentage-mainpm.controller';
 export * from './line.controller';
 
-export * from './proforma.controller';
 export * from './account-payable-proforma.controller';
-export * from './product-provider.controller';
 export * from './commission-payment-record.controller';
 export * from './commission-payment.controller';
+export * from './inventory-movements.controller';
+export * from './product-provider.controller';
+export * from './proforma.controller';
 export * from './quotation-products-quotation.controller';
+
+export * from './inventories.controller';
+export * from './delivery-request.controller';
+export * from './collection.controller';
+export * from './container.controller';

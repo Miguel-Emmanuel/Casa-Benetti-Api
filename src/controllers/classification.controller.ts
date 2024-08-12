@@ -70,7 +70,7 @@ export class ClassificationController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(Classification, {includeRelations: true}),
+                    items: getModelSchemaRef(Classification, {includeRelations: false}),
                 },
             },
         },
@@ -87,7 +87,7 @@ export class ClassificationController {
         description: 'Classification model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(Classification, {includeRelations: true}),
+                schema: getModelSchemaRef(Classification, {includeRelations: false}),
             },
         },
     })

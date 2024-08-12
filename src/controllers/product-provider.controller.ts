@@ -55,7 +55,7 @@ export class ProductProviderController {
     //         'application/json': {
     //             schema: {
     //                 type: 'array',
-    //                 items: getModelSchemaRef(ProductProvider, {includeRelations: true}),
+    //                 items: getModelSchemaRef(ProductProvider, {includeRelations: false}),
     //             },
     //         },
     //     },
@@ -72,7 +72,7 @@ export class ProductProviderController {
     //     description: 'ProductProvider model instance',
     //     content: {
     //         'application/json': {
-    //             schema: getModelSchemaRef(ProductProvider, {includeRelations: true}),
+    //             schema: getModelSchemaRef(ProductProvider, {includeRelations: false}),
     //         },
     //     },
     // })

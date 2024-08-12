@@ -38,6 +38,8 @@ export enum ModuleCategories {
     ORDENES_DE_COMPRA = 'Órdenes de compra',
     CUENTAS_POR_PAGAR = 'Cuentas por pagar',
     COMISIONES = 'Comisiones',
+    INVENTARIOS = 'Inventarios',
+    LOGISTICA = 'Logística',
 }
 
 export enum TypeUserE {
@@ -98,6 +100,12 @@ export enum TypeSaleE {
 
 export enum QuotationProductStatusE {
     PEDIDO = 'Pedido',
+    TRANSITO_NACIONAL = 'Transito Nacional',
+    TRANSITO_INTERNACIONAL = 'Transito internacional',
+    RECOLECCION = 'Recoleccion',
+    BODEGA_NACIONAL = 'Bodega nacional',
+    SHOWROOM = 'Showroom',
+    ENTREGADO = 'Entregado',
 }
 
 
@@ -178,13 +186,36 @@ export enum PaymentTypeProofE {
     SALDO_FAVOR = 'Saldo a favor',
 }
 
+// export enum PurchaseOrdersStatus {
+//     NUEVA = 'Nueva',
+//     ENVIADA_AL_PROVEDOR = 'Enviada al proveedor',
+//     EN_PRODUCCION = 'En producción',
+//     FINALIZADA = 'Finalizada',
+//     ENTREGA = 'Entregada',
+// }
 export enum PurchaseOrdersStatus {
     NUEVA = 'Nueva',
     ENVIADA_AL_PROVEDOR = 'Enviada al proveedor',
     EN_PRODUCCION = 'En producción',
-    FINALIZADA = 'Finalizada',
+    EN_RECOLECCION = 'En recoleccion',
+    BODEGA_INTERNACIONAL = 'Bodega Internacional',
+    TRANSITO_INTERNACIONAL = 'Transito internacional',
+    PROCESO_ADUANA = 'Proceso Aduana',
+    BODEGA_NACIONAL = 'Bodega nacional',
+    TRANSITO_NACIONAL = 'Transito nacional',
+    ENTREGA_PARCIAL = 'Entrega parcial',
     ENTREGA = 'Entregada',
 }
+
+export enum DeliveryRequestStatusE {
+    POR_VALIDAR = 'Por validar',
+    PROGRAMADA = 'Programada',
+    ENTREGA_PARCIAL = 'Entrega parcial',
+    ENTREGA_COMPLETA = 'Entrega completa',
+    RECHAZADA = 'Rechazada',
+}
+
+
 export enum AccountPayableHistoryStatusE {
     PENDIENTE = 'Pendiente',
     PAGADO = 'Pagado',
@@ -216,4 +247,41 @@ export enum ConvertCurrencyToMXN {
     MXN = 1,
     USD = 18.16,
     EURO = 19.71,
+}
+
+
+export enum InventoryMovementsTypeE {
+    ENTRADA = 'Entrada',
+    SALIDA = 'Salida',
+}
+
+
+
+export enum InventoriesReasonE {
+    DESCARGA_CONTENEDOR = 'Descarga de contenedor',
+    DESCARGA_RECOLECCION = 'Descarga de recolección',
+    REPARACION = 'Reparación',
+    PRESTAMO = 'Préstamo',
+    DEVOLUCION = 'Devolución',
+}
+
+
+export enum InventoriesIssueE {
+    REASIGNAR = 'Reasignar',
+    ENTREGA_CLIENTE = 'Entrega a cliente',
+    CONTENEDOR = 'Contenedor',
+    OTRO = 'Otro',
+}
+
+
+export enum CollectionDestinationE {
+    BODEGA_INTERNACIONAL = 'Bodega Internacional',
+    CONTENEDOR = 'Contenedor',
+}
+
+
+export enum ContainerStatus {
+    NUEVO = 'Nuevo',
+    EN_TRANSITO = 'En tránsito',
+    ENTREGADO = 'Entregado',
 }

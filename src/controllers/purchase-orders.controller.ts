@@ -160,4 +160,44 @@ export class PurchaseOrdersController {
     async deleteById(@param.path.number('id') id: number): Promise<void> {
         await this.purchaseOrdersService.deleteById(id);
     }
+
+    @get('/purchase-orders/earrings-collect')
+    @response(200, {
+        description: 'Array of purchase-orders model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            proformaId: {
+                                type: 'string'
+                            },
+                            provider: {
+                                type: 'string'
+                            },
+                            brand: {
+                                type: 'string'
+                            },
+                            quantity: {
+                                type: 'string'
+                            },
+                            productionEndDate: {
+                                type: 'string',
+                                format: 'date-time'
+                            },
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async earringsCollect(
+    ): Promise<Object[]> {
+        return this.purchaseOrdersService.earringsCollect();
+    }
 }

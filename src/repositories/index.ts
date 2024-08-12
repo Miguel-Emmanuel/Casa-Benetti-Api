@@ -39,3 +39,8 @@ export * from './purchase-orders.repository';
 
 export * from './proforma.repository';
 export * from './commission-payment.repository';
+export * from './inventories.repository';
+export * from './inventory-movements.repository';
+export * from './delivery-request.repository';
+export * from './collection.repository';
+export * from './container.repository';

@@ -5,6 +5,7 @@ import {BaseEntity} from './base/base-entity.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {PurchaseOrders} from './purchase-orders.model';
 
+//Cuentas por pagar
 @model({
   settings: {
     postgresql: {
@@ -76,6 +77,13 @@ export class AccountPayable extends BaseEntity {
 
   @hasMany(() => AccountPayableHistory)
   accountPayableHistories: AccountPayableHistoryWithRelations[];
+
+  //Esta pagado
+  @property({
+    type: 'boolean',
+    default: false
+  })
+  isPaid: boolean;
 
   constructor(data?: Partial<AccountPayable>) {
     super(data);

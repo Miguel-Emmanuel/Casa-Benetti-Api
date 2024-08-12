@@ -1,4 +1,4 @@
-import {ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address, Document, ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export interface ProjectManagers {
@@ -29,6 +29,7 @@ export interface Products {
 export interface Customer {
     customerId: number;
     name: string;
+    email: string;
     lastName: string;
     secondLastName: string;
     address?: Address;
@@ -169,6 +170,8 @@ export interface QuotationFindOneResponse {
         regimen: string;
         group: string
         groupId?: number;
+        email: string
+
     },
     products: ProductsById[],
     quotation: {
@@ -221,3 +224,59 @@ export interface AssembledProductsE {
     quantity: number;
     isActive: boolean;
 }
+
+
+export interface EntryDataI {
+    reasonEntry: InventoriesReasonE;
+    containerNumber: string;
+    collectionNumber: string;
+    products: {quotationProductsId: number}[];
+    branchId: number;
+    warehouseId: number;
+    projectId: string;
+    quotationProductsId: number;
+    quantity: number;
+    comment: string;
+}
+
+export interface IssueDataI {
+    reasonIssue: InventoriesIssueE;
+    branchId: number;
+    warehouseId: number;
+    quotationProductsId: number;
+    quantity: number;
+    comment: string;
+    containerNumber: string;
+    destinationBranchId: number;
+    destinationWarehouseId: number;
+}
+export interface ProductsInventorieI {
+    id: number
+    name: string,
+    sku: string,
+    stock: number
+    image: string | null,
+    classificationId?: number,
+    lineId?: number,
+    brandId?: number,
+    model: string,
+    originCode: string,
+    boxes: null,
+    description: string,
+    observations: string,
+    assembledProducts: any,
+    inventoryMovementId?: number,
+    quantity: number
+}
+export interface InventorieDataI {
+    id: number,
+    name?: string,
+    products: ProductsInventorieI[]
+}
+// export interface InventoriesWarehouseI {
+//     warehouse: InventorieDataI[],
+// }
+
+// export interface InventoriesShowroomI {
+//     showroom: InventorieDataI[],
+// }

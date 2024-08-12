@@ -29,7 +29,7 @@ export class ModuleController {
                     'application/json': {
                         schema: {
                             type: 'array',
-                            items: getModelSchemaRef(Module, {includeRelations: true}),
+                            items: getModelSchemaRef(Module, {includeRelations: false}),
                         },
                     },
                 },
@@ -83,7 +83,7 @@ export class ModuleController {
     //         'application/json': {
     //             schema: {
     //                 type: 'array',
-    //                 items: getModelSchemaRef(Module, {includeRelations: true}),
+    //                 items: getModelSchemaRef(Module, {includeRelations: false}),
     //             },
     //         },
     //     },
@@ -118,7 +118,7 @@ export class ModuleController {
     //     description: 'Module model instance',
     //     content: {
     //         'application/json': {
-    //             schema: getModelSchemaRef(Module, {includeRelations: true}),
+    //             schema: getModelSchemaRef(Module, {includeRelations: false}),
     //         },
     //     },
     // })

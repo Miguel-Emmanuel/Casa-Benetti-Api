@@ -5,7 +5,7 @@ import {DocumentSchema} from './base/document.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
-import {Proforma} from './proforma.model';
+import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
@@ -43,6 +43,43 @@ export class QuotationProducts extends Entity {
         generated: true,
     })
     id: number;
+
+    //Número de factura
+    @property({
+        type: 'string',
+    })
+    invoiceNumber?: string;
+
+    //Peso bruto
+    @property({
+        type: 'string',
+    })
+    grossWeight: string;
+
+    //Peso neto
+    @property({
+        type: 'string',
+    })
+    netWeight?: string;
+
+    //No. de cajas o bultos
+    @property({
+        type: 'number',
+    })
+    numberBoxes: number;
+
+    //Descripcion del pedimiento
+    @property({
+        type: 'string',
+    })
+    descriptionPedimiento?: string;
+
+    //NOM NOM 004, NOM 050
+    @property({
+        type: 'array',
+        itemType: 'string'
+    })
+    NOMS?: string[];
 
     //Fecha de creacion
     @property({
@@ -293,6 +330,16 @@ export class QuotationProducts extends Entity {
     })
     quantity: number;
 
+    //Cantidad del producto que ya existe en inventario
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+        default: 0
+    })
+    stock: number;
+
     //Subtotal
     @property({
         type: 'number',
@@ -407,6 +454,7 @@ export interface QuotationProductsRelations {
     provider: ProviderWithRelations
     brand: BrandWithRelations
     quotation: QuotationWithRelations
+    proforma: ProformaWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;

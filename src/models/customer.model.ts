@@ -40,6 +40,12 @@ export class Customer extends BaseEntity {
     })
     name: string;
 
+    //Correo
+    @property({
+        type: 'string',
+    })
+    email: string;
+
     //Apellido paterno
     @property({
         type: 'string',

@@ -50,4 +50,29 @@ export const modulesSeed = [
     description: 'Comisiones',
     categoryName: ModuleCategories.COMISIONES
   },
+  {
+    name: 'Inventarios',
+    description: 'Inventarios',
+    categoryName: ModuleCategories.INVENTARIOS
+  },
+  {
+    name: 'Logística',
+    description: 'Logística',
+    categoryName: ModuleCategories.LOGISTICA
+  },
+  {
+    name: 'Recolecciones',
+    description: 'Recolecciones',
+    categoryName: ModuleCategories.LOGISTICA
+  },
+  {
+    name: 'Contenedores',
+    description: 'Contenedores',
+    categoryName: ModuleCategories.LOGISTICA
+  },
+  {
+    name: 'Entregas',
+    description: 'Entregas',
+    categoryName: ModuleCategories.LOGISTICA
+  },
 ];

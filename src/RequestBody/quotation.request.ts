@@ -26,6 +26,10 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 type: 'string',
                                 nullable: true
                             },
+                            email: {
+                                type: 'string',
+                                nullable: true
+                            },
                             lastName: {
                                 type: 'string',
                                 nullable: true
@@ -164,7 +168,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     },
                     products: {
                         type: 'array',
-                        items: getModelSchemaRef(QuotationProductsCreate, {exclude: ['id', 'createdAt', 'status', 'quotationId', 'SKU', 'brandId', 'proformaId', 'dateReservationDays', 'isNotificationSent']})
+                        items: getModelSchemaRef(QuotationProductsCreate, {exclude: ['id', 'createdAt', 'status', 'quotationId', 'SKU', 'brandId', 'proformaId', 'dateReservationDays', 'isNotificationSent', 'stock']})
                         // {
                         //     properties: {
                         //         productId: {

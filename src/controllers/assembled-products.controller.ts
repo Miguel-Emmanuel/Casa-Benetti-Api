@@ -55,7 +55,7 @@ export class AssembledProductsController {
     //         'application/json': {
     //             schema: {
     //                 type: 'array',
-    //                 items: getModelSchemaRef(AssembledProducts, {includeRelations: true}),
+    //                 items: getModelSchemaRef(AssembledProducts, {includeRelations: false}),
     //             },
     //         },
     //     },
@@ -73,7 +73,7 @@ export class AssembledProductsController {
     //     description: 'AssembledProducts model instance',
     //     content: {
     //         'application/json': {
-    //             schema: getModelSchemaRef(AssembledProducts, {includeRelations: true}),
+    //             schema: getModelSchemaRef(AssembledProducts, {includeRelations: false}),
     //         },
     //     },
     // })

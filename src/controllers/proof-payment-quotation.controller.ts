@@ -66,7 +66,7 @@ export class ProofPaymentQuotationController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(ProofPaymentQuotation, {includeRelations: true}),
+                    items: getModelSchemaRef(ProofPaymentQuotation, {includeRelations: false}),
                 },
             },
         },
@@ -82,7 +82,7 @@ export class ProofPaymentQuotationController {
         description: 'ProofPaymentQuotation model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(ProofPaymentQuotation, {includeRelations: true}),
+                schema: getModelSchemaRef(ProofPaymentQuotation, {includeRelations: false}),
             },
         },
     })

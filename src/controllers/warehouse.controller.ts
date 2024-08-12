@@ -66,7 +66,7 @@ export class WarehouseController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Warehouse, {includeRelations: true}),
+          items: getModelSchemaRef(Warehouse, {includeRelations: false}),
         },
       },
     },
@@ -82,7 +82,7 @@ export class WarehouseController {
     description: 'Warehouse model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Warehouse, {includeRelations: true}),
+        schema: getModelSchemaRef(Warehouse, {includeRelations: false}),
       },
     },
   })

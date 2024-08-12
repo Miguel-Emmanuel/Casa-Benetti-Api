@@ -69,7 +69,7 @@ export class ProviderController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Provider, {includeRelations: true}),
+          items: getModelSchemaRef(Provider, {includeRelations: false}),
         },
       },
     },
@@ -85,7 +85,7 @@ export class ProviderController {
     description: 'Provider model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Provider, {includeRelations: true}),
+        schema: getModelSchemaRef(Provider, {includeRelations: false}),
       },
     },
   })

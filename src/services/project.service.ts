@@ -4,14 +4,16 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
-import {ResponseServiceBindings} from '../keys';
-import {Project, Quotation} from '../models';
-import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository} from '../repositories';
+import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
+import {Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProjectService {
     constructor(
@@ -47,6 +49,14 @@ export class ProjectService {
         public accountPayableRepository: AccountPayableRepository,
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ProformaRepository)
+        public proformaRepository: ProformaRepository,
+        @repository(DeliveryRequestRepository)
+        public deliveryRequestRepository: DeliveryRequestRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -86,13 +96,16 @@ export class ProjectService {
                                         {
                                             relation: 'product',
                                             scope: {
-                                                fields: ['id', 'name', 'lineId'],
+                                                fields: ['id', 'name', 'lineId', 'document'],
                                                 include: [
                                                     {
                                                         relation: 'line',
                                                         scope: {
                                                             fields: ['id', 'name']
                                                         }
+                                                    },
+                                                    {
+                                                        relation: 'document',
                                                     }
                                                 ]
                                             }
@@ -115,21 +128,30 @@ export class ProjectService {
         const {quotationProducts} = quotation;
         return quotationProducts.map(value => {
 
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice} = value;
-            const {name, line} = product;
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
+            const {name, line, document} = product;
             const descriptionParts = [
                 line?.name,
                 name,
                 mainMaterial,
                 mainFinish,
                 secondaryMaterial,
-                secondaryFinishing,
-                measureWide
+                secondaryFinishing
             ];
+            const measuresParts = [
+                measureWide ? `Ancho: ${measureWide}` : "",
+                measureHigh ? `Alto: ${measureHigh}` : "",
+                measureDepth ? `Prof: ${measureDepth}` : "",
+                measureCircumference ? `Circ: ${measureCircumference}` : ""
+            ];
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
 
             const description = descriptionParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
+
             return {
                 id,
                 SKU,
@@ -140,11 +162,284 @@ export class ProjectService {
                 brandId,
                 price,
                 description,
-                proformaPrice: proformaPrice ?? null
+                measures,
+                proformaPrice: proformaPrice ?? null,
+                image: document?.fileURL
             }
         })
     }
 
+    async getProductsInventories(projectId: string) {
+        const project = await this.projectRepository.findOne({
+            where: {projectId},
+            include: [
+                {
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'quotationProducts'],
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId', 'proformaPrice'],
+                                    include: [
+                                        {
+                                            relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                fields: ['id', 'name', 'lineId', 'document'],
+                                                include: [
+                                                    {
+                                                        relation: 'line',
+                                                        scope: {
+                                                            fields: ['id', 'name']
+                                                        }
+                                                    },
+                                                    {
+                                                        relation: 'document',
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'brand',
+                                            scope: {
+                                                fields: ['id', 'brandName']
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        if (!project)
+            throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        const {quotation} = project;
+        const {quotationProducts} = quotation;
+        return quotationProducts.map(value => {
+
+            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
+            const {name, line, document} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                mainMaterial,
+                mainFinish,
+                secondaryMaterial,
+                secondaryFinishing
+            ];
+            const measuresParts = [
+                measureWide ? `Ancho: ${measureWide}` : "",
+                measureHigh ? `Alto: ${measureHigh}` : "",
+                measureDepth ? `Prof: ${measureDepth}` : "",
+                measureCircumference ? `Circ: ${measureCircumference}` : ""
+            ];
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
+            return {
+                id,
+                SKU,
+                provider: provider?.name ?? '',
+                providerId,
+                name,
+                brand: brand?.brandName ?? '',
+                brandId,
+                price,
+                description,
+                measures,
+                proformaPrice: proformaPrice ?? null,
+                image: document?.fileURL
+            }
+        })
+    }
+
+
+    async getDeliveryBeValidated(id: number) {
+        try {
+            const proformas = await this.proformaRepository.find({
+                where: {projectId: id}, include: [
+                    {
+                        relation: 'purchaseOrders',
+                        scope: {
+                            where: {
+                                or: [
+                                    // {
+                                    //     status: PurchaseOrdersStatus.BODEGA_NACIONAL
+                                    // },
+                                    // {
+                                    //     status: PurchaseOrdersStatus.ENTREGA_PARCIAL
+                                    // },
+                                ]
+                            },
+
+                        }
+                    },
+                    {
+                        relation: 'quotationProducts',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'product',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'document'
+                                            },
+                                            {
+                                                relation: 'line'
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            where: {
+                                or: [
+                                    // {
+                                    //     status: QuotationProductStatusE.BODEGA_NACIONAL
+                                    // },
+                                    // {
+                                    //     status: QuotationProductStatusE.SHOWROOM
+                                    // },
+                                ]
+                            },
+                        }
+                    }
+                ]
+            })
+            let purchaseOrdersRes = [];
+            for (let index = 0; index < proformas.length; index++) {
+                const {purchaseOrders, quotationProducts} = proformas[index];
+                if (purchaseOrders) {
+                    const {id: purchaseOrderId} = purchaseOrders;
+
+
+
+                    purchaseOrdersRes.push({
+                        id: purchaseOrderId,
+                        products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id,
+                                description,
+                                SKU,
+                                image: document?.fileURL
+                            }
+                        })
+                    })
+                }
+            }
+            return purchaseOrdersRes;
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
+
+    }
+
+    async postDeliveryRequest(data: {projectId: number, deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        await this.validateBodyDeliveryRequest(data);
+        const {projectId, purchaseOrders, deliveryDay, comment} = data;
+        const projectRes = await this.findByIdProject(projectId);
+        await this.validatePurchaseOrderas(purchaseOrders);
+        const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment, customerId: projectRes.customerId})
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const {products, id: purchaseOrderId} = purchaseOrders[index];
+            for (let index = 0; index < products.length; index++) {
+                const {id, isSelected} = products[index];
+                if (isSelected)
+                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO})
+            }
+            const searchSelected = products.filter(value => value.isSelected === true);
+
+
+            if (products.length === searchSelected.length)
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA, deliveryRequestId: deliveryRequestCreate.id})
+            else
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: deliveryRequestCreate.id})
+        }
+        await this.notifyLogistics(projectId, deliveryDay);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async validatePurchaseOrderas(purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
+        for (let index = 0; index < purchaseOrders.length; index++) {
+            const element = purchaseOrders[index];
+            const where: any = {id: element.id, deliveryRequestId: {eq: null}}
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
+            if (!purchaseOrder)
+                throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una solicitud de entrega: ${element.id}`)
+        }
+    }
+    async notifyLogistics(projectId: number, deliveryDay: string) {
+        const project = await this.projectRepository.findById(projectId, {
+            include: [
+                {
+                    relation: 'customer'
+                },
+                {
+                    relation: 'quotation',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'mainProjectManager'
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        const users = await this.userRepository.find({where: {isLogistics: true}})
+        const emails = users.map(value => value.email);
+        const {customer, quotation} = project;
+        const {mainProjectManager} = quotation;
+        const options = {
+            to: emails,
+            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                projectId: project.projectId,
+                mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                date: dayjs(deliveryDay).format('DD/MM/YYYY')
+            }
+        };
+        await this.sendgridService.sendNotification(options);
+    }
+
+    async validateBodyDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        try {
+            await schemaDeliveryRequest.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
 
     async find(filter?: Filter<Project>,) {
         const accessLevel = this.user.accessLevel;
@@ -290,11 +585,19 @@ export class ProjectService {
                 iterator.quotationProducts?.mainMaterial,
                 iterator.quotationProducts?.mainFinish,
                 iterator.quotationProducts?.secondaryMaterial,
-                iterator.quotationProducts?.secondaryFinishing,
-                iterator.quotationProducts?.measureWide
+                iterator.quotationProducts?.secondaryFinishing
+            ];
+            const measuresParts = [
+                iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
+                iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
+                iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
+                iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
             ];
 
             const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measures = measuresParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
             productsArray.push({
@@ -302,6 +605,7 @@ export class ProjectService {
                 image: iterator?.document ? iterator?.document?.fileURL : '',
                 brandName: iterator?.brand?.brandName ?? '',
                 description,
+                measures,
                 price: iterator?.quotationProducts?.price,
                 listPrice: iterator?.quotationProducts?.originCost,
                 factor: iterator?.quotationProducts?.factor,
@@ -404,6 +708,8 @@ export class ProjectService {
         const project = await this.projectRepository.findOne({where: {id}});
         if (!project)
             throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        return project;
     }
 
 
@@ -423,17 +729,26 @@ export class ProjectService {
                 quotationProducts?.mainMaterial,
                 quotationProducts?.mainFinish,
                 quotationProducts?.secondaryMaterial,
-                quotationProducts?.secondaryFinishing,
-                quotationProducts?.measureWide
+                quotationProducts?.secondaryFinishing
             ];
 
             const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
             productsTemplate.push({
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
                 description,
+                measures,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
@@ -495,11 +810,20 @@ export class ProjectService {
                 quotationProducts?.mainMaterial,
                 quotationProducts?.mainFinish,
                 quotationProducts?.secondaryMaterial,
-                quotationProducts?.secondaryFinishing,
-                quotationProducts?.measureWide
+                quotationProducts?.secondaryFinishing
             ];
 
             const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
                 .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
                 .join(' ');  // Únelas con un espacio
 
@@ -507,6 +831,7 @@ export class ProjectService {
                 brandName: brand?.brandName,
                 status: quotationProducts?.status,
                 description,
+                measures,
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
