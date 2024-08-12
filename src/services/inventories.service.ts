@@ -84,7 +84,7 @@ export class InventoriesService {
                         if (findProductObject)
                             warehouseArray[findWarehouse].products[findProduct] = {
                                 ...findProductObject,
-                                stock: findProductObject.stock + stock
+                                stock: stock
                             }
                     } else {
 
@@ -151,7 +151,7 @@ export class InventoriesService {
                         if (findProductObject)
                             showroomArray[findShowroom].products[findProduct] = {
                                 ...findProductObject,
-                                stock: findProductObject.stock + stock
+                                stock: stock
                             }
                     } else {
                         showroomArray[findShowroom].products.push({
