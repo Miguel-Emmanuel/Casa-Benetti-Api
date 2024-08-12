@@ -49,6 +49,12 @@ export class PurchaseOrders extends Entity {
   })
   productionEndDate: Date;
 
+  //Fecha de llegada
+  @property({
+    type: 'date',
+  })
+  arrivalDate: Date;
+
   //Estatus
   @property({
     type: 'string',
