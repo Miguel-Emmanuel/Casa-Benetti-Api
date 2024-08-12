@@ -139,23 +139,28 @@ export class InventoriesService {
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 const findShowroom = showroomArray.findIndex(value => value.id === branchId);
                 if (findShowroom !== -1) {
-                    showroomArray[findShowroom].products.push({
-                        id,
-                        name,
-                        sku: SKU,
-                        stock,
-                        image: document?.fileURL ?? null,
-                        classificationId,
-                        lineId,
-                        brandId,
-                        model,
-                        originCode,
-                        boxes: null,
-                        description,
-                        observations: comment,
-                        assembledProducts,
-                        inventoryMovementId
-                    })
+                    const productOld = showroomArray[findShowroom].products[0];
+                    // showroomArray[findShowroom].products.push({
+                    //     id,
+                    //     name,
+                    //     sku: SKU,
+                    //     stock,
+                    //     image: document?.fileURL ?? null,
+                    //     classificationId,
+                    //     lineId,
+                    //     brandId,
+                    //     model,
+                    //     originCode,
+                    //     boxes: null,
+                    //     description,
+                    //     observations: comment,
+                    //     assembledProducts,
+                    //     inventoryMovementId
+                    // })
+                    showroomArray[findShowroom].products[0] = {
+                        ...productOld,
+                        stock: productOld.stock + stock
+                    }
                 } else {
                     showroomArray.push(
                         {
