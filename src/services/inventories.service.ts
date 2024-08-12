@@ -78,23 +78,34 @@ export class InventoriesService {
                 const findWarehouse = warehouseArray.findIndex(value => value.id === warehouseId)
                 console.log('findWarehouse: ', findWarehouse)
                 if (findWarehouse !== -1) {
-                    warehouseArray[findWarehouse].products.push({
-                        id,
-                        name,
-                        sku: SKU,
-                        stock,
-                        image: document?.fileURL ?? null,
-                        classificationId,
-                        lineId,
-                        brandId,
-                        model,
-                        originCode,
-                        boxes: null,
-                        description,
-                        observations: comment,
-                        assembledProducts,
-                        inventoryMovementId
-                    })
+                    const findProduct = warehouseArray[findWarehouse].products.findIndex(value => value.id === id);
+                    if (findProduct !== -1) {
+                        const findProductObject = warehouseArray[findWarehouse].products.find(value => value.id === id);
+                        if (findProductObject)
+                            warehouseArray[findWarehouse].products[findProduct] = {
+                                ...findProductObject,
+                                stock: findProductObject.stock + stock
+                            }
+                    } else {
+
+                        warehouseArray[findWarehouse].products.push({
+                            id,
+                            name,
+                            sku: SKU,
+                            stock,
+                            image: document?.fileURL ?? null,
+                            classificationId,
+                            lineId,
+                            brandId,
+                            model,
+                            originCode,
+                            boxes: null,
+                            description,
+                            observations: comment,
+                            assembledProducts,
+                            inventoryMovementId
+                        })
+                    }
                 } else {
                     warehouseArray.push(
                         {
