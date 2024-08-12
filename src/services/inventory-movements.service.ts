@@ -144,8 +144,8 @@ export class InventoryMovementsService {
                             inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
                         }
                         await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
-                        await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (stock + quantity)})
-
+                        const stockInventories = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                        await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (stockInventories?.stock ?? 0 + quantity)})
                     }
                     if (destinationBranchId) {
                         inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
@@ -153,8 +153,8 @@ export class InventoryMovementsService {
                             inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
                         }
                         await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
-                        await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (stock + quantity)})
-
+                        const stockInventories = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
+                        await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (stockInventories?.stock ?? 0 + quantity)})
                     }
                 }
             }
