@@ -84,7 +84,7 @@ export class InventoriesService {
                         if (findProductObject)
                             warehouseArray[findWarehouse].products[findProduct] = {
                                 ...findProductObject,
-                                quantity: findProductObject.quantity + quantity
+                                stock: findProductObject.stock + quantity
                             }
                     } else {
 
@@ -92,7 +92,7 @@ export class InventoriesService {
                             id,
                             name,
                             sku: SKU,
-                            stock,
+                            stock: quantity,
                             image: document?.fileURL ?? null,
                             classificationId,
                             lineId,
@@ -117,7 +117,7 @@ export class InventoriesService {
                                     id,
                                     name,
                                     sku: SKU,
-                                    stock,
+                                    stock: quantity,
                                     image: document?.fileURL ?? null,
                                     classificationId,
                                     lineId,
@@ -153,14 +153,14 @@ export class InventoriesService {
                         if (findProductObject)
                             showroomArray[findShowroom].products[findProduct] = {
                                 ...findProductObject,
-                                quantity: findProductObject.quantity + quantity
+                                stock: findProductObject.stock + quantity
                             }
                     } else {
                         showroomArray[findShowroom].products.push({
                             id,
                             name,
                             sku: SKU,
-                            stock,
+                            stock: quantity,
                             image: document?.fileURL ?? null,
                             classificationId,
                             lineId,
@@ -186,7 +186,7 @@ export class InventoriesService {
                                     id,
                                     name,
                                     sku: SKU,
-                                    stock,
+                                    stock: quantity,
                                     image: document?.fileURL ?? null,
                                     classificationId,
                                     lineId,
