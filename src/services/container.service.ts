@@ -6,7 +6,7 @@ import {Docs, PurchaseOrdersContainer, UpdateContainer} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Container, ContainerCreate, Document, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {ContainerRepository, DocumentRepository, QuotationProductsRepository} from '../repositories';
+import {ContainerRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -20,6 +20,8 @@ export class ContainerService {
         public documentRepository: DocumentRepository,
         @repository(QuotationProductsRepository)
         public quotationProductsRepository: QuotationProductsRepository,
+        @repository(PurchaseOrdersRepository)
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
     ) { }
 
     async create(container: Omit<ContainerCreate, 'id'>,) {
@@ -34,15 +36,6 @@ export class ContainerService {
         }
     }
 
-    // calculateDate(ETDDate?: Date, ETADate?: Date) {
-    //     let shippingDate
-    //     if (ETADate)
-    //         shippingDate = dayjs(ETADate).add(10, 'days')
-    //     else if (ETDDate)
-    //         shippingDate = dayjs(ETDDate).add(31, 'days')
-    //     return {shippingDate}
-    // }
-
     async updateById(id: number, data: UpdateContainer,) {
         await this.validateBodyUpdate(data);
         const container = await this.containerRepository.findOne({where: {id}});
@@ -51,9 +44,56 @@ export class ContainerService {
         const {docs, purchaseOrders, status} = data;
         const date = await this.calculateArrivalDateAndShippingDate(status);
         await this.containerRepository.updateById(id, {...data, ...date});
+        await this.calculateArrivalDatePurchaseOrder(id);
         await this.updateDocument(id, docs);
         await this.updateProducts(purchaseOrders);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async calculateArrivalDatePurchaseOrder(containerId: number) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'collection',
+                scope: {
+                    include: [
+                        {
+                            relation: 'purchaseOrders',
+                        }
+                    ]
+                }
+            }
+        ]
+        const container = await this.containerRepository.findById(containerId, {include});
+        const {ETDDate, ETADate} = container;
+        let arrivalDate;
+        if (ETADate) {
+            arrivalDate = dayjs(ETADate).add(10, 'days')
+        }
+        else if (ETDDate) {
+            arrivalDate = dayjs(ETDDate).add(31, 'days')
+        }
+        const {collection} = container;
+        const {purchaseOrders} = collection;
+        if (purchaseOrders) {
+            for (let index = 0; index < purchaseOrders.length; index++) {
+                const element = purchaseOrders[index];
+                if (arrivalDate) {
+                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                    return;
+                }
+                const {productionEndDate, productionRealEndDate} = element;
+                if (productionRealEndDate) {
+                    const arrivalDate = dayjs(productionRealEndDate).add(53, 'days')
+                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                    return;
+                }
+                if (productionEndDate) {
+                    const arrivalDate = dayjs(productionEndDate).add(53, 'days')
+                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                    return;
+                }
+            }
+        }
     }
 
     calculateArrivalDateAndShippingDate(status: ContainerStatus) {
