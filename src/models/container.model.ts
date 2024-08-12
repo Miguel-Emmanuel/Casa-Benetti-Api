@@ -67,13 +67,13 @@ export class Container extends BaseEntity {
     @property({
         type: 'date',
     })
-    ETDDate: string;
+    ETDDate?: Date;
 
     //Fecha ETA
     @property({
         type: 'date',
     })
-    ETADate: string;
+    ETADate?: Date;
 
     //Status
     @property({

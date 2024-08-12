@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import dayjs from 'dayjs';
 import {Docs, PurchaseOrdersContainer, UpdateContainer} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -24,12 +25,23 @@ export class ContainerService {
         try {
             await this.validateBodyCustomer(container);
             const {docs, ...body} = container
-            const containerRes = await this.containerRepository.create(body);
+            const {shippingDate} = this.calculateDate(body.ETDDate, body.ETADate)
+            const containerRes = await this.containerRepository.create({...body, shippingDate});
             await this.createDocument(containerRes!.id, docs);
             return containerRes;
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);
         }
+    }
+
+    calculateDate(ETDDate?: Date, ETADate?: Date) {
+        let shippingDate
+        if (ETDDate)
+            shippingDate = dayjs(ETDDate).add(31, 'days')
+        if (ETADate)
+            shippingDate = dayjs(ETADate).add(10, 'days')
+
+        return {shippingDate}
     }
 
     async updateById(id: number, data: UpdateContainer,) {
