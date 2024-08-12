@@ -266,6 +266,7 @@ export interface ProductsInventorieI {
     observations: string,
     assembledProducts: any,
     inventoryMovementId?: number,
+    quantity: number
 }
 export interface InventorieDataI {
     id: number,
