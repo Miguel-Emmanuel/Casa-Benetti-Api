@@ -26,7 +26,6 @@ export class ContainerService {
             await this.validateBodyCustomer(container);
             const {docs, ...body} = container
             const {shippingDate} = this.calculateDate(body.ETDDate, body.ETADate)
-            console.log(body)
             const containerRes = await this.containerRepository.create({...body, shippingDate});
             await this.createDocument(containerRes!.id, docs);
             return containerRes;
