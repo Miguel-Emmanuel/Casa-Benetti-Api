@@ -67,22 +67,84 @@ export class ContainerService {
     }
 
     async find(filter?: Filter<Container>,) {
-        const containers = await this.containerRepository.find(filter);
-        return containers.map(value => {
-            const {id, pedimento, containerNumber, invoiceNumber, grossWeight, numberBoxes, measures, ETADate, ETDDate, status} = value;
-            return {
-                id,
-                pedimento,
-                containerNumber,
-                invoiceNumber,
-                grossWeight,
-                numberBoxes,
-                measures,
-                ETADate,
-                ETDDate,
-                status
-            }
-        })
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+            const containers = await this.containerRepository.find(filter);
+            return containers.map(value => {
+                const {id, containerNumber, collection, arrivalDate, status} = value;
+                let quantity = 0;
+                for (let index = 0; index < collection?.purchaseOrders.length; index++) {
+                    const element = collection?.purchaseOrders[index];
+                    const {proforma} = element;
+                    const {quotationProducts} = proforma;
+                    quantity += quotationProducts?.length ?? 0;
+                }
+                return {
+                    id,
+                    containerNumber,
+                    quantity,
+                    shippingDate: null,
+                    arrivalDate,
+                    status
+                }
+            })
+
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Container>) {
