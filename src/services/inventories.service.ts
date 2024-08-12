@@ -134,23 +134,34 @@ export class InventoriesService {
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 const findShowroom = showroomArray.findIndex(value => value.id === branchId);
                 if (findShowroom !== -1) {
-                    showroomArray[findShowroom].products.push({
-                        id,
-                        name,
-                        sku: SKU,
-                        stock,
-                        image: document?.fileURL ?? null,
-                        classificationId,
-                        lineId,
-                        brandId,
-                        model,
-                        originCode,
-                        boxes: null,
-                        description,
-                        observations: comment,
-                        assembledProducts,
-                        inventoryMovementId
-                    })
+                    const findProduct = showroomArray[findShowroom].products.findIndex(value => value.id === id);
+                    if (findProduct !== -1) {
+                        const findProductObject = showroomArray[findShowroom].products.find(value => value.id === id);
+                        if (findProductObject)
+                            showroomArray[findShowroom].products[findProduct] = {
+                                ...findProductObject,
+                                stock: findProductObject.stock + stock
+                            }
+                    } else {
+                        showroomArray[findShowroom].products.push({
+                            id,
+                            name,
+                            sku: SKU,
+                            stock,
+                            image: document?.fileURL ?? null,
+                            classificationId,
+                            lineId,
+                            brandId,
+                            model,
+                            originCode,
+                            boxes: null,
+                            description,
+                            observations: comment,
+                            assembledProducts,
+                            inventoryMovementId
+                        })
+
+                    }
                 } else {
                     showroomArray.push(
                         {
