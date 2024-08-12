@@ -35,7 +35,7 @@ export class ContainerController {
                 'application/json': {
                     schema: getModelSchemaRef(ContainerCreate, {
                         title: 'NewContainer',
-                        exclude: ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment', 'status'],
+                        exclude: ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'arrivalDate', 'shippingDate'],
                     }),
                 },
             },
