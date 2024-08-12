@@ -67,13 +67,13 @@ export class Container extends BaseEntity {
     @property({
         type: 'date',
     })
-    ETDDate: string;
+    ETDDate?: Date;
 
     //Fecha ETA
     @property({
         type: 'date',
     })
-    ETADate: string;
+    ETADate?: Date;
 
     //Status
     @property({
@@ -81,6 +81,18 @@ export class Container extends BaseEntity {
         default: ContainerStatus.NUEVO
     })
     status: ContainerStatus;
+
+    //Fecha de llegada
+    @property({
+        type: 'date',
+    })
+    arrivalDate: Date;
+
+    //Fecha de envio
+    @property({
+        type: 'date',
+    })
+    shippingDate: Date;
 
 
     constructor(data?: Partial<Container>) {

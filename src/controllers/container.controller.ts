@@ -13,6 +13,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {UpdateContainer} from '../interface';
 import {Container, ContainerCreate} from '../models';
 import {ContainerService} from '../services';
 
@@ -93,12 +94,6 @@ export class ContainerController {
                             pedimento: {
                                 type: 'string'
                             },
-                            containerNumber: {
-                                type: 'string'
-                            },
-                            invoiceNumber: {
-                                type: 'string'
-                            },
                             grossWeight: {
                                 type: 'string'
                             },
@@ -111,15 +106,15 @@ export class ContainerController {
                             status: {
                                 type: 'string'
                             },
-                            ETDDate: {
-                                type: 'string',
-                                format: 'date-time'
-                            },
-                            ETADate: {
-                                type: 'string',
-                                format: 'date-time'
-                            },
-                            documents: {
+                            // ETDDate: {
+                            //     type: 'string',
+                            //     format: 'date-time'
+                            // },
+                            // ETADate: {
+                            //     type: 'string',
+                            //     format: 'date-time'
+                            // },
+                            docs: {
                                 type: 'array',
                                 items: {
                                     properties: {
@@ -179,7 +174,7 @@ export class ContainerController {
                 },
             },
         })
-        container: Container,
+        container: UpdateContainer,
     ): Promise<void> {
         await this.containerService.updateById(id, container);
     }

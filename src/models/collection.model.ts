@@ -50,11 +50,11 @@ export class Collection extends Entity {
     @belongsTo(() => Container)
     containerId?: number;
 
-    //Número de contenedor
-    @property({
-        type: 'string',
-    })
-    containerNumber: string;
+    // //Número de contenedor
+    // @property({
+    //     type: 'string',
+    // })
+    // containerNumber: string;
 
     constructor(data?: Partial<Collection>) {
         super(data);
