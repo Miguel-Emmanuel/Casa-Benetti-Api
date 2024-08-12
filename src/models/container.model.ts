@@ -86,13 +86,13 @@ export class Container extends BaseEntity {
     @property({
         type: 'date',
     })
-    arrivalDate: Date;
+    arrivalDate?: Date;
 
     //Fecha de envio
     @property({
         type: 'date',
     })
-    shippingDate: Date;
+    shippingDate?: Date;
 
 
     constructor(data?: Partial<Container>) {

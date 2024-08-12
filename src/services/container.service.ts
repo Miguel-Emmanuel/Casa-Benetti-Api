@@ -1,6 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
+import {ContainerStatus} from '../enums';
 import {Docs, PurchaseOrdersContainer, UpdateContainer} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -48,11 +49,19 @@ export class ContainerService {
         const container = await this.containerRepository.findOne({where: {id}});
         if (!container)
             throw this.responseService.badRequest("El contenedor no existe.")
-        await this.containerRepository.updateById(id, data);
-        const {docs, purchaseOrders} = data;
+        const {docs, purchaseOrders, status} = data;
+        const date = await this.calculateArrivalDateAndShippingDate(status);
+        await this.containerRepository.updateById(id, {...data, ...date});
         await this.updateDocument(id, docs);
         await this.updateProducts(purchaseOrders);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    calculateArrivalDateAndShippingDate(status: ContainerStatus) {
+        if (status === ContainerStatus.EN_TRANSITO)
+            return {arrivalDate: dayjs().toDate()}
+        if (status === ContainerStatus.ENTREGADO)
+            return {shippingDate: dayjs().toDate()}
     }
 
     async updateProducts(purchaseOrders: PurchaseOrdersContainer[]) {
