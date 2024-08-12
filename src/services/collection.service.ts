@@ -353,7 +353,7 @@ export class CollectionService {
 
     async calculateDate(containerId: number) {
         const {ETADate, ETDDate} = await this.containerRepository.findById(containerId);
-        if (!ETADate && !ETDDate) {
+        if (!ETADate) {
 
         }
     }

@@ -36,11 +36,10 @@ export class ContainerService {
 
     calculateDate(ETDDate?: Date, ETADate?: Date) {
         let shippingDate
-        if (ETDDate)
-            shippingDate = dayjs(ETDDate).add(31, 'days')
         if (ETADate)
             shippingDate = dayjs(ETADate).add(10, 'days')
-
+        else if (ETDDate)
+            shippingDate = dayjs(ETDDate).add(31, 'days')
         return {shippingDate}
     }
 

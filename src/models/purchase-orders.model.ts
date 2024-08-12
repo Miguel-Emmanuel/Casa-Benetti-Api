@@ -43,11 +43,17 @@ export class PurchaseOrders extends Entity {
   })
   createdAt: Date;
 
-  //Fecha de término de producción
+  //Fecha de término de producción (Fecha aproximada)
   @property({
     type: 'date',
   })
   productionEndDate: Date;
+
+  //Fecha real de término de producción
+  @property({
+    type: 'date',
+  })
+  productionRealEndDate: Date;
 
   //Fecha de llegada
   @property({
