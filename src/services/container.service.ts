@@ -26,8 +26,7 @@ export class ContainerService {
         try {
             await this.validateBodyCustomer(container);
             const {docs, ...body} = container
-            const {shippingDate} = this.calculateDate(body.ETDDate, body.ETADate)
-            const containerRes = await this.containerRepository.create({...body, shippingDate});
+            const containerRes = await this.containerRepository.create({...body});
             await this.createDocument(containerRes!.id, docs);
             return containerRes;
         } catch (error) {
@@ -35,14 +34,14 @@ export class ContainerService {
         }
     }
 
-    calculateDate(ETDDate?: Date, ETADate?: Date) {
-        let shippingDate
-        if (ETADate)
-            shippingDate = dayjs(ETADate).add(10, 'days')
-        else if (ETDDate)
-            shippingDate = dayjs(ETDDate).add(31, 'days')
-        return {shippingDate}
-    }
+    // calculateDate(ETDDate?: Date, ETADate?: Date) {
+    //     let shippingDate
+    //     if (ETADate)
+    //         shippingDate = dayjs(ETADate).add(10, 'days')
+    //     else if (ETDDate)
+    //         shippingDate = dayjs(ETDDate).add(31, 'days')
+    //     return {shippingDate}
+    // }
 
     async updateById(id: number, data: UpdateContainer,) {
         await this.validateBodyUpdate(data);
