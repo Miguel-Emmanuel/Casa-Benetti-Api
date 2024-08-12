@@ -61,8 +61,8 @@ export class InventoriesService {
         const warehouseArray: InventorieDataI[] = [];
         const showroomArray: InventorieDataI[] = [];
         for (let index = 0; index < inventoryMovements.length; index++) {
-            const {inventories, comment, id: inventoryMovementId} = inventoryMovements[index];
-            const {warehouseId, branchId, quotationProducts, branch, warehouse} = inventories;
+            const {inventories, comment, id: inventoryMovementId, quantity} = inventoryMovements[index];
+            const {warehouseId, branchId, quotationProducts, branch, warehouse, } = inventories;
             const {id, product, model, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, assembledProducts, SKU, stock} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product
             if (warehouseId) {
@@ -84,7 +84,7 @@ export class InventoriesService {
                         if (findProductObject)
                             warehouseArray[findWarehouse].products[findProduct] = {
                                 ...findProductObject,
-                                stock: stock
+                                stock: findProductObject.stock + quantity
                             }
                     } else {
 
@@ -92,7 +92,7 @@ export class InventoriesService {
                             id,
                             name,
                             sku: SKU,
-                            stock,
+                            stock: quantity,
                             image: document?.fileURL ?? null,
                             classificationId,
                             lineId,
@@ -103,7 +103,8 @@ export class InventoriesService {
                             description,
                             observations: comment,
                             assembledProducts,
-                            inventoryMovementId
+                            inventoryMovementId,
+                            quantity
                         })
                     }
                 } else {
@@ -116,7 +117,7 @@ export class InventoriesService {
                                     id,
                                     name,
                                     sku: SKU,
-                                    stock,
+                                    stock: quantity,
                                     image: document?.fileURL ?? null,
                                     classificationId,
                                     lineId,
@@ -127,7 +128,8 @@ export class InventoriesService {
                                     description,
                                     observations: comment,
                                     assembledProducts,
-                                    inventoryMovementId
+                                    inventoryMovementId,
+                                    quantity
                                 }
                             ]
                         }
@@ -151,14 +153,14 @@ export class InventoriesService {
                         if (findProductObject)
                             showroomArray[findShowroom].products[findProduct] = {
                                 ...findProductObject,
-                                stock: stock
+                                stock: findProductObject.stock + quantity
                             }
                     } else {
                         showroomArray[findShowroom].products.push({
                             id,
                             name,
                             sku: SKU,
-                            stock,
+                            stock: quantity,
                             image: document?.fileURL ?? null,
                             classificationId,
                             lineId,
@@ -169,7 +171,8 @@ export class InventoriesService {
                             description,
                             observations: comment,
                             assembledProducts,
-                            inventoryMovementId
+                            inventoryMovementId,
+                            quantity
                         })
 
                     }
@@ -183,7 +186,7 @@ export class InventoriesService {
                                     id,
                                     name,
                                     sku: SKU,
-                                    stock,
+                                    stock: quantity,
                                     image: document?.fileURL ?? null,
                                     classificationId,
                                     lineId,
@@ -194,7 +197,8 @@ export class InventoriesService {
                                     description,
                                     observations: comment,
                                     assembledProducts,
-                                    inventoryMovementId
+                                    inventoryMovementId,
+                                    quantity
                                 }
                             ]
                         }
