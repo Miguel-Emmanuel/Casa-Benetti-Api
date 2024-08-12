@@ -62,8 +62,8 @@ export class InventoriesService {
         const showroomArray: InventorieDataI[] = [];
         for (let index = 0; index < inventoryMovements.length; index++) {
             const {inventories, comment, id: inventoryMovementId, quantity} = inventoryMovements[index];
-            const {warehouseId, branchId, quotationProducts, branch, warehouse, } = inventories;
-            const {id, product, model, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, assembledProducts, SKU, stock} = quotationProducts;
+            const {warehouseId, branchId, quotationProducts, branch, warehouse, stock} = inventories;
+            const {id, product, model, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, assembledProducts, SKU} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product
             if (warehouseId) {
                 const descriptionParts = [
@@ -84,7 +84,7 @@ export class InventoriesService {
                         if (findProductObject)
                             warehouseArray[findWarehouse].products[findProduct] = {
                                 ...findProductObject,
-                                stock: findProductObject.stock + quantity
+                                stock: stock
                             }
                     } else {
 
@@ -92,7 +92,7 @@ export class InventoriesService {
                             id,
                             name,
                             sku: SKU,
-                            stock: quantity,
+                            stock: stock,
                             image: document?.fileURL ?? null,
                             classificationId,
                             lineId,
@@ -117,7 +117,7 @@ export class InventoriesService {
                                     id,
                                     name,
                                     sku: SKU,
-                                    stock: quantity,
+                                    stock: stock,
                                     image: document?.fileURL ?? null,
                                     classificationId,
                                     lineId,
@@ -153,14 +153,14 @@ export class InventoriesService {
                         if (findProductObject)
                             showroomArray[findShowroom].products[findProduct] = {
                                 ...findProductObject,
-                                stock: findProductObject.stock + quantity
+                                stock: stock
                             }
                     } else {
                         showroomArray[findShowroom].products.push({
                             id,
                             name,
                             sku: SKU,
-                            stock: quantity,
+                            stock: stock,
                             image: document?.fileURL ?? null,
                             classificationId,
                             lineId,
@@ -186,7 +186,7 @@ export class InventoriesService {
                                     id,
                                     name,
                                     sku: SKU,
-                                    stock: quantity,
+                                    stock: stock,
                                     image: document?.fileURL ?? null,
                                     classificationId,
                                     lineId,

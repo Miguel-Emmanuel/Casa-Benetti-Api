@@ -137,20 +137,24 @@ export class InventoryMovementsService {
                 }
 
                 if (reasonIssue === InventoriesIssueE.REASIGNAR) {
-                    let inventorie: any;
+                    let inventorieReasinar: any;
                     if (destinationWarehouseId) {
-                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
-                        if (!inventorie) {
-                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                        inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                        if (!inventorieReasinar) {
+                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
                         }
-                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry: undefined, comment});
+                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
+                        const stockInventories = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                        await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (stockInventories?.stock ?? 0 + quantity)})
                     }
                     if (destinationBranchId) {
-                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
-                        if (!inventorie) {
-                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                        inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
+                        if (!inventorieReasinar) {
+                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
                         }
-                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry: undefined, comment});
+                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
+                        const stockInventories = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
+                        await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (stockInventories?.stock ?? 0 + quantity)})
                     }
                 }
             }
