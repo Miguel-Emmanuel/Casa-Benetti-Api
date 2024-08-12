@@ -121,7 +121,12 @@ export class InventoryMovementsService {
         await this.validateDataIssue(branchId, warehouseId);
         try {
             const {reasonIssue, destinationBranchId, containerNumber, destinationWarehouseId} = data;
-            let inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
+            // let inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
+            let inventorie: any;
+            if (branchId)
+                inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
+            else if (warehouseId)
+                inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
             if (inventorie) {
                 const {stock} = inventorie;
                 await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
@@ -129,6 +134,24 @@ export class InventoryMovementsService {
                 await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (quotationProduct.stock - quantity)})
                 if (reasonIssue === InventoriesIssueE.ENTREGA_CLIENTE) {
                     await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.TRANSITO_NACIONAL})
+                }
+
+                if (reasonIssue === InventoriesIssueE.REASIGNAR) {
+                    let inventorie: any;
+                    if (destinationWarehouseId) {
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                        if (!inventorie) {
+                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                        }
+                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry: undefined, comment});
+                    }
+                    if (destinationBranchId) {
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
+                        if (!inventorie) {
+                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                        }
+                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry: undefined, comment});
+                    }
                 }
             }
         } catch (error) {
