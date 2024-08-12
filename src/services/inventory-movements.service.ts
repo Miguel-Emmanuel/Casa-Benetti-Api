@@ -55,7 +55,12 @@ export class InventoryMovementsService {
             const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
             const project = await this.validateDataEntry(projectId, branchId, warehouseId);
             try {
-                let inventorie: any = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
+                let inventorie: any;
+                if (branchId)
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
+                else if (warehouseId)
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
+
                 if (!inventorie) {
                     inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
                 } else {

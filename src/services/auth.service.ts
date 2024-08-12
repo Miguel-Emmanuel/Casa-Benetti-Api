@@ -239,7 +239,6 @@ export class AuthService {
     const module = await this.moduleRepository.findOne({
       where: {name: body.module},
     })
-    console.log('module: ', module)
     if (!module) return this.responseService.forbbiden("No se ha encontrado el modulo")
 
     let roleModule: any;
