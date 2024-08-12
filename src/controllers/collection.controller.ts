@@ -198,6 +198,7 @@ export class CollectionController {
                         properties: {
                             containerId: {
                                 type: 'number',
+                                nullable: true
                             },
                             destination: {
                                 type: 'string',
