@@ -1,9 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
-import {schemaCreateContainer} from '../joi.validation.ts/container.validation';
+import {Docs, PurchaseOrdersContainer, UpdateContainer} from '../interface';
+import {schemaCreateContainer, schemaUpdateContainer} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Container, ContainerCreate, Document, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {ContainerRepository, DocumentRepository} from '../repositories';
+import {ContainerRepository, DocumentRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -15,6 +16,8 @@ export class ContainerService {
         public responseService: ResponseService,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
     ) { }
 
     async create(container: Omit<ContainerCreate, 'id'>,) {
@@ -29,8 +32,26 @@ export class ContainerService {
         }
     }
 
-    async updateById(id: number, container: Container,) {
-        await this.containerRepository.updateById(id, container);
+    async updateById(id: number, data: UpdateContainer,) {
+        await this.validateBodyUpdate(data);
+        const container = await this.containerRepository.findOne({where: {id}});
+        if (!container)
+            throw this.responseService.badRequest("El contenedor no existe.")
+        await this.containerRepository.updateById(id, data);
+        const {docs, purchaseOrders} = data;
+        await this.updateDocument(id, docs);
+        await this.updateProducts(purchaseOrders);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async updateProducts(purchaseOrders: PurchaseOrdersContainer[]) {
+        for (let index = 0; index < purchaseOrders?.length; index++) {
+            const {products} = purchaseOrders[index];
+            for (let index = 0; index < products?.length; index++) {
+                const {id, ...data} = products[index];
+                await this.quotationProductsRepository.updateById(id, {...data})
+            }
+        }
     }
 
     async find(filter?: Filter<Container>,) {
@@ -181,7 +202,34 @@ export class ContainerService {
         }
     }
 
+    async validateBodyUpdate(data: UpdateContainer,) {
+        try {
+            await schemaUpdateContainer.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
     async createDocument(containerId?: number, documents?: Document[]) {
+        if (documents) {
+            for (let index = 0; index < documents?.length; index++) {
+                const element = documents[index];
+                if (element && !element?.id) {
+                    await this.containerRepository.documents(containerId).create(element);
+                } else if (element) {
+                    await this.documentRepository.updateById(element.id, {...element});
+                }
+            }
+        }
+    }
+
+    async updateDocument(containerId?: number, documents?: Docs[]) {
         if (documents) {
             for (let index = 0; index < documents?.length; index++) {
                 const element = documents[index];

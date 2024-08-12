@@ -1,4 +1,4 @@
-import {ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {ContainerStatus, ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address, Document, ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export interface ProjectManagers {
@@ -280,3 +280,32 @@ export interface InventorieDataI {
 // export interface InventoriesShowroomI {
 //     showroom: InventorieDataI[],
 // }
+
+export interface Docs {
+    id: number,
+    fileURL: string,
+    name: string,
+    extension: string
+}
+
+export interface PurchaseOrdersContainer {
+    id: number,
+    products: {
+        id: number,
+        invoiceNumber: string,
+        grossWeight: string,
+        netWeight: string,
+        numberBoxes: number,
+        descriptionPedimiento: string,
+        NOMS: string[]
+    }[]
+}
+export interface UpdateContainer {
+    pedimento: string;
+    grossWeight: string;
+    numberBoxes: number;
+    measures: string;
+    status: ContainerStatus;
+    docs: Docs[],
+    purchaseOrders: PurchaseOrdersContainer[]
+}
