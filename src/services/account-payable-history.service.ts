@@ -108,14 +108,22 @@ export class AccountPayableHistoryService {
     }
 
     async validateProductionEndDate(totalPaid: number, total: number, purchaseOrder: PurchaseOrders, providerId?: number, brandId?: number) {
+        console.log('purchaseOrder: ', purchaseOrder.id)
+        console.log('!purchaseOrder.productionEndDate: ', !purchaseOrder.productionEndDate)
         if (!purchaseOrder.productionEndDate) {
             let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
+            console.log('providerId: ', providerId)
             advanceConditionPercentage = advanceConditionPercentage ?? 100;
+            console.log('advanceConditionPercentage: ', advanceConditionPercentage)
             const porcentage = ((totalPaid / total) * 100);
+            console.log('porcentage: ', porcentage)
             if (porcentage >= advanceConditionPercentage) {
                 let {productionTime} = await this.brandRepository.findById(brandId);
+                console.log('brandId: ', brandId)
+                console.log('productionTime: ', productionTime)
                 let scheduledDate = new Date();
-                const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
+                const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0);
+                console.log('productionEndDate: ', productionEndDate)
                 await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, status: PurchaseOrdersStatus.EN_PRODUCCION})
             }
         }
