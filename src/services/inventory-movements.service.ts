@@ -141,7 +141,7 @@ export class InventoryMovementsService {
                     if (destinationWarehouseId) {
                         inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
                         if (!inventorieReasinar) {
-                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId: destinationWarehouseId})
                         } else {
                             await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
                         }
@@ -150,7 +150,7 @@ export class InventoryMovementsService {
                     if (destinationBranchId) {
                         inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
                         if (!inventorieReasinar) {
-                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, branchId: destinationBranchId})
                         } else {
                             await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
                         }
