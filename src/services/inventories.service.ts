@@ -76,7 +76,6 @@ export class InventoriesService {
                 ];
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 const findWarehouse = warehouseArray.findIndex(value => value.id === warehouseId)
-                console.log('findWarehouse: ', findWarehouse)
                 if (findWarehouse !== -1) {
                     const findProduct = warehouseArray[findWarehouse].products.findIndex(value => value.id === id);
                     if (findProduct !== -1) {
