@@ -100,6 +100,9 @@ export class ContainerController {
                             numberBoxes: {
                                 type: 'number'
                             },
+                            invoiceNumber: {
+                                type: 'string'
+                            },
                             measures: {
                                 type: 'string'
                             },
