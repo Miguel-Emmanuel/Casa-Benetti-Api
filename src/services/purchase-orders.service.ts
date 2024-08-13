@@ -8,7 +8,7 @@ import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE} from '../enums';
 import {schameUpdateStatusPurchase} from '../joi.validation.ts/purchase-order.validation';
 import {ResponseServiceBindings} from '../keys';
 import {PurchaseOrders, QuotationProductsWithRelations} from '../models';
-import {ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository} from '../repositories';
+import {CollectionRepository, ContainerRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository} from '../repositories';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
 
@@ -33,6 +33,10 @@ export class PurchaseOrdersService {
         public pdfService: PdfService,
         @inject(RestBindings.Http.RESPONSE)
         private response: Response,
+        @repository(ContainerRepository)
+        public containerRepository: ContainerRepository,
+        @repository(CollectionRepository)
+        public collectionRepository: CollectionRepository,
     ) { }
 
 
@@ -418,12 +422,68 @@ export class PurchaseOrdersService {
         const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {id}})
         if (!purchaseOrder)
             throw this.responseService.notFound("La orden de compra no se ha encontrado.")
-
+        return purchaseOrder
     }
 
 
     async deleteById(id: number) {
         await this.purchaseOrdersRepository.deleteById(id);
+    }
+
+    async saveProductionRealEndDate(id: number, data: {productionRealEndDate: string},) {
+        const {collectionId} = await this.findPurchaseOrderById(id);
+        await this.purchaseOrdersRepository.updateById(id, {productionRealEndDate: data.productionRealEndDate})
+        await this.calculateArrivalDatePurchaseOrder(collectionId);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async calculateArrivalDatePurchaseOrder(collectionId?: number) {
+        if (collectionId) {
+            const collectionFind = await this.collectionRepository.findById(collectionId);
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                            }
+                        ]
+                    }
+                }
+            ]
+            const container = await this.containerRepository.findById(collectionFind.containerId, {include});
+            const {ETDDate, ETADate} = container;
+            let arrivalDate;
+            if (ETADate) {
+                arrivalDate = dayjs(ETADate).add(10, 'days')
+            }
+            else if (ETDDate) {
+                arrivalDate = dayjs(ETDDate).add(31, 'days')
+            }
+            const {collection} = container;
+            const {purchaseOrders} = collection;
+            if (purchaseOrders) {
+                for (let index = 0; index < purchaseOrders.length; index++) {
+                    const element = purchaseOrders[index];
+                    if (arrivalDate) {
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        return;
+                    }
+                    const {productionEndDate, productionRealEndDate} = element;
+                    if (productionRealEndDate) {
+                        const arrivalDate = dayjs(productionRealEndDate).add(53, 'days')
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        return;
+                    }
+                    if (productionEndDate) {
+                        const arrivalDate = dayjs(productionEndDate).add(53, 'days')
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     async earringsCollect() {
