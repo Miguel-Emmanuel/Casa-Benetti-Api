@@ -363,7 +363,7 @@ export class PurchaseOrdersService {
                 quantity: quotationProduct?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
                 originCode: quotationProduct?.originCode,
-                assembledProducts: assembledProducts
+                assembledProducts: assembledProducts,
             })
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
