@@ -230,7 +230,7 @@ export class PurchaseOrdersService {
                     ]
                 };
             const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
-            const {createdAt, proforma, status, accountPayableId, proformaId, productionEndDate} = purchaseOrders;
+            const {createdAt, proforma, status, accountPayableId, proformaId, productionEndDate, productionRealEndDate} = purchaseOrders;
             const {provider, brand, quotationProducts, project} = proforma;
             const {customer, quotation} = project
             const {mainProjectManager} = quotation
@@ -238,7 +238,8 @@ export class PurchaseOrdersService {
             return {
                 id,
                 projectId: project?.id,
-                productionEndDate,
+                productionEndDate: productionEndDate ?? null,
+                productionRealEndDate: productionRealEndDate ?? null,
                 createdAt,
                 provider,
                 brand,
