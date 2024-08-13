@@ -43,13 +43,19 @@ export class PurchaseOrders extends Entity {
   })
   createdAt: Date;
 
-  //Fecha de término de producción
+  //Fecha de término de producción (Fecha aproximada) (Se calcula cuando se completa los pagos)
   @property({
     type: 'date',
   })
   productionEndDate: Date;
 
-  //Fecha de llegada
+  //Fecha real de término de producción (Se captura por el usuario desde la vista "Ordenes de compra")
+  @property({
+    type: 'date',
+  })
+  productionRealEndDate: Date;
+
+  //Fecha estimada de llegada(se calcula con una formula BC-46)
   @property({
     type: 'date',
   })

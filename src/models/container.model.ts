@@ -82,18 +82,17 @@ export class Container extends BaseEntity {
     })
     status: ContainerStatus;
 
-    //Fecha de llegada
-    @property({
-        type: 'date',
-    })
-    arrivalDate: Date;
-
     //Fecha de envio
     @property({
         type: 'date',
     })
-    shippingDate: Date;
+    shippingDate?: Date;
 
+    //Fecha estimada de llegada
+    @property({
+        type: 'date',
+    })
+    arrivalDate?: Date;
 
     constructor(data?: Partial<Container>) {
         super(data);
