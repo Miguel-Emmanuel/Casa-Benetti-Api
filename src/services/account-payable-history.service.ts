@@ -48,7 +48,7 @@ export class AccountPayableHistoryService {
             const newTotalPaid = accountPayable.totalPaid + newAmount
             const newBalance = accountPayable.balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.providerId, proforma.brandId,)
             await this.settleAccountPayable(newTotalPaid, total, accountPayableId, purchaseOrders.id);
         }
         delete accountPayableHistory.images;
@@ -97,7 +97,7 @@ export class AccountPayableHistoryService {
             const newTotalPaid = this.roundToTwoDecimals(totalPaid + newAmount)
             const newBalance = balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.providerId, proforma.brandId,)
             await this.settleAccountPayable(newTotalPaid, total, accountPayableId, purchaseOrders.id);
         }
 
