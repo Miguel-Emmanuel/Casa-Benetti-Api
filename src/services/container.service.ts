@@ -251,7 +251,7 @@ export class ContainerService {
                     ]
                 };
             const container = await this.containerRepository.findById(id, filter);
-            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection, arrivalDate, shippingDate, ETDDate, ETADate} = container;
+            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber} = container;
             return {
                 pedimento,
                 containerNumber,
@@ -259,6 +259,7 @@ export class ContainerService {
                 numberBoxes,
                 measures,
                 status,
+                invoiceNumber,
                 arrivalDate: arrivalDate ?? 'Pendiente',
                 shippingDate: shippingDate ?? 'Pendiente',
                 ETDDate: ETDDate ?? 'Pendiente',
