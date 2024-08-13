@@ -327,7 +327,6 @@ export class ProjectService {
             const {proformas} = project
             return proformas?.map((value: ProformaWithRelations) => {
                 const {purchaseOrders, provider, brand, accountPayable, proformaId, quotationProducts} = value;
-                console.log('purchaseOrders: ', purchaseOrders)
                 if (purchaseOrders) {
                     const {id: purchaseOrderId, status, productionEndDate, productionRealEndDate, collection, arrivalDate} = purchaseOrders;
                     return {
@@ -342,7 +341,7 @@ export class ProjectService {
                         containerNumber: collection?.container?.containerNumber ?? null,
                         arrivalDate: arrivalDate ?? null,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, quantity, originCost, proformaPrice, numberBoxes, status} = value;
                             const {document, line, name} = product;
                             const descriptionParts = [
                                 line?.name,
@@ -358,6 +357,12 @@ export class ProjectService {
                                 SKU,
                                 image: document?.fileURL,
                                 description,
+                                quantity,
+                                originCost,
+                                proformaPrice,
+                                proformaPriceQuantity: quantity * proformaPrice,
+                                numberBoxes,
+                                status
                             }
                         })
                     }
