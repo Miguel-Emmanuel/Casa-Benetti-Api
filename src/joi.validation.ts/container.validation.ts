@@ -37,6 +37,7 @@ const schemaPurchaseOrders = Joi.object({
 
 export const schemaUpdateContainer = Joi.object({
     pedimento: Joi.string().required(),
+    invoiceNumber: Joi.string().required(),
     grossWeight: Joi.string().required(),
     numberBoxes: Joi.number().required(),
     measures: Joi.string().required(),
