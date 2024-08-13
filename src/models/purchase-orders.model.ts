@@ -2,7 +2,7 @@ import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
 import {AccountPayable} from './account-payable.model';
 import {AccountsReceivable} from './accounts-receivable.model';
-import {Collection} from './collection.model';
+import {Collection, CollectionWithRelations} from './collection.model';
 import {DeliveryRequest} from './delivery-request.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 
@@ -100,6 +100,7 @@ export class PurchaseOrders extends Entity {
 export interface PurchaseOrdersRelations {
   // describe navigational properties here
   proforma: ProformaWithRelations
+  collection: CollectionWithRelations
 }
 
 export type PurchaseOrdersWithRelations = PurchaseOrders & PurchaseOrdersRelations;

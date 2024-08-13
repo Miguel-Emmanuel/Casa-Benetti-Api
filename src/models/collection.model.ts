@@ -1,5 +1,5 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
-import {Container} from './container.model';
+import {Container, ContainerWithRelations} from './container.model';
 import {Document} from './document.model';
 import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
 
@@ -64,6 +64,7 @@ export class Collection extends Entity {
 export interface CollectionRelations {
     // describe navigational properties here
     purchaseOrders: PurchaseOrdersWithRelations[]
+    container: ContainerWithRelations
 }
 
 export type CollectionWithRelations = Collection & CollectionRelations;

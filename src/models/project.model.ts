@@ -6,7 +6,7 @@ import {Branch, BranchWithRelations} from './branch.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Document} from './document.model';
-import {Proforma} from './proforma.model';
+import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -93,6 +93,7 @@ export interface ProjectRelations {
     branch: BranchWithRelations,
     customer: CustomerWithRelations;
     quotation: QuotationWithRelations
+    proformas: ProformaWithRelations[]
 }
 
 export type ProjectWithRelations = Project & ProjectRelations;
