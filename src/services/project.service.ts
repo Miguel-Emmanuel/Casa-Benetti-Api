@@ -8,7 +8,7 @@ import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotati
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
-import {Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {ProformaWithRelations, Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
@@ -263,6 +263,109 @@ export class ProjectService {
                 image: document?.fileURL
             }
         })
+    }
+
+    async getPurchaseOrdersByProjectId(id: number) {
+        try {
+            const project = await this.projectRepository.findById(id, {
+                include: [
+                    {
+                        relation: 'proformas',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'purchaseOrders',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'collection',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'container'
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    relation: 'provider'
+                                },
+                                {
+                                    relation: 'brand'
+                                },
+                                {
+                                    relation: 'accountPayable'
+                                },
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'product',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'document'
+                                                        },
+                                                        {
+                                                            relation: 'line'
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            })
+            const {proformas} = project
+            return proformas?.map((value: ProformaWithRelations) => {
+                const {purchaseOrders, provider, brand, accountPayable, proformaId, quotationProducts} = value;
+                console.log('purchaseOrders: ', purchaseOrders)
+                if (purchaseOrders) {
+                    const {id: purchaseOrderId, status, productionEndDate, productionRealEndDate, collection, arrivalDate} = purchaseOrders;
+                    return {
+                        id: purchaseOrderId,
+                        providerName: `${provider.name}`,
+                        brandName: `${brand.brandName}`,
+                        status,
+                        accountPayableId: accountPayable.id,
+                        proformaId,
+                        productionEndDate: productionEndDate ?? null,
+                        productionRealEndDate: productionRealEndDate ?? null,
+                        containerNumber: collection?.container?.containerNumber ?? null,
+                        arrivalDate: arrivalDate ?? null,
+                        products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                            }
+                        })
+                    }
+                }
+            }).filter(value => value != null) ?? []
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
 
