@@ -58,7 +58,7 @@ export class InternalExpensesController {
     })
     async find(
         @param.filter(InternalExpenses) filter?: Filter<InternalExpenses>,
-    ): Promise<InternalExpenses[]> {
+    ): Promise<Object[]> {
         return this.internalExpensesService.find(filter);
     }
 

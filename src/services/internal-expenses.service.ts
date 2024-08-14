@@ -32,7 +32,22 @@ export class InternalExpensesService {
     }
 
     async find(filter?: Filter<InternalExpenses>,) {
-        return this.internalExpensesRepository.find(filter);
+        const internalExpenses = await this.internalExpensesRepository.find(filter);
+        return internalExpenses.map(value => {
+            const {id, typesExpensesId, concept, amount, paymentMethod, originExpense, expenditureDate, provider, projectReference, createdAt} = value;
+            return {
+                id,
+                typesExpensesId,
+                concept,
+                amount,
+                paymentMethod,
+                originExpense,
+                expenditureDate,
+                provider,
+                projectReference,
+                createdAt
+            }
+        })
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<InternalExpenses>) {
