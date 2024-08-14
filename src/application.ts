@@ -21,6 +21,7 @@ import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
 import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, ExpenseServiceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
 import {OperationHook} from './operation-hooks';
+import {PurchaseOrderHook} from './operation-hooks/purchase-order.hook';
 import {UserCredentialsRepository, UserRepository} from './repositories';
 import {MySequence} from './sequence';
 import {AuthService, BcryptHasher, BranchService, BrandService, CustomerService, ExpenseService, GroupService, JWTService, MyUserService, ProviderService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
@@ -118,6 +119,7 @@ export class BaseApiLb4Application extends BootMixin(
     );
 
     this.bind(OperationHookBindings.OPERATION_SERVICE).toClass(OperationHook);
+    this.bind(OperationHookBindings.OPERATION_SERVICE_PURCHASE).toClass(PurchaseOrderHook);
     this.bind(SendgridServiceBindings.SENDGRID_SERVICE).toClass(
       SendgridService
     );

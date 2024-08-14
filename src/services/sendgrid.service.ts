@@ -38,6 +38,10 @@ export const SendgridTemplates = {
     id: 'd-7973474c38fa459fb1560eac8264261e',
     subject: 'Solicitud de entrega rechazada',
   },
+  NEW_PURCHASE_ORDER: {
+    id: 'd-a8cb27b2a0fc4fccbe200da5d2613ba9',
+    subject: 'Nueva orden de compra por antender',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})
