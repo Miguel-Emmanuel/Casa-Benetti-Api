@@ -1,4 +1,5 @@
-import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {belongsTo, model, property} from '@loopback/repository';
+import {BaseEntity} from './base/base-entity.model';
 import {Brand} from './brand.model';
 import {TypesExpenses} from './types-expenses.model';
 
@@ -9,7 +10,7 @@ import {TypesExpenses} from './types-expenses.model';
         },
     }
 })
-export class InternalExpenses extends Entity {
+export class InternalExpenses extends BaseEntity {
     @property({
         type: 'number',
         id: true,
