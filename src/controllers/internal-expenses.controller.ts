@@ -32,7 +32,7 @@ export class InternalExpensesController {
                 'application/json': {
                     schema: getModelSchemaRef(InternalExpenses, {
                         title: 'NewInternalExpenses',
-                        exclude: ['id'],
+                        exclude: ['id', 'isDeleted', 'deleteComment', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy'],
                     }),
                 },
             },
@@ -49,7 +49,7 @@ export class InternalExpensesController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(InternalExpenses, {includeRelations: true}),
+                    items: getModelSchemaRef(InternalExpenses, {includeRelations: false}),
                 },
             },
         },
@@ -65,7 +65,7 @@ export class InternalExpensesController {
         description: 'InternalExpenses model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(InternalExpenses, {includeRelations: true}),
+                schema: getModelSchemaRef(InternalExpenses, {includeRelations: false}),
             },
         },
     })
@@ -85,7 +85,10 @@ export class InternalExpensesController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(InternalExpenses, {partial: true}),
+                    schema: getModelSchemaRef(InternalExpenses, {
+                        partial: true,
+                        exclude: ['id', 'isDeleted', 'deleteComment', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy'],
+                    }),
                 },
             },
         })

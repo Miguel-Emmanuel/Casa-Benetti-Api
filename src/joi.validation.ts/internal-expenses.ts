@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {CurrencyE, TypeArticleE, UOME} from '../enums';
+import {CurrencyE, OriginExpenseE, PaymentMethodE, TypeArticleE, UOME} from '../enums';
 
 export const schemaAssembledProducts = Joi.object({
     assembledProduct: Joi.object({
@@ -97,5 +97,18 @@ export const schemaUpdateProforma = Joi.object({
 
 
 export const schemaCreateInternalExpenses = Joi.object({
-    price: Joi.number().required()
+    typesExpensesId: Joi.number().required(),
+    concept: Joi.string().required(),
+    originExpense: Joi.string().valid(...Object.values(OriginExpenseE)).messages({
+        'any.only': `El origen del gasto debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    projectReference: Joi.when('originExpense', {is: [OriginExpenseE.PROYECTO], then: Joi.string().required(), otherwise: Joi.forbidden()}),
+    brandId: Joi.when('originExpense', {is: [OriginExpenseE.SUCURSAL], then: Joi.number().required(), otherwise: Joi.forbidden()}),
+    amount: Joi.number().required(),
+    expenditureDate: Joi.number().required(),
+    paymentMethod: Joi.string().valid(...Object.values(PaymentMethodE)).messages({
+        'any.only': `El metodo de pago debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    provider: Joi.string().allow('').allow(null),
+
 })

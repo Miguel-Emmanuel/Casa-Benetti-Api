@@ -62,14 +62,14 @@ export class InternalExpenses extends BaseEntity {
 
     //Método de pago
     @property({
-        type: 'date',
+        type: 'string',
         required: true,
     })
     paymentMethod: string;
 
     //Proveedor
     @property({
-        type: 'date',
+        type: 'string',
     })
     provider: string;
 

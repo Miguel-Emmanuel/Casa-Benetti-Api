@@ -3,7 +3,7 @@ import {Filter, FilterExcludingWhere, repository} from '@loopback/repository';
 import {schemaCreateInternalExpenses} from '../joi.validation.ts/internal-expenses';
 import {ResponseServiceBindings} from '../keys';
 import {InternalExpenses} from '../models';
-import {InternalExpensesRepository} from '../repositories';
+import {BranchRepository, InternalExpensesRepository, TypesExpensesRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -13,10 +13,22 @@ export class InternalExpensesService {
         public internalExpensesRepository: InternalExpensesRepository,
         @inject(ResponseServiceBindings.RESPONSE_SERVICE)
         public responseService: ResponseService,
+        @repository(TypesExpensesRepository)
+        public typesExpensesRepository: TypesExpensesRepository,
+        @repository(BranchRepository)
+        public branchRepository: BranchRepository
     ) { }
 
     async create(internalExpenses: Omit<InternalExpenses, 'id'>,) {
-        return this.internalExpensesRepository.create(internalExpenses);
+        const {typesExpensesId, brandId} = internalExpenses;
+        await this.findTypeExpeneseById(typesExpensesId);
+        await this.findBranchById(typesExpensesId);
+        try {
+            await this.validateBodyInternalExpenses(internalExpenses);
+            return this.internalExpensesRepository.create(internalExpenses);
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error);
+        }
     }
 
     async find(filter?: Filter<InternalExpenses>,) {
@@ -29,6 +41,18 @@ export class InternalExpensesService {
 
     async updateById(id: number, internalExpenses: InternalExpenses,) {
         await this.internalExpensesRepository.updateById(id, internalExpenses);
+    }
+
+    async findTypeExpeneseById(id: number) {
+        const typesExpenses = await this.typesExpensesRepository.findOne({where: {id}});
+        if (!typesExpenses)
+            throw this.responseService.notFound('La Clasificación del gasto no existe.')
+    }
+
+    async findBranchById(id: number) {
+        const brand = await this.branchRepository.findOne({where: {id}});
+        if (!brand)
+            throw this.responseService.notFound('La sucursal no existe.')
     }
 
     async validateBodyInternalExpenses(internalExpenses: Omit<InternalExpenses, 'id'>,) {
