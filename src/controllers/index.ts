@@ -45,3 +45,4 @@ export * from './inventories.controller';
 export * from './delivery-request.controller';
 export * from './collection.controller';
 export * from './container.controller';
+export * from './internal-expenses.controller';

@@ -47,3 +47,4 @@ export * from './inventory-movements.model';
 export * from './delivery-request.model';
 export * from './collection.model';
 export * from './container.model';
+export * from './internal-expenses.model';
