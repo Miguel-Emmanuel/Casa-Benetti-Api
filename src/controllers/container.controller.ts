@@ -13,7 +13,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
-import {UpdateContainer} from '../interface';
+import {UpdateContainer, UpdateContainerProducts} from '../interface';
 import {Container, ContainerCreate} from '../models';
 import {ContainerService} from '../services';
 
@@ -174,6 +174,69 @@ export class ContainerController {
         container: UpdateContainer,
     ): Promise<void> {
         await this.containerService.updateById(id, container);
+    }
+
+
+    @patch('/containers/{id}/products')
+    @response(204, {
+        description: 'Container PATCH success',
+    })
+    async updateByIdProducts(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    grossWeight: {
+                                                        type: 'string'
+                                                    },
+                                                    netWeight: {
+                                                        type: 'string'
+                                                    },
+                                                    numberBoxes: {
+                                                        type: 'number'
+                                                    },
+                                                    descriptionPedimiento: {
+                                                        type: 'string'
+                                                    },
+                                                    NOMS: {
+                                                        type: 'array',
+                                                        items: {
+                                                            type: 'string'
+                                                        }
+                                                    },
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                },
+            },
+        })
+        container: UpdateContainerProducts,
+    ): Promise<void> {
+        await this.containerService.updateByIdProducts(id, container);
     }
 
     // @del('/containers/{id}')

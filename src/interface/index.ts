@@ -309,3 +309,7 @@ export interface UpdateContainer {
     docs: Docs[],
     purchaseOrders: PurchaseOrdersContainer[]
 }
+
+export interface UpdateContainerProducts {
+    purchaseOrders: PurchaseOrdersContainer[]
+}
