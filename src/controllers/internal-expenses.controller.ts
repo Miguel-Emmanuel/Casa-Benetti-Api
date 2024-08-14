@@ -1,29 +1,24 @@
+import {service} from '@loopback/core';
 import {
-    Count,
-    CountSchema,
     Filter,
-    FilterExcludingWhere,
-    repository,
-    Where,
+    FilterExcludingWhere
 } from '@loopback/repository';
 import {
-    del,
     get,
     getModelSchemaRef,
     param,
     patch,
     post,
-    put,
     requestBody,
-    response,
+    response
 } from '@loopback/rest';
 import {InternalExpenses} from '../models';
-import {InternalExpensesRepository} from '../repositories';
+import {InternalExpensesService} from '../services';
 
 export class InternalExpensesController {
     constructor(
-        @repository(InternalExpensesRepository)
-        public internalExpensesRepository: InternalExpensesRepository,
+        @service()
+        public internalExpensesService: InternalExpensesService
     ) { }
 
     @post('/internal-expenses')
@@ -44,18 +39,7 @@ export class InternalExpensesController {
         })
         internalExpenses: Omit<InternalExpenses, 'id'>,
     ): Promise<InternalExpenses> {
-        return this.internalExpensesRepository.create(internalExpenses);
-    }
-
-    @get('/internal-expenses/count')
-    @response(200, {
-        description: 'InternalExpenses model count',
-        content: {'application/json': {schema: CountSchema}},
-    })
-    async count(
-        @param.where(InternalExpenses) where?: Where<InternalExpenses>,
-    ): Promise<Count> {
-        return this.internalExpensesRepository.count(where);
+        return this.internalExpensesService.create(internalExpenses);
     }
 
     @get('/internal-expenses')
@@ -73,26 +57,7 @@ export class InternalExpensesController {
     async find(
         @param.filter(InternalExpenses) filter?: Filter<InternalExpenses>,
     ): Promise<InternalExpenses[]> {
-        return this.internalExpensesRepository.find(filter);
-    }
-
-    @patch('/internal-expenses')
-    @response(200, {
-        description: 'InternalExpenses PATCH success count',
-        content: {'application/json': {schema: CountSchema}},
-    })
-    async updateAll(
-        @requestBody({
-            content: {
-                'application/json': {
-                    schema: getModelSchemaRef(InternalExpenses, {partial: true}),
-                },
-            },
-        })
-        internalExpenses: InternalExpenses,
-        @param.where(InternalExpenses) where?: Where<InternalExpenses>,
-    ): Promise<Count> {
-        return this.internalExpensesRepository.updateAll(internalExpenses, where);
+        return this.internalExpensesService.find(filter);
     }
 
     @get('/internal-expenses/{id}')
@@ -108,7 +73,7 @@ export class InternalExpensesController {
         @param.path.number('id') id: number,
         @param.filter(InternalExpenses, {exclude: 'where'}) filter?: FilterExcludingWhere<InternalExpenses>
     ): Promise<InternalExpenses> {
-        return this.internalExpensesRepository.findById(id, filter);
+        return this.internalExpensesService.findById(id, filter);
     }
 
     @patch('/internal-expenses/{id}')
@@ -126,25 +91,14 @@ export class InternalExpensesController {
         })
         internalExpenses: InternalExpenses,
     ): Promise<void> {
-        await this.internalExpensesRepository.updateById(id, internalExpenses);
+        await this.internalExpensesService.updateById(id, internalExpenses);
     }
 
-    @put('/internal-expenses/{id}')
-    @response(204, {
-        description: 'InternalExpenses PUT success',
-    })
-    async replaceById(
-        @param.path.number('id') id: number,
-        @requestBody() internalExpenses: InternalExpenses,
-    ): Promise<void> {
-        await this.internalExpensesRepository.replaceById(id, internalExpenses);
-    }
-
-    @del('/internal-expenses/{id}')
-    @response(204, {
-        description: 'InternalExpenses DELETE success',
-    })
-    async deleteById(@param.path.number('id') id: number): Promise<void> {
-        await this.internalExpensesRepository.deleteById(id);
-    }
+    // @del('/internal-expenses/{id}')
+    // @response(204, {
+    //     description: 'InternalExpenses DELETE success',
+    // })
+    // async deleteById(@param.path.number('id') id: number): Promise<void> {
+    //     await this.internalExpensesRepository.deleteById(id);
+    // }
 }

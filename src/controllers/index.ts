@@ -46,3 +46,5 @@ export * from './delivery-request.controller';
 export * from './collection.controller';
 export * from './container.controller';
 export * from './internal-expenses.controller';
+export * from './internal-expenses-types-expenses.controller';
+export * from './internal-expenses-brand.controller';
