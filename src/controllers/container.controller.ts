@@ -141,6 +141,9 @@ export class ContainerController {
                                                     id: {
                                                         type: 'number'
                                                     },
+                                                    invoiceNumber: {
+                                                        type: 'string'
+                                                    },
                                                     grossWeight: {
                                                         type: 'string'
                                                     },
@@ -204,6 +207,9 @@ export class ContainerController {
                                                 properties: {
                                                     id: {
                                                         type: 'number'
+                                                    },
+                                                    invoiceNumber: {
+                                                        type: 'string'
                                                     },
                                                     grossWeight: {
                                                         type: 'string'
