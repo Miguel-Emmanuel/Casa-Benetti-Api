@@ -77,14 +77,14 @@ export class ContainerService {
         const {ETDDate, ETADate} = container;
         let arrivalDate;
         if (ETADate) {
-            arrivalDate = dayjs(ETADate).add(10, 'days')
+            arrivalDate = dayjs(ETADate).add(10, 'days').toDate()
         }
         else if (ETDDate) {
-            arrivalDate = dayjs(ETDDate).add(31, 'days')
+            arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
         }
         const {collection} = container;
-        const {purchaseOrders} = collection;
-        if (purchaseOrders) {
+        if (collection && collection?.purchaseOrders) {
+            const {purchaseOrders} = collection;
             for (let index = 0; index < purchaseOrders.length; index++) {
                 const element = purchaseOrders[index];
                 if (arrivalDate) {
@@ -93,12 +93,12 @@ export class ContainerService {
                 }
                 const {productionEndDate, productionRealEndDate} = element;
                 if (productionRealEndDate) {
-                    const arrivalDate = dayjs(productionRealEndDate).add(53, 'days')
+                    const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
                     await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
                     return;
                 }
                 if (productionEndDate) {
-                    const arrivalDate = dayjs(productionEndDate).add(53, 'days')
+                    const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
                     await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
                     return;
                 }

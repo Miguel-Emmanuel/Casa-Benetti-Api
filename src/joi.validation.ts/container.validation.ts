@@ -22,10 +22,10 @@ export const schemaCreateContainer = Joi.object({
 
 const schemaProducts = Joi.object({
     id: Joi.number().required(),
-    grossWeight: Joi.string().allow(null),
-    netWeight: Joi.string().allow(null),
+    grossWeight: Joi.string().allow(null).allow(''),
+    netWeight: Joi.string().allow(null).allow(''),
     numberBoxes: Joi.number().allow(null),
-    descriptionPedimiento: Joi.string().allow(null),
+    descriptionPedimiento: Joi.string().allow(null).allow(''),
     NOMS: Joi.array().items(Joi.string().required()).optional()
 })
 
@@ -35,15 +35,15 @@ const schemaPurchaseOrders = Joi.object({
 })
 
 export const schemaUpdateContainer = Joi.object({
-    pedimento: Joi.string().allow(null),
-    grossWeight: Joi.string().allow(null),
+    pedimento: Joi.string().allow(null).allow(''),
+    grossWeight: Joi.string().allow(null).allow(''),
     numberBoxes: Joi.number().allow(null),
-    measures: Joi.string().allow(null),
+    measures: Joi.string().allow(null).allow(''),
     status: Joi.string().valid(...Object.values(ContainerStatus)).messages({
         'any.only': `El estatus de pago debe ser igual a uno de los valores permitidos.`
-    }).allow(null),
+    }).allow(null).allow(''),
     docs: Joi.array().items(documents).optional(),
-    purchaseOrders: Joi.array().items(schemaPurchaseOrders).required(),
+    purchaseOrders: Joi.array().items(schemaPurchaseOrders).optional(),
 })
 
 
