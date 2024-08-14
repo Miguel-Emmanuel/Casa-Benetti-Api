@@ -45,3 +45,4 @@ export * from './delivery-request.repository';
 export * from './collection.repository';
 export * from './container.repository';
 export * from './internal-expenses.repository';
+export * from './types-expenses.repository';

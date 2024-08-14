@@ -48,3 +48,4 @@ export * from './delivery-request.model';
 export * from './collection.model';
 export * from './container.model';
 export * from './internal-expenses.model';
+export * from './types-expenses.model';
