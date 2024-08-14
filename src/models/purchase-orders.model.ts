@@ -5,6 +5,7 @@ import {AccountsReceivable} from './accounts-receivable.model';
 import {Collection, CollectionWithRelations} from './collection.model';
 import {DeliveryRequest} from './delivery-request.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
+import {Project} from './project.model';
 
 //Ordenes de compra
 @model({
@@ -68,6 +69,9 @@ export class PurchaseOrders extends Entity {
     default: PurchaseOrdersStatus.NUEVA
   })
   status: PurchaseOrdersStatus;
+
+  @belongsTo(() => Project)
+  projectId?: number;
 
   //Esta pagado
   @property({

@@ -201,14 +201,14 @@ export class AdvancePaymentRecordService {
             // const cuentaPorCobrar = await this.accountsReceivableRepository.findOne({where: {quotationId: quotation.id, typeCurrency}});
             const proforma = await this.proformaRepository.findOne({where: {projectId, currency: typeCurrency === ExchangeRateQuotationE.EUR ? ProformaCurrencyE.EURO : typeCurrency === ExchangeRateQuotationE.MXN ? ProformaCurrencyE.PESO_MEXICANO : ProformaCurrencyE.USD}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
             if (proforma && proforma?.accountPayable && !proforma?.purchaseOrders) {
-                await this.purchaseOrdersRepository.create({accountPayableId: proforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: proforma.id, accountsReceivableId}, /*{transaction}*/)
+                await this.purchaseOrdersRepository.create({accountPayableId: proforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: proforma.id, accountsReceivableId, projectId}, /*{transaction}*/)
             }
         } else {
             const proformas = await this.proformaRepository.find({where: {projectId}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
             for (let index = 0; index < proformas.length; index++) {
                 const element = proformas[index];
                 if (element && element?.accountPayable && !element?.purchaseOrders) {
-                    await this.purchaseOrdersRepository.create({accountPayableId: element.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: element.id, accountsReceivableId}, /*{transaction}*/)
+                    await this.purchaseOrdersRepository.create({accountPayableId: element.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: element.id, accountsReceivableId, projectId}, /*{transaction}*/)
                 }
             }
         }
@@ -236,7 +236,7 @@ export class AdvancePaymentRecordService {
             const findProforma = await this.findProforma(findQuotationProduct.proformaId)
 
             if (findProforma && findProforma?.accountPayable && !findProforma?.purchaseOrders)
-                await this.purchaseOrdersRepository.create({accountPayableId: findProforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: findQuotationProduct.proformaId, accountsReceivableId}, /*{transaction}*/)
+                await this.purchaseOrdersRepository.create({accountPayableId: findProforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: findQuotationProduct.proformaId, accountsReceivableId, projectId}, /*{transaction}*/)
         }
     }
 

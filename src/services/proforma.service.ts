@@ -480,7 +480,7 @@ export class ProformaService {
         //cambiar totalpagado
         if (advance && totalPaid >= advance) {
             //guardar el id de accounttspayableid
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId}, {transaction})
+            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
         }
 
 

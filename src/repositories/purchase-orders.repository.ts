@@ -2,7 +2,7 @@ import {Getter, inject} from '@loopback/core';
 import {BelongsToAccessor, DefaultCrudRepository, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {OperationHookBindings} from '../keys';
-import {AccountPayable, AccountsReceivable, Collection, DeliveryRequest, Proforma, PurchaseOrders, PurchaseOrdersRelations} from '../models';
+import {AccountPayable, AccountsReceivable, Collection, DeliveryRequest, Proforma, PurchaseOrders, PurchaseOrdersRelations, Project} from '../models';
 import {PurchaseOrderHook} from '../operation-hooks/purchase-order.hook';
 import {AccountPayableRepository} from './account-payable.repository';
 import {AccountsReceivableRepository} from './accounts-receivable.repository';
@@ -10,6 +10,7 @@ import {CollectionRepository} from './collection.repository';
 import {DeliveryRequestRepository} from './delivery-request.repository';
 import {ProformaRepository} from './proforma.repository';
 import {ProviderRepository} from './provider.repository';
+import {ProjectRepository} from './project.repository';
 
 export class PurchaseOrdersRepository extends DefaultCrudRepository<
   PurchaseOrders,
@@ -27,12 +28,16 @@ export class PurchaseOrdersRepository extends DefaultCrudRepository<
 
   public readonly collection: BelongsToAccessor<Collection, typeof PurchaseOrders.prototype.id>;
 
+  public readonly project: BelongsToAccessor<Project, typeof PurchaseOrders.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('AccountPayableRepository') protected accountPayableRepositoryGetter: Getter<AccountPayableRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>, @repository.getter('AccountsReceivableRepository') protected accountsReceivableRepositoryGetter: Getter<AccountsReceivableRepository>, @repository.getter('DeliveryRequestRepository') protected deliveryRequestRepositoryGetter: Getter<DeliveryRequestRepository>, @repository.getter('CollectionRepository') protected collectionRepositoryGetter: Getter<CollectionRepository>,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE_PURCHASE)
-    public operationHook: Getter<PurchaseOrderHook>,
+    public operationHook: Getter<PurchaseOrderHook>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>,
   ) {
     super(PurchaseOrders, dataSource);
+    this.project = this.createBelongsToAccessorFor('project', projectRepositoryGetter,);
+    this.registerInclusionResolver('project', this.project.inclusionResolver);
     this.collection = this.createBelongsToAccessorFor('collection', collectionRepositoryGetter,);
     this.registerInclusionResolver('collection', this.collection.inclusionResolver);
     this.deliveryRequest = this.createBelongsToAccessorFor('deliveryRequest', deliveryRequestRepositoryGetter,);
