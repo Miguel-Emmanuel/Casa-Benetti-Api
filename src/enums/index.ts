@@ -285,3 +285,16 @@ export enum ContainerStatus {
     EN_TRANSITO = 'En tránsito',
     ENTREGADO = 'Entregado',
 }
+
+
+export enum OriginExpenseE {
+    PROYECTO = 'Proyecto',
+    GENERAL = 'General',
+    SUCURSAL = 'Sucursal',
+}
+
+export enum PaymentMethodE {
+    EFECTIVO = 'Efectivo',
+    TRANSFERENCIA = 'Transferencia',
+    OTRO = 'Otro',
+}

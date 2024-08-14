@@ -1,4 +1,7 @@
-import {Entity, model, property} from '@loopback/repository';
+import {belongsTo, model, property} from '@loopback/repository';
+import {BaseEntity} from './base/base-entity.model';
+import {Branch} from './branch.model';
+import {TypesExpenses} from './types-expenses.model';
 
 @model({
     settings: {
@@ -7,7 +10,7 @@ import {Entity, model, property} from '@loopback/repository';
         },
     }
 })
-export class InternalExpenses extends Entity {
+export class InternalExpenses extends BaseEntity {
     @property({
         type: 'number',
         id: true,
@@ -15,6 +18,60 @@ export class InternalExpenses extends Entity {
     })
     id?: number;
 
+    //Clasificación del gasto
+    @belongsTo(() => TypesExpenses)
+    typesExpensesId: number;
+
+    //Concepto del gasto
+    @property({
+        type: 'string',
+        required: true,
+    })
+    concept: string;
+
+    //Origen del gasto
+    @property({
+        type: 'string',
+        required: true,
+    })
+    originExpense: string;
+
+    //Referencia del proyecto
+    @property({
+        type: 'string',
+    })
+    projectReference: string;
+
+    //Sucursal
+    @belongsTo(() => Branch)
+    branchId: number;
+
+    //Importe
+    @property({
+        type: 'number',
+        required: true,
+    })
+    amount: number;
+
+    //Fecha de gasto
+    @property({
+        type: 'date',
+        required: true,
+    })
+    expenditureDate: string;
+
+    //Método de pago
+    @property({
+        type: 'string',
+        required: true,
+    })
+    paymentMethod: string;
+
+    //Proveedor
+    @property({
+        type: 'string',
+    })
+    provider: string;
 
     constructor(data?: Partial<InternalExpenses>) {
         super(data);
