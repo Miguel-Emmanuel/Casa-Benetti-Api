@@ -2,8 +2,8 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
 import {ContainerStatus} from '../enums';
-import {Docs, PurchaseOrdersContainer, UpdateContainer} from '../interface';
-import {schemaCreateContainer, schemaUpdateContainer} from '../joi.validation.ts/container.validation';
+import {Docs, PurchaseOrdersContainer, UpdateContainer, UpdateContainerProducts} from '../interface';
+import {schemaCreateContainer, schemaUpdateContainer, schemaUpdateContainerProduct} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Container, ContainerCreate, Document, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {ContainerRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
@@ -46,6 +46,16 @@ export class ContainerService {
         await this.containerRepository.updateById(id, {...data, ...date});
         await this.calculateArrivalDatePurchaseOrder(id);
         await this.updateDocument(id, docs);
+        await this.updateProducts(purchaseOrders);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async updateByIdProducts(id: number, data: UpdateContainerProducts,) {
+        await this.validateBodyUpdateProducts(data);
+        const container = await this.containerRepository.findOne({where: {id}});
+        if (!container)
+            throw this.responseService.badRequest("El contenedor no existe.")
+        const {purchaseOrders} = data;
         await this.updateProducts(purchaseOrders);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
@@ -327,6 +337,19 @@ export class ContainerService {
     async validateBodyUpdate(data: UpdateContainer,) {
         try {
             await schemaUpdateContainer.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+    async validateBodyUpdateProducts(data: UpdateContainerProducts,) {
+        try {
+            await schemaUpdateContainerProduct.validateAsync(data);
         }
         catch (err) {
             const {details} = err;
