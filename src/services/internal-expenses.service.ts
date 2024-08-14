@@ -3,7 +3,7 @@ import {Filter, FilterExcludingWhere, repository} from '@loopback/repository';
 import {schemaCreateInternalExpenses} from '../joi.validation.ts/internal-expenses';
 import {ResponseServiceBindings} from '../keys';
 import {InternalExpenses} from '../models';
-import {BranchRepository, InternalExpensesRepository, TypesExpensesRepository} from '../repositories';
+import {BranchRepository, InternalExpensesRepository, ProjectRepository, TypesExpensesRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -16,13 +16,16 @@ export class InternalExpensesService {
         @repository(TypesExpensesRepository)
         public typesExpensesRepository: TypesExpensesRepository,
         @repository(BranchRepository)
-        public branchRepository: BranchRepository
+        public branchRepository: BranchRepository,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository
     ) { }
 
     async create(internalExpenses: Omit<InternalExpenses, 'id'>,) {
-        const {typesExpensesId, branchId} = internalExpenses;
+        const {typesExpensesId, branchId, projectReference} = internalExpenses;
         await this.findTypeExpeneseById(typesExpensesId);
         await this.findBranchById(branchId);
+        await this.findProjectByProjectId(projectReference)
         try {
             await this.validateBodyInternalExpenses(internalExpenses);
             return this.internalExpensesRepository.create(internalExpenses);
@@ -56,6 +59,12 @@ export class InternalExpensesService {
 
     async updateById(id: number, internalExpenses: InternalExpenses,) {
         await this.internalExpensesRepository.updateById(id, internalExpenses);
+    }
+
+    async findProjectByProjectId(projectReference: string) {
+        const project = await this.projectRepository.findOne({where: {projectId: projectReference}});
+        if (!project)
+            throw this.responseService.badRequest('La referencia no existe.')
     }
 
     async findTypeExpeneseById(id: number) {
