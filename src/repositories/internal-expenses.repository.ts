@@ -1,9 +1,9 @@
-import {inject, Getter} from '@loopback/core';
-import {DefaultCrudRepository, repository, BelongsToAccessor} from '@loopback/repository';
+import {Getter, inject} from '@loopback/core';
+import {BelongsToAccessor, DefaultCrudRepository, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {InternalExpenses, InternalExpensesRelations, TypesExpenses, Brand} from '../models';
+import {InternalExpenses, InternalExpensesRelations, TypesExpenses, Branch} from '../models';
 import {TypesExpensesRepository} from './types-expenses.repository';
-import {BrandRepository} from './brand.repository';
+import {BranchRepository} from './branch.repository';
 
 export class InternalExpensesRepository extends DefaultCrudRepository<
   InternalExpenses,
@@ -13,14 +13,14 @@ export class InternalExpensesRepository extends DefaultCrudRepository<
 
   public readonly typesExpenses: BelongsToAccessor<TypesExpenses, typeof InternalExpenses.prototype.id>;
 
-  public readonly brand: BelongsToAccessor<Brand, typeof InternalExpenses.prototype.id>;
+  public readonly branch: BelongsToAccessor<Branch, typeof InternalExpenses.prototype.id>;
 
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('TypesExpensesRepository') protected typesExpensesRepositoryGetter: Getter<TypesExpensesRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>,
+    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('TypesExpensesRepository') protected typesExpensesRepositoryGetter: Getter<TypesExpensesRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
   ) {
     super(InternalExpenses, dataSource);
-    this.brand = this.createBelongsToAccessorFor('brand', brandRepositoryGetter,);
-    this.registerInclusionResolver('brand', this.brand.inclusionResolver);
+    this.branch = this.createBelongsToAccessorFor('branch', branchRepositoryGetter,);
+    this.registerInclusionResolver('branch', this.branch.inclusionResolver);
     this.typesExpenses = this.createBelongsToAccessorFor('typesExpenses', typesExpensesRepositoryGetter,);
     this.registerInclusionResolver('typesExpenses', this.typesExpenses.inclusionResolver);
   }

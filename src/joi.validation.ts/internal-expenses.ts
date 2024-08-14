@@ -105,7 +105,7 @@ export const schemaCreateInternalExpenses = Joi.object({
     projectReference: Joi.when('originExpense', {is: [OriginExpenseE.PROYECTO], then: Joi.string().required(), otherwise: Joi.forbidden()}),
     brandId: Joi.when('originExpense', {is: [OriginExpenseE.SUCURSAL], then: Joi.number().required(), otherwise: Joi.forbidden()}),
     amount: Joi.number().required(),
-    expenditureDate: Joi.number().required(),
+    expenditureDate: Joi.date().required(),
     paymentMethod: Joi.string().valid(...Object.values(PaymentMethodE)).messages({
         'any.only': `El metodo de pago debe ser igual a uno de los valores permitidos.`
     }).required(),

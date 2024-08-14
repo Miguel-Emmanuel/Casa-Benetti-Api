@@ -20,9 +20,9 @@ export class InternalExpensesService {
     ) { }
 
     async create(internalExpenses: Omit<InternalExpenses, 'id'>,) {
-        const {typesExpensesId, brandId} = internalExpenses;
+        const {typesExpensesId, branchId} = internalExpenses;
         await this.findTypeExpeneseById(typesExpensesId);
-        await this.findBranchById(typesExpensesId);
+        await this.findBranchById(branchId);
         try {
             await this.validateBodyInternalExpenses(internalExpenses);
             return this.internalExpensesRepository.create(internalExpenses);

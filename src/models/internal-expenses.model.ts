@@ -1,6 +1,6 @@
 import {belongsTo, model, property} from '@loopback/repository';
 import {BaseEntity} from './base/base-entity.model';
-import {Brand} from './brand.model';
+import {Branch} from './branch.model';
 import {TypesExpenses} from './types-expenses.model';
 
 @model({
@@ -43,8 +43,8 @@ export class InternalExpenses extends BaseEntity {
     projectReference: string;
 
     //Sucursal
-    @belongsTo(() => Brand)
-    brandId: number;
+    @belongsTo(() => Branch)
+    branchId: number;
 
     //Importe
     @property({

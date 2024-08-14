@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     Filter,
@@ -15,6 +16,7 @@ import {
 import {InternalExpenses} from '../models';
 import {InternalExpensesService} from '../services';
 
+@authenticate('jwt')
 export class InternalExpensesController {
     constructor(
         @service()
