@@ -80,6 +80,7 @@ export namespace ResponseServiceBindings {
 
 export namespace OperationHookBindings {
   export const OPERATION_SERVICE = BindingKey.create<object>('operation-hook');
+  export const OPERATION_SERVICE_PURCHASE = BindingKey.create<object>('operation-hook-purchase-order');
 }
 
 export namespace SendgridServiceBindings {
