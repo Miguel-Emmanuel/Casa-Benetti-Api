@@ -60,6 +60,7 @@ export class UserController {
                                         isShowroomManager: {type: 'boolean'},
                                         isDesigner: {type: 'boolean'},
                                         isLogistics: {type: 'boolean'},
+                                        isPurchaseOrderManager: {type: 'boolean'},
                                     }
                                 },
                                 userData: {
@@ -100,6 +101,7 @@ export class UserController {
                                     isShowroomManager: {type: 'boolean'},
                                     isDesigner: {type: 'boolean'},
                                     isLogistics: {type: 'boolean'},
+                                    isPurchaseOrderManager: {type: 'boolean'},
                                 }
                             },
                             userData: {
@@ -174,6 +176,7 @@ export class UserController {
                                         isShowroomManager: {type: 'boolean'},
                                         isDesigner: {type: 'boolean'},
                                         isLogistics: {type: 'boolean'},
+                                        isPurchaseOrderManager: {type: 'boolean'},
                                     }
                                 },
                                 userData: {
@@ -212,6 +215,7 @@ export class UserController {
                                     isShowroomManager: {type: 'boolean'},
                                     isDesigner: {type: 'boolean'},
                                     isLogistics: {type: 'boolean'},
+                                    isPurchaseOrderManager: {type: 'boolean'},
                                 }
                             },
                             userData: {
