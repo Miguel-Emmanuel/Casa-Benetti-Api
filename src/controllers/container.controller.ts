@@ -100,9 +100,6 @@ export class ContainerController {
                             numberBoxes: {
                                 type: 'number'
                             },
-                            invoiceNumber: {
-                                type: 'string'
-                            },
                             measures: {
                                 type: 'string'
                             },
@@ -143,9 +140,6 @@ export class ContainerController {
                                                 properties: {
                                                     id: {
                                                         type: 'number'
-                                                    },
-                                                    invoiceNumber: {
-                                                        type: 'string'
                                                     },
                                                     grossWeight: {
                                                         type: 'string'
