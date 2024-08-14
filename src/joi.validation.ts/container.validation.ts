@@ -22,7 +22,6 @@ export const schemaCreateContainer = Joi.object({
 
 const schemaProducts = Joi.object({
     id: Joi.number().required(),
-    invoiceNumber: Joi.string().required(),
     grossWeight: Joi.string().required(),
     netWeight: Joi.string().required(),
     numberBoxes: Joi.number().required(),
@@ -37,7 +36,6 @@ const schemaPurchaseOrders = Joi.object({
 
 export const schemaUpdateContainer = Joi.object({
     pedimento: Joi.string().required(),
-    invoiceNumber: Joi.string().required(),
     grossWeight: Joi.string().required(),
     numberBoxes: Joi.number().required(),
     measures: Joi.string().required(),
