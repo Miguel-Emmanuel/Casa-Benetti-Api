@@ -247,6 +247,9 @@ export class ContainerService {
                             }
                         ]
                     }
+                },
+                {
+                    relation: 'documents'
                 }
             ]
             if (filter?.include)
@@ -261,7 +264,7 @@ export class ContainerService {
                     ]
                 };
             const container = await this.containerRepository.findById(id, filter);
-            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber} = container;
+            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents} = container;
             return {
                 pedimento,
                 containerNumber,
@@ -274,6 +277,14 @@ export class ContainerService {
                 shippingDate: shippingDate ?? 'Pendiente',
                 ETDDate: ETDDate ?? 'Pendiente',
                 ETADate: ETADate ?? 'Pendiente',
+                docs: documents?.map(value => {
+                    const {id, fileURL, name, extension} = value;
+                    return {
+                        id,
+                        fileURL,
+                        name, extension
+                    }
+                }),
                 purchaseOrders: collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
