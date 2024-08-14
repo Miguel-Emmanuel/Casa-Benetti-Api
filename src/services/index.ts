@@ -38,3 +38,4 @@ export * from './delivery-request.service';
 export * from './collection.service';
 export * from './container.service';
 export * from './internal-expenses.service';
+export * from './types-expenses.service';
