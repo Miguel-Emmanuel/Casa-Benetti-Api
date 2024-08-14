@@ -27,17 +27,16 @@ export class PurchaseOrderHook {
 
     async notifyLogistics(instance: any) {
         try {
-            const {id, proformaId} = instance
+            const {id, projectId} = instance
             const users = await this.userRepository.find({where: {isPurchaseOrderManager: true}})
             const emails = users.map(value => value.email);
             if (emails.length > 0) {
-                const proforma = await this.proformaRepository.findById(proformaId);
                 const options = {
                     to: emails,
                     templateId: SendgridTemplates.NEW_PURCHASE_ORDER.id,
                     dynamicTemplateData: {
                         subject: SendgridTemplates.NEW_PURCHASE_ORDER.subject,
-                        projectId: proforma?.projectId,
+                        projectId: projectId,
                         orderId: id
                     }
                 };
