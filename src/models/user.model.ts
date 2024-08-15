@@ -191,6 +191,13 @@ export class User extends BaseEntity {
   })
   isPurchaseOrderManager?: boolean;
 
+  //Es logistica nacional
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  isNationalLogistics?: boolean;
+
   // @hasOne(() => QuotationProjectManager)
   // quotationProjectManager: QuotationProjectManager;
 
