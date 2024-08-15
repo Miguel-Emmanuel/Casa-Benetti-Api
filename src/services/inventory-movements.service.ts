@@ -356,6 +356,18 @@ export class InventoryMovementsService {
         }) : []
     }
 
+    async updateProducts(data: {purchaseOrders: {id: number, products: {id: number, quantity: number, commentEntry: string}[]}[]}) {
+        const {purchaseOrders} = data;
+        for (let index = 0; index < purchaseOrders?.length; index++) {
+            const {products} = purchaseOrders[index];
+            for (let index = 0; index < products?.length; index++) {
+                const {id, quantity, commentEntry} = products[index];
+                await this.quotationProductsRepository.updateById(id, {quantity, commentEntry})
+            }
+        }
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
     async findContainer(id: number) {
         const container = await this.containerRepository.findOne({
             where: {id}, include: [
