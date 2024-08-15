@@ -1,6 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
+import {CollectionStatus, InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -37,49 +37,62 @@ export class InventoryMovementsService {
         await this.validateBodyEntry(data);
         const {reasonEntry} = data
         if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR || reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
-            const {containerId, collectionId, products} = data;
+            const {containerId, collectionId, purchaseOrders} = data;
             if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR) {
 
                 const container = await this.containerRepository.findOne({where: {id: containerId}});
                 if (!container)
                     throw this.responseService.notFound('El contenedor no existe.');
-                let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
-                for (let index = 0; index < products.length; index++) {
-                    const element = products[index];
-                    const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
-                    let inventorie;
-                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {containerId}]}})
-                    if (!inventorie) {
-                        inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, containerId})
-                    } else {
-                        const {stock} = inventorie;
-                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const {products, id} = purchaseOrders[index];
+                    let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
+                    for (let index = 0; index < products.length; index++) {
+                        const element = products[index];
+                        const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
+                        let inventorie;
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {containerId}]}})
+                        if (!inventorie) {
+                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, containerId})
+                        } else {
+                            const {stock} = inventorie;
+                            await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                        }
+                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                        await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
+                        await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_NACIONAL})
                     }
-                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
-                    await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
+                    await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_NACIONAL})
+
                 }
             }
             if (reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
 
-                const collection = await this.collectionRepository.findOne({where: {id: collectionId}});
+                const collection = await this.collectionRepository.findOne({where: {id: collectionId}, include: [{relation: 'purchaseOrders'}]});
                 if (!collection)
                     throw this.responseService.notFound('La recoleccion no existe.');
 
-                let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
-                for (let index = 0; index < products.length; index++) {
-                    const element = products[index];
-                    const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
-                    let inventorie;
-                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {collectionId}]}})
-                    if (!inventorie) {
-                        inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, collectionId})
-                    } else {
-                        const {stock} = inventorie;
-                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const {products, id} = purchaseOrders[index];
+                    let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
+                    for (let index = 0; index < products.length; index++) {
+                        const element = products[index];
+                        const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
+                        let inventorie;
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {collectionId}]}})
+                        if (!inventorie) {
+                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, collectionId})
+                        } else {
+                            const {stock} = inventorie;
+                            await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                        }
+                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                        await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
+                        await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_INTERNACIONAL})
                     }
-                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
-                    await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
+                    await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_INTERNACIONAL})
                 }
+                await this.collectionRepository.updateById(collectionId, {status: CollectionStatus.COMPLETADO})
             }
         } else {
             //Reparacion, Préstamo o Devolución

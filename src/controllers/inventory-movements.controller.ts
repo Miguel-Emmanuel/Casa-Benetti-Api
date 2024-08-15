@@ -49,18 +49,30 @@ export class InventoryMovementsController {
                                 type: 'number',
                                 nullable: true
                             },
-                            products: {
+                            purchaseOrders: {
                                 type: 'array',
                                 nullable: true,
                                 items: {
                                     type: 'object',
                                     properties: {
-                                        quotationProductsId: {
+                                        id: {
                                             type: 'number'
                                         },
-                                        quantity: {
-                                            type: 'number'
-                                        }
+                                        products: {
+                                            type: 'array',
+                                            nullable: true,
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    quotationProductsId: {
+                                                        type: 'number'
+                                                    },
+                                                    quantity: {
+                                                        type: 'number'
+                                                    }
+                                                }
+                                            }
+                                        },
                                     }
                                 }
                             },

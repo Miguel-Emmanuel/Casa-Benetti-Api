@@ -1,4 +1,5 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
+import {CollectionStatus} from '../enums';
 import {Container, ContainerWithRelations} from './container.model';
 import {Document} from './document.model';
 import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
@@ -36,7 +37,12 @@ export class Collection extends Entity {
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrders[];
 
-
+    //Status
+    @property({
+        type: 'string',
+        default: CollectionStatus.PROGRAMADA
+    })
+    status: CollectionStatus;
 
     //Fecha de recoleccion
     @hasMany(() => Document)
