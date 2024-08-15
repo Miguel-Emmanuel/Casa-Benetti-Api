@@ -519,6 +519,16 @@ export class ProjectController {
         return this.projectService.getPurchaseOrdersByProjectId(id);
     }
 
+    @get('/project/account-statement/{id}')
+    @response(200, {
+        description: 'Account statement model instance',
+    })
+    async getAccountStatement(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.projectService.getAccountStatement(id);
+    }
+
     // @del('/projects/{id}')
     // @response(204, {
     //     description: 'Project DELETE success',
