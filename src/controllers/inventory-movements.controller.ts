@@ -154,7 +154,7 @@ export class InventoryMovementsController {
         return this.inventoryMovementsService.issue(data);
     }
 
-    @get('/inventory-movements/{id}/purchaseOrders')
+    @get('/inventory-movements/{id}/purchase-orders')
     @response(200, {
         description: 'Array of InventoryMovements model instances',
         content: {
