@@ -4,7 +4,9 @@ import {
     repository
 } from '@loopback/repository';
 import {
+    get,
     getModelSchemaRef,
+    param,
     post,
     requestBody,
     response
@@ -39,12 +41,12 @@ export class InventoryMovementsController {
                                 type: 'string',
                             },
                             //Descarga contenedor, Descarga recolección
-                            containerNumber: {
-                                type: 'string',
+                            containerId: {
+                                type: 'number',
                                 nullable: true
                             },
-                            collectionNumber: {
-                                type: 'string',
+                            collectionId: {
+                                type: 'number',
                                 nullable: true
                             },
                             products: {
@@ -54,6 +56,9 @@ export class InventoryMovementsController {
                                     type: 'object',
                                     properties: {
                                         quotationProductsId: {
+                                            type: 'number'
+                                        },
+                                        quantity: {
                                             type: 'number'
                                         }
                                     }
@@ -127,8 +132,8 @@ export class InventoryMovementsController {
                             comment: {
                                 type: 'string',
                             },
-                            containerNumber: {
-                                type: 'string',
+                            containerId: {
+                                type: 'number',
                                 nullable: true
                             },
                             destinationBranchId: {
@@ -147,6 +152,60 @@ export class InventoryMovementsController {
         data: IssueDataI,
     ): Promise<Object> {
         return this.inventoryMovementsService.issue(data);
+    }
+
+    @get('/inventory-movements/{id}/purchaseOrders')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
+                                        description: {
+                                            type: 'string'
+                                        },
+                                        numberBoxes: {
+                                            type: 'number'
+                                        },
+                                        quantity: {
+                                            type: 'number'
+                                        },
+                                        commentEntry: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async find(
+        @param.path.number('id') id: number,
+    ): Promise<Object[]> {
+        return this.inventoryMovementsService.getPurchaseOrderByCollectionIdContainerId(id);
     }
 
     // @get('/inventory-movements/count')

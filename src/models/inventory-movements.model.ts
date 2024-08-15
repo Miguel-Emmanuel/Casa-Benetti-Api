@@ -1,5 +1,7 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
+import {Collection} from './collection.model';
+import {Container} from './container.model';
 import {Inventories, InventoriesWithRelations} from './inventories.model';
 import {Project} from './project.model';
 
@@ -96,17 +98,23 @@ export class InventoryMovements extends Entity {
     })
     comment: string;
 
-    //Número de contenedor
-    @property({
-        type: 'string',
-    })
-    containerNumber: string;
+    // //Número de contenedor
+    // @property({
+    //     type: 'string',
+    // })
+    // containerNumber: string;
 
-    //Número de recoleccion
-    @property({
-        type: 'string',
-    })
-    collectionNumber: string;
+    @belongsTo(() => Container)
+    containerId: number;
+
+    // //Número de recoleccion
+    // @property({
+    //     type: 'string',
+    // })
+    // collectionNumber: string;
+
+    @belongsTo(() => Collection)
+    collectionId: number;
 
     constructor(data?: Partial<InventoryMovements>) {
         super(data);

@@ -228,9 +228,9 @@ export interface AssembledProductsE {
 
 export interface EntryDataI {
     reasonEntry: InventoriesReasonE;
-    containerNumber: string;
-    collectionNumber: string;
-    products: {quotationProductsId: number}[];
+    containerId: number;
+    collectionId: number;
+    products: {quotationProductsId: number, quantity: number}[];
     branchId: number;
     warehouseId: number;
     projectId: string;
@@ -246,7 +246,7 @@ export interface IssueDataI {
     quotationProductsId: number;
     quantity: number;
     comment: string;
-    containerNumber: string;
+    containerId: number;
     destinationBranchId: number;
     destinationWarehouseId: number;
 }

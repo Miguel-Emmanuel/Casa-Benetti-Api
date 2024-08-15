@@ -4,7 +4,8 @@ import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, Purchase
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
 import {ResponseServiceBindings} from '../keys';
-import {BranchRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
+import {PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {BranchRepository, CollectionRepository, ContainerRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -25,27 +26,60 @@ export class InventoryMovementsService {
         @repository(ProjectRepository)
         public projectRepository: ProjectRepository,
         @repository(PurchaseOrdersRepository)
-        public purchaseOrdersRepository: PurchaseOrdersRepository
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ContainerRepository)
+        public containerRepository: ContainerRepository,
+        @repository(CollectionRepository)
+        public collectionRepository: CollectionRepository
     ) { }
 
     async entry(data: EntryDataI) {
         await this.validateBodyEntry(data);
         const {reasonEntry} = data
         if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR || reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
-
+            const {containerId, collectionId, products} = data;
             if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR) {
-                //Falta aqui la logica para traer los productos relacionados al contenedor
 
-                //Si el numero de contenedor estará a nivel orden de compra entonces desde orden de compra accedidnedo a la proforma podemos recuperar el branchid y el listado de productos
-                //Remplazar por lista de productos relacionadas al contenedor
-                const branchId = 1
-                const products: any = [{quotationProductsId: 1, quantity: 2}];
+                const container = await this.containerRepository.findOne({where: {id: containerId}});
+                if (!container)
+                    throw this.responseService.notFound('El contenedor no existe.');
+                let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
                 for (let index = 0; index < products.length; index++) {
                     const element = products[index];
-                    //Validar si existe un registro de inventario validando por quotationProductsId y branchId
+                    const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
+                    let inventorie;
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {containerId}]}})
+                    if (!inventorie) {
+                        inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, containerId})
+                    } else {
+                        const {stock} = inventorie;
+                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                    }
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                    await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
                 }
             }
             if (reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
+
+                const collection = await this.collectionRepository.findOne({where: {id: collectionId}});
+                if (!collection)
+                    throw this.responseService.notFound('La recoleccion no existe.');
+
+                let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
+                for (let index = 0; index < products.length; index++) {
+                    const element = products[index];
+                    const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
+                    let inventorie;
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {collectionId}]}})
+                    if (!inventorie) {
+                        inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, collectionId})
+                    } else {
+                        const {stock} = inventorie;
+                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                    }
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                    await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
+                }
             }
         } else {
             //Reparacion, Préstamo o Devolución
@@ -120,7 +154,7 @@ export class InventoryMovementsService {
         const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
         await this.validateDataIssue(branchId, warehouseId);
         try {
-            const {reasonIssue, destinationBranchId, containerNumber, destinationWarehouseId} = data;
+            const {reasonIssue, destinationBranchId, containerId, destinationWarehouseId} = data;
             // let inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
             let inventorie: any;
             if (branchId)
@@ -130,7 +164,7 @@ export class InventoryMovementsService {
             if (inventorie) {
                 const {stock} = inventorie;
                 await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, containerNumber, destinationWarehouseId});
+                await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, containerId, destinationWarehouseId});
                 await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (quotationProduct.stock - quantity)})
                 if (reasonIssue === InventoriesIssueE.ENTREGA_CLIENTE) {
                     await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.TRANSITO_NACIONAL})
@@ -233,5 +267,162 @@ export class InventoryMovementsService {
             throw this.responseService.unprocessableEntity(message)
         }
     }
+
+    async getPurchaseOrderByCollectionIdContainerId(id: number) {
+        const container = await this.containerRepository.findOne({
+            where: {id}, include: [
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        let collection;
+        if (!container) {
+            collection = await this.collectionRepository.findOne({
+                where: {id}, include: [
+                    {
+                        relation: 'purchaseOrders',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'proforma',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'quotationProducts',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'product',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'document'
+                                                                    },
+                                                                    {
+                                                                        relation: 'line'
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ],
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            });
+            if (!collection)
+                throw this.responseService.badRequest('El contenedor/recoleccion no existe;');
+
+            return collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                const {id: purchaseOrderid, proforma} = value;
+                const {quotationProducts} = proforma;
+                return {
+                    id: purchaseOrderid,
+                    products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                        const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS} = value;
+                        const {document, line, name} = product;
+                        const descriptionParts = [
+                            line?.name,
+                            name,
+                            mainMaterial,
+                            mainFinish,
+                            secondaryMaterial,
+                            secondaryFinishing
+                        ];
+                        const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                        return {
+                            id: productId,
+                            SKU,
+                            image: document?.fileURL,
+                            description,
+                            invoiceNumber,
+                            grossWeight,
+                            netWeight,
+                            numberBoxes,
+                            NOMS
+                        }
+                    })
+                }
+            }) : []
+
+        }
+
+        return container?.collection?.purchaseOrders ? container?.collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+            const {id: purchaseOrderid, proforma} = value;
+            const {quotationProducts} = proforma;
+            return {
+                id: purchaseOrderid,
+                products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, numberBoxes, quantity, commentEntry} = value;
+                    const {document, line, name} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing
+                    ];
+                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                    return {
+                        id: productId,
+                        SKU,
+                        image: document?.fileURL,
+                        description,
+                        numberBoxes,
+                        quantity,
+                        commentEntry
+                    }
+                })
+            }
+        }) : []
+
+    }
+
+
 
 }
