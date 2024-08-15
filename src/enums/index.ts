@@ -296,5 +296,5 @@ export enum OriginExpenseE {
 export enum PaymentMethodE {
     EFECTIVO = 'Efectivo',
     TRANSFERENCIA = 'Transferencia',
-    OTRO = 'Otro',
+    OTRO = 'Otros',
 }
