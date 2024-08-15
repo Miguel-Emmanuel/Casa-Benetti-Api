@@ -104,6 +104,7 @@ export enum QuotationProductStatusE {
     TRANSITO_INTERNACIONAL = 'Transito internacional',
     RECOLECCION = 'Recoleccion',
     BODEGA_NACIONAL = 'Bodega nacional',
+    BODEGA_INTERNACIONAL = 'Bodega Internacional',
     SHOWROOM = 'Showroom',
     ENTREGADO = 'Entregado',
 }
@@ -284,6 +285,11 @@ export enum ContainerStatus {
     NUEVO = 'Nuevo',
     EN_TRANSITO = 'En tránsito',
     ENTREGADO = 'Entregado',
+}
+
+export enum CollectionStatus {
+    PROGRAMADA = 'Programada',
+    COMPLETADO = 'Completado',
 }
 
 
