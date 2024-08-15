@@ -16,8 +16,8 @@ export const schemaCreateEntry = Joi.object({
     reasonEntry: Joi.string().valid(...Object.values(InventoriesReasonE)).messages({
         'any.only': `El motivo debe ser igual a uno de los valores permitidos.`
     }).required(),
-    containerNumber: Joi.when('reasonEntry', {is: InventoriesReasonE.DESCARGA_CONTENEDOR, then: Joi.string().required(), otherwise: Joi.forbidden()}),
-    collectionNumber: Joi.when('reasonEntry', {is: InventoriesReasonE.DESCARGA_RECOLECCION, then: Joi.string().required(), otherwise: Joi.forbidden()}),
+    containerId: Joi.when('reasonEntry', {is: InventoriesReasonE.DESCARGA_CONTENEDOR, then: Joi.number().required(), otherwise: Joi.forbidden()}),
+    collectionId: Joi.when('reasonEntry', {is: InventoriesReasonE.DESCARGA_RECOLECCION, then: Joi.number().required(), otherwise: Joi.forbidden()}),
     purchaseOrders: Joi.when('reasonEntry', {is: [InventoriesReasonE.DESCARGA_RECOLECCION, InventoriesReasonE.DESCARGA_CONTENEDOR], then: Joi.array().items(schemaPurchaseOrders).required(), otherwise: Joi.forbidden()}),
     branchId: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
     warehouseId: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
