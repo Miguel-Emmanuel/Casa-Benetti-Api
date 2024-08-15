@@ -1,8 +1,14 @@
 import * as Joi from "joi";
 import {InventoriesIssueE, InventoriesReasonE} from '../enums';
 
+
 const schemaProducts = Joi.object({
     quotationProductsId: Joi.number().required(),
+    quantity: Joi.number().required(),
+})
+const schemaPurchaseOrders = Joi.object({
+    id: Joi.number().required(),
+    products: Joi.array().items(schemaProducts).required()
 })
 
 
@@ -12,7 +18,7 @@ export const schemaCreateEntry = Joi.object({
     }).required(),
     containerNumber: Joi.when('reasonEntry', {is: InventoriesReasonE.DESCARGA_CONTENEDOR, then: Joi.string().required(), otherwise: Joi.forbidden()}),
     collectionNumber: Joi.when('reasonEntry', {is: InventoriesReasonE.DESCARGA_RECOLECCION, then: Joi.string().required(), otherwise: Joi.forbidden()}),
-    products: Joi.when('reasonEntry', {is: [InventoriesReasonE.DESCARGA_RECOLECCION, InventoriesReasonE.DESCARGA_CONTENEDOR], then: Joi.array().items(schemaProducts).required(), otherwise: Joi.forbidden()}),
+    purchaseOrders: Joi.when('reasonEntry', {is: [InventoriesReasonE.DESCARGA_RECOLECCION, InventoriesReasonE.DESCARGA_CONTENEDOR], then: Joi.array().items(schemaPurchaseOrders).required(), otherwise: Joi.forbidden()}),
     branchId: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
     warehouseId: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
     projectId: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.string().required(), otherwise: Joi.forbidden()}),
