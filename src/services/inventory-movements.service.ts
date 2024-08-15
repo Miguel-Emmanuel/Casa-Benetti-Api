@@ -281,7 +281,82 @@ export class InventoryMovementsService {
         }
     }
 
-    async getPurchaseOrderByCollectionIdContainerId(id: number) {
+    async findCollection(id: number) {
+        const collection = await this.collectionRepository.findOne({
+            where: {id}, include: [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'product',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ],
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        if (!collection)
+            throw this.responseService.badRequest('El contenedor/recoleccion no existe;');
+
+        return collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+            const {id: purchaseOrderid, proforma} = value;
+            const {quotationProducts} = proforma;
+            return {
+                id: purchaseOrderid,
+                products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS} = value;
+                    const {document, line, name} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing
+                    ];
+                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                    return {
+                        id: productId,
+                        SKU,
+                        image: document?.fileURL,
+                        description,
+                        invoiceNumber,
+                        grossWeight,
+                        netWeight,
+                        numberBoxes,
+                        NOMS
+                    }
+                })
+            }
+        }) : []
+    }
+
+    async findContainer(id: number) {
         const container = await this.containerRepository.findOne({
             where: {id}, include: [
                 {
@@ -327,83 +402,6 @@ export class InventoryMovementsService {
                 }
             ]
         });
-        let collection;
-        if (!container) {
-            collection = await this.collectionRepository.findOne({
-                where: {id}, include: [
-                    {
-                        relation: 'purchaseOrders',
-                        scope: {
-                            include: [
-                                {
-                                    relation: 'proforma',
-                                    scope: {
-                                        include: [
-                                            {
-                                                relation: 'quotationProducts',
-                                                scope: {
-                                                    include: [
-                                                        {
-                                                            relation: 'product',
-                                                            scope: {
-                                                                include: [
-                                                                    {
-                                                                        relation: 'document'
-                                                                    },
-                                                                    {
-                                                                        relation: 'line'
-                                                                    }
-                                                                ]
-                                                            }
-                                                        }
-                                                    ],
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ]
-            });
-            if (!collection)
-                throw this.responseService.badRequest('El contenedor/recoleccion no existe;');
-
-            return collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
-                const {id: purchaseOrderid, proforma} = value;
-                const {quotationProducts} = proforma;
-                return {
-                    id: purchaseOrderid,
-                    products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                        const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS} = value;
-                        const {document, line, name} = product;
-                        const descriptionParts = [
-                            line?.name,
-                            name,
-                            mainMaterial,
-                            mainFinish,
-                            secondaryMaterial,
-                            secondaryFinishing
-                        ];
-                        const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
-                        return {
-                            id: productId,
-                            SKU,
-                            image: document?.fileURL,
-                            description,
-                            invoiceNumber,
-                            grossWeight,
-                            netWeight,
-                            numberBoxes,
-                            NOMS
-                        }
-                    })
-                }
-            }) : []
-
-        }
-
         return container?.collection?.purchaseOrders ? container?.collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
             const {id: purchaseOrderid, proforma} = value;
             const {quotationProducts} = proforma;

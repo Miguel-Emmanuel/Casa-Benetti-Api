@@ -166,7 +166,7 @@ export class InventoryMovementsController {
         return this.inventoryMovementsService.issue(data);
     }
 
-    @get('/inventory-movements/{id}/purchase-orders')
+    @get('/inventory-movements/{id}/collection/purchase-orders')
     @response(200, {
         description: 'Array of InventoryMovements model instances',
         content: {
@@ -214,10 +214,64 @@ export class InventoryMovementsController {
             },
         },
     })
-    async find(
+    async findCollection(
         @param.path.number('id') id: number,
     ): Promise<Object[]> {
-        return this.inventoryMovementsService.getPurchaseOrderByCollectionIdContainerId(id);
+        return this.inventoryMovementsService.findCollection(id);
+    }
+
+    @get('/inventory-movements/{id}/container/purchase-orders')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
+                                        description: {
+                                            type: 'string'
+                                        },
+                                        numberBoxes: {
+                                            type: 'number'
+                                        },
+                                        quantity: {
+                                            type: 'number'
+                                        },
+                                        commentEntry: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async findContainer(
+        @param.path.number('id') id: number,
+    ): Promise<Object[]> {
+        return this.inventoryMovementsService.findContainer(id);
     }
 
     // @get('/inventory-movements/count')

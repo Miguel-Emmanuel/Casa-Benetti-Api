@@ -154,11 +154,12 @@ export class CollectionService {
 
             const collectios = await this.collectionRepository.find(filter);
             return collectios?.map((value: CollectionWithRelations) => {
-                const {id, dateCollection, purchaseOrders} = value;
+                const {id, dateCollection, purchaseOrders, status} = value;
                 return {
                     id,
                     dateCollection,
-                    providers: purchaseOrders?.map((value: PurchaseOrdersWithRelations) => value?.proforma?.provider?.name)?.join(', ')
+                    providers: purchaseOrders?.map((value: PurchaseOrdersWithRelations) => value?.proforma?.provider?.name)?.join(', '),
+                    status
                 }
             })
         } catch (error) {
