@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, FilterExcludingWhere, repository} from '@loopback/repository';
+import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import {schemaCreateInternalExpenses} from '../joi.validation.ts/internal-expenses';
 import {ResponseServiceBindings} from '../keys';
 import {InternalExpenses} from '../models';
@@ -35,12 +35,29 @@ export class InternalExpensesService {
     }
 
     async find(filter?: Filter<InternalExpenses>,) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'typesExpenses',
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
         const internalExpenses = await this.internalExpensesRepository.find(filter);
         return internalExpenses.map(value => {
-            const {id, typesExpensesId, concept, amount, paymentMethod, originExpense, expenditureDate, provider, projectReference, createdAt} = value;
+            const {id, typesExpensesId, concept, amount, paymentMethod, originExpense, expenditureDate, provider, projectReference, createdAt, typesExpenses} = value;
             return {
                 id,
                 typesExpensesId,
+                typesExpensesName: `${typesExpenses?.classificationExpenses} ${typesExpenses?.concept}`,
                 concept,
                 amount,
                 paymentMethod,
