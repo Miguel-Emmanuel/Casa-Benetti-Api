@@ -230,7 +230,7 @@ export interface EntryDataI {
     reasonEntry: InventoriesReasonE;
     containerId: number;
     collectionId: number;
-    products: {quotationProductsId: number}[];
+    products: {quotationProductsId: number, quantity: number}[];
     branchId: number;
     warehouseId: number;
     projectId: string;

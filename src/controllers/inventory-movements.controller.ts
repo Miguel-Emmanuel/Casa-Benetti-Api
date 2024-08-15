@@ -55,6 +55,9 @@ export class InventoryMovementsController {
                                     properties: {
                                         quotationProductsId: {
                                             type: 'number'
+                                        },
+                                        quantity: {
+                                            type: 'number'
                                         }
                                     }
                                 }

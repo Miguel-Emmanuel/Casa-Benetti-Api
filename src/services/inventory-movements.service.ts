@@ -4,7 +4,7 @@ import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, Purchase
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
 import {ResponseServiceBindings} from '../keys';
-import {BranchRepository, ContainerRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
+import {BranchRepository, CollectionRepository, ContainerRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -27,7 +27,9 @@ export class InventoryMovementsService {
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
         @repository(ContainerRepository)
-        public containerRepository: ContainerRepository
+        public containerRepository: ContainerRepository,
+        @repository(CollectionRepository)
+        public collectionRepository: CollectionRepository
     ) { }
 
     async entry(data: EntryDataI) {
@@ -40,14 +42,43 @@ export class InventoryMovementsService {
                 const container = await this.containerRepository.findOne({where: {id: containerId}});
                 if (!container)
                     throw this.responseService.notFound('El contenedor no existe.');
-
+                let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
                 for (let index = 0; index < products.length; index++) {
                     const element = products[index];
                     const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
-
+                    let inventorie;
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {containerId}]}})
+                    if (!inventorie) {
+                        inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, containerId})
+                    } else {
+                        const {stock} = inventorie;
+                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                    }
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                    await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
                 }
             }
             if (reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
+
+                const collection = await this.collectionRepository.findOne({where: {id: collectionId}});
+                if (!collection)
+                    throw this.responseService.notFound('La recoleccion no existe.');
+
+                let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
+                for (let index = 0; index < products.length; index++) {
+                    const element = products[index];
+                    const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
+                    let inventorie;
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {collectionId}]}})
+                    if (!inventorie) {
+                        inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, collectionId})
+                    } else {
+                        const {stock} = inventorie;
+                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                    }
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                    await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
+                }
             }
         } else {
             //Reparacion, Préstamo o Devolución
