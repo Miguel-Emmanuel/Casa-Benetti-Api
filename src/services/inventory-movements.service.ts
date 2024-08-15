@@ -4,6 +4,7 @@ import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, Purchase
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
 import {ResponseServiceBindings} from '../keys';
+import {PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {BranchRepository, CollectionRepository, ContainerRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -266,5 +267,162 @@ export class InventoryMovementsService {
             throw this.responseService.unprocessableEntity(message)
         }
     }
+
+    async getPurchaseOrderByCollectionIdContainerId(id: number) {
+        const container = await this.containerRepository.findOne({
+            where: {id}, include: [
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        let collection;
+        if (!container) {
+            collection = await this.collectionRepository.findOne({
+                where: {id}, include: [
+                    {
+                        relation: 'purchaseOrders',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'proforma',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'quotationProducts',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'product',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'document'
+                                                                    },
+                                                                    {
+                                                                        relation: 'line'
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ],
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            });
+            if (!collection)
+                throw this.responseService.badRequest('El contenedor/recoleccion no existe;');
+
+            return collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                const {id: purchaseOrderid, proforma} = value;
+                const {quotationProducts} = proforma;
+                return {
+                    id: purchaseOrderid,
+                    products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                        const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS} = value;
+                        const {document, line, name} = product;
+                        const descriptionParts = [
+                            line?.name,
+                            name,
+                            mainMaterial,
+                            mainFinish,
+                            secondaryMaterial,
+                            secondaryFinishing
+                        ];
+                        const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                        return {
+                            id: productId,
+                            SKU,
+                            image: document?.fileURL,
+                            description,
+                            invoiceNumber,
+                            grossWeight,
+                            netWeight,
+                            numberBoxes,
+                            NOMS
+                        }
+                    })
+                }
+            }) : []
+
+        }
+
+        return container?.collection?.purchaseOrders ? container?.collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+            const {id: purchaseOrderid, proforma} = value;
+            const {quotationProducts} = proforma;
+            return {
+                id: purchaseOrderid,
+                products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, numberBoxes, quantity, commentEntry} = value;
+                    const {document, line, name} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing
+                    ];
+                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                    return {
+                        id: productId,
+                        SKU,
+                        image: document?.fileURL,
+                        description,
+                        numberBoxes,
+                        quantity,
+                        commentEntry
+                    }
+                })
+            }
+        }) : []
+
+    }
+
+
 
 }

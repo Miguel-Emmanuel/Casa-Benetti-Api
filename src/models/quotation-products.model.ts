@@ -330,6 +330,12 @@ export class QuotationProducts extends Entity {
     })
     quantity: number;
 
+    //Comentario de entrada
+    @property({
+        type: 'string',
+    })
+    commentEntry: string;
+
     //Cantidad del producto que ya existe en inventario
     @property({
         type: 'number',
