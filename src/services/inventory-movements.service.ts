@@ -72,6 +72,9 @@ export class InventoryMovementsService {
                 if (!collection)
                     throw this.responseService.notFound('La recoleccion no existe.');
 
+                if (!collection?.container)
+                    throw this.responseService.badRequest('El contenedor no cuenta con una recoleccion.');
+
                 for (let index = 0; index < purchaseOrders?.length; index++) {
                     const {products, id} = purchaseOrders[index];
                     let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
@@ -161,50 +164,106 @@ export class InventoryMovementsService {
 
     async issue(data: IssueDataI) {
         await this.validateBodyIssue(data);
-        const {branchId, warehouseId, quotationProductsId, quantity, comment} = data
-        if (!branchId && !warehouseId)
-            return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
-        const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
-        await this.validateDataIssue(branchId, warehouseId);
         try {
             const {reasonIssue, destinationBranchId, containerId, destinationWarehouseId} = data;
             // let inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
-            let inventorie: any;
-            if (branchId)
-                inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
-            else if (warehouseId)
-                inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
-            if (inventorie) {
-                const {stock} = inventorie;
-                await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, containerId, destinationWarehouseId});
-                await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (quotationProduct.stock - quantity)})
-                if (reasonIssue === InventoriesIssueE.ENTREGA_CLIENTE) {
-                    await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.TRANSITO_NACIONAL})
+            if (reasonIssue === InventoriesIssueE.CONTENEDOR) {
+                const container = await this.containerRepository.findOne({
+                    where: {id: containerId}, include: [
+                        {
+                            relation: 'collection',
+                            scope: {
+                                include: [
+                                    {
+                                        relation: 'purchaseOrders',
+                                        scope: {
+                                            include: [
+                                                {
+                                                    relation: 'proforma',
+                                                    scope: {
+                                                        include: [
+                                                            {
+                                                                relation: 'quotationProducts',
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                })
+                if (!container)
+                    throw this.responseService.notFound('El contenedor no se ha encontrado.');
+
+                const {collection} = container
+                if (!collection)
+                    throw this.responseService.badRequest('El contenedor no cuenta con una recoleccion.');
+
+                const {purchaseOrders} = collection;
+
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const {proforma: {quotationProducts}} = purchaseOrders[index];
+                    for (let index = 0; index < quotationProducts?.length; index++) {
+                        const {id, quantity, stock} = quotationProducts[index];
+                        const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: id}, {containerId}]}})
+                        if (inventorie) {
+                            const {stock} = inventorie;
+                            await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
+                            await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue});
+                            await this.quotationProductsRepository.updateById(id, {stock: (stock - quantity)})
+                        }
+                    }
                 }
 
-                if (reasonIssue === InventoriesIssueE.REASIGNAR) {
-                    let inventorieReasinar;
-                    if (destinationWarehouseId) {
-                        inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
-                        if (!inventorieReasinar) {
-                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId: destinationWarehouseId})
-                        } else {
-                            await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
-                        }
-                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
+            } else {
+                const {branchId, warehouseId, quotationProductsId, quantity, comment} = data
+                if (!branchId && !warehouseId)
+                    return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
+                const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
+                await this.validateDataIssue(branchId, warehouseId);
+
+                let inventorie: any;
+                if (branchId)
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
+                else if (warehouseId)
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
+                if (inventorie) {
+                    const {stock} = inventorie;
+                    await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, destinationWarehouseId});
+                    await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (quotationProduct.stock - quantity)})
+                    if (reasonIssue === InventoriesIssueE.ENTREGA_CLIENTE) {
+                        await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.TRANSITO_NACIONAL})
                     }
-                    if (destinationBranchId) {
-                        inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
-                        if (!inventorieReasinar) {
-                            inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, branchId: destinationBranchId})
-                        } else {
-                            await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
+
+                    if (reasonIssue === InventoriesIssueE.REASIGNAR) {
+                        let inventorieReasinar;
+                        if (destinationWarehouseId) {
+                            inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                            if (!inventorieReasinar) {
+                                inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId: destinationWarehouseId})
+                            } else {
+                                await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
+                            }
+                            await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
                         }
-                        await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
+                        if (destinationBranchId) {
+                            inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
+                            if (!inventorieReasinar) {
+                                inventorieReasinar = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, branchId: destinationBranchId})
+                            } else {
+                                await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
+                            }
+                            await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
+                        }
                     }
                 }
             }
+
         } catch (error) {
             throw this.responseService.badRequest(error.message ?? error)
         }

@@ -38,7 +38,7 @@ export const schemaCreateIssue = Joi.object({
     quotationProductsId: Joi.number().required(),
     quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
     comment: Joi.string().required(),
-    collectionNumber: Joi.when('reasonIssue', {is: InventoriesIssueE.CONTENEDOR, then: Joi.string().required()}),
+    containerId: Joi.when('reasonIssue', {is: InventoriesIssueE.CONTENEDOR, then: Joi.number().required()}),
     destinationBranchId: Joi.when('reasonIssue', {is: InventoriesIssueE.REASIGNAR, then: Joi.number().allow(null)}),
     destinationWarehouseId: Joi.when('reasonIssue', {is: InventoriesIssueE.REASIGNAR, then: Joi.number().allow(null)}),
 })
