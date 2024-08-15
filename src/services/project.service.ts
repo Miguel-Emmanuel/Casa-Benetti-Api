@@ -660,6 +660,16 @@ export class ProjectService {
             },
             {
                 relation: 'advancePaymentRecords',
+                scope: {
+                    include: [
+                        {
+                            relation: 'documents',
+                            scope: {
+                                fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'advancePaymentRecordId']
+                            }
+                        }
+                    ]
+                }
             },
             {
                 relation: 'clientQuoteFile',
@@ -738,7 +748,13 @@ export class ProjectService {
             totalPay: advanceCustomer,
             balance,
             products: productsArray,
-            advancePaymentRecords,
+            advancePaymentRecords: advancePaymentRecords.map(value => {
+                const {documents, ...body} = value;
+                return {
+                    ...body,
+                    docs: documents
+                }
+            }),
             exchangeRateQuotation,
             reference,
             files: {
