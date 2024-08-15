@@ -1,7 +1,7 @@
 import {belongsTo, model, property} from '@loopback/repository';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch} from './branch.model';
-import {TypesExpenses} from './types-expenses.model';
+import {TypesExpenses, TypesExpensesWithRelations} from './types-expenses.model';
 
 @model({
     settings: {
@@ -80,6 +80,7 @@ export class InternalExpenses extends BaseEntity {
 
 export interface InternalExpensesRelations {
     // describe navigational properties here
+    typesExpenses: TypesExpensesWithRelations
 }
 
 export type InternalExpensesWithRelations = InternalExpenses & InternalExpensesRelations;
