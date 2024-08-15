@@ -7,6 +7,7 @@ import {
     get,
     getModelSchemaRef,
     param,
+    patch,
     post,
     requestBody,
     response
@@ -272,6 +273,67 @@ export class InventoryMovementsController {
         @param.path.number('id') id: number,
     ): Promise<Object[]> {
         return this.inventoryMovementsService.findContainer(id);
+    }
+
+    @patch('/inventory-movements/purchase-orders')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {
+                            type: 'string'
+                        }
+                    }
+                },
+            },
+        },
+    })
+    async updateProducts(
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    quantity: {
+                                                        type: 'number'
+                                                    },
+                                                    commentEntry: {
+                                                        type: 'string'
+                                                    },
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                            }
+                        }
+                    },
+                },
+            },
+        })
+        data: {purchaseOrders: {id: number, products: {id: number, quantity: number, commentEntry: string}[]}[]},
+    ): Promise<Object> {
+        return this.inventoryMovementsService.updateProducts(data);
     }
 
     // @get('/inventory-movements/count')
