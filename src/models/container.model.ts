@@ -6,6 +6,7 @@ import {DocumentSchema} from './base/document.model';
 import {Collection, CollectionWithRelations} from './collection.model';
 import {Document} from './document.model';
 
+//Contenedor
 @model({
     settings: {
         postgresql: {

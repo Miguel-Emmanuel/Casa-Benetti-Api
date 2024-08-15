@@ -120,7 +120,7 @@ export class InventoryMovementsService {
         const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
         await this.validateDataIssue(branchId, warehouseId);
         try {
-            const {reasonIssue, destinationBranchId, containerNumber, destinationWarehouseId} = data;
+            const {reasonIssue, destinationBranchId, containerId, destinationWarehouseId} = data;
             // let inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
             let inventorie: any;
             if (branchId)
@@ -130,7 +130,7 @@ export class InventoryMovementsService {
             if (inventorie) {
                 const {stock} = inventorie;
                 await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, containerNumber, destinationWarehouseId});
+                await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, containerId, destinationWarehouseId});
                 await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (quotationProduct.stock - quantity)})
                 if (reasonIssue === InventoriesIssueE.ENTREGA_CLIENTE) {
                     await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.TRANSITO_NACIONAL})

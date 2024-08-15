@@ -39,12 +39,12 @@ export class InventoryMovementsController {
                                 type: 'string',
                             },
                             //Descarga contenedor, Descarga recolección
-                            containerNumber: {
-                                type: 'string',
+                            containerId: {
+                                type: 'number',
                                 nullable: true
                             },
-                            collectionNumber: {
-                                type: 'string',
+                            collectionId: {
+                                type: 'number',
                                 nullable: true
                             },
                             products: {
@@ -127,8 +127,8 @@ export class InventoryMovementsController {
                             comment: {
                                 type: 'string',
                             },
-                            containerNumber: {
-                                type: 'string',
+                            containerId: {
+                                type: 'number',
                                 nullable: true
                             },
                             destinationBranchId: {
