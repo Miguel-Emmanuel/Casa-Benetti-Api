@@ -4,7 +4,7 @@ import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, Purchase
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
 import {ResponseServiceBindings} from '../keys';
-import {BranchRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
+import {BranchRepository, ContainerRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -25,24 +25,26 @@ export class InventoryMovementsService {
         @repository(ProjectRepository)
         public projectRepository: ProjectRepository,
         @repository(PurchaseOrdersRepository)
-        public purchaseOrdersRepository: PurchaseOrdersRepository
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ContainerRepository)
+        public containerRepository: ContainerRepository
     ) { }
 
     async entry(data: EntryDataI) {
         await this.validateBodyEntry(data);
         const {reasonEntry} = data
         if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR || reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
-
+            const {containerId, collectionId, products} = data;
             if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR) {
-                //Falta aqui la logica para traer los productos relacionados al contenedor
 
-                //Si el numero de contenedor estará a nivel orden de compra entonces desde orden de compra accedidnedo a la proforma podemos recuperar el branchid y el listado de productos
-                //Remplazar por lista de productos relacionadas al contenedor
-                const branchId = 1
-                const products: any = [{quotationProductsId: 1, quantity: 2}];
+                const container = await this.containerRepository.findOne({where: {id: containerId}});
+                if (!container)
+                    throw this.responseService.notFound('El contenedor no existe.');
+
                 for (let index = 0; index < products.length; index++) {
                     const element = products[index];
-                    //Validar si existe un registro de inventario validando por quotationProductsId y branchId
+                    const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
+
                 }
             }
             if (reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
