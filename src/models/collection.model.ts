@@ -44,10 +44,10 @@ export class Collection extends Entity {
     })
     status: CollectionStatus;
 
-    //Fecha de recoleccion
     @hasMany(() => Document)
     documents: Document[];
 
+    //Fecha de recoleccion
     @property({
         type: 'date',
     })

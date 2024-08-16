@@ -42,6 +42,10 @@ export const SendgridTemplates = {
     id: 'd-a8cb27b2a0fc4fccbe200da5d2613ba9',
     subject: 'Nueva orden de compra por antender',
   },
+  NOTIFICATION_DATE_COLLECTION: {
+    id: 'd-5cdc561e82464879874c639d1f701619',
+    subject: 'Proxima recolección programada',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})
