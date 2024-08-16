@@ -259,7 +259,21 @@ export class InventoriesService {
                                                 scope: {
                                                     include: [
                                                         {
-                                                            relation: 'purchaseOrders'
+                                                            relation: 'purchaseOrders',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'collection',
+                                                                        scope: {
+                                                                            include: [
+                                                                                {
+                                                                                    relation: 'container'
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            }
                                                         }
                                                     ]
                                                 }
@@ -369,6 +383,10 @@ export class InventoriesService {
                 brandId,
                 model,
                 purchaseOrderId: purchaseOrders?.id ?? null,
+                arrivalDate: purchaseOrders?.collection?.container?.arrivalDate ?? null,
+                containerNumber: purchaseOrders?.collection?.container?.containerNumber ?? null,
+                invoiceNumber: purchaseOrders?.collection?.container?.invoiceNumber ?? null,
+                numberBoxes: purchaseOrders?.collection?.container?.numberBoxes ?? null,
                 currency,
                 originCode,
                 description,
