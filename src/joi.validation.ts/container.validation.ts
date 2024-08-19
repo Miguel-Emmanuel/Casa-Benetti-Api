@@ -27,7 +27,7 @@ const schemaProducts = Joi.object({
     netWeight: Joi.string().allow(null).allow(''),
     numberBoxes: Joi.number().allow(null),
     descriptionPedimiento: Joi.string().allow(null).allow(''),
-    NOMS: Joi.array().items(Joi.string().required()).optional()
+    NOMS: Joi.array().items(Joi.string().optional()).optional()
 })
 
 const schemaPurchaseOrders = Joi.object({
