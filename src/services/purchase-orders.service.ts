@@ -97,7 +97,7 @@ export class PurchaseOrdersService {
                         {
                             relation: 'project',
                             scope: {
-                                fields: ['id', 'quotationId'],
+                                fields: ['id', 'quotationId', 'projectId'],
                                 include: [
                                     {
                                         relation: 'quotation',
@@ -125,8 +125,8 @@ export class PurchaseOrdersService {
             };
         return (await this.purchaseOrdersRepository.find(filter)).map(value => {
             const {id, proforma, status} = value;
-            const {provider, brand, quotationProducts, projectId, project} = proforma;
-            const {quotation} = project
+            const {provider, brand, quotationProducts, project} = proforma;
+            const {quotation, projectId} = project
             return {
                 id,
                 projectId,
@@ -189,7 +189,7 @@ export class PurchaseOrdersService {
                             {
                                 relation: 'project',
                                 scope: {
-                                    fields: ['id', 'customerId', 'quotationId'],
+                                    fields: ['id', 'customerId', 'quotationId', 'projectId'],
                                     include: [
                                         {
                                             relation: 'customer',
@@ -232,12 +232,12 @@ export class PurchaseOrdersService {
             const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
             const {createdAt, proforma, status, accountPayableId, proformaId, productionEndDate, productionRealEndDate} = purchaseOrders;
             const {provider, brand, quotationProducts, project} = proforma;
-            const {customer, quotation} = project
+            const {customer, quotation, projectId} = project
             const {mainProjectManager} = quotation
 
             return {
                 id,
-                projectId: project?.id,
+                projectId: projectId,
                 productionEndDate: productionEndDate ?? null,
                 productionRealEndDate: productionRealEndDate ?? null,
                 createdAt,
@@ -523,7 +523,7 @@ export class PurchaseOrdersService {
         })
 
         return purchaseOrders.map(value => {
-            const {id: purchaseOrderid, proforma, productionEndDate} = value;
+            const {id: purchaseOrderid, proforma, productionEndDate, productionRealEndDate} = value;
             const {proformaId, provider, brand, quotationProducts} = proforma;
             const {name} = provider;
             const {brandName} = brand;
@@ -533,7 +533,8 @@ export class PurchaseOrdersService {
                 provider: name,
                 brand: brandName,
                 quantity: quotationProducts?.length ?? 0,
-                productionEndDate
+                productionEndDate,
+                productionRealEndDate,
             }
         })
     }

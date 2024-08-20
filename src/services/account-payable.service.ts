@@ -83,7 +83,7 @@ export class AccountPayableService {
                         {
                             relation: 'project',
                             scope: {
-                                fields: ['id', 'customerId', 'quotationId'],
+                                fields: ['id', 'customerId', 'quotationId', 'projectId'],
                                 include: [
                                     {
                                         relation: 'customer',
@@ -139,8 +139,8 @@ export class AccountPayableService {
             const findAccountPayable = await this.accountPayableRepository.find(filter)
             return findAccountPayable.map(value => {
                 const {id, proforma, purchaseOrders, total, totalPaid, balance, createdAt} = value;
-                const {provider, projectId, project, branchId} = proforma;
-                const {customerId, customer} = project
+                const {provider, project, branchId} = proforma;
+                const {customerId, customer, projectId} = project
                 const {groupId} = customer;
                 return {
                     id,
@@ -187,7 +187,7 @@ export class AccountPayableService {
                             {
                                 relation: 'project',
                                 scope: {
-                                    fields: ['id', 'customerId', 'quotationId'],
+                                    fields: ['id', 'customerId', 'quotationId', 'projectId'],
                                     include: [
                                         {
                                             relation: 'customer',
@@ -265,8 +265,8 @@ export class AccountPayableService {
                 }
             })
             const {proforma, purchaseOrders, total, totalPaid, balance, currency} = findAccountPayable;
-            const {provider, brand, project, projectId} = proforma;
-            const {customer, quotation} = project
+            const {provider, brand, project} = proforma;
+            const {customer, quotation, projectId} = project
             const {closingDate, showroomManager, mainProjectManager} = quotation
             const values = {
                 id,
