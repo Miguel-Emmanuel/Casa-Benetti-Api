@@ -751,7 +751,7 @@ export class ProjectService {
                 totalPay: advanceCustomer,
                 balance,
                 products: productsArray,
-                advancePaymentRecords: advancePaymentRecords.map(value => {
+                advancePaymentRecords: advancePaymentRecords?.map(value => {
                     const {documents, ...body} = value;
                     return {
                         ...body,
