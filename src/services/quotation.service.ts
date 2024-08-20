@@ -530,9 +530,9 @@ export class QuotationService {
         const {id, quotation, isDraft, branchId, products} = data;
         await this.validateBodyQuotationShowroom(data);
         await this.validateBrancId(branchId)
+        const showroomManagerId = await this.getSMShowRoom(branchId);
         try {
             if (id === null || id == undefined) {
-                const showroomManagerId = await this.getSM(branchId);
 
                 const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchId, showroomManagerId);
                 await this.createProducts(products, createQuotation.id);
