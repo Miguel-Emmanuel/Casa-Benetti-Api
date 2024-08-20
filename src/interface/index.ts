@@ -179,6 +179,7 @@ export interface QuotationFindOneResponse {
     } | null,
     products: ProductsById[],
     quotation: {
+        clientQuote?: Document
         subtotal: number | null;
         additionalDiscount: number | null;
         percentageIva: number | null;
