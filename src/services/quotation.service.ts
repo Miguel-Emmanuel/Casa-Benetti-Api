@@ -532,7 +532,9 @@ export class QuotationService {
         await this.validateBrancId(branchId)
         try {
             if (id === null || id == undefined) {
-                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchId);
+                const showroomManagerId = await this.getSM(branchId);
+
+                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchId, showroomManagerId);
                 await this.createProducts(products, createQuotation.id);
                 return createQuotation;
             } else {
@@ -546,6 +548,13 @@ export class QuotationService {
             console.log(error)
             throw this.responseService.badRequest(error?.message ?? error);
         }
+    }
+
+    async getSMShowRoom(branchId: number) {
+        const sm = await this.userRepository.findOne({where: {branchId: branchId, isShowroomManager: true}});
+        if (!sm || !sm?.id)
+            throw this.responseService.badRequest("Aun no se encuentra un Showroom manager en tu equipo.");
+        return sm.id;
     }
 
     async validateBrancId(branchId: number) {
@@ -568,7 +577,7 @@ export class QuotationService {
         }
     }
 
-    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchId: number) {
+    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchId: number, showroomManagerId: number) {
         const data = this.convertExchangeRateQuotation(quotation);
         const bodyQuotation = {
             ...data,
@@ -576,7 +585,8 @@ export class QuotationService {
             isDraft,
             branchId,
             userId,
-            typeQuotation: TypeQuotationE.SHOWROOM
+            typeQuotation: TypeQuotationE.SHOWROOM,
+            showroomManagerId
         }
         return this.quotationRepository.create(bodyQuotation);
     }
