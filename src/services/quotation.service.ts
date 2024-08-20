@@ -113,6 +113,22 @@ export class QuotationService {
         return await this.createPdfToCustomer(findQuotation.id);
     }
 
+    async uploadPdfClientQuote(id: number, data: {document: Document}) {
+        await this.findQuotationById(id);
+        await this.createDocument(id, data.document);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async createDocument(quotationId: number, document: Document) {
+        if (quotationId) {
+            if (document && !document?.id) {
+                await this.quotationRepository.clientQuote(quotationId).create(document);
+            } else if (document) {
+                await this.documentRepository.updateById(document.id, {...document});
+            }
+        }
+    }
+
     async createPdfToCustomer(quotationId: number) {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
@@ -936,6 +952,12 @@ export class QuotationService {
     async findById(id: number, filter?: FilterExcludingWhere<Quotation>): Promise<QuotationFindOneResponse> {
         const filterInclude = [
             {
+                relation: 'clientQuote',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'id', 'clientQuoteId']
+                }
+            },
+            {
                 relation: 'customer',
             },
             {
@@ -1096,6 +1118,7 @@ export class QuotationService {
             },
             products: products,
             quotation: {
+                clientQuote: quotation?.clientQuote ?? null,
                 mainProjectManagerCommissions: quotation?.classificationPercentageMainpms,
                 subtotal: subtotal,
                 additionalDiscount: additionalDiscount,
