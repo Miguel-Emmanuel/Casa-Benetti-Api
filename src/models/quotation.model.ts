@@ -4,6 +4,7 @@ import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {ClassificationPercentageMainpm} from './classification-percentage-mainpm.model';
 import {Customer, CustomerWithRelations} from './customer.model';
+import {Document} from './document.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
@@ -211,6 +212,9 @@ export class Quotation extends BaseEntity {
         default: TypeQuotationE.GENERAL
     })
     typeQuotation: TypeQuotationE;
+
+    @hasOne(() => Document, {keyTo: 'clientQuoteId'})
+    clientQuote: Document;
 
     //************************************************ COTIZACION EN EUROS *********************************** */
 

@@ -127,6 +127,16 @@ export class QuotationController {
         return this.quotationService.changeStatusToReviewAdmin(id, body);
     }
 
+    @get('/quotations/download-pdf-client-quote/{id}')
+    @response(200, {
+        description: 'Account statement model instance',
+    })
+    async downloadPdfClientQuote(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.quotationService.downloadPdfClientQuote(id);
+    }
+
 
     @patch('/quotations/status-cerrada/{id}')
     @response(200, {

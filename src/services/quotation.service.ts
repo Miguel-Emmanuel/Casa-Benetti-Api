@@ -1,15 +1,19 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
+import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
+import fs from "fs/promises";
 import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
+import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
 import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {PdfService} from './pdf.service';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -50,7 +54,11 @@ export class QuotationService {
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
         @repository(BranchRepository)
-        public branchRepository: BranchRepository
+        public branchRepository: BranchRepository,
+        @service()
+        public pdfService: PdfService,
+        @inject(RestBindings.Http.RESPONSE)
+        private response: Response,
     ) { }
 
     async create(data: CreateQuotation) {
@@ -98,6 +106,94 @@ export class QuotationService {
             return this.quotationShowRoom(data);
         }
 
+    }
+
+    async downloadPdfClientQuote(id: number) {
+        const findQuotation = await this.findQuotationById(id);
+        return await this.createPdfToCustomer(findQuotation.id);
+    }
+
+    async createPdfToCustomer(quotationId: number) {
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]});
+        const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+        console.log("QUOTATIONCUSTOMER", quotation);
+
+
+        let productsTemplate = [];
+        for (const product of products) {
+            const {brand, document, quotationProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            productsTemplate.push({
+                brandName: brand?.brandName,
+                status: quotationProducts?.status,
+                description,
+                measures,
+                image: document?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
+                quantity: quotationProducts?.quantity,
+                percentage: quotationProducts?.percentageDiscountProduct,
+                subtotal: quotationProducts?.subtotal
+            })
+        }
+        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
+        const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
+        try {
+            const reference = `${project?.reference ?? ""}`
+            const referenceCustomerName = reference.trim() === "" ? "-" : reference
+            const properties: any = {
+                "logo": logo,
+                "customerName": `${customer?.name} ${customer?.lastName}`,
+                "quotationId": quotationId,
+                "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+                "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+                "referenceCustomer": referenceCustomerName,
+                "products": productsTemplate,
+                subtotal,
+                percentageAdditionalDiscount: percentageAdditionalDiscount ?? 0,
+                additionalDiscount,
+                percentageIva,
+                iva,
+                total,
+                advance,
+                advanceCustomer: convertToMoney(advanceCustomer ?? 0),
+                conversionAdvance: convertToMoney(conversionAdvance ?? 0),
+                balance: convertToMoney(balance ?? 0),
+                exchangeRate,
+                percentageAdvance,
+                emailPM: mainProjectManager?.email
+
+            }
+            const nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            // await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+            const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'});
+            this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
+            this.response.setHeader('Content-Type', 'application/pdf');
+            return this.response.status(200).send(buffer)
+        } catch (error) {
+            console.log('error: ', error)
+        }
     }
 
     async createComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
