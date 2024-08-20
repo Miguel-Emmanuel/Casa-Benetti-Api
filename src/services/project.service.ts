@@ -633,149 +633,153 @@ export class ProjectService {
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Project>) {
-        const include: InclusionFilter[] = [
-            {
-                relation: 'quotation',
-                scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
-                    include: [
-                        {
-                            relation: 'mainProjectManager',
-                            scope: {
-                                fields: ['id', 'firstName', 'lastName']
-                            }
-                        },
-                        {
-                            relation: 'products',
-                            scope: {
-                                include: ['brand', 'document', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
-                            }
-                        },
-                    ]
-                }
-            },
-            {
-                relation: 'customer',
-                scope: {
-                    fields: ['id', 'name', 'lastName'],
-                }
-            },
-            {
-                relation: 'advancePaymentRecords',
-                scope: {
-                    include: [
-                        {
-                            relation: 'documents',
-                            scope: {
-                                fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'advancePaymentRecordId']
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                relation: 'clientQuoteFile',
-            },
-            {
-                relation: 'providerFile',
-            },
-            {
-                relation: 'advanceFile',
-            },
-            {
-                relation: 'documents',
-            },
-        ]
-        if (filter?.include)
-            filter.include = [
-                ...filter.include,
-                ...include
-            ]
-        else
-            filter = {
-                ...filter, include: [
-                    ...include,
-                ]
-            };
-        const project = await this.projectRepository.findById(id, filter);
-        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
-        const {closingDate, products, exchangeRateQuotation} = quotation;
-        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
-        const productsArray = [];
-        for (const iterator of products ?? []) {
-            const descriptionParts = [
-                iterator?.line?.name,
-                iterator?.name,
-                iterator.quotationProducts?.mainMaterial,
-                iterator.quotationProducts?.mainFinish,
-                iterator.quotationProducts?.secondaryMaterial,
-                iterator.quotationProducts?.secondaryFinishing
-            ];
-            const measuresParts = [
-                iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
-                iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
-                iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
-                iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
-            ];
-
-            const description = descriptionParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-            const measures = measuresParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-            productsArray.push({
-                id: iterator?.id,
-                image: iterator?.document ? iterator?.document?.fileURL : '',
-                brandName: iterator?.brand?.brandName ?? '',
-                description,
-                measures,
-                price: iterator?.quotationProducts?.price,
-                listPrice: iterator?.quotationProducts?.originCost,
-                factor: iterator?.quotationProducts?.factor,
-                quantity: iterator?.quotationProducts?.quantity,
-                // provider: iterator?.provider?.name,
-                status: iterator?.quotationProducts?.status,
-                mainFinish: iterator?.quotationProducts?.mainFinish,
-                mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
-                secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
-                secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
-            })
-        }
-        return {
-            id,
-            customerName: `${customer?.name} ${customer?.lastName}`,
-            closingDate,
-            total,
-            totalPay: advanceCustomer,
-            balance,
-            products: productsArray,
-            advancePaymentRecords: advancePaymentRecords.map(value => {
-                const {documents, ...body} = value;
-                return {
-                    ...body,
-                    docs: documents
-                }
-            }),
-            exchangeRateQuotation,
-            reference,
-            files: {
-                clientQuoteFile: {
-                    fileURL: clientQuoteFile?.fileURL,
-                    name: clientQuoteFile?.name,
-                    createdAt: clientQuoteFile?.createdAt,
-                    extension: clientQuoteFile?.extension,
-                },
-                providerFile:
+        try {
+            const include: InclusionFilter[] = [
                 {
-                    fileURL: providerFile?.fileURL,
-                    name: providerFile?.name,
-                    createdAt: providerFile?.createdAt,
-                    extension: providerFile?.extension,
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
+                        include: [
+                            {
+                                relation: 'mainProjectManager',
+                                scope: {
+                                    fields: ['id', 'firstName', 'lastName']
+                                }
+                            },
+                            {
+                                relation: 'products',
+                                scope: {
+                                    include: ['brand', 'document', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
+                                }
+                            },
+                        ]
+                    }
                 },
-                advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
-                documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
+                {
+                    relation: 'customer',
+                    scope: {
+                        fields: ['id', 'name', 'lastName'],
+                    }
+                },
+                {
+                    relation: 'advancePaymentRecords',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'documents',
+                                scope: {
+                                    fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'advancePaymentRecordId']
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'clientQuoteFile',
+                },
+                {
+                    relation: 'providerFile',
+                },
+                {
+                    relation: 'advanceFile',
+                },
+                {
+                    relation: 'documents',
+                },
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include,
+                    ]
+                };
+            const project = await this.projectRepository.findById(id, filter);
+            const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
+            const {closingDate, products, exchangeRateQuotation} = quotation;
+            const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
+            const productsArray = [];
+            for (const iterator of products ?? []) {
+                const descriptionParts = [
+                    iterator?.line?.name,
+                    iterator?.name,
+                    iterator.quotationProducts?.mainMaterial,
+                    iterator.quotationProducts?.mainFinish,
+                    iterator.quotationProducts?.secondaryMaterial,
+                    iterator.quotationProducts?.secondaryFinishing
+                ];
+                const measuresParts = [
+                    iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
+                    iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
+                    iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
+                    iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
+                ];
+
+                const description = descriptionParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+                const measures = measuresParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+                productsArray.push({
+                    id: iterator?.id,
+                    image: iterator?.document ? iterator?.document?.fileURL : '',
+                    brandName: iterator?.brand?.brandName ?? '',
+                    description,
+                    measures,
+                    price: iterator?.quotationProducts?.price,
+                    listPrice: iterator?.quotationProducts?.originCost,
+                    factor: iterator?.quotationProducts?.factor,
+                    quantity: iterator?.quotationProducts?.quantity,
+                    // provider: iterator?.provider?.name,
+                    status: iterator?.quotationProducts?.status,
+                    mainFinish: iterator?.quotationProducts?.mainFinish,
+                    mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
+                    secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
+                    secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
+                })
             }
+            return {
+                id,
+                customerName: `${customer?.name} ${customer?.lastName}`,
+                closingDate,
+                total,
+                totalPay: advanceCustomer,
+                balance,
+                products: productsArray,
+                advancePaymentRecords: advancePaymentRecords.map(value => {
+                    const {documents, ...body} = value;
+                    return {
+                        ...body,
+                        docs: documents
+                    }
+                }),
+                exchangeRateQuotation,
+                reference,
+                files: {
+                    clientQuoteFile: {
+                        fileURL: clientQuoteFile?.fileURL,
+                        name: clientQuoteFile?.name,
+                        createdAt: clientQuoteFile?.createdAt,
+                        extension: clientQuoteFile?.extension,
+                    },
+                    providerFile:
+                    {
+                        fileURL: providerFile?.fileURL,
+                        name: providerFile?.name,
+                        createdAt: providerFile?.createdAt,
+                        extension: providerFile?.extension,
+                    },
+                    advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
+                    documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
+                }
+            }
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error);
         }
     }
 
