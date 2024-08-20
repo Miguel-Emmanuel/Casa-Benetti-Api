@@ -1011,7 +1011,8 @@ export class QuotationService {
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
                 rejectedComment: quotation?.comment,
-                typeQuotation: quotation?.typeQuotation
+                typeQuotation: quotation?.typeQuotation,
+                branchId: quotation?.branchId
             },
             // quotation: {
             //     subtotal: quotation.subtotal,
