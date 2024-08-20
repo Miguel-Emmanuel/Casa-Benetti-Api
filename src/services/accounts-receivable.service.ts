@@ -199,6 +199,12 @@ export class AccountsReceivableService {
 
                 }
             },
+            {
+                relation: 'project',
+                scope: {
+                    fields: ['id', 'projectId']
+                }
+            }
 
         ]
         if (filter?.include)
