@@ -745,7 +745,7 @@ export class ProjectService {
             }
             return {
                 id,
-                customerName: `${customer?.name} ${customer?.lastName}`,
+                customerName: customer ? `${customer?.name} ${customer?.lastName}` : null,
                 closingDate,
                 total,
                 totalPay: advanceCustomer,
