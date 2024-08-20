@@ -200,6 +200,7 @@ export interface QuotationFindOneResponse {
         mainProjectManagerId: number | null;
         rejectedComment?: string;
         mainProjectManagerCommissions: MainProjectManagerCommissionsI[];
+        typeQuotation?: TypeQuotationE;
     },
     commisions: {
         architectName: string;

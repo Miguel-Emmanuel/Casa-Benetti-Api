@@ -732,7 +732,7 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId} = value;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId, typeQuotation} = value;
             const {total} = this.getPricesQuotation(value);
             return {
                 id,
@@ -743,7 +743,8 @@ export class QuotationService {
                 total,
                 branchName: branch?.name,
                 status,
-                updatedAt
+                updatedAt,
+                typeQuotation
             }
         });
     }
@@ -1010,6 +1011,7 @@ export class QuotationService {
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
                 rejectedComment: quotation?.comment,
+                typeQuotation: quotation?.typeQuotation
             },
             // quotation: {
             //     subtotal: quotation.subtotal,
