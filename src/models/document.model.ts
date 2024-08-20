@@ -132,6 +132,11 @@ export class Document extends BaseEntity {
   })
   containerId?: number;
 
+  @property({
+    type: 'number',
+  })
+  clientQuoteId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }
