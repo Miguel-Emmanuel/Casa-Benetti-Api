@@ -1130,7 +1130,9 @@ export class QuotationService {
             if (isRejected === true)
                 status = StatusQuotationE.RECHAZADA;
             else {
-                await this.validateAdvanceCustomerAndEnsamblado(id);
+                if (quotation?.typeQuotation === TypeQuotationE.GENERAL) {
+                    await this.validateAdvanceCustomerAndEnsamblado(id);
+                }
                 status = StatusQuotationE.CERRADA;
                 await this.projectService.create({quotationId: id}, transaction);
             }
