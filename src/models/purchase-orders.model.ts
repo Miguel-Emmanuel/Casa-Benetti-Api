@@ -56,6 +56,12 @@ export class PurchaseOrders extends Entity {
   })
   productionRealEndDate: Date;
 
+  //Fecha Inicio de produccion (se calcular agregando 1 dia mas a la fecha de productionEndDate)
+  @property({
+    type: 'date',
+  })
+  productionStartDate: Date;
+
   //Fecha estimada de llegada(se calcula con una formula BC-46)
   @property({
     type: 'date',

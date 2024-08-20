@@ -1,6 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
+import dayjs from 'dayjs';
 import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
@@ -125,7 +126,7 @@ export class AccountPayableHistoryService {
                     let scheduledDate = new Date();
                     const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0);
                     console.log('productionEndDate: ', productionEndDate)
-                    await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, status: PurchaseOrdersStatus.EN_PRODUCCION})
+                    await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, productionStartDate: dayjs(productionEndDate).add(1, 'days').toDate(), status: PurchaseOrdersStatus.EN_PRODUCCION})
                 }
             }
         }

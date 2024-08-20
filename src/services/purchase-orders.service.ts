@@ -523,7 +523,7 @@ export class PurchaseOrdersService {
         })
 
         return purchaseOrders.map(value => {
-            const {id: purchaseOrderid, proforma, productionEndDate, productionRealEndDate} = value;
+            const {id: purchaseOrderid, proforma, productionEndDate, productionRealEndDate, productionStartDate} = value;
             const {proformaId, provider, brand, quotationProducts} = proforma;
             const {name} = provider;
             const {brandName} = brand;
@@ -533,8 +533,9 @@ export class PurchaseOrdersService {
                 provider: name,
                 brand: brandName,
                 quantity: quotationProducts?.length ?? 0,
-                productionEndDate,
-                productionRealEndDate,
+                productionEndDate: productionEndDate ?? null,
+                productionRealEndDate: productionRealEndDate ?? null,
+                productionStartDate: productionStartDate ?? null
             }
         })
     }
