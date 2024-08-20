@@ -5,7 +5,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
@@ -69,8 +69,10 @@ export class ProjectService {
         const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
         await this.updateSKUProducts(quotationId, project.reference, transaction);
-        await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
-        await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
+        if (quotation?.typeQuotation === TypeQuotationE.GENERAL) {
+            await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
+            await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
+        }
         await this.createPdfToCustomer(quotationId, project.id, transaction);
         await this.createPdfToProvider(quotationId, project.id, transaction);
         await this.createPdfToAdvance(quotationId, project.id, transaction);
