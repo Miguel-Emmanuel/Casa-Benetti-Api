@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeSaleE} from '../enums';
+import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeQuotationE, TypeSaleE} from '../enums';
 
 export const documents = Joi.object({
     id: Joi.number(),
@@ -91,7 +91,7 @@ const products = Joi.object({
     location: Joi.string().allow('').allow(null),
     assembledProducts: Joi.array().items(schemaAssembledProducts).optional().allow(null),
     typeSale: Joi.string().valid(...Object.values(TypeSaleE)).messages({
-        'any.only': `El tipo debe ser igual a uno de los valores permitidos.`
+        'any.only': `El tipo de venta debe ser igual a uno de los valores permitidos.`
     }).optional(),
     isMoneySection: Joi.boolean().allow(null).optional(),
     reservationDays: Joi.number().allow(null).optional(),
@@ -120,6 +120,9 @@ const designer = Joi.object({
 export const schemaCreateQuotition = Joi.object({
     id: Joi.number().allow(null),
     isDraft: Joi.boolean().required(),
+    typeQuotation: Joi.string().valid(...Object.values(TypeQuotationE)).messages({
+        'any.only': `El tipo de cotizacion debe ser igual a uno de los valores permitidos.`
+    }).required(),
     customer: Joi.object({
         customerId: Joi.number().allow(null),
         name: Joi.string().allow(null).allow(''),
@@ -179,6 +182,31 @@ export const schemaCreateQuotition = Joi.object({
         }).allow(null),
     }),
     proofPaymentQuotation: Joi.array().items(schemaProofPaymentQuotationQ).optional(),
+})
+
+
+export const schemaCreateQuotitionShowRoom = Joi.object({
+    id: Joi.number().allow(null),
+    isDraft: Joi.boolean().required(),
+    typeQuotation: Joi.string().valid(...Object.values(TypeQuotationE)).messages({
+        'any.only': `El tipo de cotizacion debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    branchId: Joi.number().required(),
+    products: Joi.array().items(products).required(),
+    quotation: Joi.object({
+        subtotal: Joi.number().allow(null),
+        percentageAdditionalDiscount: Joi.number().allow(null),
+        additionalDiscount: Joi.number().allow(null),
+        percentageIva: Joi.number().allow(null),
+        iva: Joi.number().allow(null),
+        total: Joi.number().allow(null),
+        exchangeRate: Joi.string().valid(...Object.values(ExchangeRateE)).messages({
+            'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+        }).allow(null),
+        exchangeRateQuotation: Joi.string().valid(...Object.values(ExchangeRateQuotationE)).messages({
+            'any.only': `El tipo de cambio en la cotizacion debe ser igual a uno de los valores permitidos.`
+        }).required(),
+    }),
 })
 
 

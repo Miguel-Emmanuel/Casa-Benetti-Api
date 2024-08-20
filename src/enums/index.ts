@@ -304,3 +304,10 @@ export enum PaymentMethodE {
     TRANSFERENCIA = 'Transferencia',
     OTRO = 'Otros',
 }
+
+
+
+export enum TypeQuotationE {
+    GENERAL = 'General',
+    SHOWROOM = 'Showroom',
+}

@@ -1,4 +1,4 @@
-import {ContainerStatus, ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {ContainerStatus, ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address, Document, ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export interface ProjectManagers {
@@ -58,19 +58,19 @@ export interface QuotationI {
     isReferencedCustomer: boolean;
     commissionPercentagereferencedCustomer: number;
     isProjectManager: boolean;
-    subtotal: number;
-    percentageAdditionalDiscount: number;
-    additionalDiscount: number;
-    percentageIva: number;
-    iva: number;
-    total: number;
+    subtotal: number;//showroom
+    percentageAdditionalDiscount: number;//showroom
+    additionalDiscount: number;//showroom
+    percentageIva: number;//showroom
+    iva: number;//showroom
+    total: number;//showroom
     percentageAdvance: number;
     advance: number;
     exchangeRate: ExchangeRateE;
     advanceCustomer: number;
     conversionAdvance: number;
     balance: number;
-    exchangeRateQuotation: ExchangeRateQuotationE;
+    exchangeRateQuotation: ExchangeRateQuotationE; //showroom
 }
 export interface Images {
     fileURL: string;
@@ -90,6 +90,11 @@ export interface Images {
 export interface CreateQuotation {
     id: number,
     isDraft: boolean;
+    typeQuotation: TypeQuotationE;
+    //Datos nivel cotizacion showroom
+    branchId: number;
+
+    //Datos cotizacion general
     customer: Customer,
     projectManagers: ProjectManagers[],
     designers: Designers[],
@@ -171,8 +176,7 @@ export interface QuotationFindOneResponse {
         group: string
         groupId?: number;
         email: string
-
-    },
+    } | null,
     products: ProductsById[],
     quotation: {
         subtotal: number | null;
