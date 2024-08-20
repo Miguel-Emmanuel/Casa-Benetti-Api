@@ -619,7 +619,7 @@ export class ProjectService {
             return {
                 id,
                 projectId,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''}`,
+                customerName: customer ? `${customer?.name} ${customer?.lastName ?? ''}` : null,
                 projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                 branch: branch?.name,
                 total: this.getTotalQuotation(exchangeRateQuotation, quotation),
