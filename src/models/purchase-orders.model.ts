@@ -3,6 +3,7 @@ import {PurchaseOrdersStatus} from '../enums';
 import {AccountPayable} from './account-payable.model';
 import {AccountsReceivable} from './accounts-receivable.model';
 import {Collection, CollectionWithRelations} from './collection.model';
+import {Container} from './container.model';
 import {DeliveryRequest} from './delivery-request.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Project} from './project.model';
@@ -79,12 +80,16 @@ export class PurchaseOrders extends Entity {
   @belongsTo(() => Project)
   projectId?: number;
 
+
   //Esta pagado
   @property({
     type: 'boolean',
     default: false
   })
   isPaid: boolean;
+
+  @belongsTo(() => Container)
+  containerId: number;
 
   @belongsTo(() => Collection)
   collectionId?: number;

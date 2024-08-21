@@ -190,7 +190,7 @@ export class InventoryMovementsService {
     async issue(data: IssueDataI) {
         await this.validateBodyIssue(data);
         try {
-            const {reasonIssue, destinationBranchId, containerId, destinationWarehouseId} = data;
+            const {reasonIssue, destinationBranchId, containerId, destinationWarehouseId, quotationProductsId, quantity} = data;
             // let inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {or: [{branchId}, {warehouseId}]}]}})
             if (reasonIssue === InventoriesIssueE.CONTENEDOR) {
                 const container = await this.containerRepository.findOne({
@@ -224,25 +224,33 @@ export class InventoryMovementsService {
                 if (!container)
                     throw this.responseService.notFound('El contenedor no se ha encontrado.');
 
-                const {collection} = container
-                if (!collection)
-                    throw this.responseService.badRequest('El contenedor no cuenta con una recoleccion.');
-
-                const {purchaseOrders} = collection;
-
-                for (let index = 0; index < purchaseOrders?.length; index++) {
-                    const {proforma: {quotationProducts}} = purchaseOrders[index];
-                    for (let index = 0; index < quotationProducts?.length; index++) {
-                        const {id, quantity, stock} = quotationProducts[index];
-                        const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: id}, {containerId}]}})
-                        if (inventorie) {
-                            const {stock} = inventorie;
-                            await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                            await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue});
-                            await this.quotationProductsRepository.updateById(id, {stock: (stock - quantity)})
-                        }
-                    }
+                await this.validateQuotationProduct(quotationProductsId);
+                const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}, {containerId}]}})
+                if (inventorie) {
+                    const {stock} = inventorie;
+                    await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue});
+                    await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (stock - quantity)})
                 }
+                // const {collection} = container
+                // if (!collection)
+                //     throw this.responseService.badRequest('El contenedor no cuenta con una recoleccion.');
+
+                // const {purchaseOrders} = collection;
+
+                // for (let index = 0; index < purchaseOrders?.length; index++) {
+                //     const {proforma: {quotationProducts}} = purchaseOrders[index];
+                //     for (let index = 0; index < quotationProducts?.length; index++) {
+                //         const {id, quantity, stock} = quotationProducts[index];
+                //         const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: id}, {containerId}]}})
+                //         if (inventorie) {
+                //             const {stock} = inventorie;
+                //             await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
+                //             await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue});
+                //             await this.quotationProductsRepository.updateById(id, {stock: (stock - quantity)})
+                //         }
+                //     }
+                // }
 
             } else {
                 const {branchId, warehouseId, quotationProductsId, quantity, comment} = data
