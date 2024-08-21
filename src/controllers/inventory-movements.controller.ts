@@ -337,7 +337,7 @@ export class InventoryMovementsController {
         return this.inventoryMovementsService.updateProducts(data);
     }
 
-    @patch('/inventory-movements/products')
+    @get('/inventory-movements/products')
     @response(200, {
         description: 'Array of Product model instances',
         content: {
