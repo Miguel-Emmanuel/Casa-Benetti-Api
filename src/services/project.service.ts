@@ -66,7 +66,7 @@ export class ProjectService {
     async create(body: {quotationId: number}, transaction: any) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, quotation.typeQuotation, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
         await this.updateSKUProducts(quotationId, project.reference, transaction);
         if (quotation?.typeQuotation === TypeQuotationE.GENERAL) {
@@ -1164,7 +1164,7 @@ export class ProjectService {
         return body;
     }
 
-    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, showroomManager: string, transaction: any) {
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, showroomManager: string, typeQuotation: TypeQuotationE, transaction: any) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
@@ -1178,7 +1178,7 @@ export class ProjectService {
         }
 
 
-        const project = await this.projectRepository.create({...body, projectId, reference}, {transaction});
+        const project = await this.projectRepository.create({...body, projectId, reference, typeQuotation}, {transaction});
         return project;
     }
 
