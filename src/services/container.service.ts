@@ -291,7 +291,7 @@ export class ContainerService {
                     return {
                         id: purchaseOrderid,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS} = value;
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS, descriptionPedimiento} = value;
                             const {document, line, name} = product;
                             const descriptionParts = [
                                 line?.name,
@@ -307,6 +307,7 @@ export class ContainerService {
                                 SKU,
                                 image: document?.fileURL,
                                 description,
+                                descriptionPedimiento,
                                 invoiceNumber,
                                 grossWeight,
                                 netWeight,
