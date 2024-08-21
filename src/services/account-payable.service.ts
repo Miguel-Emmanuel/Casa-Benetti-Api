@@ -141,13 +141,12 @@ export class AccountPayableService {
                 const {id, proforma, purchaseOrders, total, totalPaid, balance, createdAt} = value;
                 const {provider, project, branchId} = proforma;
                 const {customerId, customer, projectId} = project
-                const {groupId} = customer;
                 return {
                     id,
                     provider: `${provider.name}`,
                     purchaseOrderId: purchaseOrders?.id ?? null,
-                    customerId,
-                    groupId,
+                    customerId: customerId ?? null,
+                    groupId: customer?.groupId ?? null,
                     projectId,
                     branchId,
                     total,
