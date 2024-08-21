@@ -1,5 +1,5 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {repository} from '@loopback/repository';
+import {Filter, InclusionFilter, repository} from '@loopback/repository';
 import {CollectionStatus, InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
@@ -30,7 +30,7 @@ export class InventoryMovementsService {
         @repository(ContainerRepository)
         public containerRepository: ContainerRepository,
         @repository(CollectionRepository)
-        public collectionRepository: CollectionRepository
+        public collectionRepository: CollectionRepository,
     ) { }
 
     async entry(data: EntryDataI) {
@@ -425,6 +425,66 @@ export class InventoryMovementsService {
             }
         }
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async getProducts(filter?: Filter<QuotationProducts>,) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'product',
+                scope: {
+                    include: [
+                        {
+                            relation: 'document'
+                        },
+                        {
+                            relation: 'line'
+                        }
+                    ]
+                }
+            },
+            {
+                relation: 'quotation',
+                scope: {
+                    include: [
+                        {
+                            relation: 'project'
+                        }
+                    ]
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
+        const products = await this.quotationProductsRepository.find(filter);
+        return products.map(value => {
+            const {id, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, numberBoxes, quotation} = value;
+            const {document, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                mainMaterial,
+                mainFinish,
+                secondaryMaterial,
+                secondaryFinishing
+            ];
+            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+            return {
+                id,
+                image: document?.fileURL,
+                description,
+                numberBoxes: numberBoxes ?? null,
+                projectId: quotation?.project?.projectId ?? null
+            }
+        })
     }
 
     async findContainer(id: number) {
