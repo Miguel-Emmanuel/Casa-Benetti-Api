@@ -577,7 +577,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId', 'typeQuotation'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -627,7 +627,8 @@ export class ProjectService {
                 closingDate,
                 branchId,
                 mainProjectManagerId,
-                reference
+                reference,
+                typeQuotation: quotation?.typeQuotation
             }
         })
     }
@@ -638,7 +639,7 @@ export class ProjectService {
                 {
                     relation: 'quotation',
                     scope: {
-                        fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
+                        fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR', 'typeQuotation'],
                         include: [
                             {
                                 relation: 'mainProjectManager',
@@ -700,7 +701,7 @@ export class ProjectService {
                 };
             const project = await this.projectRepository.findById(id, filter);
             const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
-            const {closingDate, products, exchangeRateQuotation} = quotation;
+            const {closingDate, products, exchangeRateQuotation, typeQuotation} = quotation;
             const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
             const productsArray = [];
             for (const iterator of products ?? []) {
@@ -751,6 +752,7 @@ export class ProjectService {
                 totalPay: advanceCustomer,
                 balance,
                 products: productsArray,
+                typeQuotation,
                 advancePaymentRecords: advancePaymentRecords?.map(value => {
                     const {documents, ...body} = value;
                     return {
