@@ -17,6 +17,8 @@ import * as dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
 import {DateCollectionNotificationCronJob} from './cronjobs/date-collection-notification';
+import {DeliveryDayNotificationCronJob} from './cronjobs/delivery-day-notification';
+import {LoanEndDateNotificationCronJob} from './cronjobs/loan-end-date-notification';
 import {ResertvationDayCronJob} from './cronjobs/reservation-days';
 import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
@@ -52,6 +54,8 @@ export class BaseApiLb4Application extends BootMixin(
     this.component(CronComponent);
     this.add(createBindingFromClass(ResertvationDayCronJob));
     this.add(createBindingFromClass(DateCollectionNotificationCronJob));
+    this.add(createBindingFromClass(DeliveryDayNotificationCronJob));
+    this.add(createBindingFromClass(LoanEndDateNotificationCronJob));
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here

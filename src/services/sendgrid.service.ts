@@ -46,6 +46,18 @@ export const SendgridTemplates = {
     id: 'd-5cdc561e82464879874c639d1f701619',
     subject: 'Proxima recolección programada',
   },
+  NOTIFICATION_DELIVERY_DAY: {
+    id: 'd-692ff2d403614f9e8b41f412a229ac56',
+    subject: 'Proxima entrega programada',
+  },
+  NOTIFICATION_DELIVERY_DAY_CUSTOMER: {
+    id: 'd-a82b5ebdb4854f15a31889b01c433063',
+    subject: 'Proxima entrega programada',
+  },
+  NOTIFICATION__LOAN_END_DATE: {
+    id: 'd-0b581d4574b84cb6a3e862b1b9ac13d7',
+    subject: 'Recordatorio préstamo próximo a vencer',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})
