@@ -123,7 +123,9 @@ export class AccountsReceivableService {
             }
         }
         const properties: any = {
-            data
+            data,
+            image: 'https://prod.api.casa-benetti.guaodev.com//files/Xlb_0z_Foto_benetti.jpg',
+            imagetwo: 'https://api.casa-benetti.guaodev.com//files/xWFvhL_silla.png',
         }
         const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
         const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
