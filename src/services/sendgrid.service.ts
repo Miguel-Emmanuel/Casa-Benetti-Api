@@ -47,7 +47,7 @@ export const SendgridTemplates = {
     subject: 'Proxima recolección programada',
   },
   NOTIFICATION_DELIVERY_DAY: {
-    id: 'd-5cdc561e82464879874c639d1f701619',
+    id: 'd-692ff2d403614f9e8b41f412a229ac56',
     subject: 'Proxima entrega programada',
   },
   NOTIFICATION_DELIVERY_DAY_CUSTOMER: {

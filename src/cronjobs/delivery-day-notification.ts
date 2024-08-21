@@ -102,13 +102,14 @@ export class DeliveryDayNotificationCronJob extends CronJob {
         const users = await this.userRepository.find({where: {isNationalLogistics: true}})
         const emails = users.map(value => value.email);
         for (let index = 0; index < deliveryRequest.length; index++) {
-            const {purchaseOrders, project} = deliveryRequest[index];
+            const {purchaseOrders, project, id} = deliveryRequest[index];
             if (purchaseOrders) {
                 const options = {
                     to: emails,
                     templateId: SendgridTemplates.NOTIFICATION_DELIVERY_DAY.id,
                     dynamicTemplateData: {
                         subject: SendgridTemplates.NOTIFICATION_DELIVERY_DAY.subject,
+                        deliveryRequestId: id,
                         projectId: project?.projectId,
                         purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                             const {id: purchaseOrderid, proforma, productionEndDate} = value;
