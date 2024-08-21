@@ -1,6 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
-import {CollectionDestinationE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
+import {CollectionDestinationE, CollectionStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {schemaCollectionCreate, schemaCollectionPatchFeedback} from '../joi.validation.ts/collection.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Collection, CollectionWithRelations, PurchaseOrders, PurchaseOrdersRelations, PurchaseOrdersWithRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
@@ -346,7 +346,7 @@ export class CollectionService {
         await this.validateCollectionById(id);
         await this.validateBodyCollectionPatchFeedback(data);
         const {containerId, documents, destination, dateCollection} = data;
-        await this.collectionRepository.updateById(id, {containerId, destination, dateCollection})
+        await this.collectionRepository.updateById(id, {containerId, destination, dateCollection, status: CollectionStatus.COMPLETADA})
         await this.createDocument(id, documents);
         await this.validaIfContainer(id, destination);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});

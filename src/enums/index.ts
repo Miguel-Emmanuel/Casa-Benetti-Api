@@ -264,6 +264,7 @@ export enum InventoriesReasonE {
     REPARACION = 'Reparación',
     PRESTAMO = 'Préstamo',
     DEVOLUCION = 'Devolución',
+    ENTRADA_MANUAL = 'Entrada manual',
 }
 
 
@@ -289,7 +290,7 @@ export enum ContainerStatus {
 
 export enum CollectionStatus {
     PROGRAMADA = 'Programada',
-    COMPLETADO = 'Completado',
+    COMPLETADA = 'Completada',
 }
 
 
