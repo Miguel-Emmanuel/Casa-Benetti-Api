@@ -95,7 +95,7 @@ export class InventoryMovementsService {
                     }
                     await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_INTERNACIONAL})
                 }
-                await this.collectionRepository.updateById(collectionId, {status: CollectionStatus.COMPLETADO})
+                await this.collectionRepository.updateById(collectionId, {status: CollectionStatus.COMPLETADA})
             }
         } else {
             //Reparacion, Préstamo o Devolución
