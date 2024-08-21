@@ -717,12 +717,13 @@ export class ProjectService {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]}, {transaction});
         const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
-        console.log("QUOTATIONCUSTOMER", quotation);
+        // console.log("QUOTATIONCUSTOMER", quotation);
 
 
         let productsTemplate = [];
         for (const product of products) {
             const {brand, document, quotationProducts, line, name} = product;
+            console.log("QUOTATIONCUSTOMER - document", document);
             const descriptionParts = [
                 line?.name,
                 name,
