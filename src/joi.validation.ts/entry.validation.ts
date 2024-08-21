@@ -25,6 +25,17 @@ export const schemaCreateEntry = Joi.object({
     quotationProductsId: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.number().required(), otherwise: Joi.forbidden()}),
     quantity: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.number().required().positive().message('La cantidad debe ser mayor a 0.'), otherwise: Joi.forbidden()}),
     comment: Joi.when('reasonEntry', {is: [InventoriesReasonE.REPARACION, InventoriesReasonE.PRESTAMO, InventoriesReasonE.DEVOLUCION], then: Joi.string().required(), otherwise: Joi.forbidden()}),
+    // destinationType: Joi.when('reasonEntry', {
+    //     is: [InventoriesReasonE.ENTRADA_MANUAL], then: Joi.string().valid(...Object.values(DestinationTypeE)).messages({
+    //         'any.only': `El tipo de destino debe ser igual a uno de los valores permitidos.`
+    //     }).required(), otherwise: Joi.forbidden()
+    // }),
+    destinationBranchId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
+    destinationWarehouseId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
+    destinationQuotationProductsId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().required(), otherwise: Joi.forbidden()}),
+    // destinationId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().required(), otherwise: Joi.forbidden()}),
+    destinationQuantity: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().required(), otherwise: Joi.forbidden()}),
+    commentEntry: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.string().required(), otherwise: Joi.forbidden()}),
 })
 
 

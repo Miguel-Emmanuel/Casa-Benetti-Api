@@ -99,29 +99,54 @@ export class InventoryMovementsService {
             }
         } else {
             //Reparacion, Préstamo o Devolución
-            const {branchId, warehouseId, quotationProductsId, quantity, projectId, comment} = data
-            if (!branchId && !warehouseId)
-                return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
-            const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
-            const project = await this.validateDataEntry(projectId, branchId, warehouseId);
-            try {
-                let inventorie: any;
-                if (branchId)
-                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
-                else if (warehouseId)
-                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
+            if (reasonEntry === InventoriesReasonE.ENTRADA_MANUAL) {
+                const {destinationBranchId, destinationWarehouseId, destinationQuantity, commentEntry, destinationQuotationProductsId} = data
 
+                if (!destinationBranchId && !destinationWarehouseId)
+                    return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
+                const quotationProduct = await this.validateQuotationProduct(destinationQuotationProductsId);
+
+                let inventorie: any;
+                if (destinationWarehouseId) {
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: destinationQuotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                } else {
+                    inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: destinationQuotationProductsId}, {branchId: destinationBranchId}]}})
+                }
                 if (!inventorie) {
-                    inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                    inventorie = await this.inventoriesRepository.create({stock: destinationQuantity, quotationProductsId: destinationQuotationProductsId, warehouseId: destinationWarehouseId, branchId: destinationBranchId})
                 } else {
                     const {stock} = inventorie;
-                    await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                    await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + destinationQuantity)})
                 }
-                await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment});
-                await this.addQuotationProductsToStock(quotationProductsId, quantity, quotationProduct.stock);
-                await this.validateWareHouseMexicoAndItalia(quotationProductsId, warehouseId)
-            } catch (error) {
-                throw this.responseService.badRequest(error.message ?? error)
+                await this.inventoryMovementsRepository.create({quantity: destinationQuantity, projectId: quotationProduct?.quotation?.project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment: commentEntry});
+                await this.addQuotationProductsToStock(destinationQuotationProductsId, destinationQuantity, quotationProduct.stock);
+                await this.validateWareHouseMexicoAndItalia(destinationQuotationProductsId, destinationWarehouseId)
+
+            } else {
+                const {branchId, warehouseId, quotationProductsId, quantity, projectId, comment} = data
+                if (!branchId && !warehouseId)
+                    return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
+                const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
+                const project = await this.validateDataEntry(projectId, branchId, warehouseId);
+                try {
+                    let inventorie: any;
+                    if (branchId)
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
+                    else if (warehouseId)
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
+
+                    if (!inventorie) {
+                        inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
+                    } else {
+                        const {stock} = inventorie;
+                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
+                    }
+                    await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment});
+                    await this.addQuotationProductsToStock(quotationProductsId, quantity, quotationProduct.stock);
+                    await this.validateWareHouseMexicoAndItalia(quotationProductsId, warehouseId)
+                } catch (error) {
+                    throw this.responseService.badRequest(error.message ?? error)
+                }
             }
         }
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
@@ -276,7 +301,18 @@ export class InventoryMovementsService {
     }
 
     async validateQuotationProduct(id: number) {
-        const product = await this.quotationProductsRepository.findOne({where: {id}, fields: ['id', 'stock', 'quantity']})
+        const product = await this.quotationProductsRepository.findOne({
+            where: {id}, include: [{
+                relation: 'quotation',
+                scope: {
+                    include: [
+                        {
+                            relation: 'project'
+                        }
+                    ]
+                }
+            }]
+        })
         if (!product)
             throw this.responseService.badRequest('El producto no existe.')
         return product
