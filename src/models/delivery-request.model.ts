@@ -27,6 +27,7 @@ import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.mod
         }
     }
 })
+//Entregas programadas
 export class DeliveryRequest extends Entity {
     @property({
         type: 'number',
