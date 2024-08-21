@@ -5,6 +5,7 @@ import {BaseEntity} from './base/base-entity.model';
 import {DocumentSchema} from './base/document.model';
 import {Collection, CollectionWithRelations} from './collection.model';
 import {Document} from './document.model';
+import {PurchaseOrders} from './purchase-orders.model';
 
 //Contenedor
 @model({
@@ -57,6 +58,9 @@ export class Container extends BaseEntity {
         type: 'number',
     })
     numberBoxes: number;
+
+    @hasMany(() => PurchaseOrders)
+    purchaseOrders: PurchaseOrders[];
 
     //Medidas
     @property({

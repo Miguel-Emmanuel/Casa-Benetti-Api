@@ -1,5 +1,5 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {ProjectStatusE} from '../enums';
+import {ProjectStatusE, TypeQuotationE} from '../enums';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
@@ -82,6 +82,13 @@ export class Project extends BaseEntity {
         type: 'string',
     })
     reference: string;
+
+    //Tipo de cotizacion
+    @property({
+        type: 'string',
+        default: TypeQuotationE.GENERAL
+    })
+    typeQuotation: TypeQuotationE;
 
     constructor(data?: Partial<Project>) {
         super(data);

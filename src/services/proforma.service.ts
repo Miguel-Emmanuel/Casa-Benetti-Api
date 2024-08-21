@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, TypeUserE} from '../enums';
+import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, TypeQuotationE, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Document, Proforma, ProformaWithRelations, Quotation} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
@@ -77,7 +77,7 @@ export class ProformaService {
             }
             await this.createDocument(newProforma.id, document, transaction)
             await this.sendEmailProforma(newProforma.id, document.fileURL, transaction);
-            await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
+            await this.createAdvancePaymentAccount(proforma, newProforma.id!, findProject.typeQuotation, transaction)
 
             await transaction.commit()
             return {newProforma}
@@ -416,7 +416,7 @@ export class ProformaService {
         }
     }
 
-    async createAdvancePaymentAccount(proforma: Proforma, proformaId: number, transaction: any) {
+    async createAdvancePaymentAccount(proforma: Proforma, proformaId: number, typeQuotation: TypeQuotationE, transaction: any) {
         const {projectId} = proforma
         const findQuotation = await this.projectRepository.findById(proforma.projectId, {
             include: [{
@@ -478,10 +478,14 @@ export class ProformaService {
         const accountsPayable = await this.accountPayableRepository.create({currency: currencyAccountPayable, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
 
         //cambiar totalpagado
-        if (advance && totalPaid >= advance) {
-            //guardar el id de accounttspayableid
+        if (typeQuotation === TypeQuotationE.GENERAL) {
+            if (advance && totalPaid >= advance) {
+                //guardar el id de accounttspayableid
+                await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+            }
+        } else if (typeQuotation === TypeQuotationE.SHOWROOM)
             await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
-        }
+
 
 
     }
