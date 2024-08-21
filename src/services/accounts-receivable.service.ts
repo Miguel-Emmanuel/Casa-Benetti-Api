@@ -3,6 +3,7 @@ import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '
 import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import dayjs from 'dayjs';
+import fs from "fs/promises";
 import {AccessLevelRolE} from '../enums';
 import {ResponseServiceBindings} from '../keys';
 import {AccountsReceivable} from '../models';
@@ -122,9 +123,11 @@ export class AccountsReceivableService {
             } catch (error) {
             }
         }
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+
         const properties: any = {
             data,
-            image: 'https://prod.api.casa-benetti.guaodev.com//files/Xlb_0z_Foto_benetti.jpg',
+            image: defaultImage,
             imagetwo: 'https://api.casa-benetti.guaodev.com//files/xWFvhL_silla.png',
         }
         const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
