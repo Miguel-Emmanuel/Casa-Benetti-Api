@@ -1,6 +1,7 @@
 import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
+    Filter,
     repository
 } from '@loopback/repository';
 import {
@@ -13,7 +14,7 @@ import {
     response
 } from '@loopback/rest';
 import {EntryDataI, IssueDataI} from '../interface';
-import {InventoryMovements} from '../models';
+import {InventoryMovements, QuotationProducts} from '../models';
 import {InventoryMovementsRepository} from '../repositories';
 import {InventoryMovementsService} from '../services';
 
@@ -334,6 +335,48 @@ export class InventoryMovementsController {
         data: {purchaseOrders: {id: number, products: {id: number, quantity: number, commentEntry: string}[]}[]},
     ): Promise<Object> {
         return this.inventoryMovementsService.updateProducts(data);
+    }
+
+    @patch('/inventory-movements/products')
+    @response(200, {
+        description: 'Array of Product model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        products: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    id: {
+                                        type: 'number'
+                                    },
+                                    image: {
+                                        type: 'string'
+                                    },
+                                    description: {
+                                        type: 'string'
+                                    },
+                                    numberBoxes: {
+                                        type: 'number'
+                                    },
+                                    projectId: {
+                                        type: 'string'
+                                    },
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        },
+    })
+    async getProducts(
+        @param.filter(QuotationProducts) filter?: Filter<QuotationProducts>,
+    ): Promise<Object> {
+        return this.inventoryMovementsService.getProducts(filter);
     }
 
     // @get('/inventory-movements/count')
