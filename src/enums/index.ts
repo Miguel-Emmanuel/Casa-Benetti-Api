@@ -267,6 +267,11 @@ export enum InventoriesReasonE {
     ENTRADA_MANUAL = 'Entrada manual',
 }
 
+export enum DestinationTypeE {
+    ALMACENES = 'Almacenes',
+    SUCURSALES = 'Sucursales',
+}
+
 
 export enum InventoriesIssueE {
     REASIGNAR = 'Reasignar',

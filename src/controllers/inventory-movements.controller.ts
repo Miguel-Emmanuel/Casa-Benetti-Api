@@ -104,6 +104,34 @@ export class InventoryMovementsController {
                                 nullable: true
                             },
 
+                            // destinationType: {
+                            //     type: 'string',
+                            //     nullable: true
+                            // },
+                            destinationBranchId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            destinationWarehouseId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            destinationQuotationProductsId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            // destinationId: {
+                            //     type: 'number',
+                            //     nullable: true
+                            // },
+                            destinationQuantity: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            commentEntry: {
+                                type: 'string',
+                                nullable: true
+                            },
                         }
                     }
                 },

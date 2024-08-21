@@ -244,6 +244,14 @@ export interface EntryDataI {
     quotationProductsId: number;
     quantity: number;
     comment: string;
+
+    // destinationType: DestinationTypeE;
+    destinationBranchId: number;
+    destinationWarehouseId: number;
+    destinationQuotationProductsId: number;
+    // destinationId: number;
+    destinationQuantity: number;
+    commentEntry: string;
 }
 
 export interface IssueDataI {
