@@ -1,6 +1,6 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
-import {AccountPayable} from './account-payable.model';
+import {AccountPayable, AccountPayableWithRelations} from './account-payable.model';
 import {AccountsReceivable} from './accounts-receivable.model';
 import {Collection, CollectionWithRelations} from './collection.model';
 import {Container} from './container.model';
@@ -120,6 +120,7 @@ export interface PurchaseOrdersRelations {
   // describe navigational properties here
   proforma: ProformaWithRelations
   collection: CollectionWithRelations
+  accountPayable: AccountPayableWithRelations
 }
 
 export type PurchaseOrdersWithRelations = PurchaseOrders & PurchaseOrdersRelations;
