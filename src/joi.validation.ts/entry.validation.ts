@@ -31,7 +31,7 @@ export const schemaCreateEntry = Joi.object({
     //     }).required(), otherwise: Joi.forbidden()
     // }),
     destinationBranchId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
-    destinationWarehouseId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
+    destinationWarehouseId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL, InventoriesReasonE.DESCARGA_CONTENEDOR, InventoriesReasonE.DESCARGA_RECOLECCION], then: Joi.number().allow(null), otherwise: Joi.forbidden()}),
     destinationQuotationProductsId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().required(), otherwise: Joi.forbidden()}),
     // destinationId: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().required(), otherwise: Joi.forbidden()}),
     destinationQuantity: Joi.when('reasonEntry', {is: [InventoriesReasonE.ENTRADA_MANUAL,], then: Joi.number().required(), otherwise: Joi.forbidden()}),
