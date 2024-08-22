@@ -1,17 +1,17 @@
 import {Getter, inject} from '@loopback/core';
-import {BelongsToAccessor, DefaultCrudRepository, repository, HasManyRepositoryFactory} from '@loopback/repository';
+import {BelongsToAccessor, DefaultCrudRepository, HasManyRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {OperationHookBindings} from '../keys';
-import {AccountPayable, AccountsReceivable, Collection, DeliveryRequest, Proforma, PurchaseOrders, PurchaseOrdersRelations, Project, Container, QuotationProducts} from '../models';
+import {AccountPayable, AccountsReceivable, Collection, Container, DeliveryRequest, Proforma, Project, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts} from '../models';
 import {PurchaseOrderHook} from '../operation-hooks/purchase-order.hook';
 import {AccountPayableRepository} from './account-payable.repository';
 import {AccountsReceivableRepository} from './accounts-receivable.repository';
 import {CollectionRepository} from './collection.repository';
+import {ContainerRepository} from './container.repository';
 import {DeliveryRequestRepository} from './delivery-request.repository';
 import {ProformaRepository} from './proforma.repository';
-import {ProviderRepository} from './provider.repository';
 import {ProjectRepository} from './project.repository';
-import {ContainerRepository} from './container.repository';
+import {ProviderRepository} from './provider.repository';
 import {QuotationProductsRepository} from './quotation-products.repository';
 
 export class PurchaseOrdersRepository extends DefaultCrudRepository<
@@ -63,6 +63,11 @@ export class PurchaseOrdersRepository extends DefaultCrudRepository<
     this.modelClass.observe('after save', async (ctx: any) => {
       const hook = await this.operationHook();
       await hook.afterSave(this, ctx);
+    });
+
+    this.modelClass.observe('before save', async (ctx: any) => {
+      const hook = await this.operationHook();
+      await hook.beforeSave(this, ctx);
     });
   }
 }
