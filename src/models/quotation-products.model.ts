@@ -1,6 +1,6 @@
 import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
-import {CurrencyE, QuotationProductStatusE, TypeSaleE} from '../enums';
+import {CurrencyE, QuotationProductStatusE, TypeQuotationE, TypeSaleE} from '../enums';
 import {DocumentSchema} from './base/document.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
@@ -136,6 +136,13 @@ export class QuotationProducts extends Entity {
         type: 'boolean',
     })
     isNotificationSent?: boolean | null;
+
+    //Tipo de cotizacion
+    @property({
+        type: 'string',
+        default: TypeQuotationE.GENERAL
+    })
+    typeQuotation: TypeQuotationE;
 
 
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************

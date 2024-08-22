@@ -1,6 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import {QuotationProductStatusE, TypeQuotationE} from '../enums';
 import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AssembledProducts, Document, Product, ProductCreate, ProductProvider} from '../models';
@@ -166,6 +167,70 @@ export class ProductService {
 
     async count(where?: Where<Product>,) {
         return this.productRepository.count(where);
+    }
+
+    async findStock() {
+        const quotationProducts = await this.quotationProductsRepository.find({
+            where: {
+                and: [
+                    {
+                        or: [
+                            {
+                                status: QuotationProductStatusE.PEDIDO
+                            },
+                            {
+                                status: QuotationProductStatusE.BODEGA_NACIONAL
+                            }
+                        ]
+                    },
+                    {
+                        typeQuotation: TypeQuotationE.SHOWROOM,
+                    }
+                ]
+            },
+            include: [
+                {
+                    relation: 'brand'
+                },
+                {
+                    relation: 'product',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'document'
+                            },
+                            {
+                                relation: 'line'
+                            }
+                        ]
+                    }
+                }
+
+            ]
+        });
+
+        return quotationProducts?.map(value => {
+            const {id, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, brand, quantity, stock} = value;
+            const {document, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                mainMaterial,
+                mainFinish,
+                secondaryMaterial,
+                secondaryFinishing
+            ];
+            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+            return {
+                id,
+                image: document?.fileURL ?? null,
+                brand: brand?.brandName ?? null,
+                description,
+                stock,
+                quantity
+            }
+        })
+
     }
     async find(filter?: Filter<Product>,) {
         const include = [
