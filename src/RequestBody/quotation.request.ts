@@ -15,6 +15,17 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                     typeQuotation: {
                         type: 'string'
                     },
+                    showRoomDestination: {
+                        type: 'string',
+                        nullable: true
+                    },
+                    branchesId: {
+                        type: 'array',
+                        nullable: true,
+                        items: {
+                            type: 'number'
+                        }
+                    },
                     isDraft: {
                         type: 'boolean'
                     },

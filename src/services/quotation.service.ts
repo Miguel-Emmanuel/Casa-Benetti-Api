@@ -639,14 +639,14 @@ export class QuotationService {
     }
 
     async quotationShowRoom(data: CreateQuotation) {
-        const {id, quotation, isDraft, branchId, products} = data;
+        const {id, quotation, isDraft, branchesId, products} = data;
         await this.validateBodyQuotationShowroom(data);
-        await this.validateBrancId(branchId)
+        await this.validateBrancId(branchesId)
         const showroomManagerId = await this.getSMShowRoom(this.user.branchId);
         try {
             if (id === null || id == undefined) {
 
-                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchId, showroomManagerId);
+                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchesId, showroomManagerId);
                 await this.createProducts(products, createQuotation.id);
                 return createQuotation;
             } else {
@@ -669,10 +669,14 @@ export class QuotationService {
         return sm.id;
     }
 
-    async validateBrancId(branchId: number) {
-        const branch = await this.branchRepository.findOne({where: {id: branchId}});
-        if (!branch)
-            throw this.responseService.notFound('La sucursal no existe.')
+    async validateBrancId(branchesId: number[]) {
+        for (let index = 0; index < branchesId?.length; index++) {
+            const element = branchesId[index];
+            const branch = await this.branchRepository.findOne({where: {id: element}});
+            if (!branch)
+                throw this.responseService.notFound('La sucursal no existe.')
+
+        }
     }
 
     async validateBodyQuotationShowroom(data: CreateQuotation) {
@@ -689,13 +693,13 @@ export class QuotationService {
         }
     }
 
-    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchId: number, showroomManagerId: number) {
+    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchesId: number[], showroomManagerId: number) {
         const data = this.convertExchangeRateQuotation(quotation);
         const bodyQuotation = {
             ...data,
             status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
             isDraft,
-            branchId,
+            branchesId,
             userId,
             typeQuotation: TypeQuotationE.SHOWROOM,
             showroomManagerId,

@@ -191,7 +191,7 @@ export const schemaCreateQuotitionShowRoom = Joi.object({
     typeQuotation: Joi.string().valid(...Object.values(TypeQuotationE)).messages({
         'any.only': `El tipo de cotizacion debe ser igual a uno de los valores permitidos.`
     }).required(),
-    branchId: Joi.number().required(),
+    branchesId: Joi.array().items(Joi.number()).optional(),
     products: Joi.array().items(products).required(),
     quotation: Joi.object({
         subtotal: Joi.number().allow(null),

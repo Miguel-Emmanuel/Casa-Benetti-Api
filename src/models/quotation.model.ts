@@ -1,4 +1,4 @@
-import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, hasOne, model, property, referencesMany} from '@loopback/repository';
 import {ExchangeRateE, ExchangeRateQuotationE, ShowRoomDestinationE, StatusQuotationE, TypeQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
@@ -219,6 +219,9 @@ export class Quotation extends BaseEntity {
         default: TypeQuotationE.GENERAL
     })
     showRoomDestination: ShowRoomDestinationE;
+
+    @referencesMany(() => Branch, {name: 'branches'})
+    branchesId: number[];
 
     @hasOne(() => Document, {keyTo: 'clientQuoteId'})
     clientQuote: Document;
