@@ -1,5 +1,5 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeQuotationE} from '../enums';
+import {ExchangeRateE, ExchangeRateQuotationE, ShowRoomDestinationE, StatusQuotationE, TypeQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {ClassificationPercentageMainpm} from './classification-percentage-mainpm.model';
@@ -212,6 +212,13 @@ export class Quotation extends BaseEntity {
         default: TypeQuotationE.GENERAL
     })
     typeQuotation: TypeQuotationE;
+
+    //Tipo de cotizacion
+    @property({
+        type: 'string',
+        default: TypeQuotationE.GENERAL
+    })
+    showRoomDestination: ShowRoomDestinationE;
 
     @hasOne(() => Document, {keyTo: 'clientQuoteId'})
     clientQuote: Document;
