@@ -79,7 +79,7 @@ export class LoanEndDateNotificationCronJob extends CronJob {
                 dynamicTemplateData: {
                     subject: SendgridTemplates.NOTIFICATION__LOAN_END_DATE.subject,
                     projectId: project?.projectId,
-                    customerName: `${customer?.name} ${customer?.lastName ?? ''}`
+                    customerName: customer ? `${customer?.name} ${customer?.lastName ?? ''}` : ''
                 }
             };
             await this.sendgridService.sendNotification(options);
