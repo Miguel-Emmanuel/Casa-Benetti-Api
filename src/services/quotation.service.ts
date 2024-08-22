@@ -698,7 +698,8 @@ export class QuotationService {
             branchId,
             userId,
             typeQuotation: TypeQuotationE.SHOWROOM,
-            showroomManagerId
+            showroomManagerId,
+            mainProjectManagerId: this.user.id
         }
         return this.quotationRepository.create(bodyQuotation);
     }

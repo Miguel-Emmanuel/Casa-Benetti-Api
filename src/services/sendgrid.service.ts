@@ -58,6 +58,10 @@ export const SendgridTemplates = {
     id: 'd-0b581d4574b84cb6a3e862b1b9ac13d7',
     subject: 'Recordatorio préstamo próximo a vencer',
   },
+  NOTIFICATION_PROJECT_UPDATED: {
+    id: 'd-c3655b8d8c7747f18cf0e62f8964d37f',
+    subject: 'Actualización del proyecto',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})
