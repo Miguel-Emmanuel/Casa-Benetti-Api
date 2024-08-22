@@ -224,7 +224,10 @@ export class InventoryMovementsService {
                 if (!container)
                     throw this.responseService.notFound('El contenedor no se ha encontrado.');
 
-                await this.validateQuotationProduct(quotationProductsId);
+                const product = await this.validateQuotationProduct(quotationProductsId);
+                if (product?.purchaseOrdersId) {
+                    await this.purchaseOrdersRepository.updateById(product?.purchaseOrdersId, {containerId: container.id})
+                }
                 const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}, {containerId}]}})
                 if (inventorie) {
                     const {stock} = inventorie;
