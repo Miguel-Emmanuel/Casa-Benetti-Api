@@ -317,3 +317,9 @@ export enum TypeQuotationE {
     GENERAL = 'General',
     SHOWROOM = 'Showroom',
 }
+
+
+export enum WarehouseLocationE {
+    NACIONAL = 'Nacional',
+    INTERNACIONAL = 'Internacional',
+}
