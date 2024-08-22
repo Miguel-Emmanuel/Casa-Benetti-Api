@@ -481,10 +481,35 @@ export class ProformaService {
         if (typeQuotation === TypeQuotationE.GENERAL) {
             if (advance && totalPaid >= advance) {
                 //guardar el id de accounttspayableid
-                await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+                const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+                const findQuotationProducts = await this.quotationProductsRepository.find({
+                    where: {
+                        proformaId: proformaId,
+                        providerId: proforma.providerId,
+                        brandId: proforma.brandId
+                    }
+                }, {transaction})
+                for (let index = 0; index < findQuotationProducts?.length; index++) {
+                    const element = findQuotationProducts[index];
+                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+
+                }
+
             }
-        } else if (typeQuotation === TypeQuotationE.SHOWROOM)
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+        } else if (typeQuotation === TypeQuotationE.SHOWROOM) {
+            const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+            const findQuotationProducts = await this.quotationProductsRepository.find({
+                where: {
+                    proformaId: proformaId,
+                    providerId: proforma.providerId,
+                    brandId: proforma.brandId
+                }
+            }, {transaction})
+            for (let index = 0; index < findQuotationProducts?.length; index++) {
+                const element = findQuotationProducts[index];
+                await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+            }
+        }
 
 
 
