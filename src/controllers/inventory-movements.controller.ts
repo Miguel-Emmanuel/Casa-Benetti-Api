@@ -250,7 +250,7 @@ export class InventoryMovementsController {
         return this.inventoryMovementsService.findCollection(id);
     }
 
-    @get('/inventory-movements/{id}/record')
+    @get('/inventory-movements/record')
     @response(200, {
         description: 'Array of InventoryMovements model instances',
         content: {
@@ -299,7 +299,6 @@ export class InventoryMovementsController {
         },
     })
     async record(
-        @param.path.number('id') id: number,
     ): Promise<Object[]> {
         return this.inventoryMovementsService.record();
     }

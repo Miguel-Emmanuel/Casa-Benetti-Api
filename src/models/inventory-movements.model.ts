@@ -1,10 +1,12 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE} from '../enums';
+import {Branch, BranchWithRelations} from './branch.model';
 import {Collection} from './collection.model';
 import {Container} from './container.model';
 import {Inventories, InventoriesWithRelations} from './inventories.model';
 import {Project} from './project.model';
 import {User, UserWithRelations} from './user.model';
+import {Warehouse, WarehouseWithRelations} from './warehouse.model';
 
 @model({
     settings: {
@@ -85,15 +87,11 @@ export class InventoryMovements extends Entity {
     createdById: number;
 
     //Sucursal destino
-    @property({
-        type: 'number',
-    })
+    @belongsTo(() => Branch)
     destinationBranchId: number;
 
     //Bodega destino
-    @property({
-        type: 'number',
-    })
+    @belongsTo(() => Warehouse)
     destinationWarehouseId: number;
 
     //Comentario
@@ -129,6 +127,8 @@ export interface InventoryMovementsRelations {
     // describe navigational properties here
     inventories: InventoriesWithRelations
     createdBy: UserWithRelations
+    destinationBranch: BranchWithRelations
+    destinationWarehouse: WarehouseWithRelations
 }
 
 export type InventoryMovementsWithRelations = InventoryMovements & InventoryMovementsRelations;

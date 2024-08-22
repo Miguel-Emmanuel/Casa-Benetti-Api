@@ -394,18 +394,25 @@ export class InventoryMovementsService {
             include: [
                 {
                     relation: 'inventories'
+                },
+                {
+                    relation: 'destinationBranch'
+                },
+                {
+                    relation: 'destinationWarehouse'
                 }
             ]
         });
 
         return records.map(value => {
-            const {id, createdAt, createdBy, type, reasonEntry, reasonIssue, inventories} = value;
+            const {id, createdAt, createdBy, type, reasonEntry, reasonIssue, destinationBranchId, destinationWarehouseId, destinationBranch, destinationWarehouse} = value;
             return {
                 id,
                 createdAt,
                 createdBy: `${createdBy?.firstName} ${createdBy?.lastName}`,
                 type,
-                reason: reasonEntry ?? reasonIssue
+                reason: reasonEntry ?? reasonIssue,
+                destination: destinationBranchId ? destinationBranch?.name : destinationWarehouse?.name ?? null
             }
         });
     }
