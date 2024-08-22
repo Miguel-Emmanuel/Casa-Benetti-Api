@@ -1,6 +1,7 @@
 import {UserRepository} from '@loopback/authentication-jwt';
 import {BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
+import {TypeUserE} from '../enums';
 import {SendgridServiceBindings} from '../keys';
 import {ProformaRepository, ProjectRepository} from '../repositories';
 import {SendgridService, SendgridTemplates} from '../services';
@@ -59,9 +60,12 @@ export class PurchaseOrderHook {
                         ]
                     })
                     if (project) {
+                        const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
+                        const emailsAdmins = users.map(value => value.email);
                         const mainProjectManager = project?.quotation?.mainProjectManager?.email;
                         const emails = project?.quotation?.projectManagers?.map((value: any) => value.email) ?? [];
                         emails.push(mainProjectManager);
+                        emails.push(...emailsAdmins);
                         const customerName = project?.customer?.name;
                         await this.notifyChangeStatus(project.projectId, order.id, order.status, data?.status, customerName, emails);
                     }
