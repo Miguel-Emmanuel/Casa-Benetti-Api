@@ -22,6 +22,8 @@ export class PurchaseOrderHook {
         const {isNewInstance, instance, data, where} = ctx;
         if (isNewInstance === true) {
             await this.notifyLogistics(instance);
+        } else {
+
         }
     }
 

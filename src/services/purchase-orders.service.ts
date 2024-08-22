@@ -2,6 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE} from '../enums';
@@ -237,6 +238,7 @@ export class PurchaseOrdersService {
             const {provider, brand, quotationProducts, project} = proforma;
             const {customer, quotation, projectId} = project
             const {mainProjectManager} = quotation
+            const percentagePaid = this.calculatePercentagePaid(accountPayable.total, accountPayable.totalPaid);
 
             return {
                 id,
@@ -249,7 +251,7 @@ export class PurchaseOrdersService {
                 customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                 accountPayableId,
-                percentagePaid: ((accountPayable.totalPaid / accountPayable.total) * 100),
+                percentagePaid: this.roundToTwoDecimals(percentagePaid),
                 status,
                 proformaId,
                 date: 'Aun estamos trabajando en calcular la fecha.',
@@ -291,6 +293,14 @@ export class PurchaseOrdersService {
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);
         }
+    }
+
+    calculatePercentagePaid(total: number, totalPaid: number) {
+        return (totalPaid / total) * 100;
+    }
+
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
     }
 
     async downloadPurchaseOrder(purchaseOrderId: number) {
