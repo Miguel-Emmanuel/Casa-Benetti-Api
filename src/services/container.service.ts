@@ -207,6 +207,9 @@ export class ContainerService {
     async getContainerEntry() {
         try {
             const containers = await this.containerRepository.find({
+                where: {
+                    status: ContainerStatus.ENTREGADO
+                },
                 include: [
                     {
                         relation: 'purchaseOrders',
