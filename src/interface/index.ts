@@ -127,10 +127,10 @@ export interface UpdateQuotation {
 
 export interface QuotationFindResponse {
     id: number;
-    customerName: string;
+    customerName: string | null;
     pm: string | undefined;
     total: number | null;
-    branchName: string | undefined;
+    branchName: string | undefined | null;
     status: StatusQuotationE;
     updatedAt: Date | undefined;
 }

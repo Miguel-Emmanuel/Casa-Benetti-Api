@@ -846,6 +846,9 @@ export class QuotationService {
                 relation: 'branch',
             },
             {
+                relation: 'branches',
+            },
+            {
                 relation: 'mainProjectManager',
             },
         ]
@@ -866,9 +869,9 @@ export class QuotationService {
                 customerName: customer?.name,
                 pm: mainProjectManager ? `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}` : '',
                 pmId: mainProjectManagerId,
-                branchId: branch?.id,
+                branchId: branch?.id ?? null,
                 total,
-                branchName: branch?.name,
+                branchName: branch?.name ?? null,
                 status,
                 updatedAt,
                 typeQuotation
