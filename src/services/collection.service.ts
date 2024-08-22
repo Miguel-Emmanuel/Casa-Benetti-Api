@@ -241,7 +241,7 @@ export class CollectionService {
                         quantity: quotationProducts?.length ?? 0,
                         productionEndDate,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct, numberBoxes, quantity} = value;
                             const {document, line, name} = product;
                             const descriptionParts = [
                                 line?.name,
@@ -257,6 +257,8 @@ export class CollectionService {
                                 SKU,
                                 image: document?.fileURL,
                                 description,
+                                numberBoxes,
+                                quantity
                             }
                         })
                     }

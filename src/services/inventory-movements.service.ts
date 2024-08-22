@@ -231,7 +231,7 @@ export class InventoryMovementsService {
                 if (product?.purchaseOrdersId) {
                     await this.purchaseOrdersRepository.updateById(product?.purchaseOrdersId, {containerId: container.id})
                 }
-                const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}, {containerId}]}})
+                const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}]}})
                 if (inventorie) {
                     const {stock} = inventorie;
                     await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})

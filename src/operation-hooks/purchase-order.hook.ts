@@ -18,12 +18,21 @@ export class PurchaseOrderHook {
         public proformaRepository: ProformaRepository,
     ) { }
     async afterSave(_this: any, ctx: any) {
-        console.log(ctx)
         const {isNewInstance, instance, data, where} = ctx;
         if (isNewInstance === true) {
             await this.notifyLogistics(instance);
         } else {
+            if (data?.status && where?.id) {
+                console.log('instance: ', instance)
+                console.log('data: ', data)
+                console.log('where: ', where)
+                const order = await ctx.Model.findOne({where: {id: where.id}})
+                if (order) {
+                    console.log('order: ', order?.status)
+                }
 
+
+            }
         }
     }
 
