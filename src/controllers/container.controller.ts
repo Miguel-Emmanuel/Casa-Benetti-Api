@@ -63,6 +63,65 @@ export class ContainerController {
         return this.containerService.find(filter);
     }
 
+    @get('/containers/entry')
+    @response(200, {
+        description: 'Array of Container model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            containerNumber: {
+                                type: 'string'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    image: {
+                                                        type: 'string'
+                                                    },
+                                                    description: {
+                                                        type: 'string'
+                                                    },
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                },
+            },
+        },
+    })
+    async getContainerEntry(
+    ): Promise<Object[]> {
+        return this.containerService.getContainerEntry();
+    }
+
     @get('/containers/{id}')
     @response(200, {
         description: 'Container model instance',
