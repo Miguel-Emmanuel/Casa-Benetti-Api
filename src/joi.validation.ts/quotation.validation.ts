@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeQuotationE, TypeSaleE} from '../enums';
+import {CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ShowRoomDestinationE, TypeQuotationE, TypeSaleE} from '../enums';
 
 export const documents = Joi.object({
     id: Joi.number(),
@@ -190,6 +190,9 @@ export const schemaCreateQuotitionShowRoom = Joi.object({
     isDraft: Joi.boolean().required(),
     typeQuotation: Joi.string().valid(...Object.values(TypeQuotationE)).messages({
         'any.only': `El tipo de cotizacion debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    showRoomDestination: Joi.string().valid(...Object.values(ShowRoomDestinationE)).messages({
+        'any.only': `El tipo de destino debe ser igual a uno de los valores permitidos.`
     }).required(),
     branchesId: Joi.array().items(Joi.number()).optional(),
     products: Joi.array().items(products).required(),
