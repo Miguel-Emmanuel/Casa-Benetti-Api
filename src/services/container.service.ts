@@ -44,7 +44,7 @@ export class ContainerService {
                 throw this.responseService.badRequest("El contenedor no existe.")
             const {docs, purchaseOrders, status, ...body} = data;
             const date = await this.calculateArrivalDateAndShippingDate(status);
-            await this.containerRepository.updateById(id, {...body, ...date});
+            await this.containerRepository.updateById(id, {...body, ...date, status});
             await this.calculateArrivalDatePurchaseOrder(id);
             await this.updateDocument(id, docs);
             await this.updateProducts(purchaseOrders);
