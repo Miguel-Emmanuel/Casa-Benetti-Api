@@ -1,4 +1,4 @@
-import {ContainerStatus, ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {ContainerStatus, ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, ShowRoomDestinationE, StatusQuotationE, TypeQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address, Document, ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export interface ProjectManagers {
@@ -203,6 +203,8 @@ export interface QuotationFindOneResponse {
         mainProjectManagerCommissions: MainProjectManagerCommissionsI[];
         typeQuotation?: TypeQuotationE;
         branchId?: number;
+        showRoomDestination: ShowRoomDestinationE,
+        branchesId: number[]
     },
     commisions: {
         architectName: string;
