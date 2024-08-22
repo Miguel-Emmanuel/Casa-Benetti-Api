@@ -4,6 +4,7 @@ import {Collection} from './collection.model';
 import {Container} from './container.model';
 import {Inventories, InventoriesWithRelations} from './inventories.model';
 import {Project} from './project.model';
+import {User, UserWithRelations} from './user.model';
 
 @model({
     settings: {
@@ -62,7 +63,7 @@ export class InventoryMovements extends Entity {
     @belongsTo(() => Inventories)
     inventoriesId: number;
 
-    //Motivo Entrad
+    //Motivo Entrada
     @property({
         type: 'string',
         jsonSchema: {
@@ -79,6 +80,9 @@ export class InventoryMovements extends Entity {
         },
     })
     reasonIssue: InventoriesIssueE;
+
+    @belongsTo(() => User)
+    createdById: number;
 
     //Sucursal destino
     @property({
@@ -124,6 +128,7 @@ export class InventoryMovements extends Entity {
 export interface InventoryMovementsRelations {
     // describe navigational properties here
     inventories: InventoriesWithRelations
+    createdBy: UserWithRelations
 }
 
 export type InventoryMovementsWithRelations = InventoryMovements & InventoryMovementsRelations;

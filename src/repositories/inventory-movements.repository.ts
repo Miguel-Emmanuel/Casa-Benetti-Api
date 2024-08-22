@@ -1,11 +1,12 @@
 import {inject, Getter} from '@loopback/core';
 import {DefaultCrudRepository, repository, BelongsToAccessor} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {InventoryMovements, InventoryMovementsRelations, Project, Inventories, Container, Collection} from '../models';
+import {InventoryMovements, InventoryMovementsRelations, Project, Inventories, Container, Collection, User} from '../models';
 import {ProjectRepository} from './project.repository';
 import {InventoriesRepository} from './inventories.repository';
 import {ContainerRepository} from './container.repository';
 import {CollectionRepository} from './collection.repository';
+import {UserRepository} from './user.repository';
 
 export class InventoryMovementsRepository extends DefaultCrudRepository<
   InventoryMovements,
@@ -21,10 +22,14 @@ export class InventoryMovementsRepository extends DefaultCrudRepository<
 
   public readonly collection: BelongsToAccessor<Collection, typeof InventoryMovements.prototype.id>;
 
+  public readonly createdBy: BelongsToAccessor<User, typeof InventoryMovements.prototype.id>;
+
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('InventoriesRepository') protected inventoriesRepositoryGetter: Getter<InventoriesRepository>, @repository.getter('ContainerRepository') protected containerRepositoryGetter: Getter<ContainerRepository>, @repository.getter('CollectionRepository') protected collectionRepositoryGetter: Getter<CollectionRepository>,
+    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('InventoriesRepository') protected inventoriesRepositoryGetter: Getter<InventoriesRepository>, @repository.getter('ContainerRepository') protected containerRepositoryGetter: Getter<ContainerRepository>, @repository.getter('CollectionRepository') protected collectionRepositoryGetter: Getter<CollectionRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>,
   ) {
     super(InventoryMovements, dataSource);
+    this.createdBy = this.createBelongsToAccessorFor('createdBy', userRepositoryGetter,);
+    this.registerInclusionResolver('createdBy', this.createdBy.inclusionResolver);
     this.collection = this.createBelongsToAccessorFor('collection', collectionRepositoryGetter,);
     this.registerInclusionResolver('collection', this.collection.inclusionResolver);
     this.container = this.createBelongsToAccessorFor('container', containerRepositoryGetter,);

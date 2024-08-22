@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, repository} from '@loopback/repository';
+import {SecurityBindings, UserProfile} from '@loopback/security';
 import {CollectionStatus, InventoriesIssueE, InventoriesReasonE, InventoryMovementsTypeE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {EntryDataI, IssueDataI} from '../interface';
 import {schemaCreateEntry, schemaCreateIssue} from '../joi.validation.ts/entry.validation';
@@ -31,6 +32,8 @@ export class InventoryMovementsService {
         public containerRepository: ContainerRepository,
         @repository(CollectionRepository)
         public collectionRepository: CollectionRepository,
+        @inject(SecurityBindings.USER)
+        private user: UserProfile,
     ) { }
 
     async entry(data: EntryDataI) {
@@ -58,7 +61,7 @@ export class InventoryMovementsService {
                             const {stock} = inventorie;
                             await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
                         }
-                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, createdById: this.user.id});
                         await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
                         await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_NACIONAL})
                     }
@@ -89,7 +92,7 @@ export class InventoryMovementsService {
                             const {stock} = inventorie;
                             await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
                         }
-                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry});
+                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, createdById: this.user.id});
                         await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
                         await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_INTERNACIONAL})
                     }
@@ -118,7 +121,7 @@ export class InventoryMovementsService {
                     const {stock} = inventorie;
                     await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + destinationQuantity)})
                 }
-                await this.inventoryMovementsRepository.create({quantity: destinationQuantity, projectId: quotationProduct?.quotation?.project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment: commentEntry});
+                await this.inventoryMovementsRepository.create({quantity: destinationQuantity, projectId: quotationProduct?.quotation?.project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment: commentEntry, createdById: this.user.id});
                 await this.addQuotationProductsToStock(destinationQuotationProductsId, destinationQuantity, quotationProduct.stock);
                 await this.validateWareHouseMexicoAndItalia(destinationQuotationProductsId, destinationWarehouseId)
 
@@ -141,7 +144,7 @@ export class InventoryMovementsService {
                         const {stock} = inventorie;
                         await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
                     }
-                    await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment});
+                    await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment, createdById: this.user.id});
                     await this.addQuotationProductsToStock(quotationProductsId, quantity, quotationProduct.stock);
                     await this.validateWareHouseMexicoAndItalia(quotationProductsId, warehouseId)
                 } catch (error) {
@@ -232,7 +235,7 @@ export class InventoryMovementsService {
                 if (inventorie) {
                     const {stock} = inventorie;
                     await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue});
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, createdById: this.user.id});
                     await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (stock - quantity)})
                 }
                 // const {collection} = container
@@ -270,7 +273,7 @@ export class InventoryMovementsService {
                 if (inventorie) {
                     const {stock} = inventorie;
                     await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, destinationWarehouseId});
+                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, comment, destinationBranchId, destinationWarehouseId, createdById: this.user.id});
                     await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (quotationProduct.stock - quantity)})
                     if (reasonIssue === InventoriesIssueE.ENTREGA_CLIENTE) {
                         await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.TRANSITO_NACIONAL})
@@ -285,7 +288,7 @@ export class InventoryMovementsService {
                             } else {
                                 await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
                             }
-                            await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
+                            await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment, createdById: this.user.id});
                         }
                         if (destinationBranchId) {
                             inventorieReasinar = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId: destinationBranchId}]}})
@@ -294,7 +297,7 @@ export class InventoryMovementsService {
                             } else {
                                 await this.inventoriesRepository.updateById(inventorieReasinar.id, {stock: (inventorieReasinar?.stock + quantity)})
                             }
-                            await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment});
+                            await this.inventoryMovementsRepository.create({quantity, projectId: undefined, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorieReasinar.id, reasonEntry: undefined, comment, createdById: this.user.id});
                         }
                     }
                 }
@@ -385,6 +388,26 @@ export class InventoryMovementsService {
                 throw this.responseService.unprocessableEntity(`${key} es requerido.`)
             throw this.responseService.unprocessableEntity(message)
         }
+    }
+    async record() {
+        const records = await this.inventoryMovementsRepository.find({
+            include: [
+                {
+                    relation: 'inventories'
+                }
+            ]
+        });
+
+        return records.map(value => {
+            const {id, createdAt, createdBy, type, reasonEntry, reasonIssue, inventories} = value;
+            return {
+                id,
+                createdAt,
+                createdBy: `${createdBy?.firstName} ${createdBy?.lastName}`,
+                type,
+                reason: reasonEntry ?? reasonIssue
+            }
+        });
     }
 
     async findCollection(id: number) {

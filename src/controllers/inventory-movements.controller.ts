@@ -250,6 +250,60 @@ export class InventoryMovementsController {
         return this.inventoryMovementsService.findCollection(id);
     }
 
+    @get('/inventory-movements/{id}/record')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
+                                        description: {
+                                            type: 'string'
+                                        },
+                                        numberBoxes: {
+                                            type: 'number'
+                                        },
+                                        quantity: {
+                                            type: 'number'
+                                        },
+                                        commentEntry: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async record(
+        @param.path.number('id') id: number,
+    ): Promise<Object[]> {
+        return this.inventoryMovementsService.record();
+    }
+
     @get('/inventory-movements/{id}/container/purchase-orders')
     @response(200, {
         description: 'Array of InventoryMovements model instances',
