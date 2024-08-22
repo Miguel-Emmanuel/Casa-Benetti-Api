@@ -400,6 +400,9 @@ export class InventoryMovementsService {
                 },
                 {
                     relation: 'destinationWarehouse'
+                },
+                {
+                    relation: 'createdBy'
                 }
             ]
         });
