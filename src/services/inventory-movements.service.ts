@@ -409,7 +409,7 @@ export class InventoryMovementsService {
             return {
                 id,
                 createdAt,
-                createdBy: `${createdBy?.firstName} ${createdBy?.lastName}`,
+                createdBy: createdBy ? `${createdBy?.firstName} ${createdBy?.lastName}` : null,
                 type,
                 reason: reasonEntry ?? reasonIssue,
                 destination: destinationBranchId ? destinationBranch?.name : destinationWarehouse?.name ?? null

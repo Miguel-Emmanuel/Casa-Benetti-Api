@@ -256,44 +256,28 @@ export class InventoryMovementsController {
         content: {
             'application/json': {
                 schema: {
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            id: {
-                                type: 'number'
-                            },
-                            products: {
-                                type: 'array',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        id: {
-                                            type: 'number'
-                                        },
-                                        SKU: {
-                                            type: 'string'
-                                        },
-                                        image: {
-                                            type: 'string'
-                                        },
-                                        description: {
-                                            type: 'string'
-                                        },
-                                        numberBoxes: {
-                                            type: 'number'
-                                        },
-                                        quantity: {
-                                            type: 'number'
-                                        },
-                                        commentEntry: {
-                                            type: 'string'
-                                        },
-                                    }
-                                }
-                            }
-                        }
-                    },
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'number'
+                        },
+                        createdAt: {
+                            type: 'string',
+                            format: 'date-time'
+                        },
+                        createdBy: {
+                            type: 'string',
+                        },
+                        type: {
+                            type: 'string',
+                        },
+                        reason: {
+                            type: 'string',
+                        },
+                        destination: {
+                            type: 'string',
+                        },
+                    }
                 },
             },
         },
