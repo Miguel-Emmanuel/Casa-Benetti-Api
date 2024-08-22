@@ -491,7 +491,7 @@ export class ProformaService {
                 }, {transaction})
                 for (let index = 0; index < findQuotationProducts?.length; index++) {
                     const element = findQuotationProducts[index];
-                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
 
                 }
 
@@ -507,7 +507,7 @@ export class ProformaService {
             }, {transaction})
             for (let index = 0; index < findQuotationProducts?.length; index++) {
                 const element = findQuotationProducts[index];
-                await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+                await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
             }
         }
 
