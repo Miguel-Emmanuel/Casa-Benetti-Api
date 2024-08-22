@@ -36,7 +36,22 @@ export class ContainerService {
         }
     }
 
-    async createCartaTraduccion() {
+    async createCartaTraduccion(id: number) {
+        const container = await this.containerRepository.findById(id, {
+            include: [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotationProducts'
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Carta traducción');
 

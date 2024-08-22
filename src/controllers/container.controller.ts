@@ -138,7 +138,7 @@ export class ContainerController {
         return this.containerService.findById(id, filter);
     }
 
-    @get('/containers/exccel/type')
+    @get('/containers/exccel/type/{id}')
     @response(200, {
         description: 'Container model instance',
         content: {
@@ -148,8 +148,9 @@ export class ContainerController {
         },
     })
     async createCartaTraduccion(
+        @param.path.number('id') id: number,
     ): Promise<any> {
-        return this.containerService.createCartaTraduccion();
+        return this.containerService.createCartaTraduccion(id);
     }
 
     @patch('/containers/{id}')

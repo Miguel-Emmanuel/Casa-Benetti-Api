@@ -93,7 +93,7 @@ export interface CreateQuotation {
     typeQuotation: TypeQuotationE;
     //Datos nivel cotizacion showroom
     branchId: number;
-
+    branchesId: number[];
     //Datos cotizacion general
     customer: Customer,
     projectManagers: ProjectManagers[],
