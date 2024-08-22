@@ -245,13 +245,13 @@ export class ContainerService {
                     }
                 ]
             });
-            return containers.map(value => {
+            return containers?.map(value => {
                 const {id, containerNumber, purchaseOrders, arrivalDate, status, shippingDate} = value;
                 return {
                     id,
                     containerNumber,
                     status,
-                    purchaseOrders: purchaseOrders.map(value => {
+                    purchaseOrders: purchaseOrders?.map(value => {
                         const {id, quotationProducts} = value;
                         return {
                             id,
@@ -287,38 +287,31 @@ export class ContainerService {
         try {
             const include: InclusionFilter[] = [
                 {
-                    relation: 'collection',
+                    relation: 'purchaseOrders',
                     scope: {
                         include: [
                             {
-                                relation: 'purchaseOrders',
+                                relation: 'proforma',
                                 scope: {
                                     include: [
                                         {
-                                            relation: 'proforma',
+                                            relation: 'quotationProducts',
                                             scope: {
                                                 include: [
                                                     {
-                                                        relation: 'quotationProducts',
+                                                        relation: 'product',
                                                         scope: {
                                                             include: [
                                                                 {
-                                                                    relation: 'product',
-                                                                    scope: {
-                                                                        include: [
-                                                                            {
-                                                                                relation: 'document'
-                                                                            },
-                                                                            {
-                                                                                relation: 'line'
-                                                                            }
-                                                                        ]
-                                                                    }
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
                                                                 }
-                                                            ],
+                                                            ]
                                                         }
                                                     }
-                                                ]
+                                                ],
                                             }
                                         }
                                     ]
@@ -343,7 +336,7 @@ export class ContainerService {
                     ]
                 };
             const container = await this.containerRepository.findById(id, filter);
-            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, collection, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents} = container;
+            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders} = container;
             return {
                 pedimento,
                 containerNumber,
@@ -364,7 +357,7 @@ export class ContainerService {
                         name, extension
                     }
                 }),
-                purchaseOrders: collection?.purchaseOrders ? collection?.purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                purchaseOrders: purchaseOrders ? purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
                     return {
