@@ -7,6 +7,7 @@ import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
+import {PurchaseOrders} from './purchase-orders.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -193,6 +194,9 @@ export class QuotationProducts extends Entity {
         },
     })
     measureWide: number;
+
+    @belongsTo(() => PurchaseOrders)
+    purchaseOrdersId: number;
 
     //Medidas (alto)
     @property({

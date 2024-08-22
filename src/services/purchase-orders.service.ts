@@ -143,6 +143,9 @@ export class PurchaseOrdersService {
         try {
             const include: InclusionFilter[] = [
                 {
+                    relation: 'accountPayable'
+                },
+                {
                     relation: 'proforma',
                     scope: {
                         include: [
@@ -230,7 +233,7 @@ export class PurchaseOrdersService {
                     ]
                 };
             const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
-            const {createdAt, proforma, status, accountPayableId, proformaId, productionEndDate, productionRealEndDate} = purchaseOrders;
+            const {createdAt, proforma, status, accountPayableId, proformaId, productionEndDate, productionRealEndDate, accountPayable} = purchaseOrders;
             const {provider, brand, quotationProducts, project} = proforma;
             const {customer, quotation, projectId} = project
             const {mainProjectManager} = quotation
@@ -246,6 +249,7 @@ export class PurchaseOrdersService {
                 customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                 accountPayableId,
+                percentagePaid: ((accountPayable.totalPaid / accountPayable.total) * 100),
                 status,
                 proformaId,
                 date: 'Aun estamos trabajando en calcular la fecha.',

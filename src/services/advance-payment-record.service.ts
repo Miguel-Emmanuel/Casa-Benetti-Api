@@ -201,14 +201,36 @@ export class AdvancePaymentRecordService {
             // const cuentaPorCobrar = await this.accountsReceivableRepository.findOne({where: {quotationId: quotation.id, typeCurrency}});
             const proforma = await this.proformaRepository.findOne({where: {projectId, currency: typeCurrency === ExchangeRateQuotationE.EUR ? ProformaCurrencyE.EURO : typeCurrency === ExchangeRateQuotationE.MXN ? ProformaCurrencyE.PESO_MEXICANO : ProformaCurrencyE.USD}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
             if (proforma && proforma?.accountPayable && !proforma?.purchaseOrders) {
-                await this.purchaseOrdersRepository.create({accountPayableId: proforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: proforma.id, accountsReceivableId, projectId}, /*{transaction}*/)
+                const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: proforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: proforma.id, accountsReceivableId, projectId}, /*{transaction}*/)
+                const findQuotationProducts = await this.quotationProductsRepository.find({
+                    where: {
+                        proformaId: proforma.id,
+                        providerId: proforma.providerId,
+                        brandId: proforma.brandId
+                    }
+                })
+                for (let index = 0; index < findQuotationProducts?.length; index++) {
+                    const element = findQuotationProducts[index];
+                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+                }
             }
         } else {
             const proformas = await this.proformaRepository.find({where: {projectId}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
             for (let index = 0; index < proformas.length; index++) {
                 const element = proformas[index];
                 if (element && element?.accountPayable && !element?.purchaseOrders) {
-                    await this.purchaseOrdersRepository.create({accountPayableId: element.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: element.id, accountsReceivableId, projectId}, /*{transaction}*/)
+                    const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: element.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: element.id, accountsReceivableId, projectId}, /*{transaction}*/)
+                    const findQuotationProducts = await this.quotationProductsRepository.find({
+                        where: {
+                            proformaId: element.id,
+                            providerId: element.providerId,
+                            brandId: element.brandId
+                        }
+                    })
+                    for (let index = 0; index < findQuotationProducts?.length; index++) {
+                        const element = findQuotationProducts[index];
+                        await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+                    }
                 }
             }
         }
@@ -235,8 +257,20 @@ export class AdvancePaymentRecordService {
         if (findQuotationProduct && findQuotationProduct.proformaId) {
             const findProforma = await this.findProforma(findQuotationProduct.proformaId)
 
-            if (findProforma && findProforma?.accountPayable && !findProforma?.purchaseOrders)
-                await this.purchaseOrdersRepository.create({accountPayableId: findProforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: findQuotationProduct.proformaId, accountsReceivableId, projectId}, /*{transaction}*/)
+            if (findProforma && findProforma?.accountPayable && !findProforma?.purchaseOrders) {
+                const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: findProforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: findQuotationProduct.proformaId, accountsReceivableId, projectId}, /*{transaction}*/)
+                const findQuotationProducts = await this.quotationProductsRepository.find({
+                    where: {
+                        proformaId: findProforma.id,
+                        providerId: findProforma.providerId,
+                        brandId: findProforma.brandId
+                    }
+                })
+                for (let index = 0; index < findQuotationProducts?.length; index++) {
+                    const element = findQuotationProducts[index];
+                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+                }
+            }
         }
     }
 

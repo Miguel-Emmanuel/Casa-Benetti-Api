@@ -1,8 +1,8 @@
 import {Getter, inject} from '@loopback/core';
-import {BelongsToAccessor, DefaultCrudRepository, repository} from '@loopback/repository';
+import {BelongsToAccessor, DefaultCrudRepository, repository, HasManyRepositoryFactory} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {OperationHookBindings} from '../keys';
-import {AccountPayable, AccountsReceivable, Collection, DeliveryRequest, Proforma, PurchaseOrders, PurchaseOrdersRelations, Project, Container} from '../models';
+import {AccountPayable, AccountsReceivable, Collection, DeliveryRequest, Proforma, PurchaseOrders, PurchaseOrdersRelations, Project, Container, QuotationProducts} from '../models';
 import {PurchaseOrderHook} from '../operation-hooks/purchase-order.hook';
 import {AccountPayableRepository} from './account-payable.repository';
 import {AccountsReceivableRepository} from './accounts-receivable.repository';
@@ -12,6 +12,7 @@ import {ProformaRepository} from './proforma.repository';
 import {ProviderRepository} from './provider.repository';
 import {ProjectRepository} from './project.repository';
 import {ContainerRepository} from './container.repository';
+import {QuotationProductsRepository} from './quotation-products.repository';
 
 export class PurchaseOrdersRepository extends DefaultCrudRepository<
   PurchaseOrders,
@@ -33,12 +34,16 @@ export class PurchaseOrdersRepository extends DefaultCrudRepository<
 
   public readonly container: BelongsToAccessor<Container, typeof PurchaseOrders.prototype.id>;
 
+  public readonly quotationProducts: HasManyRepositoryFactory<QuotationProducts, typeof PurchaseOrders.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('AccountPayableRepository') protected accountPayableRepositoryGetter: Getter<AccountPayableRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>, @repository.getter('AccountsReceivableRepository') protected accountsReceivableRepositoryGetter: Getter<AccountsReceivableRepository>, @repository.getter('DeliveryRequestRepository') protected deliveryRequestRepositoryGetter: Getter<DeliveryRequestRepository>, @repository.getter('CollectionRepository') protected collectionRepositoryGetter: Getter<CollectionRepository>,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE_PURCHASE)
-    public operationHook: Getter<PurchaseOrderHook>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('ContainerRepository') protected containerRepositoryGetter: Getter<ContainerRepository>,
+    public operationHook: Getter<PurchaseOrderHook>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('ContainerRepository') protected containerRepositoryGetter: Getter<ContainerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>,
   ) {
     super(PurchaseOrders, dataSource);
+    this.quotationProducts = this.createHasManyRepositoryFactoryFor('quotationProducts', quotationProductsRepositoryGetter,);
+    this.registerInclusionResolver('quotationProducts', this.quotationProducts.inclusionResolver);
     this.container = this.createBelongsToAccessorFor('container', containerRepositoryGetter,);
     this.registerInclusionResolver('container', this.container.inclusionResolver);
     this.project = this.createBelongsToAccessorFor('project', projectRepositoryGetter,);

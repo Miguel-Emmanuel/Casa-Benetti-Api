@@ -204,6 +204,80 @@ export class ContainerService {
         }
     }
 
+    async getContainerEntry() {
+        try {
+            const containers = await this.containerRepository.find({
+                where: {
+                    status: ContainerStatus.ENTREGADO
+                },
+                include: [
+                    {
+                        relation: 'purchaseOrders',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'product',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'document'
+                                                        },
+                                                        {
+                                                            relation: 'line'
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            });
+            return containers.map(value => {
+                const {id, containerNumber, purchaseOrders, arrivalDate, status, shippingDate} = value;
+                return {
+                    id,
+                    containerNumber,
+                    status,
+                    purchaseOrders: purchaseOrders.map(value => {
+                        const {id, quotationProducts} = value;
+                        return {
+                            id,
+                            quotationProducts: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                                const {id: productId, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
+                                const {document, line, name} = product;
+                                const descriptionParts = [
+                                    line?.name,
+                                    name,
+                                    mainMaterial,
+                                    mainFinish,
+                                    secondaryMaterial,
+                                    secondaryFinishing
+                                ];
+                                const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                                return {
+                                    id: productId,
+                                    image: document?.fileURL,
+                                    description,
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
+    }
+
     async findById(id: number, filter?: FilterExcludingWhere<Container>) {
         try {
             const include: InclusionFilter[] = [

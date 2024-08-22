@@ -1,12 +1,13 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
-import {AccountPayable} from './account-payable.model';
+import {AccountPayable, AccountPayableWithRelations} from './account-payable.model';
 import {AccountsReceivable} from './accounts-receivable.model';
 import {Collection, CollectionWithRelations} from './collection.model';
 import {Container} from './container.model';
 import {DeliveryRequest} from './delivery-request.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Project} from './project.model';
+import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 
 //Ordenes de compra
 @model({
@@ -81,6 +82,9 @@ export class PurchaseOrders extends Entity {
   projectId?: number;
 
 
+  @hasMany(() => QuotationProducts)
+  quotationProducts: QuotationProductsWithRelations[];
+
   //Esta pagado
   @property({
     type: 'boolean',
@@ -116,6 +120,7 @@ export interface PurchaseOrdersRelations {
   // describe navigational properties here
   proforma: ProformaWithRelations
   collection: CollectionWithRelations
+  accountPayable: AccountPayableWithRelations
 }
 
 export type PurchaseOrdersWithRelations = PurchaseOrders & PurchaseOrdersRelations;
