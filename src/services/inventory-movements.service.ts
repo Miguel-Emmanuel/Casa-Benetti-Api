@@ -40,7 +40,7 @@ export class InventoryMovementsService {
         await this.validateBodyEntry(data);
         const {reasonEntry} = data
         if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR || reasonEntry === InventoriesReasonE.DESCARGA_RECOLECCION) {
-            const {containerId, collectionId, purchaseOrders} = data;
+            const {containerId, collectionId, purchaseOrders, destinationWarehouseId} = data;
             if (reasonEntry === InventoriesReasonE.DESCARGA_CONTENEDOR) {
 
                 const container = await this.containerRepository.findOne({where: {id: containerId}});
@@ -54,9 +54,9 @@ export class InventoryMovementsService {
                         const element = products[index];
                         const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
                         let inventorie;
-                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {containerId}]}})
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
                         if (!inventorie) {
-                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, containerId})
+                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, warehouseId: destinationWarehouseId})
                         } else {
                             const {stock} = inventorie;
                             await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
@@ -65,7 +65,7 @@ export class InventoryMovementsService {
                         await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
                         await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_NACIONAL})
                     }
-                    await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_NACIONAL})
+                    await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_NACIONAL, containerId})
 
                 }
             }
@@ -75,9 +75,6 @@ export class InventoryMovementsService {
                 if (!collection)
                     throw this.responseService.notFound('La recoleccion no existe.');
 
-                if (!collection?.container)
-                    throw this.responseService.badRequest('El contenedor no cuenta con una recoleccion.');
-
                 for (let index = 0; index < purchaseOrders?.length; index++) {
                     const {products, id} = purchaseOrders[index];
                     let quantity = products.reduce((accumulator, item) => accumulator + item.quantity, 0);
@@ -85,9 +82,9 @@ export class InventoryMovementsService {
                         const element = products[index];
                         const quotationProduct = await this.validateQuotationProduct(element.quotationProductsId);
                         let inventorie;
-                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {collectionId}]}})
+                        inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: element.quotationProductsId}, {warehouseId: destinationWarehouseId}]}})
                         if (!inventorie) {
-                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, collectionId})
+                            inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId: element.quotationProductsId, warehouseId: destinationWarehouseId})
                         } else {
                             const {stock} = inventorie;
                             await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock + quantity)})
@@ -96,7 +93,7 @@ export class InventoryMovementsService {
                         await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
                         await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_INTERNACIONAL})
                     }
-                    await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_INTERNACIONAL})
+                    await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_INTERNACIONAL, collectionId})
                 }
                 await this.collectionRepository.updateById(collectionId, {status: CollectionStatus.COMPLETADA})
             }

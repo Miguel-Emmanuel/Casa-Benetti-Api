@@ -1,6 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
+import ExcelJS from 'exceljs';
 import {ContainerStatus} from '../enums';
 import {Docs, PurchaseOrdersContainer, UpdateContainer, UpdateContainerProducts} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer, schemaUpdateContainerProduct} from '../joi.validation.ts/container.validation';
@@ -8,7 +9,6 @@ import {ResponseServiceBindings} from '../keys';
 import {Container, ContainerCreate, Document, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {ContainerRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
-
 @injectable({scope: BindingScope.TRANSIENT})
 export class ContainerService {
     constructor(
@@ -34,6 +34,37 @@ export class ContainerService {
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);
         }
+    }
+
+    async createCartaTraduccion() {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Carta traducción');
+
+        const columns = [
+            {header: 'Monto', key: 'monto', width: 20},
+            {header: 'Num Banco', key: 'numBanco', width: 20},
+            {header: 'Nombre Banco', key: 'nombreBanco', width: 20},
+        ];
+        const startRow = 2;
+        worksheet.getRow(startRow).values = columns.map(column => column.header);
+        worksheet.columns = columns;
+
+        worksheet.mergeCells('A1:J1');
+        worksheet.getCell('A1').value = 'Carta traducción';
+        worksheet.getCell('A1').alignment = {vertical: 'middle', horizontal: 'center'};
+
+        const data = [{a: 'hola', b: 'bebe', c: 'jajajaja'}]
+
+        data.forEach((row: any) => {
+            const newRow = worksheet.addRow({
+                monto: row.a,
+                numBanco: row.b,
+                nombreBanco: row.c,
+            });
+        });
+
+        const filename = `test`;
+        await workbook.xlsx.writeFile(`.sandbox/${filename}.xlsx`);
     }
 
     async updateById(id: number, data: UpdateContainer,) {

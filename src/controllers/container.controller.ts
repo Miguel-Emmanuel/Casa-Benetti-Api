@@ -138,6 +138,20 @@ export class ContainerController {
         return this.containerService.findById(id, filter);
     }
 
+    @get('/containers/exccel/type')
+    @response(200, {
+        description: 'Container model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Container, {includeRelations: false}),
+            },
+        },
+    })
+    async createCartaTraduccion(
+    ): Promise<any> {
+        return this.containerService.createCartaTraduccion();
+    }
+
     @patch('/containers/{id}')
     @response(204, {
         description: 'Container PATCH success',
