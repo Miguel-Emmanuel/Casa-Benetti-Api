@@ -1149,7 +1149,9 @@ export class QuotationService {
                 mainProjectManagerId: quotation?.mainProjectManagerId,
                 rejectedComment: quotation?.comment,
                 typeQuotation: quotation?.typeQuotation,
-                branchId: quotation?.branchId
+                branchId: quotation?.branchId,
+                showRoomDestination: quotation?.showRoomDestination,
+                branchesId: quotation?.branchesId
             },
             // quotation: {
             //     subtotal: quotation.subtotal,
