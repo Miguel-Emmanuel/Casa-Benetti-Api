@@ -37,17 +37,22 @@ export class ContainerService {
     }
 
     async updateById(id: number, data: UpdateContainer,) {
-        await this.validateBodyUpdate(data);
-        const container = await this.containerRepository.findOne({where: {id}});
-        if (!container)
-            throw this.responseService.badRequest("El contenedor no existe.")
-        const {docs, purchaseOrders, status} = data;
-        const date = await this.calculateArrivalDateAndShippingDate(status);
-        await this.containerRepository.updateById(id, {...data, ...date});
-        await this.calculateArrivalDatePurchaseOrder(id);
-        await this.updateDocument(id, docs);
-        await this.updateProducts(purchaseOrders);
-        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+        try {
+            await this.validateBodyUpdate(data);
+            const container = await this.containerRepository.findOne({where: {id}});
+            if (!container)
+                throw this.responseService.badRequest("El contenedor no existe.")
+            const {docs, purchaseOrders, status, ...body} = data;
+            const date = await this.calculateArrivalDateAndShippingDate(status);
+            await this.containerRepository.updateById(id, {...body, ...date});
+            await this.calculateArrivalDatePurchaseOrder(id);
+            await this.updateDocument(id, docs);
+            await this.updateProducts(purchaseOrders);
+            return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+        } catch (error) {
+            console.log(error)
+            throw this.responseService.badRequest(error?.message ?? error);
+        }
     }
 
     async updateByIdProducts(id: number, data: UpdateContainerProducts,) {
