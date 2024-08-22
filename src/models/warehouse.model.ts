@@ -1,4 +1,5 @@
 import {belongsTo, model, property} from '@loopback/repository';
+import {WarehouseLocationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Organization} from './organization.model';
 
@@ -59,6 +60,11 @@ export class Warehouse extends BaseEntity {
     type: 'string',
   })
   manager?: string;
+
+  @property({
+    type: 'string',
+  })
+  location?: WarehouseLocationE;
 
   @property({
     type: 'string',
