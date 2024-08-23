@@ -1169,12 +1169,22 @@ export class ProjectService {
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
         let reference = null;
-        if (previousProject) {
-            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
-            reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
+        if (typeQuotation === TypeQuotationE.GENERAL) {
+            if (previousProject) {
+                projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
+                reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
+            } else {
+                projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
+                reference = `${this.getNumberReference(showroomManager)}`;
+            }
         } else {
-            projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
-            reference = `${this.getNumberReference(showroomManager)}`;
+            if (previousProject) {
+                projectId = `SH${branch?.name?.charAt(0).toUpperCase()}${previousProject.id + 1}`;
+                reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
+            } else {
+                projectId = `SH${branch?.name?.charAt(0).toUpperCase()}${1}`;
+                reference = `${this.getNumberReference(showroomManager)}`;
+            }
         }
 
 
