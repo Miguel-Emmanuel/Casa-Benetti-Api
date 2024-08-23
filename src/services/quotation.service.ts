@@ -647,12 +647,12 @@ export class QuotationService {
             if (id === null || id == undefined) {
 
                 const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchesId, showroomManagerId, showRoomDestination);
-                await this.createProducts(products, createQuotation.id);
+                await this.createProducts(products, createQuotation.id, branchesId);
                 return createQuotation;
             } else {
                 const findQuotation = await this.findQuotationById(id);
                 await this.deleteProdcuts(findQuotation, products);
-                await this.updateProducts(products, findQuotation.id)
+                await this.updateProducts(products, findQuotation.id, branchesId)
                 await this.updateQuotationShowroom(quotation, isDraft, this.user.id, findQuotation.id, showRoomDestination, branchesId);
                 return this.findQuotationById(id);
             }
@@ -709,7 +709,7 @@ export class QuotationService {
         return this.quotationRepository.create(bodyQuotation);
     }
 
-    async createProducts(products: QuotationProductsCreate[], quotationId: number) {
+    async createProducts(products: QuotationProductsCreate[], quotationId: number, branchesId: number[]) {
         for (const element of products) {
             const product = await this.productRepository.findOne({where: {id: element.productId}});
             if (product) {
@@ -719,7 +719,7 @@ export class QuotationService {
                 delete element.secondaryMaterialImg;
                 delete element.secondaryFinishingImag;
                 delete element.document;
-                const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined, typeQuotation: TypeQuotationE.SHOWROOM},);
+                const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined, typeQuotation: TypeQuotationE.SHOWROOM, branchesId},);
                 await this.createDocumentProduct(response.productId, document)
                 await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                 await this.createDocumentMainFinish(response.id, mainFinishImg);
@@ -738,7 +738,7 @@ export class QuotationService {
         }
     }
 
-    async updateProducts(products: QuotationProductsCreate[], quotationId: number) {
+    async updateProducts(products: QuotationProductsCreate[], quotationId: number, branchesId: number[]) {
         for (const element of products) {
 
             const product = await this.productRepository.findOne({where: {id: element.productId}});
@@ -760,7 +760,7 @@ export class QuotationService {
                         isNotificationSent = true;
                     }
                     element.isNotificationSent = element?.reservationDays ? false : undefined
-                    await this.quotationProductsRepository.updateById(findQuotationP.id, {...element, dateReservationDays, isNotificationSent});
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, {...element, dateReservationDays, isNotificationSent, branchesId});
                     await this.createDocumentProduct(findQuotationP.productId, document)
                     await this.createDocumentMainMaterial(findQuotationP.id, mainMaterialImg)
                     await this.createDocumentMainFinish(findQuotationP.id, mainFinishImg);
@@ -774,7 +774,7 @@ export class QuotationService {
                     delete element.secondaryFinishingImag;
                     delete element.document;
                     // const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
-                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined},);
+                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined, branchesId},);
                     await this.createDocumentProduct(response.productId, document)
                     await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                     await this.createDocumentMainFinish(response.id, mainFinishImg);
