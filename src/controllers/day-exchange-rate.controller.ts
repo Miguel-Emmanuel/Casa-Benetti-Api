@@ -30,7 +30,7 @@ export class DayExchangeRateController {
     @post('/day-exchange-rates')
     @response(200, {
         description: 'DayExchangeRate model instance',
-        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate, {exclude: ['createdAt']})}},
+        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate, {})}},
     })
     async create(
         @requestBody({
@@ -38,7 +38,7 @@ export class DayExchangeRateController {
                 'application/json': {
                     schema: getModelSchemaRef(DayExchangeRate, {
                         title: 'NewDayExchangeRate',
-                        exclude: ['id'],
+                        exclude: ['id', 'createdAt'],
                     }),
                 },
             },
@@ -91,7 +91,7 @@ export class DayExchangeRateController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(DayExchangeRate, {partial: true, exclude: ['createdAt']}),
+                    schema: getModelSchemaRef(DayExchangeRate, {partial: true, exclude: ['id', 'createdAt']}),
                 },
             },
         })
