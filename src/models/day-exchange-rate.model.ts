@@ -29,21 +29,33 @@ export class DayExchangeRate extends Entity {
 
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     euroToPeso: number;
 
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     euroToDolar: number;
 
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     dolarToPeso: number;
 
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     dolarToEuro: number;
 
