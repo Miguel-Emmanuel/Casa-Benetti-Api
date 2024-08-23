@@ -1,7 +1,8 @@
-import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasOne, model, property, referencesMany} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE, TypeQuotationE, TypeSaleE} from '../enums';
 import {DocumentSchema} from './base/document.model';
+import {Branch} from './branch.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
@@ -204,6 +205,9 @@ export class QuotationProducts extends Entity {
 
     @belongsTo(() => PurchaseOrders)
     purchaseOrdersId: number;
+
+    @referencesMany(() => Branch, {name: 'branches'})
+    branchesId: number[];
 
     //Medidas (alto)
     @property({

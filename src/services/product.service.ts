@@ -274,6 +274,60 @@ export class ProductService {
         return products;
     }
 
+    async findShowRoom(branchId?: number, filter?: Filter<Product>,) {
+        let where: any = {
+            typeQuotation: TypeQuotationE.SHOWROOM,
+        }
+        if (branchId) {
+            where.branchId = [branchId];
+        }
+        const include: InclusionFilter[] = [
+            {
+                relation: 'document',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                }
+            },
+            {
+                relation: 'brand',
+                scope: {
+                    fields: ['brandName', 'id',]
+                }
+            },
+            {
+                relation: 'quotationProducts',
+                scope: {
+                    where: {
+                        ...where
+                    }
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
+        const products = await this.productRepository.find(filter);
+        for (let index = 0; index < products.length; index++) {
+            const document = products[index].document;
+            if (document) {
+                const element: any = document;
+                const createdBy = await this.userRepository.findByIdOrDefault(element.createdBy);
+                const updatedBy = await this.userRepository.findByIdOrDefault(element.updatedBy);
+                element.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
+                element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
+            }
+        }
+        return products.filter(value => value.quotationProducts);
+    }
+
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {
         const include: InclusionFilter[] = [
             // {

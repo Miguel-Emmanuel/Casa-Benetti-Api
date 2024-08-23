@@ -115,6 +115,24 @@ export class ProductController {
     ): Promise<Product[]> {
         return this.productService.find(filter);
     }
+    @get('/products/showroom')
+    @response(200, {
+        description: 'Array of Product model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: getModelSchemaRef(Product, {includeRelations: false}),
+                },
+            },
+        },
+    })
+    async findShowRoom(
+        @param.filter(Product) filter?: Filter<Product>,
+        @param.query.number('branchId') branchId?: number,
+    ): Promise<Product[]> {
+        return this.productService.findShowRoom(branchId, filter);
+    }
 
     @get('/products/stock')
     @response(200, {
