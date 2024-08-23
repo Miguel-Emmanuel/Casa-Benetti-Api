@@ -800,6 +800,16 @@ export class ContainerService {
                 },
                 {
                     relation: 'documents'
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders'
+                            }
+                        ]
+                    }
                 }
             ]
             if (filter?.include)
@@ -813,8 +823,10 @@ export class ContainerService {
                         ...include
                     ]
                 };
+
             const container = await this.containerRepository.findById(id, filter);
-            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders} = container;
+            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection} = container;
+            const purchaseOrdersContainers = [...purchaseOrders, ...collection?.purchaseOrders]
             return {
                 pedimento,
                 containerNumber,
@@ -835,7 +847,7 @@ export class ContainerService {
                         name, extension
                     }
                 }),
-                purchaseOrders: purchaseOrders ? purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                purchaseOrders: purchaseOrdersContainers ? purchaseOrdersContainers?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
                     const {id: purchaseOrderid, proforma} = value;
                     const {quotationProducts} = proforma;
                     return {
