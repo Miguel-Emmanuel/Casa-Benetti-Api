@@ -225,7 +225,7 @@ export class ContainerService {
         });
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Carta traducción');
+        const worksheet = workbook.addWorksheet('Carta porte');
 
         worksheet.mergeCells('A4:I4');
         worksheet.getCell('A4').value = 'DATOS DEL CLIENTE';
@@ -369,6 +369,158 @@ export class ContainerService {
         }
         const buffer = await workbook.xlsx.writeBuffer();
         this.res.setHeader('Content-Disposition', `attachment; filename=archivo-carta-porte.xlsx`);
+        this.res.setHeader('Content-Type', 'application/xlsx');
+        return this.res.status(200).send(buffer)
+    }
+
+    async createArchivoEtiquetas(id: number) {
+        const container = await this.containerRepository.findById(id, {
+            include: [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'brand'
+                                        },
+                                        {
+                                            relation: 'quotation',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'customer'
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'line'
+                                                    },
+                                                    {
+                                                        relation: 'document'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Archivo etiqueta');
+
+        worksheet.mergeCells('A1:E4');
+        worksheet.getCell('A1').value = 'BENETTI CASA, S DE RL DE CV';
+        worksheet.getCell('A1').alignment = {vertical: 'middle', horizontal: 'center'};
+
+        worksheet.mergeCells('A6:E10');
+        worksheet.getCell('A6').value = 'AV. PROLONGACIÓN BOSQUES #1813 L-153-154, LOMAS DE VISTA HERMOSA CUAJIMALPA DE MORELOS, CP 05100, MÉXICO, CIUDAD DE MÉXICO.';
+        worksheet.getCell('A6').alignment = {vertical: 'middle', horizontal: 'center', wrapText: true};
+
+        worksheet.getColumn(1).width = 20;
+        worksheet.getColumn(2).width = 20;
+
+        worksheet.getCell('A13').value = 'SKU:';
+        worksheet.getCell('A13').font = {bold: true};
+        worksheet.getCell('B13').value = 'BCA150508BCA';
+        worksheet.getCell('B13').alignment = {horizontal: 'left'};
+
+        worksheet.getCell('A14').value = 'Producto:';
+        worksheet.getCell('A14').font = {bold: true};
+        worksheet.getCell('B14').value = 'BCA150508BCA';
+        worksheet.getCell('B14').alignment = {horizontal: 'left'};
+
+        worksheet.getCell('A15').value = 'Hecho en: ';
+        worksheet.getCell('A15').font = {bold: true};
+        worksheet.getCell('B15').value = 'BCA150508BCA';
+        worksheet.getCell('B15').alignment = {horizontal: 'left'};
+
+        worksheet.getCell('A16').value = 'Marca:';
+        worksheet.getCell('A16').font = {bold: true};
+        worksheet.getCell('B16').value = 'BCA150508BCA';
+        worksheet.getCell('B16').alignment = {horizontal: 'left'};
+
+        worksheet.getCell('A17').value = 'Modelo:';
+        worksheet.getCell('A17').font = {bold: true};
+        worksheet.getCell('B17').value = 'BCA150508BCA';
+        worksheet.getCell('B17').alignment = {horizontal: 'left'};
+
+        worksheet.getCell('A18').value = 'Contenido:';
+        worksheet.getCell('A18').font = {bold: true};
+        worksheet.getCell('B18').value = 'BCA150508BCA';
+        worksheet.getCell('B18').alignment = {horizontal: 'left'};
+
+        worksheet.mergeCells('A21:E21');
+        worksheet.getCell('A21').value = 'MOBILIARIO INSTALADO POR PERSONAL ESPECIALIZADO DE LA EMPRESA IMPORTADORA';
+        worksheet.getCell('A21').alignment = {vertical: 'middle', horizontal: 'center', wrapText: true};
+        worksheet.getCell('A21').font = {underline: true};
+
+        for (let index = 0; index < container?.purchaseOrders?.length; index++) {
+            const element = container?.purchaseOrders[index];
+            for (let index = 0; index < element?.quotationProducts?.length; index++) {
+                const elementProduct = element?.quotationProducts[index];
+                const {product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = elementProduct;
+                const {line, name} = product;
+                const descriptionParts = [
+                    line?.name,
+                    name,
+                    mainMaterial,
+                    mainFinish,
+                    secondaryMaterial,
+                    secondaryFinishing
+                ];
+                const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                let file = ''
+                try {
+                    const fileName = elementProduct?.product?.document?.fileURL?.split('/').pop();
+                    if (fileName) {
+                        const localFile = this.validateFileName(fileName);
+                        console.log(localFile)
+                        file = `data:image/svg+xml;base64,${await fs.readFile(localFile, {encoding: 'base64'})}`
+                    }
+                } catch (error) {
+
+                }
+                const newRow = worksheet.addRow({
+                    codigo: elementProduct?.SKU,
+                    numeroFactura: elementProduct?.invoiceNumber,
+                    ordenCompraId: element.id,
+                    proveedor: elementProduct?.provider?.name,
+                    marca: elementProduct?.brand?.brandName,
+                    cliente: elementProduct?.quotation?.customer?.name,
+                    linea: elementProduct?.product?.line?.name,
+                    modelo: elementProduct?.model,
+                    cantidad: elementProduct?.quantity,
+                    precioUnitarioEuros: elementProduct?.originCost,
+                    precioTotal: elementProduct?.price,
+                    fotografia: file,
+                    descripcion: description,
+                    pesoNeto: elementProduct?.netWeight,
+                    pesoBruto: elementProduct?.grossWeight,
+                    paisOrigen: elementProduct?.product?.countryOrigin,
+                });
+
+            }
+
+        }
+        const buffer = await workbook.xlsx.writeBuffer();
+        this.res.setHeader('Content-Disposition', `attachment; filename=archivo-etiqueta.xlsx`);
         this.res.setHeader('Content-Type', 'application/xlsx');
         return this.res.status(200).send(buffer)
     }

@@ -168,6 +168,21 @@ export class ContainerController {
         return this.containerService.createCartaPorte(id);
     }
 
+    @get('/containers/download/archivo-etiquetas/{id}')
+    @response(200, {
+        description: 'Container model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Container, {includeRelations: false}),
+            },
+        },
+    })
+    async createArchivoEtiquetas(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.containerService.createArchivoEtiquetas(id);
+    }
+
 
     @patch('/containers/{id}')
     @response(204, {
