@@ -175,6 +175,158 @@ export class ContainerService {
         return this.res.status(200).send(buffer)
     }
 
+    async createCartaPorte(id: number) {
+        const container = await this.containerRepository.findById(id, {
+            include: [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'brand'
+                                        },
+                                        {
+                                            relation: 'quotation',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'customer'
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'line'
+                                                    },
+                                                    {
+                                                        relation: 'document'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+
+        const workbook = new ExcelJS.Workbook();
+
+        for (let index = 0; index < container?.purchaseOrders?.length; index++) {
+            const element = container?.purchaseOrders[index];
+            const worksheet = workbook.addWorksheet('Carta traducción');
+
+            worksheet.mergeCells('A4:I4');
+            worksheet.getCell('A4').value = 'DATOS DEL CLIENTE';
+            worksheet.getCell('A4').alignment = {vertical: 'middle', horizontal: 'center'};
+
+            worksheet.getColumn(1).width = 30;
+            worksheet.getColumn(2).width = 30;
+            worksheet.getColumn(3).width = 30;
+            worksheet.getColumn(4).width = 30;
+            worksheet.getColumn(5).width = 30;
+            worksheet.getColumn(6).width = 30;
+            worksheet.getColumn(7).width = 30;
+            worksheet.getColumn(8).width = 30;
+            worksheet.getColumn(9).width = 30;
+
+            worksheet.getCell('A7').value = 'RFC:';
+            worksheet.getCell('A7').font = {bold: true};
+            worksheet.getCell('A8').value = 'RAZÓN SOCIAL:';
+            worksheet.getCell('A8').font = {bold: true};
+            worksheet.getCell('A9').value = 'DOMICILIO FISCAL:';
+            worksheet.getCell('A9').font = {bold: true};
+            worksheet.getCell('A10').value = 'RÉGIMEN FISCAL:';
+            worksheet.getCell('A10').font = {bold: true};
+            worksheet.getCell('A11').value = 'CÓDIGO POSTAL:';
+            worksheet.getCell('A11').font = {bold: true};
+            worksheet.getCell('A12').value = 'CLAVE DEL PAÍS DE ORIGEN:';
+            worksheet.getCell('A12').font = {bold: true};
+
+            worksheet.mergeCells('A15:I15');
+            worksheet.getCell('A15').value = 'DIRECCIÓN DE ENTREGA';
+            worksheet.getCell('A15').alignment = {vertical: 'middle', horizontal: 'center'};
+
+            worksheet.getCell('A18').value = 'NOMBRE DEL DESTINATARIO:';
+            worksheet.getCell('A18').font = {bold: true};
+            worksheet.getCell('A19').value = 'DOMICILIO DE ENTREGA:';
+            worksheet.getCell('A19').font = {bold: true};
+            worksheet.getCell('A20').value = 'HORARIO:';
+            worksheet.getCell('A20').font = {bold: true};
+            worksheet.getCell('A21').value = 'CONTACTO:';
+            worksheet.getCell('A21').font = {bold: true};
+            worksheet.getCell('A22').value = 'TELEFONO:';
+            worksheet.getCell('A22').font = {bold: true};
+            worksheet.getCell('A23').value = 'REFERENCIA INTERNA:';
+            worksheet.getCell('A23').font = {bold: true};
+
+            worksheet.mergeCells('A26:I26');
+            worksheet.getCell('A26').value = 'DATOS DEL CONTENEDOR';
+            worksheet.getCell('A26').alignment = {vertical: 'middle', horizontal: 'center'};
+
+            worksheet.getCell('A29').value = 'PEDIMIENTO:';
+            worksheet.getCell('A29').font = {bold: true};
+            worksheet.getCell('A30').value = 'CONTENEDOR:';
+            worksheet.getCell('A30').font = {bold: true};
+            worksheet.getCell('A31').value = 'PESO BRUTO:';
+            worksheet.getCell('A31').font = {bold: true};
+            worksheet.getCell('A32').value = 'NÚMERO DE BULTOS:';
+            worksheet.getCell('A32').font = {bold: true};
+            worksheet.getCell('A33').value = 'MEDIDAS:';
+            worksheet.getCell('A33').font = {bold: true};
+
+            const columns = [
+                {header: 'Número de factura', key: 'noFactura', width: 20},
+                {header: 'Orden', key: 'orden', width: 20},
+                {header: 'Proveedor', key: 'proveedor', width: 20},
+                {header: 'Marca', key: 'marca', width: 20},
+                {header: 'Linea', key: 'linea', width: 20},
+                {header: 'Modelo', key: 'modelo', width: 20},
+                {header: 'Cantidad', key: 'cantidad', width: 20},
+                {header: 'Peso bruto', key: 'pesoBruto', width: 20},
+                {header: 'Clave del SAT', key: 'claveSAT', width: 20},
+            ];
+            const startRow = 36;
+            worksheet.getRow(startRow).values = columns.map(column => column.header);
+            for (let index = 0; index < element?.quotationProducts?.length; index++) {
+                const elementProduct = element?.quotationProducts[index];
+
+                worksheet.addRow([
+                    elementProduct?.invoiceNumber,
+                    element.id,
+                    elementProduct?.provider?.name,
+                    elementProduct?.brand?.brandName,
+                    elementProduct?.product?.line?.name,
+                    elementProduct?.model,
+                    elementProduct?.quantity,
+                    elementProduct?.grossWeight,
+                    elementProduct?.product?.CATSAT,
+                ]);
+            }
+        }
+        // const buffer = await workbook.xlsx.writeBuffer();
+        // this.res.setHeader('Content-Disposition', `attachment; filename=archivo-carta-porte.xlsx`);
+        // this.res.setHeader('Content-Type', 'application/xlsx');
+        // return this.res.status(200).send(buffer)
+        const filename = `SEemisor`;
+        // Guardar el archivo
+        await workbook.xlsx.writeFile(`.sandbox/${filename}.xlsx`);
+    }
+
     private validateFileName(fileName: string) {
         const resolved = path.resolve(this.storageDirectory, fileName);
         if (resolved.startsWith(this.storageDirectory)) return resolved;

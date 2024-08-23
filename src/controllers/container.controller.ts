@@ -138,7 +138,7 @@ export class ContainerController {
         return this.containerService.findById(id, filter);
     }
 
-    @get('/containers/exccel/type/{id}')
+    @get('/containers/download/carta-traduccion/{id}')
     @response(200, {
         description: 'Container model instance',
         content: {
@@ -152,6 +152,22 @@ export class ContainerController {
     ): Promise<any> {
         return this.containerService.createCartaTraduccion(id);
     }
+
+    @get('/containers/download/carta-porte/{id}')
+    @response(200, {
+        description: 'Container model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Container, {includeRelations: false}),
+            },
+        },
+    })
+    async createCartaPorte(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.containerService.createCartaPorte(id);
+    }
+
 
     @patch('/containers/{id}')
     @response(204, {
