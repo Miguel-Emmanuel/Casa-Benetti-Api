@@ -67,6 +67,7 @@ export class QuotationProducts extends Entity {
     //No. de cajas o bultos
     @property({
         type: 'number',
+        default: 1
     })
     numberBoxes: number;
 
