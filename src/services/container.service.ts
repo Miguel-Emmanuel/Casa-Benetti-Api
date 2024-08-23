@@ -225,7 +225,7 @@ export class ContainerService {
         });
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Carta traducción');
+        const worksheet = workbook.addWorksheet('Carta porte');
 
         worksheet.mergeCells('A4:I4');
         worksheet.getCell('A4').value = 'DATOS DEL CLIENTE';
@@ -369,6 +369,142 @@ export class ContainerService {
         }
         const buffer = await workbook.xlsx.writeBuffer();
         this.res.setHeader('Content-Disposition', `attachment; filename=archivo-carta-porte.xlsx`);
+        this.res.setHeader('Content-Type', 'application/xlsx');
+        return this.res.status(200).send(buffer)
+    }
+
+    async createArchivoEtiquetas(id: number) {
+        const container = await this.containerRepository.findById(id, {
+            include: [
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'brand'
+                                        },
+                                        {
+                                            relation: 'quotation',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'customer'
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'line'
+                                                    },
+                                                    {
+                                                        relation: 'document'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Archivo etiqueta');
+
+        const rowOffset = 25; // Desplazamiento de filas para cada bloque de etiqueta
+
+        for (let index = 0; index < container?.purchaseOrders?.length; index++) {
+            const element = container?.purchaseOrders[index];
+            for (let index = 0; index < element?.quotationProducts?.length; index++) {
+                const elementProduct = element?.quotationProducts[index];
+                const {id, product, numberBoxes, SKU, brand, model} = elementProduct;
+                const {name, countryOrigin} = product;
+                let iterations = numberBoxes ? numberBoxes === 0 ? 1 : numberBoxes : 1;
+                for (let i = 0; i < iterations; i++) {
+                    const startRow = i * rowOffset + 1;
+                    console.log(id)
+                    // Limpiar el rango de celdas antes de combinar
+                    worksheet.getCell(`A${startRow}`).value = '';
+                    worksheet.getCell(`A${startRow + 5}`).value = '';
+                    worksheet.getCell(`A${startRow + 12}`).value = '';
+                    worksheet.getCell(`A${startRow + 20}`).value = '';
+
+                    // Unir celdas para la cabecera
+                    if (!worksheet.getCell(`A${startRow}`).isMerged) {
+                        worksheet.mergeCells(`A${startRow}:E${startRow + 3}`);
+                    }
+                    worksheet.getCell(`A${startRow}`).value = 'BENETTI CASA, S DE RL DE CV';
+                    worksheet.getCell(`A${startRow}`).alignment = {vertical: 'middle', horizontal: 'center'};
+
+                    // Unir celdas para la dirección
+                    if (!worksheet.getCell(`A${startRow + 5}`).isMerged) {
+                        worksheet.mergeCells(`A${startRow + 5}:E${startRow + 9}`);
+                    }
+                    worksheet.getCell(`A${startRow + 5}`).value = 'AV. PROLONGACIÓN BOSQUES #1813 L-153-154, LOMAS DE VISTA HERMOSA CUAJIMALPA DE MORELOS, CP 05100, MÉXICO, CIUDAD DE MÉXICO.';
+                    worksheet.getCell(`A${startRow + 5}`).alignment = {vertical: 'middle', horizontal: 'center', wrapText: true};
+
+                    // Ajustar el ancho de las columnas
+                    worksheet.getColumn(1).width = 20;
+                    worksheet.getColumn(2).width = 20;
+
+                    // Asignar valores para las etiquetas SKU, Producto, etc.
+                    worksheet.getCell(`A${startRow + 12}`).value = 'SKU:';
+                    worksheet.getCell(`A${startRow + 12}`).font = {bold: true};
+                    worksheet.getCell(`B${startRow + 12}`).value = SKU;
+                    worksheet.getCell(`B${startRow + 12}`).alignment = {horizontal: 'left'};
+
+                    worksheet.getCell(`A${startRow + 13}`).value = 'Producto:';
+                    worksheet.getCell(`A${startRow + 13}`).font = {bold: true};
+                    worksheet.getCell(`B${startRow + 13}`).value = name;
+                    worksheet.getCell(`B${startRow + 13}`).alignment = {horizontal: 'left'};
+
+                    worksheet.getCell(`A${startRow + 14}`).value = 'Hecho en:';
+                    worksheet.getCell(`A${startRow + 14}`).font = {bold: true};
+                    worksheet.getCell(`B${startRow + 14}`).value = countryOrigin;
+                    worksheet.getCell(`B${startRow + 14}`).alignment = {horizontal: 'left'};
+
+                    worksheet.getCell(`A${startRow + 15}`).value = 'Marca:';
+                    worksheet.getCell(`A${startRow + 15}`).font = {bold: true};
+                    worksheet.getCell(`B${startRow + 15}`).value = brand?.brandName;
+                    worksheet.getCell(`B${startRow + 15}`).alignment = {horizontal: 'left'};
+
+                    worksheet.getCell(`A${startRow + 16}`).value = 'Modelo:';
+                    worksheet.getCell(`A${startRow + 16}`).font = {bold: true};
+                    worksheet.getCell(`B${startRow + 16}`).value = model;
+                    worksheet.getCell(`B${startRow + 16}`).alignment = {horizontal: 'left'};
+
+                    worksheet.getCell(`A${startRow + 17}`).value = 'Contenido:';
+                    worksheet.getCell(`A${startRow + 17}`).font = {bold: true};
+                    worksheet.getCell(`B${startRow + 17}`).value = '1 pieza';
+                    worksheet.getCell(`B${startRow + 17}`).alignment = {horizontal: 'left'};
+
+                    // Unir celdas y asignar el texto final con subrayado
+                    if (!worksheet.getCell(`A${startRow + 20}`).isMerged) {
+                        worksheet.mergeCells(`A${startRow + 20}:E${startRow + 20}`);
+                    }
+                    worksheet.getCell(`A${startRow + 20}`).value = 'MOBILIARIO INSTALADO POR PERSONAL ESPECIALIZADO DE LA EMPRESA IMPORTADORA';
+                    worksheet.getCell(`A${startRow + 20}`).alignment = {vertical: 'middle', horizontal: 'center', wrapText: true};
+                    worksheet.getCell(`A${startRow + 20}`).font = {underline: true};
+                }
+            }
+
+        }
+        const buffer = await workbook.xlsx.writeBuffer();
+        this.res.setHeader('Content-Disposition', `attachment; filename=archivo-etiqueta.xlsx`);
         this.res.setHeader('Content-Type', 'application/xlsx');
         return this.res.status(200).send(buffer)
     }
