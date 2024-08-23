@@ -31,7 +31,7 @@ export class DayExchangeRateService {
     }
 
     async updateById(id: number, dayExchangeRate: DayExchangeRate,) {
-        await this.dayExchangeRateRepository.updateById(id, dayExchangeRate);
+        await this.dayExchangeRateRepository.updateById(id, {...dayExchangeRate, updatedAt: new Date()});
     }
 
 }

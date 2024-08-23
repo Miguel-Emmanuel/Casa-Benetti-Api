@@ -22,6 +22,12 @@ export class DayExchangeRate extends Entity {
     createdAt?: Date;
 
     @property({
+        type: 'date',
+        default: () => new Date(),
+    })
+    updatedAt?: Date;
+
+    @property({
         type: 'number',
     })
     euroToPeso: number;
