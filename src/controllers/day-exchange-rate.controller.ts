@@ -38,7 +38,7 @@ export class DayExchangeRateController {
                 'application/json': {
                     schema: getModelSchemaRef(DayExchangeRate, {
                         title: 'NewDayExchangeRate',
-                        exclude: ['id', 'createdAt'],
+                        exclude: ['id', 'createdAt', 'updatedAt'],
                     }),
                 },
             },
@@ -91,7 +91,7 @@ export class DayExchangeRateController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(DayExchangeRate, {partial: true, exclude: ['id', 'createdAt']}),
+                    schema: getModelSchemaRef(DayExchangeRate, {partial: true, exclude: ['id', 'createdAt', 'updatedAt']}),
                 },
             },
         })
