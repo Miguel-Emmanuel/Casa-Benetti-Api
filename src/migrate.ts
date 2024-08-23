@@ -60,7 +60,8 @@ export async function migrate(args: string[]) {
       'Collection',
       'Container',
       'TypesExpenses',
-      'InternalExpenses'
+      'InternalExpenses',
+      'DayExchangeRate'
     ],
   });
 

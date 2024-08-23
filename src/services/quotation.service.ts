@@ -12,7 +12,7 @@ import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, sc
 import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
-import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {PdfService} from './pdf.service';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
@@ -59,6 +59,8 @@ export class QuotationService {
         public pdfService: PdfService,
         @inject(RestBindings.Http.RESPONSE)
         private response: Response,
+        @repository(DayExchangeRateRepository)
+        public dayExchangeRateRepository: DayExchangeRateRepository,
     ) { }
 
     async create(data: CreateQuotation) {
@@ -1243,7 +1245,7 @@ export class QuotationService {
             status = StatusQuotationE.ENREVISIONADMINSITRACION;
             if (isFractionate === true) {
                 typeFractional = await this.typeCurrencyFractionate(id);
-                prices = this.calculatePricesExchangeRate(quotation, typeFractional);
+                prices = await this.calculatePricesExchangeRate(quotation, typeFractional);
             }
         }
         await this.quotationRepository.updateById(id, {status, comment, ...prices, isFractionate, typeFractional});
@@ -1345,14 +1347,25 @@ export class QuotationService {
         return Number(new BigNumber(num).toFixed(2));
     }
 
-    calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
+    async getdayExchangeRate() {
+        const dayExchangeRate = await this.dayExchangeRateRepository.findOne();
+        if (dayExchangeRate) {
+            const {euroToDolar, euroToPeso} = dayExchangeRate;
+            return {USD: euroToDolar, MXN: euroToPeso}
+        } else {
+            return {USD: 1.074, MXN: 19.28}
+        }
+    }
+
+    async calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
         //CAMBIAR TIPO DE MONEDA URGENTE
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
             let bodyMXN = {};
             let bodyUSD = {};
-            const USD = 1.074;
-            const MXN = 19.28;
+            const {USD, MXN} = await this.getdayExchangeRate();
+            // const USD = 1.074;
+            // const MXN = 19.28;
             const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
                 advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
             if (typeFractional.MXN === true) {
