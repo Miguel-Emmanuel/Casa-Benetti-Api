@@ -1,13 +1,14 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AdvancePaymentStatusE, CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus} from '../enums';
+import {AdvancePaymentStatusE, CurrencyE, ExchangeRateQuotationE, ProductTypeE, ProformaCurrencyE, PurchaseOrdersStatus} from '../enums';
 import {schameCreateAdvancePayment, schameCreateAdvancePaymentUpdate} from '../joi.validation.ts/advance-payment-record.validation';
-import {ResponseServiceBindings} from '../keys';
-import {AdvancePaymentRecord, AdvancePaymentRecordCreate, Quotation} from '../models';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
+import {AccountsReceivableWithRelations, AdvancePaymentRecord, AdvancePaymentRecordCreate, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
 import {AccountsReceivableRepository, AdvancePaymentRecordRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AdvancePaymentRecordService {
@@ -32,6 +33,8 @@ export class AdvancePaymentRecordService {
         public quotationProductsRepository: QuotationProductsRepository,
         @repository(ProformaRepository)
         public proformaRepository: ProformaRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService,
     ) { }
 
 
@@ -119,10 +122,11 @@ export class AdvancePaymentRecordService {
 
     async updateById(id: number, advancePaymentRecord: AdvancePaymentRecordCreate,) {
         const payment = await this.findAdvancePayment(id);
+        await this.validateBodyAdvancePaymentUpdate(advancePaymentRecord);
         if (payment.status === AdvancePaymentStatusE.PAGADO)
             throw this.responseService.badRequest("El cobro ya fue pagado y no puede actualizarse.");
 
-        const {vouchers, status, salesDeviation} = advancePaymentRecord;
+        const {vouchers, status, salesDeviation, productType} = advancePaymentRecord;
         const {conversionAmountPaid, accountsReceivable, projectId} = payment;
 
 
@@ -141,16 +145,95 @@ export class AdvancePaymentRecordService {
                 totalVenta = updatedTotal;
 
             const balance = balanceOld - conversionAmountPaid;
-            const totalPaidNew = totalPaid + conversionAmountPaid;
-            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {balance: this.roundToTwoDecimals(balance), totalPaid: this.roundToTwoDecimals(totalPaidNew)})
+            const totalPaidNew = this.roundToTwoDecimals(totalPaid + conversionAmountPaid);
+            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {balance: this.roundToTwoDecimals(balance), totalPaid: totalPaidNew})
             await this.createPurchaseOrders(projectId, accountsReceivable.id, totalPaidNew, typeCurrency,)
+            await this.validatePaid(accountsReceivable, totalPaidNew, totalSale, productType);
         }
-        await this.validateBodyAdvancePaymentUpdate(advancePaymentRecord);
         delete advancePaymentRecord?.vouchers;
         await this.createDocuments(id, vouchers);
         await this.advancePaymentRecordRepository.updateById(id, {...advancePaymentRecord});
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
+
+    async validatePaid(accountsReceivable: AccountsReceivableWithRelations, totalPaid: number, total: number, productType: ProductTypeE) {
+        if (totalPaid >= total) {
+            const {project} = accountsReceivable;
+            const {projectId, quotation, customer} = project;
+            const {mainProjectManager, quotationProducts} = quotation;
+            if (productType === ProductTypeE.STOCK)
+                await this.notifyStock(mainProjectManager.email, projectId, customer.name, quotationProducts);
+            else
+                await this.notifyPedido(mainProjectManager.email, projectId, customer.name, quotationProducts);
+        }
+    }
+
+    async notifyPedido(email: string, projectId: string, customerName: string, quotationProducts: QuotationProductsWithRelations[]) {
+        const options = {
+            to: email,
+            templateId: SendgridTemplates.NOTIFICATION_PRODUCT_PEDIDO.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.NOTIFICATION_PRODUCT_PEDIDO.subject,
+                projectId,
+                customerName,
+                products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                    const {id: productId, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
+                    const {document, line, name} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing
+                    ];
+                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                    return {
+                        id: productId,
+                        name: name,
+                        image: document?.fileURL,
+                        description,
+                    }
+                })
+            }
+        };
+        await this.sendgridService.sendNotification(options);
+    }
+
+    async notifyStock(email: string, projectId: string, customerName: string, quotationProducts: QuotationProductsWithRelations[]) {
+        const users = await this.userRepository.find({where: {isLogistics: true}})
+        const emails = users.map(value => value.email);
+        const options = {
+            to: emails,
+            templateId: SendgridTemplates.NOTIFICATION_PRODUCT_STOCK.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.NOTIFICATION_PRODUCT_STOCK.subject,
+                projectId,
+                customerName,
+                products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                    const {id: productId, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
+                    const {document, line, name} = product;
+                    const descriptionParts = [
+                        line?.name,
+                        name,
+                        mainMaterial,
+                        mainFinish,
+                        secondaryMaterial,
+                        secondaryFinishing
+                    ];
+                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                    return {
+                        id: productId,
+                        name: name,
+                        image: document?.fileURL,
+                        description,
+                    }
+                })
+            }
+        };
+        await this.sendgridService.sendNotification(options);
+    }
+
 
     roundToTwoDecimals(num: number): number {
         return Number(new BigNumber(num).toFixed(2));
@@ -275,7 +358,59 @@ export class AdvancePaymentRecordService {
     }
 
     async findAdvancePayment(id: number) {
-        const advancePaymentRecord = await this.advancePaymentRecordRepository.findOne({where: {id}, include: [{relation: 'accountsReceivable'}]});
+        const advancePaymentRecord = await this.advancePaymentRecordRepository.findOne({
+            where: {id},
+            include: [
+                {
+                    relation: 'accountsReceivable',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'project',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotation',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'mainProjectManager'
+                                                    },
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            relation: 'customer'
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+
+            ]
+        });
         if (!advancePaymentRecord)
             throw this.responseService.badRequest("Cobro no existe.");
         return advancePaymentRecord;

@@ -1,7 +1,7 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {Customer} from './customer.model';
-import {Project} from './project.model';
+import {Project, ProjectWithRelations} from './project.model';
 import {Quotation} from './quotation.model';
 
 //Cuentas por cobrar
@@ -117,6 +117,7 @@ export class AccountsReceivable extends Entity {
 
 export interface AccountsReceivableRelations {
     // describe navigational properties here
+    project: ProjectWithRelations
 }
 
 export type AccountsReceivableWithRelations = AccountsReceivable & AccountsReceivableRelations;

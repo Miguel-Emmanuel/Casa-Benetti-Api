@@ -806,7 +806,38 @@ export class ContainerService {
                     scope: {
                         include: [
                             {
-                                relation: 'purchaseOrders'
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
                             }
                         ]
                     }
@@ -826,7 +857,8 @@ export class ContainerService {
 
             const container = await this.containerRepository.findById(id, filter);
             const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection} = container;
-            const purchaseOrdersContainers = [...purchaseOrders, ...collection?.purchaseOrders]
+            const purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
+            console.log(purchaseOrdersContainers)
             return {
                 pedimento,
                 containerNumber,

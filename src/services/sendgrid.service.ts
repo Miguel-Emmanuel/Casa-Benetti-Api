@@ -62,6 +62,14 @@ export const SendgridTemplates = {
     id: 'd-c3655b8d8c7747f18cf0e62f8964d37f',
     subject: 'Actualización del proyecto',
   },
+  NOTIFICATION_PRODUCT_PEDIDO: {
+    id: 'd-14c76c8b084e486eac8ac5545df1600a',
+    subject: 'Coordinación de Entrega',
+  },
+  NOTIFICATION_PRODUCT_STOCK: {
+    id: 'd-f046dce2c2eb4b50adbe29350390461f',
+    subject: 'Coordinación de Entrega',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})

@@ -1,6 +1,6 @@
 import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
-import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, TypeAdvancePaymentRecordE} from '../enums';
+import {AdvancePaymentStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ProductTypeE, TypeAdvancePaymentRecordE} from '../enums';
 import {AccountsReceivable, AccountsReceivableWithRelations} from './accounts-receivable.model';
 import {DocumentSchema} from './base/document.model';
 import {Document} from './document.model';
@@ -169,6 +169,13 @@ export class AdvancePaymentRecord extends Entity {
         type: 'string',
     })
     reference: string;
+
+    //Tipo de producto
+    @property({
+        type: 'string',
+        required: false,
+    })
+    productType: ProductTypeE;
 
 
     constructor(data?: Partial<AdvancePaymentRecord>) {

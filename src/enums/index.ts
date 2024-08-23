@@ -328,3 +328,8 @@ export enum WarehouseLocationE {
     NACIONAL = 'Nacional',
     INTERNACIONAL = 'Internacional',
 }
+
+export enum ProductTypeE {
+    STOCK = 'Stock',
+    PEDIDO = 'Pedido',
+}
