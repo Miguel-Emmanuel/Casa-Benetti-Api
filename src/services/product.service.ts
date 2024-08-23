@@ -279,7 +279,7 @@ export class ProductService {
             typeQuotation: TypeQuotationE.SHOWROOM,
         }
         if (branchId) {
-            where.branchId = [branchId];
+            where.branchesId = [branchId];
         }
         const include: InclusionFilter[] = [
             {
