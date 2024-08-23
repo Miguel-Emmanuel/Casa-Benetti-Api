@@ -52,3 +52,4 @@ export * from './purchase-orders-quotation-products.controller';
 export * from './inventory-movements-user.controller';
 export * from './inventory-movements-branch.controller';
 export * from './inventory-movements-warehouse.controller';
+export * from './day-exchange-rate.controller';
