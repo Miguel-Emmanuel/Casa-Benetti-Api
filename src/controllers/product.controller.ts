@@ -134,46 +134,6 @@ export class ProductController {
         return this.productService.findShowRoom(branchId, filter);
     }
 
-    @get('/products/stock')
-    @response(200, {
-        description: 'Array of Product model instances',
-        content: {
-            'application/json': {
-                schema: {
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            id: {
-                                type: 'number',
-                            },
-                            image: {
-                                type: 'string',
-                            },
-                            brand: {
-                                type: 'string',
-                            },
-                            description: {
-                                type: 'string',
-                            },
-                            stock: {
-                                type: 'number',
-                            },
-                            quantity: {
-                                type: 'number',
-                            },
-                        }
-                    }
-                },
-            },
-        },
-    })
-    async findStock(
-    ): Promise<Object[]> {
-        return this.productService.findStock();
-    }
-
-
     @get('/products/{id}')
     @response(200, {
         description: 'Product model instance',
