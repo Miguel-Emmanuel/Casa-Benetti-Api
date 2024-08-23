@@ -436,7 +436,6 @@ export class ContainerService {
                 let iterations = numberBoxes ? numberBoxes === 0 ? 1 : numberBoxes : 1;
                 for (let i = 0; i < iterations; i++) {
                     const startRow = i * rowOffset + 1;
-                    console.log(id)
                     // Limpiar el rango de celdas antes de combinar
                     worksheet.getCell(`A${startRow}`).value = '';
                     worksheet.getCell(`A${startRow + 5}`).value = '';
