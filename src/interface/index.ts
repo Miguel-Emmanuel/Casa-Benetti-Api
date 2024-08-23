@@ -94,6 +94,7 @@ export interface CreateQuotation {
     //Datos nivel cotizacion showroom
     branchId: number;
     branchesId: number[];
+    showRoomDestination: ShowRoomDestinationE
     //Datos cotizacion general
     customer: Customer,
     projectManagers: ProjectManagers[],

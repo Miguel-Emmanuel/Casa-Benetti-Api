@@ -5,7 +5,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
+import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
@@ -639,21 +639,21 @@ export class QuotationService {
     }
 
     async quotationShowRoom(data: CreateQuotation) {
-        const {id, quotation, isDraft, branchesId, products} = data;
+        const {id, quotation, isDraft, branchesId, products, showRoomDestination} = data;
         await this.validateBodyQuotationShowroom(data);
         await this.validateBrancId(branchesId)
         const showroomManagerId = await this.getSMShowRoom(this.user.branchId);
         try {
             if (id === null || id == undefined) {
 
-                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchesId, showroomManagerId);
+                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchesId, showroomManagerId, showRoomDestination);
                 await this.createProducts(products, createQuotation.id);
                 return createQuotation;
             } else {
                 const findQuotation = await this.findQuotationById(id);
                 await this.deleteProdcuts(findQuotation, products);
                 await this.updateProducts(products, findQuotation.id)
-                await this.updateQuotationShowroom(quotation, isDraft, this.user.id, findQuotation.id);
+                await this.updateQuotationShowroom(quotation, isDraft, this.user.id, findQuotation.id, showRoomDestination, branchesId);
                 return this.findQuotationById(id);
             }
         } catch (error) {
@@ -693,7 +693,7 @@ export class QuotationService {
         }
     }
 
-    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchesId: number[], showroomManagerId: number) {
+    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchesId: number[], showroomManagerId: number, showRoomDestination: ShowRoomDestinationE) {
         const data = this.convertExchangeRateQuotation(quotation);
         const bodyQuotation = {
             ...data,
@@ -703,7 +703,8 @@ export class QuotationService {
             userId,
             typeQuotation: TypeQuotationE.SHOWROOM,
             showroomManagerId,
-            mainProjectManagerId: this.user.id
+            mainProjectManagerId: this.user.id,
+            showRoomDestination
         }
         return this.quotationRepository.create(bodyQuotation);
     }
@@ -784,13 +785,15 @@ export class QuotationService {
         }
     }
 
-    async updateQuotationShowroom(quotation: QuotationI, isDraft: boolean, userId: number, quotationId: number) {
+    async updateQuotationShowroom(quotation: QuotationI, isDraft: boolean, userId: number, quotationId: number, showRoomDestination: ShowRoomDestinationE, branchesId: number[]) {
         const data = this.convertExchangeRateQuotation(quotation);
         const bodyQuotation = {
             ...data,
             status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
             isDraft,
-            userId
+            userId,
+            showRoomDestination,
+            branchesId,
         }
         await this.quotationRepository.updateById(quotationId, bodyQuotation)
     }
