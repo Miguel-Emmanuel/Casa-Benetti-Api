@@ -639,6 +639,9 @@ export class QuotationService {
     }
 
     async quotationShowRoom(data: CreateQuotation) {
+        const branchId = this.user.branchId;
+        if (!branchId)
+            throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
         const {id, quotation, isDraft, branchesId, products, showRoomDestination} = data;
         await this.validateBodyQuotationShowroom(data);
         await this.validateBrancId(branchesId)
@@ -646,7 +649,7 @@ export class QuotationService {
         try {
             if (id === null || id == undefined) {
 
-                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchesId, showroomManagerId, showRoomDestination);
+                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchesId, showroomManagerId, showRoomDestination, branchId);
                 await this.createProducts(products, createQuotation.id, branchesId);
                 return createQuotation;
             } else {
@@ -693,7 +696,7 @@ export class QuotationService {
         }
     }
 
-    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchesId: number[], showroomManagerId: number, showRoomDestination: ShowRoomDestinationE) {
+    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchesId: number[], showroomManagerId: number, showRoomDestination: ShowRoomDestinationE, branchId: number) {
         const data = this.convertExchangeRateQuotation(quotation);
         const bodyQuotation = {
             ...data,
@@ -704,7 +707,8 @@ export class QuotationService {
             typeQuotation: TypeQuotationE.SHOWROOM,
             showroomManagerId,
             mainProjectManagerId: this.user.id,
-            showRoomDestination
+            showRoomDestination,
+            branchId
         }
         return this.quotationRepository.create(bodyQuotation);
     }
