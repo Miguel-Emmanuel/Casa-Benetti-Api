@@ -248,7 +248,7 @@ export class PurchaseOrdersService {
                 createdAt,
                 provider,
                 brand,
-                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customer: customer ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                 accountPayableId,
                 percentagePaid: this.roundToTwoDecimals(percentagePaid),

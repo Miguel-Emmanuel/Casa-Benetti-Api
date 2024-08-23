@@ -297,6 +297,32 @@ export class ProductService {
             {
                 relation: 'quotationProducts',
                 scope: {
+                    include: [
+                        {
+                            relation: 'mainMaterialImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        },
+                        {
+                            relation: 'mainFinishImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        },
+                        {
+                            relation: 'secondaryMaterialImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        },
+                        {
+                            relation: 'secondaryFinishingImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        }
+                    ],
                     where: {
                         ...where
                     }

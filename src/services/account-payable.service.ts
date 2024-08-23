@@ -273,7 +273,7 @@ export class AccountPayableService {
                 brand: brand?.brandName,
                 purchaseOrderId: purchaseOrders?.id ?? null,
                 projectId,
-                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customer: customer ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 closingDate,
                 showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
                 mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
