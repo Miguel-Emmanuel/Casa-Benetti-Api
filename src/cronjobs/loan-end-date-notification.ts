@@ -23,8 +23,9 @@ export class LoanEndDateNotificationCronJob extends CronJob {
                 await this.notify();
             },
             // cronTime: '*/5 * * * * *',
-            cronTime: '0 0 * * *',
+            cronTime: '0 7 * * *',
             start: true,
+            timeZone: 'America/Mexico_City'
         });
     }
 
