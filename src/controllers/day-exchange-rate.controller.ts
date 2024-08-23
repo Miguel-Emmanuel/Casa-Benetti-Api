@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     Filter,
@@ -17,6 +18,7 @@ import {DayExchangeRate} from '../models';
 import {DayExchangeRateRepository} from '../repositories';
 import {DayExchangeRateService} from '../services';
 
+@authenticate('jwt')
 export class DayExchangeRateController {
     constructor(
         @repository(DayExchangeRateRepository)
@@ -28,7 +30,7 @@ export class DayExchangeRateController {
     @post('/day-exchange-rates')
     @response(200, {
         description: 'DayExchangeRate model instance',
-        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate)}},
+        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate, {exclude: ['createdAt']})}},
     })
     async create(
         @requestBody({
@@ -53,7 +55,7 @@ export class DayExchangeRateController {
             'application/json': {
                 schema: {
                     type: 'array',
-                    items: getModelSchemaRef(DayExchangeRate, {includeRelations: true}),
+                    items: getModelSchemaRef(DayExchangeRate, {includeRelations: false}),
                 },
             },
         },
@@ -69,7 +71,7 @@ export class DayExchangeRateController {
         description: 'DayExchangeRate model instance',
         content: {
             'application/json': {
-                schema: getModelSchemaRef(DayExchangeRate, {includeRelations: true}),
+                schema: getModelSchemaRef(DayExchangeRate, {includeRelations: false}),
             },
         },
     })
@@ -89,7 +91,7 @@ export class DayExchangeRateController {
         @requestBody({
             content: {
                 'application/json': {
-                    schema: getModelSchemaRef(DayExchangeRate, {partial: true}),
+                    schema: getModelSchemaRef(DayExchangeRate, {partial: true, exclude: ['createdAt']}),
                 },
             },
         })
