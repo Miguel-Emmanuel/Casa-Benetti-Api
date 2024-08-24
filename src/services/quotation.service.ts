@@ -13,6 +13,7 @@ import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
 import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {DayExchangeCalculateService} from './day-exchange-calculate';
 import {PdfService} from './pdf.service';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
@@ -61,6 +62,8 @@ export class QuotationService {
         private response: Response,
         @repository(DayExchangeRateRepository)
         public dayExchangeRateRepository: DayExchangeRateRepository,
+        @service()
+        public dayExchangeCalculateService: DayExchangeCalculateService
     ) { }
 
     async create(data: CreateQuotation) {
@@ -1347,15 +1350,7 @@ export class QuotationService {
         return Number(new BigNumber(num).toFixed(2));
     }
 
-    async getdayExchangeRate() {
-        const dayExchangeRate = await this.dayExchangeRateRepository.findOne();
-        if (dayExchangeRate) {
-            const {euroToDolar, euroToPeso} = dayExchangeRate;
-            return {USD: euroToDolar, MXN: euroToPeso}
-        } else {
-            return {USD: 1.074, MXN: 19.28}
-        }
-    }
+
 
     async calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
         //CAMBIAR TIPO DE MONEDA URGENTE
@@ -1363,7 +1358,7 @@ export class QuotationService {
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
             let bodyMXN = {};
             let bodyUSD = {};
-            const {USD, MXN} = await this.getdayExchangeRate();
+            const {USD, MXN} = await this.dayExchangeCalculateService.getdayExchangeRateEuroTo();
             // const USD = 1.074;
             // const MXN = 19.28;
             const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,

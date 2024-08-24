@@ -1,9 +1,10 @@
-import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {ConvertCurrencyToEUR, CurrencyE, InventoryMovementsTypeE} from '../enums';
 import {InventorieDataI} from '../interface';
 import {ResponseServiceBindings} from '../keys';
 import {InventoriesRepository, InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
+import {DayExchangeCalculateService} from './day-exchange-calculate';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -17,6 +18,8 @@ export class InventoriesService {
         public responseService: ResponseService,
         @repository(InventoriesRepository)
         public inventoriesRepository: InventoriesRepository,
+        @service()
+        public dayExchangeCalculateService: DayExchangeCalculateService
     ) { }
 
     async find() {
@@ -368,7 +371,7 @@ export class InventoriesService {
                 ]
             });
 
-            const calculateCost = this.calculateCost(currency, proformaAmount)
+            const calculateCost = await this.calculateCost(currency, originCost)
             return {
                 id,
                 image: document?.fileURL ?? null,
@@ -413,14 +416,19 @@ export class InventoriesService {
         }
     }
 
-    calculateCost(currency: CurrencyE, proformaAmount: number) {
-        if (currency === CurrencyE.PESO_MEXICANO)
-            return {amount: proformaAmount * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
+    async calculateCost(currency: CurrencyE, originCost: number) {
+        if (currency === CurrencyE.PESO_MEXICANO) {
+            const {EUR} = await this.dayExchangeCalculateService.getdayExchangeRateMxnTo();
+            // return {amount: originCost * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
+            return {amount: originCost * EUR, parity: EUR}
+        }
 
-        if (currency === CurrencyE.USD)
-            return {amount: proformaAmount * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
-
-        return {amount: proformaAmount, parity: ConvertCurrencyToEUR.EURO}
+        if (currency === CurrencyE.USD) {
+            const {EUR} = await this.dayExchangeCalculateService.getdayExchangeRateDollarTo();
+            // return {amount: originCost * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
+            return {amount: originCost * EUR, parity: EUR}
+        }
+        return {amount: originCost, parity: ConvertCurrencyToEUR.EURO}
     }
 
 }
