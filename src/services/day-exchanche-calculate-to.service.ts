@@ -1,10 +1,9 @@
-import {BindingScope, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {DayExchangeRateRepository} from '../repositories';
 
 @injectable({scope: BindingScope.TRANSIENT})
-export class DayExchangeCalculateService {
-
+export class DayExchancheCalculateToService {
     constructor(
         @repository(DayExchangeRateRepository)
         public dayExchangeRateRepository: DayExchangeRateRepository,
