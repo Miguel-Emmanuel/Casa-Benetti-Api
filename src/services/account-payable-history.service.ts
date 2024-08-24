@@ -7,6 +7,7 @@ import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
 import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DayExchangeRateRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {CalculateScheledDateService} from './calculate-scheled-date.service';
+import {DayExchangeCalculateService} from './day-exchange-calculate';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -37,6 +38,8 @@ export class AccountPayableHistoryService {
         public userRepository: UserRepository,
         @repository(DayExchangeRateRepository)
         public dayExchangeRateRepository: DayExchangeRateRepository,
+        @service()
+        public dayExchangeCalculateService: DayExchangeCalculateService
     ) { }
 
 
@@ -231,35 +234,7 @@ export class AccountPayableHistoryService {
         return account;
     }
 
-    async getdayExchangeRateEuroTo() {
-        const dayExchangeRate = await this.dayExchangeRateRepository.findOne();
-        if (dayExchangeRate) {
-            const {euroToDolar, euroToPeso} = dayExchangeRate;
-            return {USD: euroToDolar, MXN: euroToPeso}
-        } else {
-            return {USD: 1.074, MXN: 19.28}
-        }
-    }
 
-    async getdayExchangeRateMxnTo() {
-        const dayExchangeRate = await this.dayExchangeRateRepository.findOne();
-        if (dayExchangeRate) {
-            const {mxnToDolar, mxnToEuro} = dayExchangeRate;
-            return {USD: mxnToDolar, EUR: mxnToEuro}
-        } else {
-            return {USD: 0.052, EUR: 0.047}
-        }
-    }
-
-    async getdayExchangeRateDollarTo() {
-        const dayExchangeRate = await this.dayExchangeRateRepository.findOne();
-        if (dayExchangeRate) {
-            const {dolarToEuro, dolarToPeso} = dayExchangeRate;
-            return {EUR: dolarToEuro, MXN: dolarToPeso}
-        } else {
-            return {EUR: 0.89, MXN: 19.11}
-        }
-    }
 
     async convertCurrency(accountPayableAmount: number, accountPayableCurrency: ExchangeRateE, accountPayableId: number): Promise<number> {
         const findAccountProforma = await this.accountPayableRepository.findOne({
@@ -271,7 +246,7 @@ export class AccountPayableHistoryService {
         if (findAccountProforma && findAccountProforma?.proforma) {
             const proformaCurrency = findAccountProforma?.proforma?.currency
             if (proformaCurrency === ProformaCurrencyE.EURO) {
-                const {USD, MXN} = await this.getdayExchangeRateEuroTo();
+                const {USD, MXN} = await this.dayExchangeCalculateService.getdayExchangeRateEuroTo();
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToEUR.MXN
@@ -288,7 +263,7 @@ export class AccountPayableHistoryService {
                 }
             }
             else if (proformaCurrency === ProformaCurrencyE.PESO_MEXICANO) {
-                const {USD, EUR} = await this.getdayExchangeRateMxnTo();
+                const {USD, EUR} = await this.dayExchangeCalculateService.getdayExchangeRateMxnTo();
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToMXN.MXN
@@ -304,7 +279,7 @@ export class AccountPayableHistoryService {
                 }
             }
             else if (proformaCurrency === ProformaCurrencyE.USD) {
-                const {MXN, EUR} = await this.getdayExchangeRateDollarTo();
+                const {MXN, EUR} = await this.dayExchangeCalculateService.getdayExchangeRateDollarTo();
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToUSD.MXN
