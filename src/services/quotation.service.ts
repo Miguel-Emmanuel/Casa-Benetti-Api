@@ -13,7 +13,7 @@ import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
 import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
-import {DayExchangeCalculateService} from './day-exchange-calculate';
+import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {PdfService} from './pdf.service';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
@@ -63,7 +63,7 @@ export class QuotationService {
         @repository(DayExchangeRateRepository)
         public dayExchangeRateRepository: DayExchangeRateRepository,
         @service()
-        public dayExchangeCalculateService: DayExchangeCalculateService
+        public dayExchancheCalculateToService: DayExchancheCalculateToService
     ) { }
 
     async create(data: CreateQuotation) {
@@ -1358,7 +1358,7 @@ export class QuotationService {
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
             let bodyMXN = {};
             let bodyUSD = {};
-            const {USD, MXN} = await this.dayExchangeCalculateService.getdayExchangeRateEuroTo();
+            const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroTo();
             // const USD = 1.074;
             // const MXN = 19.28;
             const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,

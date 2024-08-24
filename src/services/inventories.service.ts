@@ -4,7 +4,7 @@ import {ConvertCurrencyToEUR, CurrencyE, InventoryMovementsTypeE} from '../enums
 import {InventorieDataI} from '../interface';
 import {ResponseServiceBindings} from '../keys';
 import {InventoriesRepository, InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
-import {DayExchangeCalculateService} from './day-exchange-calculate';
+import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -19,7 +19,7 @@ export class InventoriesService {
         @repository(InventoriesRepository)
         public inventoriesRepository: InventoriesRepository,
         @service()
-        public dayExchangeCalculateService: DayExchangeCalculateService
+        public dayExchancheCalculateToService: DayExchancheCalculateToService
     ) { }
 
     async find() {
@@ -418,13 +418,13 @@ export class InventoriesService {
 
     async calculateCost(currency: CurrencyE, originCost: number) {
         if (currency === CurrencyE.PESO_MEXICANO) {
-            const {EUR} = await this.dayExchangeCalculateService.getdayExchangeRateMxnTo();
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnTo();
             // return {amount: originCost * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
             return {amount: originCost * EUR, parity: EUR}
         }
 
         if (currency === CurrencyE.USD) {
-            const {EUR} = await this.dayExchangeCalculateService.getdayExchangeRateDollarTo();
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarTo();
             // return {amount: originCost * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
             return {amount: originCost * EUR, parity: EUR}
         }

@@ -7,7 +7,7 @@ import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
 import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DayExchangeRateRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {CalculateScheledDateService} from './calculate-scheled-date.service';
-import {DayExchangeCalculateService} from './day-exchange-calculate';
+import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -39,7 +39,7 @@ export class AccountPayableHistoryService {
         @repository(DayExchangeRateRepository)
         public dayExchangeRateRepository: DayExchangeRateRepository,
         @service()
-        public dayExchangeCalculateService: DayExchangeCalculateService
+        public dayExchancheCalculateToService: DayExchancheCalculateToService
     ) { }
 
 
@@ -246,7 +246,7 @@ export class AccountPayableHistoryService {
         if (findAccountProforma && findAccountProforma?.proforma) {
             const proformaCurrency = findAccountProforma?.proforma?.currency
             if (proformaCurrency === ProformaCurrencyE.EURO) {
-                const {USD, MXN} = await this.dayExchangeCalculateService.getdayExchangeRateEuroTo();
+                const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroTo();
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToEUR.MXN
@@ -263,7 +263,7 @@ export class AccountPayableHistoryService {
                 }
             }
             else if (proformaCurrency === ProformaCurrencyE.PESO_MEXICANO) {
-                const {USD, EUR} = await this.dayExchangeCalculateService.getdayExchangeRateMxnTo();
+                const {USD, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnTo();
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToMXN.MXN
@@ -279,7 +279,7 @@ export class AccountPayableHistoryService {
                 }
             }
             else if (proformaCurrency === ProformaCurrencyE.USD) {
-                const {MXN, EUR} = await this.dayExchangeCalculateService.getdayExchangeRateDollarTo();
+                const {MXN, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarTo();
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToUSD.MXN
