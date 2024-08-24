@@ -172,15 +172,18 @@ export class AccountPayableHistoryService {
     async notifyLogistics(purchaseOrderId?: number) {
         const users = await this.userRepository.find({where: {isLogistics: true}})
         const emails = users.map(value => value.email);
-        const options = {
-            to: emails,
-            templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
-            dynamicTemplateData: {
-                subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
-                purchaseOrderId
-            }
-        };
-        await this.sendgridService.sendNotification(options);
+        for (let index = 0; index < emails?.length; index++) {
+            const elementMail = emails[index];
+            const options = {
+                to: elementMail,
+                templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
+                    purchaseOrderId
+                }
+            };
+            await this.sendgridService.sendNotification(options);
+        }
     }
 
 

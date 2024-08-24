@@ -203,35 +203,38 @@ export class AdvancePaymentRecordService {
     async notifyStock(email: string, projectId: string, customerName: string, quotationProducts: QuotationProductsWithRelations[]) {
         const users = await this.userRepository.find({where: {isLogistics: true}})
         const emails = users.map(value => value.email);
-        const options = {
-            to: emails,
-            templateId: SendgridTemplates.NOTIFICATION_PRODUCT_STOCK.id,
-            dynamicTemplateData: {
-                subject: SendgridTemplates.NOTIFICATION_PRODUCT_STOCK.subject,
-                projectId,
-                customerName,
-                products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                    const {id: productId, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
-                    const {document, line, name} = product;
-                    const descriptionParts = [
-                        line?.name,
-                        name,
-                        mainMaterial,
-                        mainFinish,
-                        secondaryMaterial,
-                        secondaryFinishing
-                    ];
-                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
-                    return {
-                        id: productId,
-                        name: name,
-                        image: document?.fileURL,
-                        description,
-                    }
-                })
-            }
-        };
-        await this.sendgridService.sendNotification(options);
+        for (let index = 0; index < emails?.length; index++) {
+            const elementMail = emails[index];
+            const options = {
+                to: elementMail,
+                templateId: SendgridTemplates.NOTIFICATION_PRODUCT_STOCK.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.NOTIFICATION_PRODUCT_STOCK.subject,
+                    projectId,
+                    customerName,
+                    products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                        const {id: productId, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
+                        const {document, line, name} = product;
+                        const descriptionParts = [
+                            line?.name,
+                            name,
+                            mainMaterial,
+                            mainFinish,
+                            secondaryMaterial,
+                            secondaryFinishing
+                        ];
+                        const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                        return {
+                            id: productId,
+                            name: name,
+                            image: document?.fileURL,
+                            description,
+                        }
+                    })
+                }
+            };
+            await this.sendgridService.sendNotification(options);
+        }
     }
 
 

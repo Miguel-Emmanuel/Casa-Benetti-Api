@@ -80,16 +80,19 @@ export class PurchaseOrderHook {
             const users = await this.userRepository.find({where: {isPurchaseOrderManager: true}})
             const emails = users.map(value => value.email);
             if (emails.length > 0) {
-                const options = {
-                    to: emails,
-                    templateId: SendgridTemplates.NEW_PURCHASE_ORDER.id,
-                    dynamicTemplateData: {
-                        subject: SendgridTemplates.NEW_PURCHASE_ORDER.subject,
-                        projectId: projectId,
-                        orderId: id
-                    }
-                };
-                await this.sendgridService.sendNotification(options);
+                for (let index = 0; index < emails?.length; index++) {
+                    const elementMail = emails[index];
+                    const options = {
+                        to: elementMail,
+                        templateId: SendgridTemplates.NEW_PURCHASE_ORDER.id,
+                        dynamicTemplateData: {
+                            subject: SendgridTemplates.NEW_PURCHASE_ORDER.subject,
+                            projectId: projectId,
+                            orderId: id
+                        }
+                    };
+                    await this.sendgridService.sendNotification(options);
+                }
             }
         } catch (error) {
             console.log('Error al mandar correo para nueva orden de compra.', error)
@@ -99,19 +102,22 @@ export class PurchaseOrderHook {
         try {
 
             if (emails.length > 0) {
-                const options = {
-                    to: emails,
-                    templateId: SendgridTemplates.NOTIFICATION_PROJECT_UPDATED.id,
-                    dynamicTemplateData: {
-                        subject: SendgridTemplates.NOTIFICATION_PROJECT_UPDATED.subject,
-                        projectId: projectId,
-                        purchaseOrderId,
-                        statusold,
-                        statusnew,
-                        customerName
-                    }
-                };
-                await this.sendgridService.sendNotification(options);
+                for (let index = 0; index < emails.length; index++) {
+                    const element = emails[index];
+                    const options = {
+                        to: element,
+                        templateId: SendgridTemplates.NOTIFICATION_PROJECT_UPDATED.id,
+                        dynamicTemplateData: {
+                            subject: SendgridTemplates.NOTIFICATION_PROJECT_UPDATED.subject,
+                            projectId: projectId,
+                            purchaseOrderId,
+                            statusold,
+                            statusnew,
+                            customerName
+                        }
+                    };
+                    await this.sendgridService.sendNotification(options);
+                }
             }
         } catch (error) {
             console.log('Error al mandar correo para nueva orden de compra.', error)
