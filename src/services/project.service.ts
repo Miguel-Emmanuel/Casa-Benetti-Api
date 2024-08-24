@@ -527,18 +527,21 @@ export class ProjectService {
         const emails = users.map(value => value.email);
         const {customer, quotation} = project;
         const {mainProjectManager} = quotation;
-        const options = {
-            to: emails,
-            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
-            dynamicTemplateData: {
-                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                projectId: project.projectId,
-                mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
-                date: dayjs(deliveryDay).format('DD/MM/YYYY')
-            }
-        };
-        await this.sendgridService.sendNotification(options);
+        for (let index = 0; index < emails?.length; index++) {
+            const element = emails[index];
+            const options = {
+                to: emails,
+                templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
+                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    projectId: project.projectId,
+                    mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                    date: dayjs(deliveryDay).format('DD/MM/YYYY')
+                }
+            };
+            await this.sendgridService.sendNotification(options);
+        }
     }
 
     async validateBodyDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {

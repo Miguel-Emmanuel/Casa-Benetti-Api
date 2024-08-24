@@ -24,7 +24,7 @@ export class DateCollectionNotificationCronJob extends CronJob {
                 await this.notify();
             },
             // cronTime: '*/5 * * * * *',
-            cronTime: '0 7 * * *',
+            cronTime: '40 13 * * *',
             start: true,
             timeZone: 'America/Mexico_City'
         });
@@ -81,17 +81,31 @@ export class DateCollectionNotificationCronJob extends CronJob {
                     const {proforma} = element[0]
                     if (proforma) {
                         const {provider} = proforma;
-                        const options = {
-                            to: emails,
+                        for (let index = 0; index < emails?.length; index++) {
+                            const elementMail = emails[index];
+                            const options = {
+                                to: elementMail,
+                                templateId: SendgridTemplates.NOTIFICATION_DATE_COLLECTION.id,
+                                dynamicTemplateData: {
+                                    subject: SendgridTemplates.NOTIFICATION_DATE_COLLECTION.subject,
+                                    providerName: `${provider?.name}`,
+                                    purchaseOrderId: element.map(value => value.id),
+                                    collectionId
+                                }
+                            };
+                            await this.sendgridService.sendNotification(options);
+                        }
+                        const options2 = {
+                            to: 'waldo@whathecode.com',
                             templateId: SendgridTemplates.NOTIFICATION_DATE_COLLECTION.id,
                             dynamicTemplateData: {
                                 subject: SendgridTemplates.NOTIFICATION_DATE_COLLECTION.subject,
-                                providerName: `${provider?.name}`,
-                                purchaseOrderId: element.map(value => value.id),
-                                collectionId
+                                providerName: `test`,
+                                purchaseOrderId: [1, 2, 3],
+                                collectionId: 9
                             }
                         };
-                        await this.sendgridService.sendNotification(options);
+                        await this.sendgridService.sendNotification(options2);
                     }
                 }
             }

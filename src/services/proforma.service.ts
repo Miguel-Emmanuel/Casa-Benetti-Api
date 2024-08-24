@@ -161,11 +161,14 @@ export class ProformaService {
             const element = users[index];
             emails.push(element.email)
         }
-        const optionsDynamic = {
-            to: emails,
-            ...option,
-        };
-        await this.sendgridService.sendNotification(optionsDynamic);
+        for (let index = 0; index < emails?.length; index++) {
+            const elementMail = emails[index];
+            const optionsDynamic = {
+                to: elementMail,
+                ...option,
+            };
+            await this.sendgridService.sendNotification(optionsDynamic);
+        }
     }
 
     setCurrencyToAmount(proformaAmount: number, currency: ProformaCurrencyE) {

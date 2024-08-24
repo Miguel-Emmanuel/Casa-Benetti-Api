@@ -105,41 +105,44 @@ export class DeliveryDayNotificationCronJob extends CronJob {
         for (let index = 0; index < deliveryRequest.length; index++) {
             const {purchaseOrders, project, id} = deliveryRequest[index];
             if (purchaseOrders) {
-                const options = {
-                    to: emails,
-                    templateId: SendgridTemplates.NOTIFICATION_DELIVERY_DAY.id,
-                    dynamicTemplateData: {
-                        subject: SendgridTemplates.NOTIFICATION_DELIVERY_DAY.subject,
-                        deliveryRequestId: id,
-                        projectId: project?.projectId,
-                        purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
-                            const {id: purchaseOrderid, proforma, productionEndDate} = value;
-                            const {quotationProducts} = proforma;
-                            return {
-                                id: purchaseOrderid,
-                                products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                                    const {id: productId, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
-                                    const {document, line, name} = product;
-                                    const descriptionParts = [
-                                        line?.name,
-                                        name,
-                                        mainMaterial,
-                                        mainFinish,
-                                        secondaryMaterial,
-                                        secondaryFinishing
-                                    ];
-                                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
-                                    return {
-                                        id: productId,
-                                        image: document?.fileURL,
-                                        description,
-                                    }
-                                })
-                            }
-                        }),
-                    }
-                };
-                await this.sendgridService.sendNotification(options);
+                for (let index = 0; index < emails.length; index++) {
+                    const elementMail = emails[index];
+                    const options = {
+                        to: elementMail,
+                        templateId: SendgridTemplates.NOTIFICATION_DELIVERY_DAY.id,
+                        dynamicTemplateData: {
+                            subject: SendgridTemplates.NOTIFICATION_DELIVERY_DAY.subject,
+                            deliveryRequestId: id,
+                            projectId: project?.projectId,
+                            purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                                const {id: purchaseOrderid, proforma, productionEndDate} = value;
+                                const {quotationProducts} = proforma;
+                                return {
+                                    id: purchaseOrderid,
+                                    products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                                        const {id: productId, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, } = value;
+                                        const {document, line, name} = product;
+                                        const descriptionParts = [
+                                            line?.name,
+                                            name,
+                                            mainMaterial,
+                                            mainFinish,
+                                            secondaryMaterial,
+                                            secondaryFinishing
+                                        ];
+                                        const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                                        return {
+                                            id: productId,
+                                            image: document?.fileURL,
+                                            description,
+                                        }
+                                    })
+                                }
+                            }),
+                        }
+                    };
+                    await this.sendgridService.sendNotification(options);
+                }
                 //Email del cliente
                 const {customer} = project
                 const options2 = {
