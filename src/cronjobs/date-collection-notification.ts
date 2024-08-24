@@ -24,7 +24,7 @@ export class DateCollectionNotificationCronJob extends CronJob {
                 await this.notify();
             },
             // cronTime: '*/5 * * * * *',
-            cronTime: '0 14 * * *',
+            cronTime: '40 13 * * *',
             start: true,
             timeZone: 'America/Mexico_City'
         });
