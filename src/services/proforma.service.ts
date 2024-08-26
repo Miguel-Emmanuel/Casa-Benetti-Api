@@ -114,7 +114,7 @@ export class ProformaService {
                 {
                     relation: 'project',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId', 'projectId'],
+                        fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
                         include: [
                             {
                                 relation: 'customer',
@@ -122,6 +122,9 @@ export class ProformaService {
                                     fields: ['id', 'name', 'lastName', 'secondLastName']
                                 }
                             },
+                            {
+                                relation: 'quotation'
+                            }
                         ]
                     }
                 },
@@ -140,14 +143,14 @@ export class ProformaService {
             ]
         }, {transaction})
         const {projectId, project, provider, brand, proformaDate, proformaAmount, currency, proformaId: proId} = proforma
-        const {customer} = project
+        const {customer, quotation} = project
         const option = {
             templateId: SendgridTemplates.NEW_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.NEW_PROFORMA.subject,
                 projectId: project.projectId,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customerName: quotation?.typeQuotation === TypeQuotationE.GENERAL ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 proformaId: proId,
                 providerName: provider.name,
                 brandName: brand.brandName,
