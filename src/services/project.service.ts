@@ -921,7 +921,8 @@ export class ProjectService {
                 balance: convertToMoney(balance ?? 0),
                 exchangeRate,
                 percentageAdvance,
-                emailPM: mainProjectManager?.email
+                emailPM: mainProjectManager?.email,
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
 
             }
             const nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
@@ -994,7 +995,8 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": referenceCustomerName,
                 "products": prodcutsArray,
-                "type": 'COTIZACION'
+                "type": 'COTIZACION',
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);

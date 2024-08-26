@@ -232,7 +232,13 @@
         <div class="column column-3">
             <div class="property">
                 <div class="property-name">Cliente:</div>
-                <div class="property-value">{{customerName}}</div>
+                <div class="property-value">
+                    {{#if isTypeQuotationGeneral}}
+                    {{customerName}}
+                    {{else}}
+                    Showroom
+                    {{/if}}
+                </div>
             </div>
             <div class="property">
                 <div class="property-name">Cotización:</div>
