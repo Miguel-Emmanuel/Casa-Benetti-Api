@@ -326,7 +326,7 @@ export class ProformaService {
                 {
                     relation: 'project',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId', 'projectId'],
+                        fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
                         include: [
                             {
                                 relation: 'customer',
@@ -334,6 +334,9 @@ export class ProformaService {
                                     fields: ['id', 'name', 'lastName', 'secondLastName']
                                 }
                             },
+                            {
+                                relation: 'quotation'
+                            }
                         ]
                     }
                 },
@@ -399,14 +402,15 @@ export class ProformaService {
             }
         }
         const {projectId, project, proformaId: proId} = oldData;
-        const {customer} = project
+        const {customer, quotation} = project
         const option = {
             templateId: SendgridTemplates.UPDATE_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.UPDATE_PROFORMA.subject,
                 projectId: project.projectId,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                // customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customerName: quotation?.typeQuotation === TypeQuotationE.GENERAL ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 proformaId: proId,
                 ...objectOld,
                 ...objectNew
@@ -418,6 +422,7 @@ export class ProformaService {
                 to: element.email,
                 ...option,
             };
+            console.log(optionsDynamic)
             await this.sendgridService.sendNotification(optionsDynamic);
         }
     }
