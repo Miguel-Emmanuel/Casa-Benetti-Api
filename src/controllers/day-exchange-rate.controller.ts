@@ -97,7 +97,7 @@ export class DayExchangeRateController {
         })
         dayExchangeRate: DayExchangeRate,
     ): Promise<void> {
-        await this.dayExchangeRateRepository.updateById(id, dayExchangeRate);
+        await this.dayExchangeRateService.updateById(id, dayExchangeRate);
     }
 
     // @del('/day-exchange-rates/{id}')
