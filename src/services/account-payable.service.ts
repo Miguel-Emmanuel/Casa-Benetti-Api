@@ -83,7 +83,7 @@ export class AccountPayableService {
                         {
                             relation: 'project',
                             scope: {
-                                fields: ['id', 'customerId', 'quotationId'],
+                                fields: ['id', 'customerId', 'quotationId', 'projectId'],
                                 include: [
                                     {
                                         relation: 'customer',
@@ -139,15 +139,14 @@ export class AccountPayableService {
             const findAccountPayable = await this.accountPayableRepository.find(filter)
             return findAccountPayable.map(value => {
                 const {id, proforma, purchaseOrders, total, totalPaid, balance, createdAt} = value;
-                const {provider, projectId, project, branchId} = proforma;
-                const {customerId, customer} = project
-                const {groupId} = customer;
+                const {provider, project, branchId} = proforma;
+                const {customerId, customer, projectId} = project
                 return {
                     id,
                     provider: `${provider.name}`,
                     purchaseOrderId: purchaseOrders?.id ?? null,
-                    customerId,
-                    groupId,
+                    customerId: customerId ?? null,
+                    groupId: customer?.groupId ?? null,
                     projectId,
                     branchId,
                     total,
@@ -187,7 +186,7 @@ export class AccountPayableService {
                             {
                                 relation: 'project',
                                 scope: {
-                                    fields: ['id', 'customerId', 'quotationId'],
+                                    fields: ['id', 'customerId', 'quotationId', 'projectId'],
                                     include: [
                                         {
                                             relation: 'customer',
@@ -265,8 +264,8 @@ export class AccountPayableService {
                 }
             })
             const {proforma, purchaseOrders, total, totalPaid, balance, currency} = findAccountPayable;
-            const {provider, brand, project, projectId} = proforma;
-            const {customer, quotation} = project
+            const {provider, brand, project} = proforma;
+            const {customer, quotation, projectId} = project
             const {closingDate, showroomManager, mainProjectManager} = quotation
             const values = {
                 id,
@@ -274,7 +273,7 @@ export class AccountPayableService {
                 brand: brand?.brandName,
                 purchaseOrderId: purchaseOrders?.id ?? null,
                 projectId,
-                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customer: customer ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 closingDate,
                 showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
                 mainProjectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,

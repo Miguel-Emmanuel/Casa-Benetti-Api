@@ -1,5 +1,7 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {Branch, BranchWithRelations} from './branch.model';
+import {Collection} from './collection.model';
+import {Container} from './container.model';
 import {InventoryMovements} from './inventory-movements.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {Warehouse, WarehouseWithRelations} from './warehouse.model';
@@ -59,6 +61,16 @@ export class Inventories extends Entity {
 
     @hasMany(() => InventoryMovements)
     inventoryMovements: InventoryMovements[];
+
+
+    //Conenedor id
+    @belongsTo(() => Container)
+    containerId: number;
+
+    //Recoleccion id
+    @belongsTo(() => Collection)
+    collectionId: number;
+
 
     //Sucursal/showrooms
     @belongsTo(() => Warehouse)

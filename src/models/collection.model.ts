@@ -1,5 +1,6 @@
 import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
-import {Container} from './container.model';
+import {CollectionStatus} from '../enums';
+import {Container, ContainerWithRelations} from './container.model';
 import {Document} from './document.model';
 import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
 
@@ -36,12 +37,17 @@ export class Collection extends Entity {
     @hasMany(() => PurchaseOrders)
     purchaseOrders: PurchaseOrders[];
 
+    //Status
+    @property({
+        type: 'string',
+        default: CollectionStatus.PROGRAMADA
+    })
+    status: CollectionStatus;
 
-
-    //Fecha de recoleccion
     @hasMany(() => Document)
     documents: Document[];
 
+    //Fecha de recoleccion
     @property({
         type: 'date',
     })
@@ -50,11 +56,11 @@ export class Collection extends Entity {
     @belongsTo(() => Container)
     containerId?: number;
 
-    //Número de contenedor
-    @property({
-        type: 'string',
-    })
-    containerNumber: string;
+    // //Número de contenedor
+    // @property({
+    //     type: 'string',
+    // })
+    // containerNumber: string;
 
     constructor(data?: Partial<Collection>) {
         super(data);
@@ -64,6 +70,7 @@ export class Collection extends Entity {
 export interface CollectionRelations {
     // describe navigational properties here
     purchaseOrders: PurchaseOrdersWithRelations[]
+    container: ContainerWithRelations
 }
 
 export type CollectionWithRelations = Collection & CollectionRelations;

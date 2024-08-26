@@ -446,6 +446,89 @@ export class ProjectController {
         await this.projectService.uploadDocuments(id, data);
     }
 
+
+    @get('/projects/{id}/purchase-orders')
+    @response(200, {
+        description: 'Project model instance',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            providerName: {
+                                type: 'string'
+                            },
+                            brandName: {
+                                type: 'string'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                            accountPayableId: {
+                                type: 'number'
+                            },
+                            proformaId: {
+                                type: 'string'
+                            },
+                            productionEndDate: {
+                                type: 'string'
+                            },
+                            productionRealEndDate: {
+                                type: 'string'
+                            },
+                            containerNumber: {
+                                type: 'string'
+                            },
+                            arrivalDate: {
+                                type: 'string'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        description: {
+                                            type: 'string'
+                                        },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        },
+    })
+    async getPurchaseOrdersByProjectId(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.projectService.getPurchaseOrdersByProjectId(id);
+    }
+
+    @get('/project/account-statement/{id}')
+    @response(200, {
+        description: 'Account statement model instance',
+    })
+    async getAccountStatement(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.projectService.getAccountStatement(id);
+    }
+
     // @del('/projects/{id}')
     // @response(204, {
     //     description: 'Project DELETE success',

@@ -1,12 +1,14 @@
-import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasOne, model, property, referencesMany} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
-import {CurrencyE, QuotationProductStatusE, TypeSaleE} from '../enums';
+import {CurrencyE, QuotationProductStatusE, TypeQuotationE, TypeSaleE} from '../enums';
 import {DocumentSchema} from './base/document.model';
+import {Branch} from './branch.model';
 import {Brand, BrandWithRelations} from './brand.model';
 import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
+import {PurchaseOrders} from './purchase-orders.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -65,6 +67,7 @@ export class QuotationProducts extends Entity {
     //No. de cajas o bultos
     @property({
         type: 'number',
+        default: 1
     })
     numberBoxes: number;
 
@@ -97,6 +100,7 @@ export class QuotationProducts extends Entity {
     //Venta o prestamo
     @property({
         type: 'string',
+        default: TypeSaleE.VENTA
     })
     typeSale?: TypeSaleE;
 
@@ -135,6 +139,13 @@ export class QuotationProducts extends Entity {
         type: 'boolean',
     })
     isNotificationSent?: boolean | null;
+
+    //Tipo de cotizacion
+    @property({
+        type: 'string',
+        default: TypeQuotationE.GENERAL
+    })
+    typeQuotation: TypeQuotationE;
 
 
     //******************************************** ACTUALIZACION DE PRODUCTOS ***************
@@ -193,6 +204,12 @@ export class QuotationProducts extends Entity {
         },
     })
     measureWide: number;
+
+    @belongsTo(() => PurchaseOrders)
+    purchaseOrdersId: number;
+
+    @referencesMany(() => Branch, {name: 'branches'})
+    branchesId: number[];
 
     //Medidas (alto)
     @property({
@@ -329,6 +346,12 @@ export class QuotationProducts extends Entity {
         },
     })
     quantity: number;
+
+    //Comentario de entrada
+    @property({
+        type: 'string',
+    })
+    commentEntry: string;
 
     //Cantidad del producto que ya existe en inventario
     @property({

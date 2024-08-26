@@ -1,19 +1,21 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
+import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
-import {Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {ProformaWithRelations, Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
+
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProjectService {
     constructor(
@@ -57,16 +59,20 @@ export class ProjectService {
         public sendgridService: SendgridService,
         @repository(UserRepository)
         public userRepository: UserRepository,
+        @inject(RestBindings.Http.RESPONSE)
+        private response: Response,
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
         const {quotationId} = body;
         const quotation = await this.findQuotationById(quotationId);
-        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, transaction);
+        const project = await this.createProject({quotationId, branchId: quotation.branchId, customerId: quotation?.customerId}, quotation.showroomManager.firstName, quotation.typeQuotation, transaction);
         await this.changeStatusProductsToPedido(quotationId, transaction);
         await this.updateSKUProducts(quotationId, project.reference, transaction);
-        await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
-        await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
+        if (quotation?.typeQuotation === TypeQuotationE.GENERAL) {
+            await this.createAdvancePaymentRecord(quotation, project.id, project.reference, transaction)
+            await this.createCommissionPaymentRecord(quotation, project.id, quotationId, transaction)
+        }
         await this.createPdfToCustomer(quotationId, project.id, transaction);
         await this.createPdfToProvider(quotationId, project.id, transaction);
         await this.createPdfToAdvance(quotationId, project.id, transaction);
@@ -265,6 +271,114 @@ export class ProjectService {
         })
     }
 
+    async getPurchaseOrdersByProjectId(id: number) {
+        try {
+            const project = await this.projectRepository.findById(id, {
+                include: [
+                    {
+                        relation: 'proformas',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'purchaseOrders',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'collection',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'container'
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    relation: 'provider'
+                                },
+                                {
+                                    relation: 'brand'
+                                },
+                                {
+                                    relation: 'accountPayable'
+                                },
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'product',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'document'
+                                                        },
+                                                        {
+                                                            relation: 'line'
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            })
+            const {proformas} = project
+            return proformas?.map((value: ProformaWithRelations) => {
+                const {purchaseOrders, provider, brand, accountPayable, proformaId, quotationProducts} = value;
+                if (purchaseOrders) {
+                    const {id: purchaseOrderId, status, productionEndDate, productionRealEndDate, collection, arrivalDate} = purchaseOrders;
+                    return {
+                        id: purchaseOrderId,
+                        providerName: `${provider.name}`,
+                        brandName: `${brand.brandName}`,
+                        status,
+                        accountPayableId: accountPayable.id,
+                        proformaId,
+                        productionEndDate: productionEndDate ?? null,
+                        productionRealEndDate: productionRealEndDate ?? null,
+                        containerNumber: collection?.container?.containerNumber ?? null,
+                        arrivalDate: arrivalDate ?? null,
+                        products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, quantity, originCost, proformaPrice, numberBoxes, status} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                                quantity,
+                                originCost,
+                                proformaPrice,
+                                proformaPriceQuantity: quantity * proformaPrice,
+                                numberBoxes,
+                                status
+                            }
+                        })
+                    }
+                }
+            }).filter(value => value != null) ?? []
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
+    }
+
 
     async getDeliveryBeValidated(id: number) {
         try {
@@ -413,18 +527,21 @@ export class ProjectService {
         const emails = users.map(value => value.email);
         const {customer, quotation} = project;
         const {mainProjectManager} = quotation;
-        const options = {
-            to: emails,
-            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
-            dynamicTemplateData: {
-                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
-                projectId: project.projectId,
-                mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
-                date: dayjs(deliveryDay).format('DD/MM/YYYY')
-            }
-        };
-        await this.sendgridService.sendNotification(options);
+        for (let index = 0; index < emails?.length; index++) {
+            const element = emails[index];
+            const options = {
+                to: emails,
+                templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
+                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    projectId: project.projectId,
+                    mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                    date: dayjs(deliveryDay).format('DD/MM/YYYY')
+                }
+            };
+            await this.sendgridService.sendNotification(options);
+        }
     }
 
     async validateBodyDeliveryRequest(data: {projectId: number, deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
@@ -463,7 +580,7 @@ export class ProjectService {
             {
                 relation: 'quotation',
                 scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId'],
+                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'mainProjectManagerId', 'typeQuotation'],
                     include: [
                         {
                             relation: 'mainProjectManager',
@@ -505,147 +622,169 @@ export class ProjectService {
             return {
                 id,
                 projectId,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''}`,
-                projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                customerName: customer ? `${customer?.name} ${customer?.lastName ?? ''}` : null,
+                projectManager: mainProjectManager ? `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}` : null,
                 branch: branch?.name,
                 total: this.getTotalQuotation(exchangeRateQuotation, quotation),
                 status,
                 closingDate,
                 branchId,
                 mainProjectManagerId,
-                reference
+                reference,
+                typeQuotation: quotation?.typeQuotation
             }
         })
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Project>) {
-        const include: InclusionFilter[] = [
-            {
-                relation: 'quotation',
-                scope: {
-                    fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR'],
-                    include: [
-                        {
-                            relation: 'mainProjectManager',
-                            scope: {
-                                fields: ['id', 'firstName', 'lastName']
-                            }
-                        },
-                        {
-                            relation: 'products',
-                            scope: {
-                                include: ['brand', 'document', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
-                            }
-                        },
-                    ]
-                }
-            },
-            {
-                relation: 'customer',
-                scope: {
-                    fields: ['id', 'name', 'lastName'],
-                }
-            },
-            {
-                relation: 'advancePaymentRecords',
-            },
-            {
-                relation: 'clientQuoteFile',
-            },
-            {
-                relation: 'providerFile',
-            },
-            {
-                relation: 'advanceFile',
-            },
-            {
-                relation: 'documents',
-            },
-        ]
-        if (filter?.include)
-            filter.include = [
-                ...filter.include,
-                ...include
-            ]
-        else
-            filter = {
-                ...filter, include: [
-                    ...include,
-                ]
-            };
-        const project = await this.projectRepository.findById(id, filter);
-        const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
-        const {closingDate, products, exchangeRateQuotation} = quotation;
-        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
-        const productsArray = [];
-        for (const iterator of products ?? []) {
-            const descriptionParts = [
-                iterator?.line?.name,
-                iterator?.name,
-                iterator.quotationProducts?.mainMaterial,
-                iterator.quotationProducts?.mainFinish,
-                iterator.quotationProducts?.secondaryMaterial,
-                iterator.quotationProducts?.secondaryFinishing
-            ];
-            const measuresParts = [
-                iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
-                iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
-                iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
-                iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
-            ];
-
-            const description = descriptionParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-            const measures = measuresParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-            productsArray.push({
-                id: iterator?.id,
-                image: iterator?.document ? iterator?.document?.fileURL : '',
-                brandName: iterator?.brand?.brandName ?? '',
-                description,
-                measures,
-                price: iterator?.quotationProducts?.price,
-                listPrice: iterator?.quotationProducts?.originCost,
-                factor: iterator?.quotationProducts?.factor,
-                quantity: iterator?.quotationProducts?.quantity,
-                // provider: iterator?.provider?.name,
-                status: iterator?.quotationProducts?.status,
-                mainFinish: iterator?.quotationProducts?.mainFinish,
-                mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
-                secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
-                secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
-            })
-        }
-        return {
-            id,
-            customerName: `${customer?.name} ${customer?.lastName}`,
-            closingDate,
-            total,
-            totalPay: advanceCustomer,
-            balance,
-            products: productsArray,
-            advancePaymentRecords,
-            exchangeRateQuotation,
-            reference,
-            files: {
-                clientQuoteFile: {
-                    fileURL: clientQuoteFile?.fileURL,
-                    name: clientQuoteFile?.name,
-                    createdAt: clientQuoteFile?.createdAt,
-                    extension: clientQuoteFile?.extension,
-                },
-                providerFile:
+        try {
+            const include: InclusionFilter[] = [
                 {
-                    fileURL: providerFile?.fileURL,
-                    name: providerFile?.name,
-                    createdAt: providerFile?.createdAt,
-                    extension: providerFile?.extension,
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR', 'typeQuotation'],
+                        include: [
+                            {
+                                relation: 'mainProjectManager',
+                                scope: {
+                                    fields: ['id', 'firstName', 'lastName']
+                                }
+                            },
+                            {
+                                relation: 'products',
+                                scope: {
+                                    include: ['brand', 'document', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
+                                }
+                            },
+                        ]
+                    }
                 },
-                advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
-                documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
+                {
+                    relation: 'customer',
+                    scope: {
+                        fields: ['id', 'name', 'lastName'],
+                    }
+                },
+                {
+                    relation: 'advancePaymentRecords',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'documents',
+                                scope: {
+                                    fields: ['id', 'createdAt', 'fileURL', 'name', 'extension', 'advancePaymentRecordId']
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'clientQuoteFile',
+                },
+                {
+                    relation: 'providerFile',
+                },
+                {
+                    relation: 'advanceFile',
+                },
+                {
+                    relation: 'documents',
+                },
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include,
+                    ]
+                };
+            const project = await this.projectRepository.findById(id, filter);
+            const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
+            const {closingDate, products, exchangeRateQuotation, typeQuotation} = quotation;
+            const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
+            const productsArray = [];
+            for (const iterator of products ?? []) {
+                const descriptionParts = [
+                    iterator?.line?.name,
+                    iterator?.name,
+                    iterator.quotationProducts?.mainMaterial,
+                    iterator.quotationProducts?.mainFinish,
+                    iterator.quotationProducts?.secondaryMaterial,
+                    iterator.quotationProducts?.secondaryFinishing
+                ];
+                const measuresParts = [
+                    iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
+                    iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
+                    iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
+                    iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
+                ];
+
+                const description = descriptionParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+                const measures = measuresParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+                productsArray.push({
+                    id: iterator?.id,
+                    image: iterator?.document ? iterator?.document?.fileURL : '',
+                    brandName: iterator?.brand?.brandName ?? '',
+                    description,
+                    measures,
+                    price: iterator?.quotationProducts?.price,
+                    listPrice: iterator?.quotationProducts?.originCost,
+                    factor: iterator?.quotationProducts?.factor,
+                    quantity: iterator?.quotationProducts?.quantity,
+                    // provider: iterator?.provider?.name,
+                    status: iterator?.quotationProducts?.status,
+                    mainFinish: iterator?.quotationProducts?.mainFinish,
+                    mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
+                    secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
+                    secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
+                })
             }
+            return {
+                id,
+                customerName: customer ? `${customer?.name} ${customer?.lastName}` : null,
+                closingDate,
+                total,
+                totalPay: advanceCustomer,
+                balance,
+                products: productsArray,
+                typeQuotation,
+                advancePaymentRecords: advancePaymentRecords?.map(value => {
+                    const {documents, ...body} = value;
+                    return {
+                        ...body,
+                        docs: documents
+                    }
+                }),
+                exchangeRateQuotation,
+                reference,
+                files: {
+                    clientQuoteFile: {
+                        fileURL: clientQuoteFile?.fileURL,
+                        name: clientQuoteFile?.name,
+                        createdAt: clientQuoteFile?.createdAt,
+                        extension: clientQuoteFile?.extension,
+                    },
+                    providerFile:
+                    {
+                        fileURL: providerFile?.fileURL,
+                        name: providerFile?.name,
+                        createdAt: providerFile?.createdAt,
+                        extension: providerFile?.extension,
+                    },
+                    advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
+                    documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
+                }
+            }
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error);
         }
     }
 
@@ -783,10 +922,11 @@ export class ProjectService {
                 balance: convertToMoney(balance ?? 0),
                 exchangeRate,
                 percentageAdvance,
-                emailPM: mainProjectManager?.email
+                emailPM: mainProjectManager?.email,
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
 
             }
-            const nameFile = `cotizacion_cliente_${customer?.name}-${customer?.lastName}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            const nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
@@ -856,7 +996,8 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": referenceCustomerName,
                 "products": prodcutsArray,
-                "type": 'COTIZACION'
+                "type": 'COTIZACION',
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
             const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
@@ -1029,21 +1170,31 @@ export class ProjectService {
         return body;
     }
 
-    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, showroomManager: string, transaction: any) {
+    async createProject(body: {quotationId: number, branchId: number, customerId?: number}, showroomManager: string, typeQuotation: TypeQuotationE, transaction: any) {
         const previousProject = await this.projectRepository.findOne({order: ['createdAt DESC'], include: [{relation: 'branch'}]})
         const branch = await this.branchRepository.findOne({where: {id: body.branchId}})
         let projectId = null;
         let reference = null;
-        if (previousProject) {
-            projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
-            reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
+        if (typeQuotation === TypeQuotationE.GENERAL) {
+            if (previousProject) {
+                projectId = `${previousProject.id + 1}${branch?.name?.charAt(0).toUpperCase()}`;
+                reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
+            } else {
+                projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
+                reference = `${this.getNumberReference(showroomManager)}`;
+            }
         } else {
-            projectId = `${1}${branch?.name?.charAt(0).toUpperCase()}`;
-            reference = `${this.getNumberReference(showroomManager)}`;
+            if (previousProject) {
+                projectId = `SH${branch?.name?.charAt(0).toUpperCase()}${previousProject.id + 1}`;
+                reference = `${this.getNumberReference(showroomManager, previousProject.reference)}`;
+            } else {
+                projectId = `SH${branch?.name?.charAt(0).toUpperCase()}${1}`;
+                reference = `${this.getNumberReference(showroomManager)}`;
+            }
         }
 
 
-        const project = await this.projectRepository.create({...body, projectId, reference}, {transaction});
+        const project = await this.projectRepository.create({...body, projectId, reference, typeQuotation}, {transaction});
         return project;
     }
 
@@ -1374,6 +1525,98 @@ export class ProjectService {
         if (!quotation)
             throw this.responseService.badRequest('La cotizacion no existe.');
         return quotation
+    }
+
+    async getAccountStatement(id: number) {
+        const project = await this.findProjectById(id);
+        const advancePaymentRecordsFind = await this.accountsReceivableRepository.find({where: {projectId: id}, include: ['advancePaymentRecords']});
+        const {projectId, customer, quotation} = project;
+        const {showroomManager, mainProjectManager, closingDate} = quotation;
+        let data = [];
+        for (let index = 0; index < advancePaymentRecordsFind.length; index++) {
+            const element = advancePaymentRecordsFind[index];
+            const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords, typeCurrency} = element;
+            try {
+                let balanceDetail = totalSale;
+                data.push({
+                    typeCurrency,
+                    today: dayjs().format('DD/MM/YYYY'),
+                    projectId,
+                    customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                    showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
+                    closingDate: dayjs(closingDate).format('DD/MM/YYYY'),
+                    totalSale,
+                    updatedTotal,
+                    totalPaid,
+                    totalPercentage: 0,
+                    balance,
+                    advancePaymentRecords: advancePaymentRecords.map(value => {
+                        balanceDetail = balanceDetail - value.subtotalAmountPaid;
+                        return {
+                            ...value,
+                            balanceDetail: balanceDetail.toFixed(2),
+                            paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
+                            amountPaid: value.subtotalAmountPaid.toFixed(2),
+                            subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
+                            conversionAmountPaid: value.subtotalAmountPaid.toFixed(2),
+                        }
+                    })
+                })
+
+            } catch (error) {
+            }
+        }
+        const properties: any = {
+            data
+        }
+        const nameFile = `estado_de_cuenta_${dayjs().format()}.pdf`
+        const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/estado_cuenta.html`, properties, {format: 'A3'});
+        this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
+        this.response.setHeader('Content-Type', 'application/pdf');
+        return this.response.status(200).send(buffer)
+
+    }
+
+    async findAccountReceivable(id: number) {
+        const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {id}, include: ['advancePaymentRecords']});
+        if (!accountsReceivable)
+            throw this.responseService.badRequest('La cuenta por cobrar no existe.');
+        return accountsReceivable
+    }
+
+    async findProjectById(id: number) {
+        const project = await this.projectRepository.findById(id, {
+            include: [
+                {
+                    relation: 'quotation',
+                    scope: {
+                        fields: ['id', 'showroomManagerId', 'closingDate', 'totalEUR', 'totalMXN', 'totalUSD', 'mainProjectManagerId'],
+                        include: [
+                            {
+                                relation: 'showroomManager',
+                                scope: {
+                                    fields: ['id', 'firstName', 'lastName']
+                                }
+                            },
+                            {
+                                relation: 'mainProjectManager',
+                                scope: {
+                                    fields: ['id', 'firstName', 'lastName']
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'customer',
+                    scope: {
+                        fields: ['name', 'lastName', 'secondLastName']
+                    }
+                }
+            ]
+        });
+        return project;
     }
 
 }

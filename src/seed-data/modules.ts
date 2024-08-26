@@ -75,4 +75,9 @@ export const modulesSeed = [
     description: 'Entregas',
     categoryName: ModuleCategories.LOGISTICA
   },
+  {
+    name: 'Tipo de cambio',
+    description: 'Tipo de cambio',
+    categoryName: ModuleCategories.TIPO_CAMBIO
+  },
 ];

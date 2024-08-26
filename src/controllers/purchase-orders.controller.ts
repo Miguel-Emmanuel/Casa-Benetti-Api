@@ -200,4 +200,40 @@ export class PurchaseOrdersController {
     ): Promise<Object[]> {
         return this.purchaseOrdersService.earringsCollect();
     }
+
+    @patch('/purchase-orders/{id}/production-real-end-date')
+    @response(204, {
+        description: 'purchase order PATCH success',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async saveProductionRealEndDate(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            productionRealEndDate: {
+                                type: 'string',
+                                format: 'date-time'
+                            }
+                        }
+                    }
+                },
+            },
+        })
+        data: {productionRealEndDate: string},
+    ): Promise<void> {
+        await this.purchaseOrdersService.saveProductionRealEndDate(id, data);
+    }
 }

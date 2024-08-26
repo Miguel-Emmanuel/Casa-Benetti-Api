@@ -1,12 +1,12 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {ProjectStatusE} from '../enums';
+import {ProjectStatusE, TypeQuotationE} from '../enums';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Document} from './document.model';
-import {Proforma} from './proforma.model';
+import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -83,6 +83,13 @@ export class Project extends BaseEntity {
     })
     reference: string;
 
+    //Tipo de cotizacion
+    @property({
+        type: 'string',
+        default: TypeQuotationE.GENERAL
+    })
+    typeQuotation: TypeQuotationE;
+
     constructor(data?: Partial<Project>) {
         super(data);
     }
@@ -93,6 +100,7 @@ export interface ProjectRelations {
     branch: BranchWithRelations,
     customer: CustomerWithRelations;
     quotation: QuotationWithRelations
+    proformas: ProformaWithRelations[]
 }
 
 export type ProjectWithRelations = Project & ProjectRelations;

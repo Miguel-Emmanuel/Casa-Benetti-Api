@@ -19,7 +19,7 @@ import {
 } from '@loopback/rest';
 import {CreateRequestBody, QuotationFindResponseSwagger, QuotationGteByIdResponse, UpdateRequestBody} from '../RequestBody/quotation.request';
 import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse, UpdateQuotation} from '../interface';
-import {Quotation} from '../models';
+import {Document, Quotation} from '../models';
 import {QuotationService} from '../services';
 
 @authenticate('jwt')
@@ -37,7 +37,7 @@ export class QuotationController {
     async create(
         @requestBody(CreateRequestBody)
         data: CreateQuotation,
-    ): Promise<Quotation> {
+    ): Promise<Object> {
         return this.quotationService.create(data);
     }
 
@@ -125,6 +125,58 @@ export class QuotationController {
         body: {isFractionate: boolean, isRejected: boolean, comment: string},
     ): Promise<object> {
         return this.quotationService.changeStatusToReviewAdmin(id, body);
+    }
+
+    @get('/quotations/download-pdf-client-quote/{id}')
+    @response(200, {
+        description: 'Account statement model instance',
+    })
+    async downloadPdfClientQuote(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.quotationService.downloadPdfClientQuote(id);
+    }
+
+    @post('/quotations/upload-pdf-client-quote/{id}')
+    @response(204, {
+        description: 'quotations PATCH success',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async uploadPdfClientQuote(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            document: {
+                                type: 'object',
+                                nullable: true,
+                                properties: {
+                                    id: {type: 'number'},
+                                    fileURL: {type: 'string'},
+                                    name: {type: 'string'},
+                                    extension: {type: 'string'}
+                                }
+                            },
+                        },
+                    },
+                },
+            },
+        })
+        data: {document: Document}
+    ): Promise<any> {
+        return this.quotationService.uploadPdfClientQuote(id, data);
     }
 
 

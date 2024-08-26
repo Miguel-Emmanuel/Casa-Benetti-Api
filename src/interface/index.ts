@@ -1,4 +1,4 @@
-import {ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, StatusQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
+import {ContainerStatus, ExchangeRateE, ExchangeRateQuotationE, InventoriesIssueE, InventoriesReasonE, PaymentTypeProofE, ShowRoomDestinationE, StatusQuotationE, TypeQuotationE, TypeRegimenE, TypeSaleE} from '../enums';
 import {Address, Document, ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
 
 export interface ProjectManagers {
@@ -58,19 +58,19 @@ export interface QuotationI {
     isReferencedCustomer: boolean;
     commissionPercentagereferencedCustomer: number;
     isProjectManager: boolean;
-    subtotal: number;
-    percentageAdditionalDiscount: number;
-    additionalDiscount: number;
-    percentageIva: number;
-    iva: number;
-    total: number;
+    subtotal: number;//showroom
+    percentageAdditionalDiscount: number;//showroom
+    additionalDiscount: number;//showroom
+    percentageIva: number;//showroom
+    iva: number;//showroom
+    total: number;//showroom
     percentageAdvance: number;
     advance: number;
     exchangeRate: ExchangeRateE;
     advanceCustomer: number;
     conversionAdvance: number;
     balance: number;
-    exchangeRateQuotation: ExchangeRateQuotationE;
+    exchangeRateQuotation: ExchangeRateQuotationE; //showroom
 }
 export interface Images {
     fileURL: string;
@@ -90,6 +90,12 @@ export interface Images {
 export interface CreateQuotation {
     id: number,
     isDraft: boolean;
+    typeQuotation: TypeQuotationE;
+    //Datos nivel cotizacion showroom
+    branchId: number;
+    branchesId: number[];
+    showRoomDestination: ShowRoomDestinationE
+    //Datos cotizacion general
     customer: Customer,
     projectManagers: ProjectManagers[],
     designers: Designers[],
@@ -122,10 +128,10 @@ export interface UpdateQuotation {
 
 export interface QuotationFindResponse {
     id: number;
-    customerName: string;
+    customerName: string | null;
     pm: string | undefined;
     total: number | null;
-    branchName: string | undefined;
+    branchName: string | undefined | null;
     status: StatusQuotationE;
     updatedAt: Date | undefined;
 }
@@ -171,10 +177,10 @@ export interface QuotationFindOneResponse {
         group: string
         groupId?: number;
         email: string
-
-    },
+    } | null,
     products: ProductsById[],
     quotation: {
+        clientQuote?: Document
         subtotal: number | null;
         additionalDiscount: number | null;
         percentageIva: number | null;
@@ -196,6 +202,10 @@ export interface QuotationFindOneResponse {
         mainProjectManagerId: number | null;
         rejectedComment?: string;
         mainProjectManagerCommissions: MainProjectManagerCommissionsI[];
+        typeQuotation?: TypeQuotationE;
+        branchId?: number;
+        showRoomDestination: ShowRoomDestinationE,
+        branchesId: number[]
     },
     commisions: {
         architectName: string;
@@ -228,15 +238,23 @@ export interface AssembledProductsE {
 
 export interface EntryDataI {
     reasonEntry: InventoriesReasonE;
-    containerNumber: string;
-    collectionNumber: string;
-    products: {quotationProductsId: number}[];
+    containerId: number;
+    collectionId: number;
+    purchaseOrders: {id: number, products: {quotationProductsId: number, quantity: number}[];}[]
     branchId: number;
     warehouseId: number;
     projectId: string;
     quotationProductsId: number;
     quantity: number;
     comment: string;
+
+    // destinationType: DestinationTypeE;
+    destinationBranchId: number;
+    destinationWarehouseId: number;
+    destinationQuotationProductsId: number;
+    // destinationId: number;
+    destinationQuantity: number;
+    commentEntry: string;
 }
 
 export interface IssueDataI {
@@ -246,7 +264,7 @@ export interface IssueDataI {
     quotationProductsId: number;
     quantity: number;
     comment: string;
-    containerNumber: string;
+    containerId: number;
     destinationBranchId: number;
     destinationWarehouseId: number;
 }
@@ -280,3 +298,36 @@ export interface InventorieDataI {
 // export interface InventoriesShowroomI {
 //     showroom: InventorieDataI[],
 // }
+
+export interface Docs {
+    id: number,
+    fileURL: string,
+    name: string,
+    extension: string
+}
+
+export interface PurchaseOrdersContainer {
+    id: number,
+    products: {
+        id: number,
+        invoiceNumber: string,
+        grossWeight: string,
+        netWeight: string,
+        numberBoxes: number,
+        descriptionPedimiento: string,
+        NOMS: string[]
+    }[]
+}
+export interface UpdateContainer {
+    pedimento: string;
+    grossWeight: string;
+    numberBoxes: number;
+    measures: string;
+    status: ContainerStatus;
+    docs: Docs[],
+    purchaseOrders: PurchaseOrdersContainer[]
+}
+
+export interface UpdateContainerProducts {
+    purchaseOrders: PurchaseOrdersContainer[]
+}

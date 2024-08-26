@@ -1,16 +1,20 @@
 import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
+    Filter,
     repository
 } from '@loopback/repository';
 import {
+    get,
     getModelSchemaRef,
+    param,
+    patch,
     post,
     requestBody,
     response
 } from '@loopback/rest';
 import {EntryDataI, IssueDataI} from '../interface';
-import {InventoryMovements} from '../models';
+import {InventoryMovements, QuotationProducts} from '../models';
 import {InventoryMovementsRepository} from '../repositories';
 import {InventoryMovementsService} from '../services';
 
@@ -39,23 +43,38 @@ export class InventoryMovementsController {
                                 type: 'string',
                             },
                             //Descarga contenedor, Descarga recolección
-                            containerNumber: {
-                                type: 'string',
+                            containerId: {
+                                type: 'number',
                                 nullable: true
                             },
-                            collectionNumber: {
-                                type: 'string',
+                            collectionId: {
+                                type: 'number',
                                 nullable: true
                             },
-                            products: {
+                            purchaseOrders: {
                                 type: 'array',
                                 nullable: true,
                                 items: {
                                     type: 'object',
                                     properties: {
-                                        quotationProductsId: {
+                                        id: {
                                             type: 'number'
-                                        }
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            nullable: true,
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    quotationProductsId: {
+                                                        type: 'number'
+                                                    },
+                                                    quantity: {
+                                                        type: 'number'
+                                                    }
+                                                }
+                                            }
+                                        },
                                     }
                                 }
                             },
@@ -85,6 +104,34 @@ export class InventoryMovementsController {
                                 nullable: true
                             },
 
+                            // destinationType: {
+                            //     type: 'string',
+                            //     nullable: true
+                            // },
+                            destinationBranchId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            destinationWarehouseId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            destinationQuotationProductsId: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            // destinationId: {
+                            //     type: 'number',
+                            //     nullable: true
+                            // },
+                            destinationQuantity: {
+                                type: 'number',
+                                nullable: true
+                            },
+                            commentEntry: {
+                                type: 'string',
+                                nullable: true
+                            },
                         }
                     }
                 },
@@ -127,8 +174,8 @@ export class InventoryMovementsController {
                             comment: {
                                 type: 'string',
                             },
-                            containerNumber: {
-                                type: 'string',
+                            containerId: {
+                                type: 'number',
                                 nullable: true
                             },
                             destinationBranchId: {
@@ -147,6 +194,254 @@ export class InventoryMovementsController {
         data: IssueDataI,
     ): Promise<Object> {
         return this.inventoryMovementsService.issue(data);
+    }
+
+    @get('/inventory-movements/{id}/collection/purchase-orders')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
+                                        description: {
+                                            type: 'string'
+                                        },
+                                        numberBoxes: {
+                                            type: 'number'
+                                        },
+                                        quantity: {
+                                            type: 'number'
+                                        },
+                                        commentEntry: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async findCollection(
+        @param.path.number('id') id: number,
+    ): Promise<Object[]> {
+        return this.inventoryMovementsService.findCollection(id);
+    }
+
+    @get('/inventory-movements/record')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'number'
+                        },
+                        createdAt: {
+                            type: 'string',
+                            format: 'date-time'
+                        },
+                        createdBy: {
+                            type: 'string',
+                        },
+                        type: {
+                            type: 'string',
+                        },
+                        reason: {
+                            type: 'string',
+                        },
+                        destination: {
+                            type: 'string',
+                        },
+                    }
+                },
+            },
+        },
+    })
+    async record(
+    ): Promise<Object[]> {
+        return this.inventoryMovementsService.record();
+    }
+
+    @get('/inventory-movements/{id}/container/purchase-orders')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            products: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        SKU: {
+                                            type: 'string'
+                                        },
+                                        image: {
+                                            type: 'string'
+                                        },
+                                        description: {
+                                            type: 'string'
+                                        },
+                                        numberBoxes: {
+                                            type: 'number'
+                                        },
+                                        quantity: {
+                                            type: 'number'
+                                        },
+                                        commentEntry: {
+                                            type: 'string'
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+    })
+    async findContainer(
+        @param.path.number('id') id: number,
+    ): Promise<Object[]> {
+        return this.inventoryMovementsService.findContainer(id);
+    }
+
+    @patch('/inventory-movements/purchase-orders')
+    @response(200, {
+        description: 'Array of InventoryMovements model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {
+                            type: 'string'
+                        }
+                    }
+                },
+            },
+        },
+    })
+    async updateProducts(
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    quantity: {
+                                                        type: 'number'
+                                                    },
+                                                    commentEntry: {
+                                                        type: 'string'
+                                                    },
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                            }
+                        }
+                    },
+                },
+            },
+        })
+        data: {purchaseOrders: {id: number, products: {id: number, quantity: number, commentEntry: string}[]}[]},
+    ): Promise<Object> {
+        return this.inventoryMovementsService.updateProducts(data);
+    }
+
+    @get('/inventory-movements/products')
+    @response(200, {
+        description: 'Array of Product model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        products: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    id: {
+                                        type: 'number'
+                                    },
+                                    image: {
+                                        type: 'string'
+                                    },
+                                    description: {
+                                        type: 'string'
+                                    },
+                                    numberBoxes: {
+                                        type: 'number'
+                                    },
+                                    projectId: {
+                                        type: 'string'
+                                    },
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+        },
+    })
+    async getProducts(
+        @param.filter(QuotationProducts) filter?: Filter<QuotationProducts>,
+    ): Promise<Object> {
+        return this.inventoryMovementsService.getProducts(filter);
     }
 
     // @get('/inventory-movements/count')

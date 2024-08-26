@@ -232,7 +232,13 @@
         <div class="column column-3">
             <div class="property">
                 <div class="property-name">Cliente:</div>
-                <div class="property-value">{{customerName}}</div>
+                <div class="property-value">
+                    {{#if isTypeQuotationGeneral}}
+                    {{customerName}}
+                    {{else}}
+                    Showroom
+                    {{/if}}
+                </div>
             </div>
             <div class="property">
                 <div class="property-name">Cotización:</div>
@@ -350,6 +356,7 @@
             </div>
 
             </br>
+            {{#if isTypeQuotationGeneral}}
             <div class="grid-container">
                 <div class="grid-item" style="background-color: #BEB5C6;">ANTICIPO</div>
                 <div class="grid-item">EUROS</div>
@@ -367,6 +374,7 @@
                 <div class="grid-item">EUROS</div>
                 <div class="grid-item">{{balance}}</div>
             </div>
+            {{/if}}
         </section>
     </div>
     </br>

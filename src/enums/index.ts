@@ -40,6 +40,7 @@ export enum ModuleCategories {
     COMISIONES = 'Comisiones',
     INVENTARIOS = 'Inventarios',
     LOGISTICA = 'Logística',
+    TIPO_CAMBIO = 'Tipo de cambio',
 }
 
 export enum TypeUserE {
@@ -104,6 +105,7 @@ export enum QuotationProductStatusE {
     TRANSITO_INTERNACIONAL = 'Transito internacional',
     RECOLECCION = 'Recoleccion',
     BODEGA_NACIONAL = 'Bodega nacional',
+    BODEGA_INTERNACIONAL = 'Bodega Internacional',
     SHOWROOM = 'Showroom',
     ENTREGADO = 'Entregado',
 }
@@ -263,6 +265,12 @@ export enum InventoriesReasonE {
     REPARACION = 'Reparación',
     PRESTAMO = 'Préstamo',
     DEVOLUCION = 'Devolución',
+    ENTRADA_MANUAL = 'Entrada manual',
+}
+
+export enum DestinationTypeE {
+    ALMACENES = 'Almacenes',
+    SUCURSALES = 'Sucursales',
 }
 
 
@@ -284,4 +292,45 @@ export enum ContainerStatus {
     NUEVO = 'Nuevo',
     EN_TRANSITO = 'En tránsito',
     ENTREGADO = 'Entregado',
+}
+
+export enum CollectionStatus {
+    PROGRAMADA = 'Programada',
+    COMPLETADA = 'Completada',
+}
+
+
+export enum OriginExpenseE {
+    PROYECTO = 'Proyecto',
+    GENERAL = 'General',
+    SUCURSAL = 'Sucursal',
+}
+
+export enum PaymentMethodE {
+    EFECTIVO = 'Efectivo',
+    TRANSFERENCIA = 'Transferencia',
+    OTRO = 'Otros',
+}
+
+
+
+export enum TypeQuotationE {
+    GENERAL = 'General',
+    SHOWROOM = 'Showroom',
+}
+
+export enum ShowRoomDestinationE {
+    GENERAL = 'General',
+    SHOWROOM = 'Showroom',
+}
+
+
+export enum WarehouseLocationE {
+    NACIONAL = 'Nacional',
+    INTERNACIONAL = 'Internacional',
+}
+
+export enum ProductTypeE {
+    STOCK = 'Stock',
+    PEDIDO = 'Pedido',
 }

@@ -21,8 +21,9 @@ export class ResertvationDayCronJob extends CronJob {
                 await this.notifyCustomer();
             },
             // cronTime: '*/5 * * * * *',
-            cronTime: '0 0 * * *',
+            cronTime: '0 7 * * *',
             start: true,
+            timeZone: 'America/Mexico_City',
         });
     }
 

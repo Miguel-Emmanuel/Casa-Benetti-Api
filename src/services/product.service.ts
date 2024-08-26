@@ -1,6 +1,7 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import {QuotationProductStatusE, TypeQuotationE} from '../enums';
 import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AssembledProducts, Document, Product, ProductCreate, ProductProvider} from '../models';
@@ -167,6 +168,70 @@ export class ProductService {
     async count(where?: Where<Product>,) {
         return this.productRepository.count(where);
     }
+
+    async findStock() {
+        const quotationProducts = await this.quotationProductsRepository.find({
+            where: {
+                and: [
+                    {
+                        or: [
+                            {
+                                status: QuotationProductStatusE.PEDIDO
+                            },
+                            {
+                                status: QuotationProductStatusE.BODEGA_NACIONAL
+                            }
+                        ]
+                    },
+                    {
+                        typeQuotation: TypeQuotationE.SHOWROOM,
+                    }
+                ]
+            },
+            include: [
+                {
+                    relation: 'brand'
+                },
+                {
+                    relation: 'product',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'document'
+                            },
+                            {
+                                relation: 'line'
+                            }
+                        ]
+                    }
+                }
+
+            ]
+        });
+
+        return quotationProducts?.map(value => {
+            const {id, product, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, brand, quantity, stock} = value;
+            const {document, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                mainMaterial,
+                mainFinish,
+                secondaryMaterial,
+                secondaryFinishing
+            ];
+            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+            return {
+                id,
+                image: document?.fileURL ?? null,
+                brand: brand?.brandName ?? null,
+                description,
+                stock,
+                quantity
+            }
+        })
+
+    }
     async find(filter?: Filter<Product>,) {
         const include = [
             {
@@ -207,6 +272,86 @@ export class ProductService {
             }
         }
         return products;
+    }
+
+    async findShowRoom(branchId?: number, filter?: Filter<Product>,) {
+        let where: any = {
+            typeQuotation: TypeQuotationE.SHOWROOM,
+        }
+        if (branchId) {
+            where.branchesId = [branchId];
+        }
+        const include: InclusionFilter[] = [
+            {
+                relation: 'document',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                }
+            },
+            {
+                relation: 'brand',
+                scope: {
+                    fields: ['brandName', 'id',]
+                }
+            },
+            {
+                relation: 'quotationProducts',
+                scope: {
+                    include: [
+                        {
+                            relation: 'mainMaterialImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        },
+                        {
+                            relation: 'mainFinishImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        },
+                        {
+                            relation: 'secondaryMaterialImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        },
+                        {
+                            relation: 'secondaryFinishingImage',
+                            scope: {
+                                fields: ['fileURL', 'name', 'extension', 'createdBy', 'updatedBy', 'id']
+                            }
+                        }
+                    ],
+                    where: {
+                        ...where
+                    }
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            };
+        const products = await this.productRepository.find(filter);
+        for (let index = 0; index < products.length; index++) {
+            const document = products[index].document;
+            if (document) {
+                const element: any = document;
+                const createdBy = await this.userRepository.findByIdOrDefault(element.createdBy);
+                const updatedBy = await this.userRepository.findByIdOrDefault(element.updatedBy);
+                element.createdBy = {id: createdBy?.id, avatar: createdBy?.avatar, name: createdBy && `${createdBy?.firstName} ${createdBy?.lastName}`};
+                element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
+            }
+        }
+        return products.filter(value => value.quotationProducts);
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {

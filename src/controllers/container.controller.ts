@@ -13,6 +13,7 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {UpdateContainer, UpdateContainerProducts} from '../interface';
 import {Container, ContainerCreate} from '../models';
 import {ContainerService} from '../services';
 
@@ -34,7 +35,7 @@ export class ContainerController {
                 'application/json': {
                     schema: getModelSchemaRef(ContainerCreate, {
                         title: 'NewContainer',
-                        exclude: ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment', 'status'],
+                        exclude: ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isDeleted', 'deleteComment', 'status', 'arrivalDate', 'shippingDate'],
                     }),
                 },
             },
@@ -62,6 +63,65 @@ export class ContainerController {
         return this.containerService.find(filter);
     }
 
+    @get('/containers/entry')
+    @response(200, {
+        description: 'Array of Container model instances',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {
+                                type: 'number'
+                            },
+                            containerNumber: {
+                                type: 'string'
+                            },
+                            status: {
+                                type: 'string'
+                            },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    image: {
+                                                        type: 'string'
+                                                    },
+                                                    description: {
+                                                        type: 'string'
+                                                    },
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                },
+            },
+        },
+    })
+    async getContainerEntry(
+    ): Promise<Object[]> {
+        return this.containerService.getContainerEntry();
+    }
+
     @get('/containers/{id}')
     @response(200, {
         description: 'Container model instance',
@@ -78,6 +138,52 @@ export class ContainerController {
         return this.containerService.findById(id, filter);
     }
 
+    @get('/containers/download/carta-traduccion/{id}')
+    @response(200, {
+        description: 'Container model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Container, {includeRelations: false}),
+            },
+        },
+    })
+    async createCartaTraduccion(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.containerService.createCartaTraduccion(id);
+    }
+
+    @get('/containers/download/carta-porte/{id}')
+    @response(200, {
+        description: 'Container model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Container, {includeRelations: false}),
+            },
+        },
+    })
+    async createCartaPorte(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.containerService.createCartaPorte(id);
+    }
+
+    @get('/containers/download/archivo-etiquetas/{id}')
+    @response(200, {
+        description: 'Container model instance',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Container, {includeRelations: false}),
+            },
+        },
+    })
+    async createArchivoEtiquetas(
+        @param.path.number('id') id: number,
+    ): Promise<any> {
+        return this.containerService.createArchivoEtiquetas(id);
+    }
+
+
     @patch('/containers/{id}')
     @response(204, {
         description: 'Container PATCH success',
@@ -93,12 +199,6 @@ export class ContainerController {
                             pedimento: {
                                 type: 'string'
                             },
-                            containerNumber: {
-                                type: 'string'
-                            },
-                            invoiceNumber: {
-                                type: 'string'
-                            },
                             grossWeight: {
                                 type: 'string'
                             },
@@ -111,15 +211,15 @@ export class ContainerController {
                             status: {
                                 type: 'string'
                             },
-                            ETDDate: {
-                                type: 'string',
-                                format: 'date-time'
-                            },
-                            ETADate: {
-                                type: 'string',
-                                format: 'date-time'
-                            },
-                            documents: {
+                            // ETDDate: {
+                            //     type: 'string',
+                            //     format: 'date-time'
+                            // },
+                            // ETADate: {
+                            //     type: 'string',
+                            //     format: 'date-time'
+                            // },
+                            docs: {
                                 type: 'array',
                                 items: {
                                     properties: {
@@ -179,9 +279,75 @@ export class ContainerController {
                 },
             },
         })
-        container: Container,
+        container: UpdateContainer,
     ): Promise<void> {
         await this.containerService.updateById(id, container);
+    }
+
+
+    @patch('/containers/{id}/products')
+    @response(204, {
+        description: 'Container PATCH success',
+    })
+    async updateByIdProducts(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    invoiceNumber: {
+                                                        type: 'string'
+                                                    },
+                                                    grossWeight: {
+                                                        type: 'string'
+                                                    },
+                                                    netWeight: {
+                                                        type: 'string'
+                                                    },
+                                                    numberBoxes: {
+                                                        type: 'number'
+                                                    },
+                                                    descriptionPedimiento: {
+                                                        type: 'string'
+                                                    },
+                                                    NOMS: {
+                                                        type: 'array',
+                                                        items: {
+                                                            type: 'string'
+                                                        }
+                                                    },
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                },
+            },
+        })
+        container: UpdateContainerProducts,
+    ): Promise<void> {
+        await this.containerService.updateByIdProducts(id, container);
     }
 
     // @del('/containers/{id}')

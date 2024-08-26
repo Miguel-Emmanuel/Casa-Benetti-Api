@@ -23,7 +23,7 @@ export const schemaCollectionPatchFeedback = Joi.object({
     destination: Joi.string().valid(...Object.values(CollectionDestinationE)).messages({
         'any.only': `El destino debe ser igual a uno de los valores permitidos.`
     }).required(),
-    containerNumber: Joi.when('destination', {is: [CollectionDestinationE.CONTENEDOR], then: Joi.string().required(), otherwise: Joi.forbidden()}),
+    containerId: Joi.when('destination', {is: [CollectionDestinationE.CONTENEDOR], then: Joi.number().required(), otherwise: Joi.forbidden()}),
     dateCollection: Joi.date().required(),
     documents: Joi.array().items(documents).optional(),
 })

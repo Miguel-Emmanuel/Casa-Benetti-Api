@@ -1,11 +1,13 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
-import {AccountPayableHistoryStatusE, ConvertCurrencyToEUR, ConvertCurrencyToMXN, ConvertCurrencyToUSD, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
+import dayjs from 'dayjs';
+import {AccountPayableHistoryStatusE, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
-import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
+import {AccountPayableHistoryRepository, AccountPayableRepository, BrandRepository, DayExchangeRateRepository, DocumentRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {CalculateScheledDateService} from './calculate-scheled-date.service';
+import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -34,6 +36,10 @@ export class AccountPayableHistoryService {
         public sendgridService: SendgridService,
         @repository(UserRepository)
         public userRepository: UserRepository,
+        @repository(DayExchangeRateRepository)
+        public dayExchangeRateRepository: DayExchangeRateRepository,
+        @service()
+        public dayExchancheCalculateToService: DayExchancheCalculateToService
     ) { }
 
 
@@ -48,7 +54,7 @@ export class AccountPayableHistoryService {
             const newTotalPaid = accountPayable.totalPaid + newAmount
             const newBalance = accountPayable.balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.providerId, proforma.brandId,)
             await this.settleAccountPayable(newTotalPaid, total, accountPayableId, purchaseOrders.id);
         }
         delete accountPayableHistory.images;
@@ -97,7 +103,7 @@ export class AccountPayableHistoryService {
             const newTotalPaid = this.roundToTwoDecimals(totalPaid + newAmount)
             const newBalance = balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.id, proforma.brandId,)
+            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.providerId, proforma.brandId,)
             await this.settleAccountPayable(newTotalPaid, total, accountPayableId, purchaseOrders.id);
         }
 
@@ -108,18 +114,27 @@ export class AccountPayableHistoryService {
     }
 
     async validateProductionEndDate(totalPaid: number, total: number, purchaseOrder: PurchaseOrders, providerId?: number, brandId?: number) {
-        if (!purchaseOrder.productionEndDate) {
-            let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
-            advanceConditionPercentage = advanceConditionPercentage ?? 100;
-            const porcentage = ((totalPaid / total) * 100);
-            if (porcentage >= advanceConditionPercentage) {
-                let {productionTime} = await this.brandRepository.findById(brandId);
-                let scheduledDate = new Date();
-                const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0)
-                await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, status: PurchaseOrdersStatus.EN_PRODUCCION})
+        if (purchaseOrder) {
+            console.log('purchaseOrder: ', purchaseOrder)
+            console.log('!purchaseOrder.productionEndDate: ', !purchaseOrder?.productionEndDate)
+            if (!purchaseOrder?.productionEndDate) {
+                let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
+                console.log('providerId: ', providerId)
+                advanceConditionPercentage = advanceConditionPercentage ?? 100;
+                console.log('advanceConditionPercentage: ', advanceConditionPercentage)
+                const porcentage = ((totalPaid / total) * 100);
+                console.log('porcentage: ', porcentage)
+                if (porcentage >= advanceConditionPercentage) {
+                    let {productionTime} = await this.brandRepository.findById(brandId);
+                    console.log('brandId: ', brandId)
+                    console.log('productionTime: ', productionTime)
+                    let scheduledDate = new Date();
+                    const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0);
+                    console.log('productionEndDate: ', productionEndDate)
+                    await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, productionStartDate: dayjs(productionEndDate).add(1, 'days').toDate(), status: PurchaseOrdersStatus.EN_PRODUCCION})
+                }
             }
         }
-
     }
 
     async settleAccountPayable(totalPaid: number, total: number, accountPayableId: number, purchaseOrderId?: number) {
@@ -157,15 +172,18 @@ export class AccountPayableHistoryService {
     async notifyLogistics(purchaseOrderId?: number) {
         const users = await this.userRepository.find({where: {isLogistics: true}})
         const emails = users.map(value => value.email);
-        const options = {
-            to: emails,
-            templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
-            dynamicTemplateData: {
-                subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
-                purchaseOrderId
-            }
-        };
-        await this.sendgridService.sendNotification(options);
+        for (let index = 0; index < emails?.length; index++) {
+            const elementMail = emails[index];
+            const options = {
+                to: elementMail,
+                templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
+                    purchaseOrderId
+                }
+            };
+            await this.sendgridService.sendNotification(options);
+        }
     }
 
 
@@ -219,6 +237,8 @@ export class AccountPayableHistoryService {
         return account;
     }
 
+
+
     async convertCurrency(accountPayableAmount: number, accountPayableCurrency: ExchangeRateE, accountPayableId: number): Promise<number> {
         const findAccountProforma = await this.accountPayableRepository.findOne({
             where: {id: accountPayableId},
@@ -229,28 +249,53 @@ export class AccountPayableHistoryService {
         if (findAccountProforma && findAccountProforma?.proforma) {
             const proformaCurrency = findAccountProforma?.proforma?.currency
             if (proformaCurrency === ProformaCurrencyE.EURO) {
-                if (accountPayableCurrency === ExchangeRateE.MXN)
-                    mount = accountPayableAmount * ConvertCurrencyToEUR.MXN
-                else if (accountPayableCurrency === ExchangeRateE.USD)
-                    mount = accountPayableAmount * ConvertCurrencyToEUR.USD
-                else
-                    mount = accountPayableAmount * ConvertCurrencyToEUR.EURO
+                const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroTo();
+
+                if (accountPayableCurrency === ExchangeRateE.MXN) {
+                    // mount = accountPayableAmount * ConvertCurrencyToEUR.MXN
+                    mount = accountPayableAmount * MXN
+                }
+                else if (accountPayableCurrency === ExchangeRateE.USD) {
+                    // mount = accountPayableAmount * ConvertCurrencyToEUR.USD
+                    mount = accountPayableAmount * USD
+                }
+                else {
+                    // mount = accountPayableAmount * ConvertCurrencyToEUR.EURO
+                    mount = accountPayableAmount;
+
+                }
             }
             else if (proformaCurrency === ProformaCurrencyE.PESO_MEXICANO) {
-                if (accountPayableCurrency === ExchangeRateE.MXN)
-                    mount = accountPayableAmount * ConvertCurrencyToMXN.MXN
-                else if (accountPayableCurrency === ExchangeRateE.USD)
-                    mount = accountPayableAmount * ConvertCurrencyToMXN.USD
-                else
-                    mount = accountPayableAmount * ConvertCurrencyToMXN.EURO
+                const {USD, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnTo();
+
+                if (accountPayableCurrency === ExchangeRateE.MXN) {
+                    // mount = accountPayableAmount * ConvertCurrencyToMXN.MXN
+                    mount = accountPayableAmount;
+                }
+                else if (accountPayableCurrency === ExchangeRateE.USD) {
+                    // mount = accountPayableAmount * ConvertCurrencyToMXN.USD
+                    mount = accountPayableAmount * USD
+                }
+                else {
+                    // mount = accountPayableAmount * ConvertCurrencyToMXN.EURO
+                    mount = accountPayableAmount * EUR
+                }
             }
             else if (proformaCurrency === ProformaCurrencyE.USD) {
-                if (accountPayableCurrency === ExchangeRateE.MXN)
-                    mount = accountPayableAmount * ConvertCurrencyToUSD.MXN
-                else if (accountPayableCurrency === ExchangeRateE.USD)
-                    mount = accountPayableAmount * ConvertCurrencyToUSD.USD
-                else
-                    mount = accountPayableAmount * ConvertCurrencyToUSD.EURO
+                const {MXN, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarTo();
+
+                if (accountPayableCurrency === ExchangeRateE.MXN) {
+                    // mount = accountPayableAmount * ConvertCurrencyToUSD.MXN
+                    mount = accountPayableAmount * MXN
+                }
+                else if (accountPayableCurrency === ExchangeRateE.USD) {
+                    // mount = accountPayableAmount * ConvertCurrencyToUSD.USD
+                    mount = accountPayableAmount;
+                }
+                else {
+                    // mount = accountPayableAmount * ConvertCurrencyToUSD.EURO
+                    mount = accountPayableAmount * EUR
+                }
             }
         }
         return mount

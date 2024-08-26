@@ -2,7 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, TypeUserE} from '../enums';
+import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, TypeQuotationE, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Document, Proforma, ProformaWithRelations, Quotation} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
@@ -77,7 +77,7 @@ export class ProformaService {
             }
             await this.createDocument(newProforma.id, document, transaction)
             await this.sendEmailProforma(newProforma.id, document.fileURL, transaction);
-            await this.createAdvancePaymentAccount(proforma, newProforma.id!, transaction)
+            await this.createAdvancePaymentAccount(proforma, newProforma.id!, findProject.typeQuotation, transaction)
 
             await transaction.commit()
             return {newProforma}
@@ -114,7 +114,7 @@ export class ProformaService {
                 {
                     relation: 'project',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId', 'projectId'],
+                        fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
                         include: [
                             {
                                 relation: 'customer',
@@ -122,6 +122,9 @@ export class ProformaService {
                                     fields: ['id', 'name', 'lastName', 'secondLastName']
                                 }
                             },
+                            {
+                                relation: 'quotation'
+                            }
                         ]
                     }
                 },
@@ -140,14 +143,14 @@ export class ProformaService {
             ]
         }, {transaction})
         const {projectId, project, provider, brand, proformaDate, proformaAmount, currency, proformaId: proId} = proforma
-        const {customer} = project
+        const {customer, quotation} = project
         const option = {
             templateId: SendgridTemplates.NEW_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.NEW_PROFORMA.subject,
                 projectId: project.projectId,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customerName: quotation?.typeQuotation === TypeQuotationE.GENERAL ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 proformaId: proId,
                 providerName: provider.name,
                 brandName: brand.brandName,
@@ -161,11 +164,14 @@ export class ProformaService {
             const element = users[index];
             emails.push(element.email)
         }
-        const optionsDynamic = {
-            to: emails,
-            ...option,
-        };
-        await this.sendgridService.sendNotification(optionsDynamic);
+        for (let index = 0; index < emails?.length; index++) {
+            const elementMail = emails[index];
+            const optionsDynamic = {
+                to: elementMail,
+                ...option,
+            };
+            await this.sendgridService.sendNotification(optionsDynamic);
+        }
     }
 
     setCurrencyToAmount(proformaAmount: number, currency: ProformaCurrencyE) {
@@ -320,7 +326,7 @@ export class ProformaService {
                 {
                     relation: 'project',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId', 'projectId'],
+                        fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
                         include: [
                             {
                                 relation: 'customer',
@@ -328,6 +334,9 @@ export class ProformaService {
                                     fields: ['id', 'name', 'lastName', 'secondLastName']
                                 }
                             },
+                            {
+                                relation: 'quotation'
+                            }
                         ]
                     }
                 },
@@ -393,14 +402,15 @@ export class ProformaService {
             }
         }
         const {projectId, project, proformaId: proId} = oldData;
-        const {customer} = project
+        const {customer, quotation} = project
         const option = {
             templateId: SendgridTemplates.UPDATE_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.UPDATE_PROFORMA.subject,
                 projectId: project.projectId,
-                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                // customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customerName: quotation?.typeQuotation === TypeQuotationE.GENERAL ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 proformaId: proId,
                 ...objectOld,
                 ...objectNew
@@ -412,11 +422,12 @@ export class ProformaService {
                 to: element.email,
                 ...option,
             };
+            console.log(optionsDynamic)
             await this.sendgridService.sendNotification(optionsDynamic);
         }
     }
 
-    async createAdvancePaymentAccount(proforma: Proforma, proformaId: number, transaction: any) {
+    async createAdvancePaymentAccount(proforma: Proforma, proformaId: number, typeQuotation: TypeQuotationE, transaction: any) {
         const {projectId} = proforma
         const findQuotation = await this.projectRepository.findById(proforma.projectId, {
             include: [{
@@ -478,10 +489,39 @@ export class ProformaService {
         const accountsPayable = await this.accountPayableRepository.create({currency: currencyAccountPayable, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
 
         //cambiar totalpagado
-        if (advance && totalPaid >= advance) {
-            //guardar el id de accounttspayableid
-            await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId}, {transaction})
+        if (typeQuotation === TypeQuotationE.GENERAL) {
+            if (advance && totalPaid >= advance) {
+                //guardar el id de accounttspayableid
+                const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+                const findQuotationProducts = await this.quotationProductsRepository.find({
+                    where: {
+                        proformaId: proformaId,
+                        providerId: proforma.providerId,
+                        brandId: proforma.brandId
+                    }
+                }, {transaction})
+                for (let index = 0; index < findQuotationProducts?.length; index++) {
+                    const element = findQuotationProducts[index];
+                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
+
+                }
+
+            }
+        } else if (typeQuotation === TypeQuotationE.SHOWROOM) {
+            const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+            const findQuotationProducts = await this.quotationProductsRepository.find({
+                where: {
+                    proformaId: proformaId,
+                    providerId: proforma.providerId,
+                    brandId: proforma.brandId
+                }
+            }, {transaction})
+            for (let index = 0; index < findQuotationProducts?.length; index++) {
+                const element = findQuotationProducts[index];
+                await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
+            }
         }
+
 
 
     }

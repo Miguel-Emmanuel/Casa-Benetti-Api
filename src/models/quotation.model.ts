@@ -1,9 +1,10 @@
-import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
-import {ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE} from '../enums';
+import {belongsTo, hasMany, hasOne, model, property, referencesMany} from '@loopback/repository';
+import {ExchangeRateE, ExchangeRateQuotationE, ShowRoomDestinationE, StatusQuotationE, TypeQuotationE} from '../enums';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {ClassificationPercentageMainpm} from './classification-percentage-mainpm.model';
 import {Customer, CustomerWithRelations} from './customer.model';
+import {Document} from './document.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
@@ -204,6 +205,26 @@ export class Quotation extends BaseEntity {
         required: false,
     })
     exchangeRate: ExchangeRateE;
+
+    //Tipo de cotizacion
+    @property({
+        type: 'string',
+        default: TypeQuotationE.GENERAL
+    })
+    typeQuotation: TypeQuotationE;
+
+    //Tipo de cotizacion
+    @property({
+        type: 'string',
+        default: TypeQuotationE.GENERAL
+    })
+    showRoomDestination: ShowRoomDestinationE;
+
+    @referencesMany(() => Branch, {name: 'branches'})
+    branchesId: number[];
+
+    @hasOne(() => Document, {keyTo: 'clientQuoteId'})
+    clientQuote: Document;
 
     //************************************************ COTIZACION EN EUROS *********************************** */
 

@@ -1,15 +1,20 @@
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
+import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
-import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, StatusQuotationE, TypeArticleE, TypeCommisionE} from '../enums';
+import fs from "fs/promises";
+import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
+import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
-import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
+import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
-import {ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
+import {PdfService} from './pdf.service';
 import {ProjectService} from './project.service';
 import {ProofPaymentQuotationService} from './proof-payment-quotation.service';
 import {ResponseService} from './response.service';
@@ -48,50 +53,167 @@ export class QuotationService {
         @repository(ClassificationPercentageMainpmRepository)
         public classificationPercentageMainpmRepository: ClassificationPercentageMainpmRepository,
         @repository(DocumentRepository)
-        public documentRepository: DocumentRepository
+        public documentRepository: DocumentRepository,
+        @repository(BranchRepository)
+        public branchRepository: BranchRepository,
+        @service()
+        public pdfService: PdfService,
+        @inject(RestBindings.Http.RESPONSE)
+        private response: Response,
+        @repository(DayExchangeRateRepository)
+        public dayExchangeRateRepository: DayExchangeRateRepository,
+        @service()
+        public dayExchancheCalculateToService: DayExchancheCalculateToService
     ) { }
 
     async create(data: CreateQuotation) {
-        const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation} = data;
-        const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
-        const branchId = this.user.branchId;
-        if (!branchId)
-            throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
-        //Falta agregar validacion para saber cuando es borrador o no
-        await this.validateBodyQuotation(data);
-        await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
-        if (isReferencedCustomer === true)
-            await this.findUserById(quotation.referenceCustomerId);
-        let groupId = null;
-        let customerId = null;
-        const showroomManagerId = await this.getSM(mainProjectManagerId);
-        try {
-            groupId = await this.createOrGetGroup(customer);
-            customerId = await this.createOrGetCustomer({...customer}, groupId);
-            const userId = this.user.id;
-            delete quotation.mainProjectManagerCommissions;
-            if (id === null || id == undefined) {
-                const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
-                await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
-                await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
-                await this.createComissionPmClasification(createQuotation.id, mainProjectManagerCommissions)
-                return createQuotation;
-            } else {
-                const findQuotation = await this.findQuotationById(id);
-                await this.updateQuotation(quotation, isDraft, customerId, userId, id);
-                await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
-                await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
-                await this.updateProofPayments(proofPaymentQuotation, id);
-                await this.updatecreateComissionPmClasification(findQuotation.id, mainProjectManagerCommissions)
-                return this.findQuotationById(id);
+        const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation, typeQuotation} = data;
+        if (typeQuotation === TypeQuotationE.GENERAL) {
+            const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
+            const branchId = this.user.branchId;
+            if (!branchId)
+                throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
+            //Falta agregar validacion para saber cuando es borrador o no
+            await this.validateBodyQuotation(data);
+            await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
+            if (isReferencedCustomer === true)
+                await this.findUserById(quotation.referenceCustomerId);
+            let groupId = null;
+            let customerId = null;
+            const showroomManagerId = await this.getSM(mainProjectManagerId);
+            try {
+                groupId = await this.createOrGetGroup(customer);
+                customerId = await this.createOrGetCustomer({...customer}, groupId);
+                const userId = this.user.id;
+                delete quotation.mainProjectManagerCommissions;
+                if (id === null || id == undefined) {
+                    const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
+                    await this.createProofPayments(proofPaymentQuotation, createQuotation.id);
+                    await this.createManyQuotition(projectManagers, designers, products, createQuotation.id)
+                    await this.createComissionPmClasification(createQuotation.id, mainProjectManagerCommissions)
+                    return createQuotation;
+                } else {
+                    const findQuotation = await this.findQuotationById(id);
+                    await this.updateQuotation(quotation, isDraft, customerId, userId, id);
+                    await this.deleteManyQuotation(findQuotation, projectManagers, designers, products);
+                    await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id);
+                    await this.updateProofPayments(proofPaymentQuotation, id);
+                    await this.updatecreateComissionPmClasification(findQuotation.id, mainProjectManagerCommissions)
+                    return this.findQuotationById(id);
+                }
+            } catch (error) {
+                if (customer?.name && customerId) {
+                    await this.userRepository.deleteById(customerId);
+                }
+                throw this.responseService.badRequest(error?.message ? error?.message : error);
             }
-        } catch (error) {
-            if (customer?.name && customerId) {
-                await this.userRepository.deleteById(customerId);
-            }
-            throw this.responseService.badRequest(error?.message ? error?.message : error);
+        } else {
+            return this.quotationShowRoom(data);
         }
 
+    }
+
+    async downloadPdfClientQuote(id: number) {
+        const findQuotation = await this.findQuotationById(id);
+        return await this.createPdfToCustomer(findQuotation.id);
+    }
+
+    async uploadPdfClientQuote(id: number, data: {document: Document}) {
+        await this.findQuotationById(id);
+        await this.createDocument(id, data.document);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async createDocument(quotationId: number, document: Document) {
+        if (quotationId) {
+            if (document && !document?.id) {
+                await this.quotationRepository.clientQuote(quotationId).create(document);
+            } else if (document) {
+                await this.documentRepository.updateById(document.id, {...document});
+            }
+        }
+    }
+
+    async createPdfToCustomer(quotationId: number) {
+        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]});
+        const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+
+
+        let productsTemplate = [];
+        for (const product of products) {
+            const {brand, document, quotationProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            productsTemplate.push({
+                brandName: brand?.brandName,
+                status: quotationProducts?.status,
+                description,
+                measures,
+                image: document?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
+                quantity: quotationProducts?.quantity,
+                percentage: quotationProducts?.percentageDiscountProduct,
+                subtotal: quotationProducts?.subtotal
+            })
+        }
+        const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
+        const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
+        try {
+            const reference = `${project?.reference ?? ""}`
+            const referenceCustomerName = reference.trim() === "" ? "-" : reference
+            const properties: any = {
+                "logo": logo,
+                "customerName": `${customer?.name} ${customer?.lastName}`,
+                "quotationId": quotationId,
+                "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+                "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+                "referenceCustomer": referenceCustomerName,
+                "products": productsTemplate,
+                subtotal,
+                percentageAdditionalDiscount: percentageAdditionalDiscount ?? 0,
+                additionalDiscount,
+                percentageIva,
+                iva,
+                total,
+                advance,
+                advanceCustomer: convertToMoney(advanceCustomer ?? 0),
+                conversionAdvance: convertToMoney(conversionAdvance ?? 0),
+                balance: convertToMoney(balance ?? 0),
+                exchangeRate,
+                percentageAdvance,
+                emailPM: mainProjectManager?.email,
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
+            }
+            const nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            // await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+            const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'});
+            this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
+            this.response.setHeader('Content-Type', 'application/pdf');
+            return this.response.status(200).send(buffer)
+        } catch (error) {
+            console.log('error: ', error)
+        }
     }
 
     async createComissionPmClasification(quotationId: number, mainProjectManagerCommissions: MainProjectManagerCommissionsI[] = []) {
@@ -288,13 +410,11 @@ export class QuotationService {
         const {customerId, groupName, ...dataCustomer} = customer;
         if (customerId) {
             const findCustomer = await this.customerRepository.findOne({where: {id: customerId}});
-            console.log(customerId)
             if (!findCustomer)
                 throw this.responseService.badRequest('El cliente id no existe.')
 
             return findCustomer.id;
         } else {
-            console.log
             const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId, groupId: groupId});
             return createCustomer.id;
         }
@@ -344,7 +464,7 @@ export class QuotationService {
                 delete element.secondaryMaterialImg;
                 delete element.secondaryFinishingImag;
                 delete element.document;
-                const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined},);
+                const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined},);
                 await this.createDocumentProduct(response.productId, document)
                 await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                 await this.createDocumentMainFinish(response.id, mainFinishImg);
@@ -460,10 +580,10 @@ export class QuotationService {
                     delete element.document;
                     let dateReservationDays, isNotificationSent;
                     if (findQuotationP?.dateReservationDays && element?.reservationDays) {
-                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days');
+                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days').toDate();
                         isNotificationSent = true;
                     } else if (!findQuotationP?.dateReservationDays && element?.reservationDays) {
-                        dateReservationDays = dayjs().add(element?.reservationDays, 'days');
+                        dateReservationDays = dayjs().add(element?.reservationDays, 'days').toDate();
                         isNotificationSent = true;
                     }
                     element.isNotificationSent = element?.reservationDays ? false : undefined
@@ -481,7 +601,7 @@ export class QuotationService {
                     delete element.secondaryFinishingImag;
                     delete element.document;
                     // const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
-                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined},);
+                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined},);
                     await this.createDocumentProduct(response.productId, document)
                     await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                     await this.createDocumentMainFinish(response.id, mainFinishImg);
@@ -518,6 +638,170 @@ export class QuotationService {
 
             throw this.responseService.unprocessableEntity(message)
         }
+    }
+
+    async quotationShowRoom(data: CreateQuotation) {
+        const branchId = this.user.branchId;
+        if (!branchId)
+            throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
+        const {id, quotation, isDraft, branchesId, products, showRoomDestination} = data;
+        await this.validateBodyQuotationShowroom(data);
+        await this.validateBrancId(branchesId)
+        const showroomManagerId = await this.getSMShowRoom(this.user.branchId);
+        try {
+            if (id === null || id == undefined) {
+
+                const createQuotation = await this.createQuatationShowRoom(quotation, isDraft, this.user.id, branchesId, showroomManagerId, showRoomDestination, branchId);
+                await this.createProducts(products, createQuotation.id, branchesId);
+                return createQuotation;
+            } else {
+                const findQuotation = await this.findQuotationById(id);
+                await this.deleteProdcuts(findQuotation, products);
+                await this.updateProducts(products, findQuotation.id, branchesId)
+                await this.updateQuotationShowroom(quotation, isDraft, this.user.id, findQuotation.id, showRoomDestination, branchesId);
+                return this.findQuotationById(id);
+            }
+        } catch (error) {
+            console.log(error)
+            throw this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async getSMShowRoom(branchId: number) {
+        const sm = await this.userRepository.findOne({where: {branchId: branchId, isShowroomManager: true}});
+        if (!sm || !sm?.id)
+            throw this.responseService.badRequest("Aun no se encuentra un Showroom manager en tu equipo.");
+        return sm.id;
+    }
+
+    async validateBrancId(branchesId: number[]) {
+        for (let index = 0; index < branchesId?.length; index++) {
+            const element = branchesId[index];
+            const branch = await this.branchRepository.findOne({where: {id: element}});
+            if (!branch)
+                throw this.responseService.notFound('La sucursal no existe.')
+
+        }
+    }
+
+    async validateBodyQuotationShowroom(data: CreateQuotation) {
+        try {
+            await schemaCreateQuotitionShowRoom.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchesId: number[], showroomManagerId: number, showRoomDestination: ShowRoomDestinationE, branchId: number) {
+        const data = this.convertExchangeRateQuotation(quotation);
+        const bodyQuotation = {
+            ...data,
+            status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
+            isDraft,
+            branchesId,
+            userId,
+            typeQuotation: TypeQuotationE.SHOWROOM,
+            showroomManagerId,
+            mainProjectManagerId: this.user.id,
+            showRoomDestination,
+            branchId
+        }
+        return this.quotationRepository.create(bodyQuotation);
+    }
+
+    async createProducts(products: QuotationProductsCreate[], quotationId: number, branchesId: number[]) {
+        for (const element of products) {
+            const product = await this.productRepository.findOne({where: {id: element.productId}});
+            if (product) {
+                const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag, document} = element
+                delete element.mainMaterialImg;
+                delete element.mainFinishImg;
+                delete element.secondaryMaterialImg;
+                delete element.secondaryFinishingImag;
+                delete element.document;
+                const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined, typeQuotation: TypeQuotationE.SHOWROOM, branchesId},);
+                await this.createDocumentProduct(response.productId, document)
+                await this.createDocumentMainMaterial(response.id, mainMaterialImg)
+                await this.createDocumentMainFinish(response.id, mainFinishImg);
+                await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
+                await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImag);
+            }
+        }
+    }
+
+    async deleteProdcuts(quotation: Quotation, products: QuotationProductsCreate[]) {
+        const {id} = quotation;
+        const productsMap = products.map((value) => value.productId);
+        const productsDelete = quotation.products?.filter((value) => !productsMap.includes(value?.id ?? 0)) ?? []
+        for (const element of productsDelete) {
+            await this.quotationRepository.products(id).unlink(element.id)
+        }
+    }
+
+    async updateProducts(products: QuotationProductsCreate[], quotationId: number, branchesId: number[]) {
+        for (const element of products) {
+
+            const product = await this.productRepository.findOne({where: {id: element.productId}});
+            if (product) {
+                const findQuotationP = await this.quotationProductsRepository.findOne({where: {quotationId: quotationId, productId: element.productId}});
+                if (findQuotationP) {
+                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag, document} = element
+                    delete element.mainMaterialImg;
+                    delete element.mainFinishImg;
+                    delete element.secondaryMaterialImg;
+                    delete element.secondaryFinishingImag;
+                    delete element.document;
+                    let dateReservationDays, isNotificationSent;
+                    if (findQuotationP?.dateReservationDays && element?.reservationDays) {
+                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days').toDate();
+                        isNotificationSent = true;
+                    } else if (!findQuotationP?.dateReservationDays && element?.reservationDays) {
+                        dateReservationDays = dayjs().add(element?.reservationDays, 'days').toDate();
+                        isNotificationSent = true;
+                    }
+                    element.isNotificationSent = element?.reservationDays ? false : undefined
+                    await this.quotationProductsRepository.updateById(findQuotationP.id, {...element, dateReservationDays, isNotificationSent, branchesId});
+                    await this.createDocumentProduct(findQuotationP.productId, document)
+                    await this.createDocumentMainMaterial(findQuotationP.id, mainMaterialImg)
+                    await this.createDocumentMainFinish(findQuotationP.id, mainFinishImg);
+                    await this.createDocumentSecondaryMaterial(findQuotationP.id, secondaryMaterialImg);
+                    await this.createDocumentSecondaryFinishingImage(findQuotationP.id, secondaryFinishingImag);
+                } else {
+                    const {mainMaterialImg, mainFinishImg, secondaryMaterialImg, secondaryFinishingImag, document} = element
+                    delete element.mainMaterialImg;
+                    delete element.mainFinishImg;
+                    delete element.secondaryMaterialImg;
+                    delete element.secondaryFinishingImag;
+                    delete element.document;
+                    // const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
+                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined, branchesId},);
+                    await this.createDocumentProduct(response.productId, document)
+                    await this.createDocumentMainMaterial(response.id, mainMaterialImg)
+                    await this.createDocumentMainFinish(response.id, mainFinishImg);
+                    await this.createDocumentSecondaryMaterial(response.id, secondaryMaterialImg);
+                    await this.createDocumentSecondaryFinishingImage(response.id, secondaryFinishingImag);
+                }
+            }
+        }
+    }
+
+    async updateQuotationShowroom(quotation: QuotationI, isDraft: boolean, userId: number, quotationId: number, showRoomDestination: ShowRoomDestinationE, branchesId: number[]) {
+        const data = this.convertExchangeRateQuotation(quotation);
+        const bodyQuotation = {
+            ...data,
+            status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
+            isDraft,
+            userId,
+            showRoomDestination,
+            branchesId,
+        }
+        await this.quotationRepository.updateById(quotationId, bodyQuotation)
     }
 
     async validateBodyQuotationUpdate(data: UpdateQuotation) {
@@ -571,6 +855,9 @@ export class QuotationService {
                 relation: 'branch',
             },
             {
+                relation: 'branches',
+            },
+            {
                 relation: 'mainProjectManager',
             },
         ]
@@ -584,19 +871,19 @@ export class QuotationService {
                 ...filter, include: [...filterInclude]
             };
         return (await this.quotationRepository.find(filter)).map(value => {
-            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId} = value;
-            const {name} = customer;
+            const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId, typeQuotation} = value;
             const {total} = this.getPricesQuotation(value);
             return {
                 id,
-                customerName: name,
+                customerName: customer?.name,
                 pm: mainProjectManager ? `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}` : '',
                 pmId: mainProjectManagerId,
-                branchId: branch?.id,
+                branchId: branch?.id ?? null,
                 total,
-                branchName: branch?.name,
+                branchName: branch?.name ?? null,
                 status,
-                updatedAt
+                updatedAt,
+                typeQuotation
             }
         });
     }
@@ -681,6 +968,12 @@ export class QuotationService {
 
     async findById(id: number, filter?: FilterExcludingWhere<Quotation>): Promise<QuotationFindOneResponse> {
         const filterInclude = [
+            {
+                relation: 'clientQuote',
+                scope: {
+                    fields: ['fileURL', 'name', 'extension', 'id', 'clientQuoteId']
+                }
+            },
             {
                 relation: 'customer',
             },
@@ -825,23 +1118,24 @@ export class QuotationService {
 
         const response: QuotationFindOneResponse = {
             customer: {
-                customerId: quotation.customerId,
-                firstName: quotation.customer.name,
-                lastName: quotation.customer.lastName,
-                secondLastName: quotation.customer.secondLastName,
-                address: quotation.customer?.address,
-                addressDescription: quotation.customer?.addressDescription,
-                phone: quotation.customer.phone,
-                invoice: quotation.customer.invoice,
-                rfc: quotation.customer.rfc,
-                businessName: quotation.customer.businessName,
-                regimen: quotation.customer.regimen,
+                customerId: quotation?.customerId,
+                firstName: quotation?.customer?.name,
+                lastName: quotation?.customer?.lastName,
+                secondLastName: quotation?.customer?.secondLastName,
+                address: quotation?.customer?.address,
+                addressDescription: quotation?.customer?.addressDescription,
+                phone: quotation?.customer?.phone,
+                invoice: quotation?.customer?.invoice,
+                rfc: quotation?.customer?.rfc,
+                businessName: quotation?.customer?.businessName,
+                regimen: quotation?.customer?.regimen,
                 group: quotation?.customer?.group?.name,
                 groupId: quotation?.customer?.groupId,
                 email: quotation?.customer?.email
             },
             products: products,
             quotation: {
+                clientQuote: quotation?.clientQuote ?? null,
                 mainProjectManagerCommissions: quotation?.classificationPercentageMainpms,
                 subtotal: subtotal,
                 additionalDiscount: additionalDiscount,
@@ -863,6 +1157,10 @@ export class QuotationService {
                 status: quotation.status,
                 mainProjectManagerId: quotation?.mainProjectManagerId,
                 rejectedComment: quotation?.comment,
+                typeQuotation: quotation?.typeQuotation,
+                branchId: quotation?.branchId,
+                showRoomDestination: quotation?.showRoomDestination,
+                branchesId: quotation?.branchesId
             },
             // quotation: {
             //     subtotal: quotation.subtotal,
@@ -931,7 +1229,9 @@ export class QuotationService {
 
     async changeStatusToReviewAdmin(id: number, body: {isFractionate: boolean, isRejected: boolean, comment: string}) {
         const quotation = await this.findQuotationAndProductsById(id);
-        await this.validateIfExistCustomer(quotation);
+        if (quotation.typeQuotation === TypeQuotationE.GENERAL) {
+            await this.validateIfExistCustomer(quotation);
+        }
         await this.validateChangeStatusSM(body);
         if (quotation.status !== StatusQuotationE.ENREVISIONSM)
             throw this.responseService.badRequest(`La cotizacion aun no se encuentra en revision por SM.`)
@@ -945,7 +1245,7 @@ export class QuotationService {
             status = StatusQuotationE.ENREVISIONADMINSITRACION;
             if (isFractionate === true) {
                 typeFractional = await this.typeCurrencyFractionate(id);
-                prices = this.calculatePricesExchangeRate(quotation, typeFractional);
+                prices = await this.calculatePricesExchangeRate(quotation, typeFractional);
             }
         }
         await this.quotationRepository.updateById(id, {status, comment, ...prices, isFractionate, typeFractional});
@@ -978,7 +1278,9 @@ export class QuotationService {
             if (isRejected === true)
                 status = StatusQuotationE.RECHAZADA;
             else {
-                await this.validateAdvanceCustomerAndEnsamblado(id);
+                if (quotation?.typeQuotation === TypeQuotationE.GENERAL) {
+                    await this.validateAdvanceCustomerAndEnsamblado(id);
+                }
                 status = StatusQuotationE.CERRADA;
                 await this.projectService.create({quotationId: id}, transaction);
             }
@@ -1045,14 +1347,17 @@ export class QuotationService {
         return Number(new BigNumber(num).toFixed(2));
     }
 
-    calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
+
+
+    async calculatePricesExchangeRate(quotation: Quotation, typeFractional: {EUR: boolean, MXN: boolean, USD: boolean}) {
         //CAMBIAR TIPO DE MONEDA URGENTE
         const {exchangeRateQuotation} = quotation;
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
             let bodyMXN = {};
             let bodyUSD = {};
-            const USD = 1.074;
-            const MXN = 19.28;
+            const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroTo();
+            // const USD = 1.074;
+            // const MXN = 19.28;
             const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
                 advanceEUR, advanceCustomerEUR, conversionAdvanceEUR, balanceEUR} = quotation
             if (typeFractional.MXN === true) {

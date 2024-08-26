@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
     get,
@@ -6,7 +7,7 @@ import {
 } from '@loopback/rest';
 import {InventoriesService} from '../services';
 
-// @authenticate('jwt')
+@authenticate('jwt')
 export class InventoriesController {
     constructor(
         @service()

@@ -1,10 +1,10 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
-import {CollectionDestinationE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
+import {CollectionDestinationE, CollectionStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {schemaCollectionCreate, schemaCollectionPatchFeedback} from '../joi.validation.ts/collection.validation';
 import {ResponseServiceBindings} from '../keys';
 import {Collection, CollectionWithRelations, PurchaseOrders, PurchaseOrdersRelations, PurchaseOrdersWithRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {CollectionRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
+import {CollectionRepository, ContainerRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -20,6 +20,8 @@ export class CollectionService {
         public documentRepository: DocumentRepository,
         @repository(QuotationProductsRepository)
         public quotationProductsRepository: QuotationProductsRepository,
+        @repository(ContainerRepository)
+        public containerRepository: ContainerRepository,
     ) { }
 
     async earringsCollect() {
@@ -152,11 +154,12 @@ export class CollectionService {
 
             const collectios = await this.collectionRepository.find(filter);
             return collectios?.map((value: CollectionWithRelations) => {
-                const {id, dateCollection, purchaseOrders} = value;
+                const {id, dateCollection, purchaseOrders, status} = value;
                 return {
                     id,
                     dateCollection,
-                    providers: purchaseOrders?.map((value: PurchaseOrdersWithRelations) => value?.proforma?.provider?.name)?.join(', ')
+                    providers: purchaseOrders?.map((value: PurchaseOrdersWithRelations) => value?.proforma?.provider?.name)?.join(', '),
+                    status
                 }
             })
         } catch (error) {
@@ -238,7 +241,7 @@ export class CollectionService {
                         quantity: quotationProducts?.length ?? 0,
                         productionEndDate,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
-                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct, numberBoxes, quantity} = value;
                             const {document, line, name} = product;
                             const descriptionParts = [
                                 line?.name,
@@ -254,6 +257,8 @@ export class CollectionService {
                                 SKU,
                                 image: document?.fileURL,
                                 description,
+                                numberBoxes,
+                                quantity
                             }
                         })
                     }
@@ -325,7 +330,7 @@ export class CollectionService {
         return collection;
     }
 
-    async validateBodyCollectionPatchFeedback(data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+    async validateBodyCollectionPatchFeedback(data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         try {
             await schemaCollectionPatchFeedback.validateAsync(data);
         }
@@ -339,14 +344,21 @@ export class CollectionService {
         }
     }
 
-    async setFeedback(id: number, data: {destination: CollectionDestinationE, dateCollection: Date, containerNumber: string, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+    async setFeedback(id: number, data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         await this.validateCollectionById(id);
         await this.validateBodyCollectionPatchFeedback(data);
-        const {containerNumber, documents, destination, dateCollection} = data;
-        await this.collectionRepository.updateById(id, {containerNumber, destination, dateCollection})
+        const {containerId, documents, destination, dateCollection} = data;
+        await this.collectionRepository.updateById(id, {containerId, destination, dateCollection, status: CollectionStatus.COMPLETADA})
         await this.createDocument(id, documents);
         await this.validaIfContainer(id, destination);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async calculateDate(containerId: number) {
+        const {ETADate, ETDDate} = await this.containerRepository.findById(containerId);
+        if (!ETADate) {
+
+        }
     }
 
     async validaIfContainer(collectionId: number, destination: CollectionDestinationE) {

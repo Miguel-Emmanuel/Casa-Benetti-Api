@@ -38,6 +38,38 @@ export const SendgridTemplates = {
     id: 'd-7973474c38fa459fb1560eac8264261e',
     subject: 'Solicitud de entrega rechazada',
   },
+  NEW_PURCHASE_ORDER: {
+    id: 'd-a8cb27b2a0fc4fccbe200da5d2613ba9',
+    subject: 'Nueva orden de compra por antender',
+  },
+  NOTIFICATION_DATE_COLLECTION: {
+    id: 'd-5cdc561e82464879874c639d1f701619',
+    subject: 'Proxima recolección programada',
+  },
+  NOTIFICATION_DELIVERY_DAY: {
+    id: 'd-692ff2d403614f9e8b41f412a229ac56',
+    subject: 'Proxima entrega programada',
+  },
+  NOTIFICATION_DELIVERY_DAY_CUSTOMER: {
+    id: 'd-a82b5ebdb4854f15a31889b01c433063',
+    subject: 'Proxima entrega programada',
+  },
+  NOTIFICATION__LOAN_END_DATE: {
+    id: 'd-0b581d4574b84cb6a3e862b1b9ac13d7',
+    subject: 'Recordatorio préstamo próximo a vencer',
+  },
+  NOTIFICATION_PROJECT_UPDATED: {
+    id: 'd-c3655b8d8c7747f18cf0e62f8964d37f',
+    subject: 'Actualización del proyecto',
+  },
+  NOTIFICATION_PRODUCT_PEDIDO: {
+    id: 'd-14c76c8b084e486eac8ac5545df1600a',
+    subject: 'Coordinación de Entrega',
+  },
+  NOTIFICATION_PRODUCT_STOCK: {
+    id: 'd-f046dce2c2eb4b50adbe29350390461f',
+    subject: 'Coordinación de Entrega',
+  },
 };
 
 @injectable({scope: BindingScope.TRANSIENT})

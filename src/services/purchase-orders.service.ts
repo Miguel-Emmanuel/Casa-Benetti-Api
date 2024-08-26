@@ -2,13 +2,14 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE} from '../enums';
+import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE, TypeQuotationE} from '../enums';
 import {schameUpdateStatusPurchase} from '../joi.validation.ts/purchase-order.validation';
 import {ResponseServiceBindings} from '../keys';
 import {PurchaseOrders, QuotationProductsWithRelations} from '../models';
-import {ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository} from '../repositories';
+import {CollectionRepository, ContainerRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository} from '../repositories';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
 
@@ -33,6 +34,10 @@ export class PurchaseOrdersService {
         public pdfService: PdfService,
         @inject(RestBindings.Http.RESPONSE)
         private response: Response,
+        @repository(ContainerRepository)
+        public containerRepository: ContainerRepository,
+        @repository(CollectionRepository)
+        public collectionRepository: CollectionRepository,
     ) { }
 
 
@@ -93,7 +98,7 @@ export class PurchaseOrdersService {
                         {
                             relation: 'project',
                             scope: {
-                                fields: ['id', 'quotationId'],
+                                fields: ['id', 'quotationId', 'projectId'],
                                 include: [
                                     {
                                         relation: 'quotation',
@@ -121,8 +126,8 @@ export class PurchaseOrdersService {
             };
         return (await this.purchaseOrdersRepository.find(filter)).map(value => {
             const {id, proforma, status} = value;
-            const {provider, brand, quotationProducts, projectId, project} = proforma;
-            const {quotation} = project
+            const {provider, brand, quotationProducts, project} = proforma;
+            const {quotation, projectId} = project
             return {
                 id,
                 projectId,
@@ -138,6 +143,9 @@ export class PurchaseOrdersService {
     async findById(id: number, filter?: FilterExcludingWhere<PurchaseOrders>) {
         try {
             const include: InclusionFilter[] = [
+                {
+                    relation: 'accountPayable'
+                },
                 {
                     relation: 'proforma',
                     scope: {
@@ -185,7 +193,7 @@ export class PurchaseOrdersService {
                             {
                                 relation: 'project',
                                 scope: {
-                                    fields: ['id', 'customerId', 'quotationId'],
+                                    fields: ['id', 'customerId', 'quotationId', 'projectId'],
                                     include: [
                                         {
                                             relation: 'customer',
@@ -226,21 +234,24 @@ export class PurchaseOrdersService {
                     ]
                 };
             const purchaseOrders = await this.purchaseOrdersRepository.findById(id, filter);
-            const {createdAt, proforma, status, accountPayableId, proformaId, productionEndDate} = purchaseOrders;
+            const {createdAt, proforma, status, accountPayableId, proformaId, productionEndDate, productionRealEndDate, accountPayable} = purchaseOrders;
             const {provider, brand, quotationProducts, project} = proforma;
-            const {customer, quotation} = project
+            const {customer, quotation, projectId} = project
             const {mainProjectManager} = quotation
+            const percentagePaid = this.calculatePercentagePaid(accountPayable.total, accountPayable.totalPaid);
 
             return {
                 id,
-                projectId: project?.id,
-                productionEndDate,
+                projectId: projectId,
+                productionEndDate: productionEndDate ?? null,
+                productionRealEndDate: productionRealEndDate ?? null,
                 createdAt,
                 provider,
                 brand,
-                customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customer: customer ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                 accountPayableId,
+                percentagePaid: this.roundToTwoDecimals(percentagePaid),
                 status,
                 proformaId,
                 date: 'Aun estamos trabajando en calcular la fecha.',
@@ -282,6 +293,14 @@ export class PurchaseOrdersService {
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);
         }
+    }
+
+    calculatePercentagePaid(total: number, totalPaid: number) {
+        return (totalPaid / total) * 100;
+    }
+
+    roundToTwoDecimals(num: number): number {
+        return Number(new BigNumber(num).toFixed(2));
     }
 
     async downloadPurchaseOrder(purchaseOrderId: number) {
@@ -358,7 +377,7 @@ export class PurchaseOrdersService {
                 quantity: quotationProduct?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
                 originCode: quotationProduct?.originCode,
-                assembledProducts: assembledProducts
+                assembledProducts: assembledProducts,
             })
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
@@ -377,7 +396,8 @@ export class PurchaseOrdersService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": reference,
                 "products": prodcutsArray,
-                "type": 'PEDIDO'
+                "type": 'PEDIDO',
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
             const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'});
             this.response.setHeader('Content-Disposition', `attachment; filename=order_compra.pdf`);
@@ -418,12 +438,68 @@ export class PurchaseOrdersService {
         const purchaseOrder = await this.purchaseOrdersRepository.findOne({where: {id}})
         if (!purchaseOrder)
             throw this.responseService.notFound("La orden de compra no se ha encontrado.")
-
+        return purchaseOrder
     }
 
 
     async deleteById(id: number) {
         await this.purchaseOrdersRepository.deleteById(id);
+    }
+
+    async saveProductionRealEndDate(id: number, data: {productionRealEndDate: string},) {
+        const {collectionId} = await this.findPurchaseOrderById(id);
+        await this.purchaseOrdersRepository.updateById(id, {productionRealEndDate: data.productionRealEndDate})
+        await this.calculateArrivalDatePurchaseOrder(collectionId);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async calculateArrivalDatePurchaseOrder(collectionId?: number) {
+        if (collectionId) {
+            const collectionFind = await this.collectionRepository.findById(collectionId);
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                            }
+                        ]
+                    }
+                }
+            ]
+            const container = await this.containerRepository.findById(collectionFind.containerId, {include});
+            const {ETDDate, ETADate} = container;
+            let arrivalDate;
+            if (ETADate) {
+                arrivalDate = dayjs(ETADate).add(10, 'days')
+            }
+            else if (ETDDate) {
+                arrivalDate = dayjs(ETDDate).add(31, 'days')
+            }
+            const {collection} = container;
+            const {purchaseOrders} = collection;
+            if (purchaseOrders) {
+                for (let index = 0; index < purchaseOrders.length; index++) {
+                    const element = purchaseOrders[index];
+                    if (arrivalDate) {
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        return;
+                    }
+                    const {productionEndDate, productionRealEndDate} = element;
+                    if (productionRealEndDate) {
+                        const arrivalDate = dayjs(productionRealEndDate).add(53, 'days')
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        return;
+                    }
+                    if (productionEndDate) {
+                        const arrivalDate = dayjs(productionEndDate).add(53, 'days')
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     async earringsCollect() {
@@ -462,7 +538,7 @@ export class PurchaseOrdersService {
         })
 
         return purchaseOrders.map(value => {
-            const {id: purchaseOrderid, proforma, productionEndDate} = value;
+            const {id: purchaseOrderid, proforma, productionEndDate, productionRealEndDate, productionStartDate} = value;
             const {proformaId, provider, brand, quotationProducts} = proforma;
             const {name} = provider;
             const {brandName} = brand;
@@ -472,7 +548,9 @@ export class PurchaseOrdersService {
                 provider: name,
                 brand: brandName,
                 quantity: quotationProducts?.length ?? 0,
-                productionEndDate
+                productionEndDate: productionEndDate ?? null,
+                productionRealEndDate: productionRealEndDate ?? null,
+                productionStartDate: productionStartDate ?? null
             }
         })
     }

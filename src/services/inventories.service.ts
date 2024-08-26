@@ -1,9 +1,10 @@
-import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {ConvertCurrencyToEUR, CurrencyE, InventoryMovementsTypeE} from '../enums';
 import {InventorieDataI} from '../interface';
 import {ResponseServiceBindings} from '../keys';
 import {InventoriesRepository, InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
+import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -17,6 +18,8 @@ export class InventoriesService {
         public responseService: ResponseService,
         @repository(InventoriesRepository)
         public inventoriesRepository: InventoriesRepository,
+        @service()
+        public dayExchancheCalculateToService: DayExchancheCalculateToService
     ) { }
 
     async find() {
@@ -76,7 +79,6 @@ export class InventoriesService {
                 ];
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
                 const findWarehouse = warehouseArray.findIndex(value => value.id === warehouseId)
-                console.log('findWarehouse: ', findWarehouse)
                 if (findWarehouse !== -1) {
                     const findProduct = warehouseArray[findWarehouse].products.findIndex(value => value.id === id);
                     if (findProduct !== -1) {
@@ -260,7 +262,21 @@ export class InventoriesService {
                                                 scope: {
                                                     include: [
                                                         {
-                                                            relation: 'purchaseOrders'
+                                                            relation: 'purchaseOrders',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'collection',
+                                                                        scope: {
+                                                                            include: [
+                                                                                {
+                                                                                    relation: 'container'
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            }
                                                         }
                                                     ]
                                                 }
@@ -355,7 +371,7 @@ export class InventoriesService {
                 ]
             });
 
-            const calculateCost = this.calculateCost(currency, proformaAmount)
+            const calculateCost = await this.calculateCost(currency, originCost)
             return {
                 id,
                 image: document?.fileURL ?? null,
@@ -370,6 +386,10 @@ export class InventoriesService {
                 brandId,
                 model,
                 purchaseOrderId: purchaseOrders?.id ?? null,
+                arrivalDate: purchaseOrders?.collection?.container?.arrivalDate ?? null,
+                containerNumber: purchaseOrders?.collection?.container?.containerNumber ?? null,
+                invoiceNumber: purchaseOrders?.collection?.container?.invoiceNumber ?? null,
+                numberBoxes: purchaseOrders?.collection?.container?.numberBoxes ?? null,
                 currency,
                 originCode,
                 description,
@@ -377,6 +397,7 @@ export class InventoriesService {
                 cost: price,
                 costPerUnity: calculateCost.amount,
                 parity: calculateCost.parity,
+                originCost,
                 inventories: inventoriesNEQ.map(value => {
                     const {branchId, warehouseId, stock, quotationProducts, warehouse, branch} = value;
                     return {
@@ -396,14 +417,19 @@ export class InventoriesService {
         }
     }
 
-    calculateCost(currency: CurrencyE, proformaAmount: number) {
-        if (currency === CurrencyE.PESO_MEXICANO)
-            return {amount: proformaAmount * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
+    async calculateCost(currency: CurrencyE, originCost: number) {
+        if (currency === CurrencyE.PESO_MEXICANO) {
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnTo();
+            // return {amount: originCost * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
+            return {amount: originCost * EUR, parity: EUR}
+        }
 
-        if (currency === CurrencyE.USD)
-            return {amount: proformaAmount * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
-
-        return {amount: proformaAmount, parity: ConvertCurrencyToEUR.EURO}
+        if (currency === CurrencyE.USD) {
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarTo();
+            // return {amount: originCost * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
+            return {amount: originCost * EUR, parity: EUR}
+        }
+        return {amount: originCost, parity: ConvertCurrencyToEUR.EURO}
     }
 
 }

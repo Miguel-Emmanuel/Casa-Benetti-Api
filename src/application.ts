@@ -16,11 +16,15 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import * as dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
+import {DateCollectionNotificationCronJob} from './cronjobs/date-collection-notification';
+import {DeliveryDayNotificationCronJob} from './cronjobs/delivery-day-notification';
+import {LoanEndDateNotificationCronJob} from './cronjobs/loan-end-date-notification';
 import {ResertvationDayCronJob} from './cronjobs/reservation-days';
 import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
 import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, ExpenseServiceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
 import {OperationHook} from './operation-hooks';
+import {PurchaseOrderHook} from './operation-hooks/purchase-order.hook';
 import {UserCredentialsRepository, UserRepository} from './repositories';
 import {MySequence} from './sequence';
 import {AuthService, BcryptHasher, BranchService, BrandService, CustomerService, ExpenseService, GroupService, JWTService, MyUserService, ProviderService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
@@ -49,6 +53,9 @@ export class BaseApiLb4Application extends BootMixin(
 
     this.component(CronComponent);
     this.add(createBindingFromClass(ResertvationDayCronJob));
+    this.add(createBindingFromClass(DateCollectionNotificationCronJob));
+    this.add(createBindingFromClass(DeliveryDayNotificationCronJob));
+    this.add(createBindingFromClass(LoanEndDateNotificationCronJob));
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
@@ -118,6 +125,7 @@ export class BaseApiLb4Application extends BootMixin(
     );
 
     this.bind(OperationHookBindings.OPERATION_SERVICE).toClass(OperationHook);
+    this.bind(OperationHookBindings.OPERATION_SERVICE_PURCHASE).toClass(PurchaseOrderHook);
     this.bind(SendgridServiceBindings.SENDGRID_SERVICE).toClass(
       SendgridService
     );
