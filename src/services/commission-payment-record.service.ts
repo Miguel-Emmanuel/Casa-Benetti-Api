@@ -153,7 +153,7 @@ export class CommissionPaymentRecordService {
         if (!commission)
             throw this.responseService.notFound('La comision no existe.');
 
-        const {project, projectId, user, userName, type, percentagePaid, totalPaid, commissionAmount, balance, status, commissionPayments} = commission;
+        const {project, projectId, user, userName, type, percentagePaid, totalPaid, commissionAmount, balance, status, commissionPayments, commissionPercentage} = commission;
         const {quotation, customer} = project;
         const {showroomManager} = quotation;
         return {
@@ -169,7 +169,8 @@ export class CommissionPaymentRecordService {
             balance,
             exchangeRate: this.roundToTwoDecimals(commissionAmount * 19.25),
             status,
-            commissionPayments
+            commissionPayments,
+            commissionPercentage
         }
     }
 
