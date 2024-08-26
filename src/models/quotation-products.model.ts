@@ -100,6 +100,7 @@ export class QuotationProducts extends Entity {
     //Venta o prestamo
     @property({
         type: 'string',
+        default: TypeSaleE.VENTA
     })
     typeSale?: TypeSaleE;
 
