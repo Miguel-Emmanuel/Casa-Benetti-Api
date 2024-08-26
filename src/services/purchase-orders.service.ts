@@ -5,7 +5,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE} from '../enums';
+import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE, TypeQuotationE} from '../enums';
 import {schameUpdateStatusPurchase} from '../joi.validation.ts/purchase-order.validation';
 import {ResponseServiceBindings} from '../keys';
 import {PurchaseOrders, QuotationProductsWithRelations} from '../models';
@@ -396,7 +396,8 @@ export class PurchaseOrdersService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": reference,
                 "products": prodcutsArray,
-                "type": 'PEDIDO'
+                "type": 'PEDIDO',
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
             const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'});
             this.response.setHeader('Content-Disposition', `attachment; filename=order_compra.pdf`);
