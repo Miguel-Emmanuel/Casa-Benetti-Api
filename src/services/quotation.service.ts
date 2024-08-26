@@ -138,7 +138,6 @@ export class QuotationService {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]});
         const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
-        console.log("QUOTATIONCUSTOMER", quotation);
 
 
         let productsTemplate = [];
@@ -411,13 +410,11 @@ export class QuotationService {
         const {customerId, groupName, ...dataCustomer} = customer;
         if (customerId) {
             const findCustomer = await this.customerRepository.findOne({where: {id: customerId}});
-            console.log(customerId)
             if (!findCustomer)
                 throw this.responseService.badRequest('El cliente id no existe.')
 
             return findCustomer.id;
         } else {
-            console.log
             const createCustomer = await this.customerRepository.create({...dataCustomer, organizationId: this.user.organizationId, groupId: groupId});
             return createCustomer.id;
         }
