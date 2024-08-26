@@ -40,6 +40,7 @@ export enum ModuleCategories {
     COMISIONES = 'Comisiones',
     INVENTARIOS = 'Inventarios',
     LOGISTICA = 'Logística',
+    TIPO_CAMBIO = 'Tipo de cambio',
 }
 
 export enum TypeUserE {
