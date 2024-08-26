@@ -580,10 +580,10 @@ export class QuotationService {
                     delete element.document;
                     let dateReservationDays, isNotificationSent;
                     if (findQuotationP?.dateReservationDays && element?.reservationDays) {
-                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days');
+                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days').toDate();
                         isNotificationSent = true;
                     } else if (!findQuotationP?.dateReservationDays && element?.reservationDays) {
-                        dateReservationDays = dayjs().add(element?.reservationDays, 'days');
+                        dateReservationDays = dayjs().add(element?.reservationDays, 'days').toDate();
                         isNotificationSent = true;
                     }
                     element.isNotificationSent = element?.reservationDays ? false : undefined
@@ -601,7 +601,7 @@ export class QuotationService {
                     delete element.secondaryFinishingImag;
                     delete element.document;
                     // const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
-                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined},);
+                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined},);
                     await this.createDocumentProduct(response.productId, document)
                     await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                     await this.createDocumentMainFinish(response.id, mainFinishImg);
@@ -725,7 +725,7 @@ export class QuotationService {
                 delete element.secondaryMaterialImg;
                 delete element.secondaryFinishingImag;
                 delete element.document;
-                const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined, typeQuotation: TypeQuotationE.SHOWROOM, branchesId},);
+                const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined, typeQuotation: TypeQuotationE.SHOWROOM, branchesId},);
                 await this.createDocumentProduct(response.productId, document)
                 await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                 await this.createDocumentMainFinish(response.id, mainFinishImg);
@@ -759,10 +759,10 @@ export class QuotationService {
                     delete element.document;
                     let dateReservationDays, isNotificationSent;
                     if (findQuotationP?.dateReservationDays && element?.reservationDays) {
-                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days');
+                        dateReservationDays = dayjs(findQuotationP?.dateReservationDays).add(element?.reservationDays, 'days').toDate();
                         isNotificationSent = true;
                     } else if (!findQuotationP?.dateReservationDays && element?.reservationDays) {
-                        dateReservationDays = dayjs().add(element?.reservationDays, 'days');
+                        dateReservationDays = dayjs().add(element?.reservationDays, 'days').toDate();
                         isNotificationSent = true;
                     }
                     element.isNotificationSent = element?.reservationDays ? false : undefined
@@ -780,7 +780,7 @@ export class QuotationService {
                     delete element.secondaryFinishingImag;
                     delete element.document;
                     // const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
-                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days') : undefined, isNotificationSent: element?.reservationDays ? false : undefined, branchesId},);
+                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined, branchesId},);
                     await this.createDocumentProduct(response.productId, document)
                     await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                     await this.createDocumentMainFinish(response.id, mainFinishImg);
