@@ -397,6 +397,7 @@ export class InventoriesService {
                 cost: price,
                 costPerUnity: calculateCost.amount,
                 parity: calculateCost.parity,
+                originCost,
                 inventories: inventoriesNEQ.map(value => {
                     const {branchId, warehouseId, stock, quotationProducts, warehouse, branch} = value;
                     return {
