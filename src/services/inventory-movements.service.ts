@@ -91,7 +91,7 @@ export class InventoryMovementsService {
                         }
                         await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, createdById: this.user.id});
                         await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
-                        await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_INTERNACIONAL})
+                        await this.quotationProductsRepository.updateById(element.quotationProductsId, {status: QuotationProductStatusE.BODEGA_INTERNACIONAL})
                     }
                     await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_INTERNACIONAL, collectionId})
                 }
