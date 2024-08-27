@@ -591,9 +591,9 @@ export class ContainerService {
 
     calculateArrivalDateAndShippingDate(status: ContainerStatus) {
         if (status === ContainerStatus.EN_TRANSITO)
-            return {arrivalDate: dayjs().toDate()}
-        if (status === ContainerStatus.ENTREGADO)
             return {shippingDate: dayjs().toDate()}
+        if (status === ContainerStatus.ENTREGADO)
+            return {arrivalDate: dayjs().toDate()}
     }
 
     async updateProducts(purchaseOrders: PurchaseOrdersContainer[]) {
