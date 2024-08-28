@@ -627,38 +627,31 @@ export class ContainerService {
         try {
             const include: InclusionFilter[] = [
                 {
-                    relation: 'collection',
+                    relation: 'purchaseOrders',
                     scope: {
                         include: [
                             {
-                                relation: 'purchaseOrders',
+                                relation: 'proforma',
                                 scope: {
                                     include: [
                                         {
-                                            relation: 'proforma',
+                                            relation: 'quotationProducts',
                                             scope: {
                                                 include: [
                                                     {
-                                                        relation: 'quotationProducts',
+                                                        relation: 'product',
                                                         scope: {
                                                             include: [
                                                                 {
-                                                                    relation: 'product',
-                                                                    scope: {
-                                                                        include: [
-                                                                            {
-                                                                                relation: 'document'
-                                                                            },
-                                                                            {
-                                                                                relation: 'line'
-                                                                            }
-                                                                        ]
-                                                                    }
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
                                                                 }
-                                                            ],
+                                                            ]
                                                         }
                                                     }
-                                                ]
+                                                ],
                                             }
                                         }
                                     ]
@@ -681,10 +674,10 @@ export class ContainerService {
                 };
             const containers = await this.containerRepository.find(filter);
             return containers.map(value => {
-                const {id, containerNumber, collection, arrivalDate, status, shippingDate} = value;
+                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders} = value;
                 let quantity = 0;
-                for (let index = 0; index < collection?.purchaseOrders.length; index++) {
-                    const element = collection?.purchaseOrders[index];
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const element = purchaseOrders[index];
                     const {proforma} = element;
                     const {quotationProducts} = proforma;
                     quantity += quotationProducts?.length ?? 0;
