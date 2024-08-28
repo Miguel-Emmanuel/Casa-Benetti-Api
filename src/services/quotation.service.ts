@@ -205,7 +205,9 @@ export class QuotationService {
                 emailPM: mainProjectManager?.email,
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
-            const nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            let nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            if (quotation.typeQuotation === TypeQuotationE.SHOWROOM)
+                nameFile = `showroom_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             // await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             const buffer = await this.pdfService.createPDFWithTemplateHtmlToBuffer(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'});
             this.response.setHeader('Content-Disposition', `attachment; filename=${nameFile}`);
