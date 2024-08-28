@@ -150,12 +150,14 @@ export class ContainerService {
                 }
                 // Primero, agrega la imagen al workbook
                 let imageId = null
+                console.log('file: ', file)
                 if (file) {
                     imageId = workbook.addImage({
                         filename: file, // 'file' es tu imagen en base64
                         extension: 'png' // Cambia la extensión según el tipo de imagen
                     });
                 }
+                console.log('imageId: ', imageId)
                 const newRow = worksheet.addRow({
                     codigo: elementProduct?.SKU,
                     numeroFactura: elementProduct?.invoiceNumber,
@@ -175,6 +177,7 @@ export class ContainerService {
                     paisOrigen: elementProduct?.product?.countryOrigin,
                 });
                 if (imageId) {
+                    console.log('Inside image id: ', file)
                     const imageWidth = 60; // ejemplo de ancho en píxeles
                     const imageHeight = 60;
                     const widthInPoints = imageWidth / 0.75;
