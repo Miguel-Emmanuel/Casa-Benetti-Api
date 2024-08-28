@@ -457,14 +457,7 @@ export class PurchaseOrdersService {
             const collectionFind = await this.collectionRepository.findById(collectionId);
             const include: InclusionFilter[] = [
                 {
-                    relation: 'collection',
-                    scope: {
-                        include: [
-                            {
-                                relation: 'purchaseOrders',
-                            }
-                        ]
-                    }
+                    relation: 'purchaseOrders',
                 }
             ]
             const container = await this.containerRepository.findById(collectionFind.containerId, {include});
