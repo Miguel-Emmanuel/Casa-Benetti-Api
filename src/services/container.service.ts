@@ -141,10 +141,12 @@ export class ContainerService {
                     const fileName = elementProduct?.product?.document?.fileURL?.split('/').pop();
                     if (fileName) {
                         const localFile = this.validateFileName(fileName);
+                        console.log('localFile: ', localFile)
                         await fs.access(localFile)
                         file = localFile
                     }
                 } catch (error) {
+                    console.log('error: ', error)
                 }
                 // Primero, agrega la imagen al workbook
                 let imageId = null
