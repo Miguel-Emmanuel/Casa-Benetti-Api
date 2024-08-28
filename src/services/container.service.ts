@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import ExcelJS from 'exceljs';
 import fs from "fs/promises";
 import path from 'path';
-import {ContainerStatus} from '../enums';
+import {ContainerStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {Docs, PurchaseOrdersContainer, UpdateContainer, UpdateContainerProducts} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer, schemaUpdateContainerProduct} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings, STORAGE_DIRECTORY} from '../keys';
@@ -524,6 +524,7 @@ export class ContainerService {
             const date = await this.calculateArrivalDateAndShippingDate(status);
             await this.containerRepository.updateById(id, {...body, ...date, status});
             await this.calculateArrivalDatePurchaseOrder(id);
+            await this.setStatusPurchaseOrder(id, status);
             await this.updateDocument(id, docs);
             await this.updateProducts(purchaseOrders);
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
@@ -543,17 +544,34 @@ export class ContainerService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
+
+    async setStatusPurchaseOrder(containerId: number, status: ContainerStatus) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'purchaseOrders',
+            }
+        ]
+        const container = await this.containerRepository.findById(containerId, {include});
+        const {purchaseOrders} = container;
+        if (purchaseOrders) {
+            for (let index = 0; index < purchaseOrders.length; index++) {
+                const element = purchaseOrders[index];
+                if (status === ContainerStatus.EN_TRANSITO) {
+                    await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL})
+                    await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.TRANSITO_INTERNACIONAL})
+                }
+                if (status === ContainerStatus.ENTREGADO) {
+                    await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.PROCESO_ADUANA})
+                    await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.PROCESO_ADUANA})
+                }
+            }
+        }
+    }
+
     async calculateArrivalDatePurchaseOrder(containerId: number) {
         const include: InclusionFilter[] = [
             {
-                relation: 'collection',
-                scope: {
-                    include: [
-                        {
-                            relation: 'purchaseOrders',
-                        }
-                    ]
-                }
+                relation: 'purchaseOrders',
             }
         ]
         const container = await this.containerRepository.findById(containerId, {include});
@@ -565,9 +583,8 @@ export class ContainerService {
         else if (ETDDate) {
             arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
         }
-        const {collection} = container;
-        if (collection && collection?.purchaseOrders) {
-            const {purchaseOrders} = collection;
+        const {purchaseOrders} = container;
+        if (purchaseOrders) {
             for (let index = 0; index < purchaseOrders.length; index++) {
                 const element = purchaseOrders[index];
                 if (arrivalDate) {
