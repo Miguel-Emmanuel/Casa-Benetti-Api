@@ -266,6 +266,11 @@
             </thead>
             <tbody>
                 {{#each products}}
+
+                {{#if isTypeQuotationGeneral}}
+
+                {{#if this.isTypeQuotationGeneral}}
+                <!-- Inicio -->
                 {{#if this.typeArticle}}
                 <tr style="background-color: #FFFBEE;">
                     <td>{{this.brandName}}</td>
@@ -324,6 +329,76 @@
                     <td>{{this.quantity}}</td>
                 </tr>
                 {{/if}}
+                <!-- Fin -->
+
+                {{/if}}
+
+                {{else}}
+
+                <!-- Inicio -->
+                {{#if this.typeArticle}}
+                <tr style="background-color: #FFFBEE;">
+                    <td>{{this.brandName}}</td>
+                    <td>{{this.originCode}}</td>
+                    <td>{{this.status}}</td>
+                    <td>{{this.description}}</td>
+                    <td>{{this.measures}}</td>
+                    <td>
+                        <div class="column column-1" style="justify-content: center;background-color: #FFFBEE;">
+                            <img src="{{{this.image}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="column column-1" style="justify-content: center;background-color: #FFFBEE;">
+                            <img src="{{{this.mainFinishImage}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>{{this.quantity}}</td>
+                </tr>
+                {{#each this.assembledProducts}}
+                <tr style="">
+                    <td style="background-color: #FFF4EE;">{{../this.brandName}}</td>
+                    <td></td>
+                    <td></td>
+                    <td>{{this.description}}</td>
+                    <td>
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.document.fileURL}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                    </td>
+                    <td>{{this.mainFinish}}</td>
+                    <td>{{this.quantity}}</td>
+                </tr>
+                {{/each}}
+
+                {{else}}
+                <tr>
+                    <td>{{this.brandName}}</td>
+                    <td>{{this.originCode}}</td>
+                    <td>{{this.status}}</td>
+                    <td>{{this.description}}</td>
+                    <td>{{this.measures}}</td>
+                    <td>
+                        <div class=" column column-1" style="justify-content: center;">
+                            <img src="{{{this.image}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                        {{this.mainFinish}}
+                        <div class="column column-1" style="justify-content: center;">
+                            <img src="{{{this.mainFinishImage}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>{{this.quantity}}</td>
+                </tr>
+                {{/if}}
+                <!-- Fin -->
+
+                {{/if}}
+
+
                 {{/each}}
             </tbody>
         </table>
