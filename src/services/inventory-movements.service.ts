@@ -196,22 +196,15 @@ export class InventoryMovementsService {
                 const container = await this.containerRepository.findOne({
                     where: {id: containerId}, include: [
                         {
-                            relation: 'collection',
+                            relation: 'purchaseOrders',
                             scope: {
                                 include: [
                                     {
-                                        relation: 'purchaseOrders',
+                                        relation: 'proforma',
                                         scope: {
                                             include: [
                                                 {
-                                                    relation: 'proforma',
-                                                    scope: {
-                                                        include: [
-                                                            {
-                                                                relation: 'quotationProducts',
-                                                            }
-                                                        ]
-                                                    }
+                                                    relation: 'quotationProducts',
                                                 }
                                             ]
                                         }
@@ -225,15 +218,19 @@ export class InventoryMovementsService {
                     throw this.responseService.notFound('El contenedor no se ha encontrado.');
 
                 const product = await this.validateQuotationProduct(quotationProductsId);
+                console.log('product: ', product)
+                console.log('product?.purchaseOrdersId: ', product?.purchaseOrdersId)
                 if (product?.purchaseOrdersId) {
                     await this.purchaseOrdersRepository.updateById(product?.purchaseOrdersId, {containerId: container.id})
-                }
-                const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}]}})
-                if (inventorie) {
-                    const {stock} = inventorie;
-                    await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, createdById: this.user.id});
-                    await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (stock - quantity)})
+                    const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}]}})
+                    if (inventorie) {
+                        const {stock} = inventorie;
+                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
+                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, createdById: this.user.id});
+                        await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (stock - quantity)})
+                    }
+                } else {
+                    return this.responseService.badRequest('El producto no se encuentra en una orden de compra');
                 }
                 // const {collection} = container
                 // if (!collection)

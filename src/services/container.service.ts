@@ -3,9 +3,9 @@ import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopba
 import {HttpErrors, Response, RestBindings} from '@loopback/rest';
 import dayjs from 'dayjs';
 import ExcelJS from 'exceljs';
-import fs from "fs/promises";
+import fs from 'fs/promises';
 import path from 'path';
-import {ContainerStatus} from '../enums';
+import {ContainerStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {Docs, PurchaseOrdersContainer, UpdateContainer, UpdateContainerProducts} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer, schemaUpdateContainerProduct} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings, STORAGE_DIRECTORY} from '../keys';
@@ -136,16 +136,23 @@ export class ContainerService {
                     secondaryFinishing
                 ];
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
-                let file = ''
+                let file = null
                 try {
                     const fileName = elementProduct?.product?.document?.fileURL?.split('/').pop();
                     if (fileName) {
                         const localFile = this.validateFileName(fileName);
-                        console.log(localFile)
-                        file = `data:image/svg+xml;base64,${await fs.readFile(localFile, {encoding: 'base64'})}`
+                        await fs.access(localFile)
+                        file = localFile
                     }
                 } catch (error) {
-
+                }
+                // Primero, agrega la imagen al workbook
+                let imageId = null
+                if (file) {
+                    imageId = workbook.addImage({
+                        filename: file, // 'file' es tu imagen en base64
+                        extension: 'png' // Cambia la extensión según el tipo de imagen
+                    });
                 }
                 const newRow = worksheet.addRow({
                     codigo: elementProduct?.SKU,
@@ -159,13 +166,24 @@ export class ContainerService {
                     cantidad: elementProduct?.quantity,
                     precioUnitarioEuros: elementProduct?.originCost,
                     precioTotal: elementProduct?.price,
-                    fotografia: file,
+                    fotografia: '',
                     descripcion: description,
                     pesoNeto: elementProduct?.netWeight,
                     pesoBruto: elementProduct?.grossWeight,
                     paisOrigen: elementProduct?.product?.countryOrigin,
                 });
-
+                if (imageId) {
+                    const imageWidth = 60; // ejemplo de ancho en píxeles
+                    const imageHeight = 60;
+                    const widthInPoints = imageWidth / 0.75;
+                    const heightInPoints = imageHeight / 0.95;
+                    worksheet.getColumn(13).width = widthInPoints / 8.43; // Ajustar el ancho de la columna
+                    worksheet.getRow(newRow.number).height = heightInPoints;
+                    worksheet.addImage(imageId, {
+                        tl: {col: 11, row: newRow.number - 1}, // Comienza en la celda de la columna 'fotografia'
+                        ext: {width: imageWidth, height: imageHeight} // Ajusta el tamaño según necesites
+                    });
+                }
             }
 
         }
@@ -524,6 +542,7 @@ export class ContainerService {
             const date = await this.calculateArrivalDateAndShippingDate(status);
             await this.containerRepository.updateById(id, {...body, ...date, status});
             await this.calculateArrivalDatePurchaseOrder(id);
+            await this.setStatusPurchaseOrder(id, status);
             await this.updateDocument(id, docs);
             await this.updateProducts(purchaseOrders);
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
@@ -543,17 +562,34 @@ export class ContainerService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
+
+    async setStatusPurchaseOrder(containerId: number, status: ContainerStatus) {
+        const include: InclusionFilter[] = [
+            {
+                relation: 'purchaseOrders',
+            }
+        ]
+        const container = await this.containerRepository.findById(containerId, {include});
+        const {purchaseOrders} = container;
+        if (purchaseOrders) {
+            for (let index = 0; index < purchaseOrders.length; index++) {
+                const element = purchaseOrders[index];
+                if (status === ContainerStatus.EN_TRANSITO) {
+                    await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL})
+                    await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.TRANSITO_INTERNACIONAL})
+                }
+                if (status === ContainerStatus.ENTREGADO) {
+                    await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.PROCESO_ADUANA})
+                    await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.PROCESO_ADUANA})
+                }
+            }
+        }
+    }
+
     async calculateArrivalDatePurchaseOrder(containerId: number) {
         const include: InclusionFilter[] = [
             {
-                relation: 'collection',
-                scope: {
-                    include: [
-                        {
-                            relation: 'purchaseOrders',
-                        }
-                    ]
-                }
+                relation: 'purchaseOrders',
             }
         ]
         const container = await this.containerRepository.findById(containerId, {include});
@@ -565,9 +601,8 @@ export class ContainerService {
         else if (ETDDate) {
             arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
         }
-        const {collection} = container;
-        if (collection && collection?.purchaseOrders) {
-            const {purchaseOrders} = collection;
+        const {purchaseOrders} = container;
+        if (purchaseOrders) {
             for (let index = 0; index < purchaseOrders.length; index++) {
                 const element = purchaseOrders[index];
                 if (arrivalDate) {
@@ -610,38 +645,31 @@ export class ContainerService {
         try {
             const include: InclusionFilter[] = [
                 {
-                    relation: 'collection',
+                    relation: 'purchaseOrders',
                     scope: {
                         include: [
                             {
-                                relation: 'purchaseOrders',
+                                relation: 'proforma',
                                 scope: {
                                     include: [
                                         {
-                                            relation: 'proforma',
+                                            relation: 'quotationProducts',
                                             scope: {
                                                 include: [
                                                     {
-                                                        relation: 'quotationProducts',
+                                                        relation: 'product',
                                                         scope: {
                                                             include: [
                                                                 {
-                                                                    relation: 'product',
-                                                                    scope: {
-                                                                        include: [
-                                                                            {
-                                                                                relation: 'document'
-                                                                            },
-                                                                            {
-                                                                                relation: 'line'
-                                                                            }
-                                                                        ]
-                                                                    }
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
                                                                 }
-                                                            ],
+                                                            ]
                                                         }
                                                     }
-                                                ]
+                                                ],
                                             }
                                         }
                                     ]
@@ -664,10 +692,10 @@ export class ContainerService {
                 };
             const containers = await this.containerRepository.find(filter);
             return containers.map(value => {
-                const {id, containerNumber, collection, arrivalDate, status, shippingDate} = value;
+                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders} = value;
                 let quantity = 0;
-                for (let index = 0; index < collection?.purchaseOrders.length; index++) {
-                    const element = collection?.purchaseOrders[index];
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const element = purchaseOrders[index];
                     const {proforma} = element;
                     const {quotationProducts} = proforma;
                     quantity += quotationProducts?.length ?? 0;
