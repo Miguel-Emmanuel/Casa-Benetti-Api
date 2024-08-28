@@ -3,7 +3,7 @@ import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopba
 import {HttpErrors, Response, RestBindings} from '@loopback/rest';
 import dayjs from 'dayjs';
 import ExcelJS from 'exceljs';
-import fs from "fs/promises";
+import fs from 'fs/promises';
 import path from 'path';
 import {ContainerStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {Docs, PurchaseOrdersContainer, UpdateContainer, UpdateContainerProducts} from '../interface';
@@ -136,16 +136,23 @@ export class ContainerService {
                     secondaryFinishing
                 ];
                 const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
-                let file = ''
+                let file = null
                 try {
                     const fileName = elementProduct?.product?.document?.fileURL?.split('/').pop();
                     if (fileName) {
                         const localFile = this.validateFileName(fileName);
-                        console.log(localFile)
-                        file = `data:image/svg+xml;base64,${await fs.readFile(localFile, {encoding: 'base64'})}`
+                        await fs.access(localFile)
+                        file = localFile
                     }
                 } catch (error) {
-
+                }
+                // Primero, agrega la imagen al workbook
+                let imageId = null
+                if (file) {
+                    imageId = workbook.addImage({
+                        filename: file, // 'file' es tu imagen en base64
+                        extension: 'png' // Cambia la extensión según el tipo de imagen
+                    });
                 }
                 const newRow = worksheet.addRow({
                     codigo: elementProduct?.SKU,
@@ -159,13 +166,24 @@ export class ContainerService {
                     cantidad: elementProduct?.quantity,
                     precioUnitarioEuros: elementProduct?.originCost,
                     precioTotal: elementProduct?.price,
-                    fotografia: file,
+                    fotografia: '',
                     descripcion: description,
                     pesoNeto: elementProduct?.netWeight,
                     pesoBruto: elementProduct?.grossWeight,
                     paisOrigen: elementProduct?.product?.countryOrigin,
                 });
-
+                if (imageId) {
+                    const imageWidth = 60; // ejemplo de ancho en píxeles
+                    const imageHeight = 60;
+                    const widthInPoints = imageWidth / 0.75;
+                    const heightInPoints = imageHeight / 0.95;
+                    worksheet.getColumn(13).width = widthInPoints / 8.43; // Ajustar el ancho de la columna
+                    worksheet.getRow(newRow.number).height = heightInPoints;
+                    worksheet.addImage(imageId, {
+                        tl: {col: 11, row: newRow.number - 1}, // Comienza en la celda de la columna 'fotografia'
+                        ext: {width: imageWidth, height: imageHeight} // Ajusta el tamaño según necesites
+                    });
+                }
             }
 
         }
