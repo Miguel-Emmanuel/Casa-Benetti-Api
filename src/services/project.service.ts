@@ -978,7 +978,8 @@ export class ProjectService {
                 quantity: quotationProducts?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
                 originCode: quotationProducts?.originCode,
-                assembledProducts: quotationProducts?.assembledProducts ?? []
+                assembledProducts: quotationProducts?.assembledProducts ?? [],
+                isTypeQuotationGeneral: quotationProducts?.stock === 0 ? false : true,
             })
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
