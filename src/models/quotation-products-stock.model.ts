@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {QuotationProducts} from './quotation-products.model';
+import {Quotation} from './quotation.model';
 
 @model({
     settings: {
@@ -15,15 +17,11 @@ export class QuotationProductsStock extends Entity {
     })
     id?: number;
 
-    @property({
-        type: 'number',
-    })
-    quotationProductsId?: number;
+    @belongsTo(() => QuotationProducts)
+    quotationProductsId: number;
 
-    @property({
-        type: 'number',
-    })
-    quotationId?: number;
+    @belongsTo(() => Quotation)
+    quotationId: number;
 
     constructor(data?: Partial<QuotationProductsStock>) {
         super(data);
