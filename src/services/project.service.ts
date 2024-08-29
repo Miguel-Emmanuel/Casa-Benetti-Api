@@ -1554,8 +1554,7 @@ export class ProjectService {
                     totalPercentage: 0,
                     balance,
                     advancePaymentRecords: advancePaymentRecords.map(value => {
-                        balanceDetail = balanceDetail - value.subtotalAmountPaid;
-                        return {
+                        const data = {
                             ...value,
                             balanceDetail: balanceDetail.toFixed(2),
                             paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
@@ -1563,6 +1562,8 @@ export class ProjectService {
                             subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
                             conversionAmountPaid: value.subtotalAmountPaid.toFixed(2),
                         }
+                        balanceDetail = balanceDetail - value.subtotalAmountPaid;
+                        return {...data}
                     })
                 })
 
