@@ -1,4 +1,5 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {TypeSaleE} from '../enums';
 import {QuotationProducts} from './quotation-products.model';
 import {Quotation} from './quotation.model';
 
@@ -22,6 +23,48 @@ export class QuotationProductsStock extends Entity {
 
     @belongsTo(() => Quotation)
     quotationId: number;
+
+    //Venta o prestamo
+    @property({
+        type: 'string',
+    })
+    typeSale?: TypeSaleE;
+
+    //Dias de reservacion
+    @property({
+        type: 'number',
+    })
+    reservationDays: number;
+
+    //Fecha de reservacion
+    @property({
+        type: 'date',
+    })
+    dateReservationDays?: Date;
+
+    //Fecha inicial del préstamo
+    @property({
+        type: 'date',
+    })
+    loanInitialDate: Date;
+
+    //Fecha final del préstamo
+    @property({
+        type: 'date',
+    })
+    loanEndDate: Date;
+
+    //cantidad
+    @property({
+        type: 'number',
+    })
+    quantity: number;
+
+    //Notificacion para dias de reservacion enviada
+    @property({
+        type: 'boolean',
+    })
+    isNotificationSent?: boolean | null;
 
     constructor(data?: Partial<QuotationProductsStock>) {
         super(data);
