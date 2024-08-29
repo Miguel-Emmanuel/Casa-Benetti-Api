@@ -1048,6 +1048,52 @@ export class QuotationService {
 
             },
             {
+                relation: 'quotationProductsStocks',
+                scope: {
+                    include: [
+                        {
+                            relation: 'quotationProducts',
+                            scope: {
+                                include: [
+                                    {
+                                        relation: 'mainMaterialImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                    {
+                                        relation: 'mainFinishImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                    {
+                                        relation: 'secondaryMaterialImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                    {
+                                        relation: 'secondaryFinishingImage',
+                                        scope: {
+                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                        }
+                                    },
+                                    {
+                                        relation: 'product',
+                                        scope: {
+                                            include: [
+                                                'brand', 'document', 'line'
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                    ]
+                }
+            },
+            {
                 relation: 'projectManagers',
                 scope: {
                     fields: ['id', 'firstName'],
@@ -1105,6 +1151,32 @@ export class QuotationService {
         const projectManagers: ProjectManagersById[] = [];
         const designers: DesignersById[] = [];
         for (const iterator of quotation?.quotationProducts ?? []) {
+            const {line, name, document, brand} = iterator.product;
+            products.push({
+                ...iterator,
+                SKU: iterator?.SKU,
+                brandName: iterator?.brand?.brandName ?? '',
+                status: iterator.status,
+                description: `${line?.name} ${name} ${iterator.mainMaterial} ${iterator.mainFinish} ${iterator.secondaryMaterial} ${iterator.secondaryFinishing} ${iterator.measureWide}`,
+                image: document ? document?.fileURL : '',
+                quantity: iterator.quantity,
+                percentageDiscountProduct: iterator.percentageDiscountProduct,
+                discountProduct: iterator.discountProduct,
+                percentageMaximumDiscount: iterator.percentageMaximumDiscount,
+                maximumDiscount: iterator.maximumDiscount,
+                subtotal: iterator.subtotal,
+                mainMaterialImage: iterator?.mainMaterialImage ?? null,
+                mainFinishImage: iterator?.mainFinishImage ?? null,
+                secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
+                secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
+                line: line,
+                brand: brand,
+                document: document,
+            })
+        }
+
+        for (const element of quotation?.quotationProductsStocks ?? []) {
+            const {quotationProducts: iterator} = element;
             const {line, name, document, brand} = iterator.product;
             products.push({
                 ...iterator,
