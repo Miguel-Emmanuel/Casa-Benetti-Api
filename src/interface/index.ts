@@ -101,7 +101,8 @@ export interface CreateQuotation {
     designers: Designers[],
     products: QuotationProductsCreate[],
     quotation: QuotationI
-    proofPaymentQuotation: ProofPaymentQuotationCreate[]
+    proofPaymentQuotation: ProofPaymentQuotationCreate[],
+    productsStock: number[],
 }
 
 export interface BodyProofPayment {

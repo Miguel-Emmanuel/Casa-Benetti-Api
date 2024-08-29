@@ -61,7 +61,8 @@ export async function migrate(args: string[]) {
       'Container',
       'TypesExpenses',
       'InternalExpenses',
-      'DayExchangeRate'
+      'DayExchangeRate',
+      'QuotationProductsStock'
     ],
   });
 

@@ -50,3 +50,4 @@ export * from './container.model';
 export * from './internal-expenses.model';
 export * from './types-expenses.model';
 export * from './day-exchange-rate.model';
+export * from './quotation-products-stock.model';
