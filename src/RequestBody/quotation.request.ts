@@ -189,6 +189,37 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                         type: 'array',
                         items: getModelSchemaRef(QuotationProductsCreate, {exclude: ['id', 'createdAt', 'status', 'quotationId', 'SKU', 'brandId', 'proformaId', 'dateReservationDays', 'isNotificationSent', 'stock', 'invoiceNumber', 'grossWeight', 'netWeight', 'numberBoxes', 'descriptionPedimiento', 'NOMS', 'proformaPrice', 'commentEntry', 'typeQuotation']})
                     },
+                    productsStock: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                id: {
+                                    type: 'number'
+                                },
+                                typeSale: {
+                                    type: 'string'
+                                },
+                                reservationDays: {
+                                    type: 'number'
+                                },
+                                loanInitialDate: {
+                                    type: 'string',
+                                    format: 'date-time'
+                                },
+                                loanEndDate: {
+                                    type: 'string',
+                                    format: 'date-time'
+                                },
+                                discountProduct: {
+                                    type: 'number'
+                                },
+                                quantity: {
+                                    type: 'number'
+                                },
+                            }
+                        }
+                    },
                     quotation: {
                         type: 'object',
                         properties: {

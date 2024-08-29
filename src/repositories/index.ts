@@ -47,3 +47,4 @@ export * from './container.repository';
 export * from './internal-expenses.repository';
 export * from './types-expenses.repository';
 export * from './day-exchange-rate.repository';
+export * from './quotation-products-stock.repository';

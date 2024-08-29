@@ -87,6 +87,16 @@ export interface Images {
 //     quotationId: number;
 //     images: Images[]
 // }
+
+export interface ProductsStock {
+    id: number; //ID del quotationProduct
+    typeSale: TypeSaleE;
+    reservationDays: number;
+    loanInitialDate: Date;
+    loanEndDate: Date;
+    discountProduct: number;
+    quantity: number;
+}
 export interface CreateQuotation {
     id: number,
     isDraft: boolean;
@@ -101,7 +111,8 @@ export interface CreateQuotation {
     designers: Designers[],
     products: QuotationProductsCreate[],
     quotation: QuotationI
-    proofPaymentQuotation: ProofPaymentQuotationCreate[]
+    proofPaymentQuotation: ProofPaymentQuotationCreate[],
+    productsStock: ProductsStock[],
 }
 
 export interface BodyProofPayment {

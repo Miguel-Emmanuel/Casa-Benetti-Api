@@ -117,6 +117,18 @@ const designer = Joi.object({
     commissionPercentageDesigner: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
 })
 
+const productsStock = Joi.object({
+    id: Joi.number(),
+    typeSale: Joi.string().valid(...Object.values(TypeSaleE)).messages({
+        'any.only': `El tipo de venta debe ser igual a uno de los valores permitidos.`
+    }).optional(),
+    reservationDays: Joi.number().allow(null).optional(),
+    loanInitialDate: Joi.date().allow(null).optional(),
+    loanEndDate: Joi.date().allow(null).optional(),
+    discountProduct: Joi.number().allow(null),
+    quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
+})
+
 export const schemaCreateQuotition = Joi.object({
     id: Joi.number().allow(null),
     isDraft: Joi.boolean().required(),
@@ -152,6 +164,7 @@ export const schemaCreateQuotition = Joi.object({
     projectManagers: Joi.array().items(projectManager).optional(),
     designers: Joi.array().items(designer).optional(),
     products: Joi.array().items(products).required(),
+    productsStock: Joi.array().items(productsStock).optional(),
     quotation: Joi.object({
         mainProjectManagerId: Joi.number().required(),
         mainProjectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
