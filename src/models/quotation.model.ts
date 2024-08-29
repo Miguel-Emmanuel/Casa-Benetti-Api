@@ -10,7 +10,7 @@ import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
 import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
-import {QuotationProductsStock} from './quotation-products-stock.model';
+import {QuotationProductsStock, QuotationProductsStockWithRelations} from './quotation-products-stock.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {User, UserWithRelations} from './user.model';
@@ -131,7 +131,7 @@ export class Quotation extends BaseEntity {
     quotationProducts: QuotationProductsWithRelations[];
 
     @hasMany(() => QuotationProductsStock)
-    quotationProductsStocks: QuotationProductsStock[];
+    quotationProductsStocks: QuotationProductsStockWithRelations[];
 
     @belongsTo(() => Organization)
     organizationId: number;
