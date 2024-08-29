@@ -8,7 +8,7 @@ import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
-import {PurchaseOrders} from './purchase-orders.model';
+import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -478,6 +478,7 @@ export interface QuotationProductsRelations {
     brand: BrandWithRelations
     quotation: QuotationWithRelations
     proforma: ProformaWithRelations
+    purchaseOrders: PurchaseOrdersWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;
