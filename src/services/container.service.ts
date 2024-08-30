@@ -99,27 +99,36 @@ export class ContainerService {
                                     scope: {
                                         include: [
                                             {
-                                                relation: 'proforma',
+                                                relation: 'quotationProducts',
                                                 scope: {
                                                     include: [
                                                         {
-                                                            relation: 'quotationProducts',
+                                                            relation: 'provider'
+                                                        },
+                                                        {
+                                                            relation: 'brand'
+                                                        },
+                                                        {
+                                                            relation: 'quotation',
                                                             scope: {
                                                                 include: [
                                                                     {
-                                                                        relation: 'product',
-                                                                        scope: {
-                                                                            include: [
-                                                                                {
-                                                                                    relation: 'document'
-                                                                                },
-                                                                                {
-                                                                                    relation: 'line'
-                                                                                }
-                                                                            ]
-                                                                        }
+                                                                        relation: 'customer'
                                                                     }
-                                                                ],
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'product',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'line'
+                                                                    },
+                                                                    {
+                                                                        relation: 'document'
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     ]
@@ -302,27 +311,36 @@ export class ContainerService {
                                     scope: {
                                         include: [
                                             {
-                                                relation: 'proforma',
+                                                relation: 'quotationProducts',
                                                 scope: {
                                                     include: [
                                                         {
-                                                            relation: 'quotationProducts',
+                                                            relation: 'provider'
+                                                        },
+                                                        {
+                                                            relation: 'brand'
+                                                        },
+                                                        {
+                                                            relation: 'quotation',
                                                             scope: {
                                                                 include: [
                                                                     {
-                                                                        relation: 'product',
-                                                                        scope: {
-                                                                            include: [
-                                                                                {
-                                                                                    relation: 'document'
-                                                                                },
-                                                                                {
-                                                                                    relation: 'line'
-                                                                                }
-                                                                            ]
-                                                                        }
+                                                                        relation: 'customer'
                                                                     }
-                                                                ],
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'product',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'line'
+                                                                    },
+                                                                    {
+                                                                        relation: 'document'
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     ]
@@ -546,27 +564,36 @@ export class ContainerService {
                                     scope: {
                                         include: [
                                             {
-                                                relation: 'proforma',
+                                                relation: 'quotationProducts',
                                                 scope: {
                                                     include: [
                                                         {
-                                                            relation: 'quotationProducts',
+                                                            relation: 'provider'
+                                                        },
+                                                        {
+                                                            relation: 'brand'
+                                                        },
+                                                        {
+                                                            relation: 'quotation',
                                                             scope: {
                                                                 include: [
                                                                     {
-                                                                        relation: 'product',
-                                                                        scope: {
-                                                                            include: [
-                                                                                {
-                                                                                    relation: 'document'
-                                                                                },
-                                                                                {
-                                                                                    relation: 'line'
-                                                                                }
-                                                                            ]
-                                                                        }
+                                                                        relation: 'customer'
                                                                     }
-                                                                ],
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'product',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'line'
+                                                                    },
+                                                                    {
+                                                                        relation: 'document'
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     ]
