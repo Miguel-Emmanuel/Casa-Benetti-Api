@@ -933,6 +933,7 @@ export class ProjectService {
                     mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
                     secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
                     secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
+                    typeQuotation: iterator.quotationProducts?.typeQuotation
                 })
             }
 
@@ -978,6 +979,7 @@ export class ProjectService {
                     mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
                     secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
                     secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
+                    typeQuotation: iterator.quotationProducts?.typeQuotation
                 })
             }
             return {
