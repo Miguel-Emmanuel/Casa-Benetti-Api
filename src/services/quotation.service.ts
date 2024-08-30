@@ -898,7 +898,7 @@ export class QuotationService {
                     delete element.document;
                     // const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost});
                     // const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined, branchesId},);
-                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, branchesId},);
+                    const response = await this.quotationProductsRepository.create({...element, quotationId, brandId: product.brandId, price: element.factor * element.originCost, branchesId, typeQuotation: TypeQuotationE.SHOWROOM},);
                     await this.createDocumentProduct(response.productId, document)
                     await this.createDocumentMainMaterial(response.id, mainMaterialImg)
                     await this.createDocumentMainFinish(response.id, mainFinishImg);
