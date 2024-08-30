@@ -88,6 +88,47 @@ export class ContainerService {
                             }
                         ]
                     }
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 }
             ]
         });
@@ -121,7 +162,7 @@ export class ContainerService {
         worksheet.getCell('A1').value = 'Carta traducción';
         worksheet.getCell('A1').alignment = {vertical: 'middle', horizontal: 'center'};
 
-        for (let index = 0; index < container?.purchaseOrders?.length; index++) {
+        for (let index = 0; index < [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []].length; index++) {
             const element = container?.purchaseOrders[index];
             for (let index = 0; index < element?.quotationProducts?.length; index++) {
                 const elementProduct = element?.quotationProducts[index];
@@ -234,6 +275,47 @@ export class ContainerService {
                                                     },
                                                     {
                                                         relation: 'document'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
                                                     }
                                                 ]
                                             }
@@ -372,7 +454,7 @@ export class ContainerService {
         const startRow = 36;
         worksheet.getRow(startRow).values = columns.map(column => column.header);
 
-        for (let index = 0; index < container?.purchaseOrders?.length; index++) {
+        for (let index = 0; index < [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []].length; index++) {
             const element = container?.purchaseOrders[index];
             for (let index = 0; index < element?.quotationProducts?.length; index++) {
                 const elementProduct = element?.quotationProducts[index];
@@ -441,6 +523,47 @@ export class ContainerService {
                             }
                         ]
                     }
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 }
             ]
         });
@@ -450,7 +573,7 @@ export class ContainerService {
 
         const rowOffset = 25; // Desplazamiento de filas para cada bloque de etiqueta
 
-        for (let index = 0; index < container?.purchaseOrders?.length; index++) {
+        for (let index = 0; index < [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []].length; index++) {
             const element = container?.purchaseOrders[index];
             for (let index = 0; index < element?.quotationProducts?.length; index++) {
                 const elementProduct = element?.quotationProducts[index];
@@ -682,6 +805,47 @@ export class ContainerService {
                             }
                         ]
                     }
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'proforma',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'quotationProducts',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'product',
+                                                                    scope: {
+                                                                        include: [
+                                                                            {
+                                                                                relation: 'document'
+                                                                            },
+                                                                            {
+                                                                                relation: 'line'
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ],
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 }
             ]
             if (filter?.include)
@@ -697,8 +861,17 @@ export class ContainerService {
                 };
             const containers = await this.containerRepository.find(filter);
             return containers.map(value => {
-                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders, createdAt} = value;
+                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders, createdAt, collection} = value;
                 let quantity = 0;
+                if (collection) {
+                    const {purchaseOrders} = collection;
+                    for (let index = 0; index < purchaseOrders?.length; index++) {
+                        const element = purchaseOrders[index];
+                        const {proforma} = element;
+                        const {quotationProducts} = proforma;
+                        quantity += quotationProducts?.length ?? 0;
+                    }
+                }
                 for (let index = 0; index < purchaseOrders?.length; index++) {
                     const element = purchaseOrders[index];
                     const {proforma} = element;
