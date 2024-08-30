@@ -697,7 +697,7 @@ export class ContainerService {
                 };
             const containers = await this.containerRepository.find(filter);
             return containers.map(value => {
-                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders} = value;
+                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders, createdAt} = value;
                 let quantity = 0;
                 for (let index = 0; index < purchaseOrders?.length; index++) {
                     const element = purchaseOrders[index];
@@ -711,7 +711,8 @@ export class ContainerService {
                     quantity,
                     shippingDate,
                     arrivalDate,
-                    status
+                    status,
+                    createdAt
                 }
             })
 
@@ -889,10 +890,11 @@ export class ContainerService {
                 };
 
             const container = await this.containerRepository.findById(id, filter);
-            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection} = container;
+            const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection, createdAt} = container;
             const purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
             return {
                 pedimento,
+                createdAt,
                 containerNumber,
                 grossWeight,
                 numberBoxes,
