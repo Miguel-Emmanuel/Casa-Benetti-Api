@@ -193,9 +193,10 @@ export class ContainerService {
                 let imageId = null
                 console.log('file: ', file)
                 if (file) {
+                    const extension = path.extname(file).slice(1);
                     imageId = workbook.addImage({
                         filename: file, // 'file' es tu imagen en base64
-                        extension: 'png' // Cambia la extensión según el tipo de imagen
+                        extension: extension === 'png' ? 'png' : 'jpeg' // Cambia la extensión según el tipo de imagen
                     });
                 }
                 console.log('imageId: ', imageId)
