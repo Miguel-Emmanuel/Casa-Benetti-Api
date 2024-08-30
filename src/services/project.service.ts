@@ -1180,7 +1180,7 @@ export class ProjectService {
                 subtotal: quotationProducts?.subtotal
             })
         }
-        for (const iterator of quotationProductsStocks) {
+        for (const iterator of quotationProductsStocks ?? []) {
             const {quotationProducts} = iterator;
             const {product} = quotationProducts;
             const {line, document, brand} = product;
