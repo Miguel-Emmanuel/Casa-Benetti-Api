@@ -127,6 +127,12 @@ const productsStock = Joi.object({
     loanEndDate: Joi.date().allow(null).optional(),
     discountProduct: Joi.number().allow(null),
     quantity: Joi.number().positive().message('La cantidad debe ser mayor a 0.').required(),
+    originCost: Joi.number().required(),
+    price: Joi.number().required(),
+    factor: Joi.number().required(),
+    subtotal: Joi.number().required(),
+    percentageDiscountProduct: Joi.number().allow(null),
+    subtotalDiscount: Joi.number().required(),
 })
 
 export const schemaCreateQuotition = Joi.object({

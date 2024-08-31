@@ -96,6 +96,12 @@ export interface ProductsStock {
     loanEndDate: Date;
     discountProduct: number;
     quantity: number;
+    originCost: number;
+    price: number;
+    factor: number;
+    subtotal: number;
+    percentageDiscountProduct: number;
+    subtotalDiscount: number;
 }
 export interface CreateQuotation {
     id: number,

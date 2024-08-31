@@ -276,9 +276,9 @@ export class QuotationService {
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
-                quantity: quotationProducts?.quantity,
-                percentage: quotationProducts?.percentageDiscountProduct,
-                subtotal: quotationProducts?.subtotal
+                quantity: iterator?.quantity,
+                percentage: iterator?.percentageDiscountProduct,
+                subtotal: iterator?.subtotal
             })
         }
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
@@ -580,7 +580,20 @@ export class QuotationService {
         }
         for (let index = 0; index < productsStock?.length; index++) {
             const element = productsStock[index];
-            await this.quotationProductsStockRepository.create({quotationId, quotationProductsId: element.id, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined})
+            await this.quotationProductsStockRepository.create({
+                quotationId, quotationProductsId: element.id, dateReservationDays: element?.reservationDays ? dayjs().add(element?.reservationDays, 'days').toDate() : undefined, isNotificationSent: element?.reservationDays ? false : undefined,
+                typeSale: element.typeSale,
+                loanInitialDate: element.loanEndDate,
+                loanEndDate: element.loanEndDate,
+                quantity: element.quantity,
+                discountProduct: element.discountProduct,
+                originCost: element.originCost,
+                factor: element.factor,
+                subtotal: element.subtotal,
+                percentageDiscountProduct: element.percentageDiscountProduct,
+                subtotalDiscount: element.subtotalDiscount,
+                price: element.factor * element.originCost
+            })
         }
     }
 
@@ -722,7 +735,20 @@ export class QuotationService {
             const element = productsStock[index];
             const quotationProductsStock = await this.quotationProductsStockRepository.findOne({where: {quotationId, quotationProductsId: element.id}})
             if (!quotationProductsStock)
-                await this.quotationProductsStockRepository.create({quotationId, quotationProductsId: element.id})
+                await this.quotationProductsStockRepository.create({
+                    quotationId, quotationProductsId: element.id,
+                    typeSale: element.typeSale,
+                    loanInitialDate: element.loanEndDate,
+                    loanEndDate: element.loanEndDate,
+                    quantity: element.quantity,
+                    discountProduct: element.discountProduct,
+                    originCost: element.originCost,
+                    factor: element.factor,
+                    subtotal: element.subtotal,
+                    percentageDiscountProduct: element.percentageDiscountProduct,
+                    subtotalDiscount: element.subtotalDiscount,
+                    price: element.factor * element.originCost
+                })
             else {
                 let dateReservationDays;
                 if (quotationProductsStock?.dateReservationDays && element?.reservationDays) {
@@ -731,7 +757,20 @@ export class QuotationService {
                     dateReservationDays = dayjs().add(element?.reservationDays, 'days').toDate();
                 }
                 const isNotificationSent = element?.reservationDays ? false : undefined
-                await this.quotationProductsStockRepository.updateById(element.id, {dateReservationDays, isNotificationSent})
+                await this.quotationProductsStockRepository.updateById(element.id, {
+                    dateReservationDays, isNotificationSent,
+                    typeSale: element.typeSale,
+                    loanInitialDate: element.loanEndDate,
+                    loanEndDate: element.loanEndDate,
+                    quantity: element.quantity,
+                    discountProduct: element.discountProduct,
+                    originCost: element.originCost,
+                    factor: element.factor,
+                    subtotal: element.subtotal,
+                    percentageDiscountProduct: element.percentageDiscountProduct,
+                    subtotalDiscount: element.subtotalDiscount,
+                    price: element.factor * element.originCost
+                })
             }
         }
     }
@@ -1273,12 +1312,12 @@ export class QuotationService {
                 status: iterator.status,
                 description: `${line?.name} ${name} ${iterator.mainMaterial} ${iterator.mainFinish} ${iterator.secondaryMaterial} ${iterator.secondaryFinishing} ${iterator.measureWide}`,
                 image: document ? document?.fileURL : '',
-                quantity: iterator.quantity,
-                percentageDiscountProduct: iterator.percentageDiscountProduct,
-                discountProduct: iterator.discountProduct,
+                // quantity: iterator.quantity,
+                // percentageDiscountProduct: iterator.percentageDiscountProduct,
+                // discountProduct: iterator.discountProduct,
                 percentageMaximumDiscount: iterator.percentageMaximumDiscount,
                 maximumDiscount: iterator.maximumDiscount,
-                subtotal: iterator.subtotal,
+                // subtotal: iterator.subtotal,
                 mainMaterialImage: iterator?.mainMaterialImage ?? null,
                 mainFinishImage: iterator?.mainFinishImage ?? null,
                 secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,

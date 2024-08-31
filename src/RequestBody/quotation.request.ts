@@ -217,6 +217,25 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                 quantity: {
                                     type: 'number'
                                 },
+                                originCost: {
+                                    type: 'number'
+                                },
+                                factor: {
+                                    type: 'number'
+                                },
+                                price: {
+                                    type: 'number'
+                                },
+                                subtotal: {
+                                    type: 'number'
+                                },
+                                percentageDiscountProduct: {
+                                    type: 'number'
+                                },
+                                subtotalDiscount: {
+                                    type: 'number'
+                                },
+
                             }
                         }
                     },
