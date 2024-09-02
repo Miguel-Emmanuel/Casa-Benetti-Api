@@ -5,7 +5,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
@@ -1177,7 +1177,10 @@ export class ProjectService {
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 percentage: quotationProducts?.percentageDiscountProduct,
-                subtotal: quotationProducts?.subtotal
+                subtotal: quotationProducts?.subtotal,
+                currencyEuro: quotationProducts?.currency === CurrencyE.EURO,
+                currencyUSD: quotationProducts?.currency === CurrencyE.USD,
+                currencyPesoMexicano: quotationProducts?.currency === CurrencyE.PESO_MEXICANO,
             })
         }
         for (const iterator of quotationProductsStocks ?? []) {
@@ -1215,7 +1218,10 @@ export class ProjectService {
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: iterator?.quantity,
                 percentage: iterator?.percentageDiscountProduct,
-                subtotal: iterator?.subtotal
+                subtotal: iterator?.subtotal,
+                currencyEuro: quotationProducts?.currency === CurrencyE.EURO,
+                currencyUSD: quotationProducts?.currency === CurrencyE.USD,
+                currencyPesoMexicano: quotationProducts?.currency === CurrencyE.PESO_MEXICANO,
             })
         }
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
