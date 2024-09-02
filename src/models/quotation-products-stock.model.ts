@@ -66,6 +66,75 @@ export class QuotationProductsStock extends Entity {
     })
     isNotificationSent?: boolean | null;
 
+
+    //Costo Origen (precio de lista)
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    originCost: number;
+
+    //Factor
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    factor: number;
+
+    //precio (factor * Costo Origen)
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    price: number;
+
+    //Subtotal
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    subtotal: number;
+
+    //Descuento porcentaje por producto
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    percentageDiscountProduct: number;
+
+    //Descuento por producto total
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+        default: 0
+    })
+    discountProduct: number;
+
+    //Subtotal con descuento
+    @property({
+        type: 'number',
+        required: false,
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    subtotalDiscount: number;
+
     constructor(data?: Partial<QuotationProductsStock>) {
         super(data);
     }

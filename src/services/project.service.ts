@@ -421,7 +421,7 @@ export class ProjectService {
                 const {quotation} = project
                 const {quotationProductsStocks} = quotation
                 for (let index = 0; index < quotationProductsStocks?.length; index++) {
-                    const {quotationProducts} = quotationProductsStocks[index];
+                    const {quotationProducts, quantity: quantityStock, originCost} = quotationProductsStocks[index];
                     const {purchaseOrders} = quotationProducts
                     if (purchaseOrders) {
                         const {id: purchaseOrderId, status, productionEndDate, productionRealEndDate, collection, arrivalDate, proforma} = purchaseOrders;
@@ -439,7 +439,7 @@ export class ProjectService {
                                 containerNumber: collection?.container?.containerNumber ?? null,
                                 arrivalDate: arrivalDate ?? null,
                                 products: () => {
-                                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, quantity, originCost, proformaPrice, numberBoxes, status} = quotationProducts;
+                                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, quantity, proformaPrice, numberBoxes, status} = quotationProducts;
                                     const {document, line, name} = product;
                                     const descriptionParts = [
                                         line?.name,
@@ -455,7 +455,7 @@ export class ProjectService {
                                         SKU,
                                         image: document?.fileURL,
                                         description,
-                                        quantity,
+                                        quantity: quantityStock,
                                         originCost,
                                         proformaPrice,
                                         proformaPriceQuantity: quantity * proformaPrice,
@@ -969,10 +969,10 @@ export class ProjectService {
                     brandName: brand?.brandName ?? '',
                     description,
                     measures,
-                    price: iterator?.quotationProducts?.price,
-                    listPrice: iterator?.quotationProducts?.originCost,
-                    factor: iterator?.quotationProducts?.factor,
-                    quantity: iterator?.quotationProducts?.quantity,
+                    price: iterator?.price,
+                    listPrice: iterator?.originCost,
+                    factor: iterator?.factor,
+                    quantity: iterator?.quantity,
                     // provider: iterator?.provider?.name,
                     status: iterator?.quotationProducts?.status,
                     mainFinish: iterator?.quotationProducts?.mainFinish,
@@ -1213,9 +1213,9 @@ export class ProjectService {
                 image: document?.fileURL ?? defaultImage,
                 mainFinish: quotationProducts?.mainFinish,
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
-                quantity: quotationProducts?.quantity,
-                percentage: quotationProducts?.percentageDiscountProduct,
-                subtotal: quotationProducts?.subtotal
+                quantity: iterator?.quantity,
+                percentage: iterator?.percentageDiscountProduct,
+                subtotal: iterator?.subtotal
             })
         }
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
