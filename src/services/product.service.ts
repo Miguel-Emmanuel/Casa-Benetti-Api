@@ -275,26 +275,26 @@ export class ProductService {
     }
 
     async findShowRoom(branchId?: number, filter?: Filter<Product>,) {
-        let where: any = {
-            typeQuotation: TypeQuotationE.SHOWROOM,
-        }
         // let where: any = {
-        //     and: [
-        //         {
-        //             typeQuotation: TypeQuotationE.SHOWROOM,
-        //         },
-        //         {
-        //             or: [
-        //                 {
-        //                     status: QuotationProductStatusE.SHOWROOM,
-        //                 },
-        //                 {
-        //                     status: QuotationProductStatusE.BODEGA_NACIONAL,
-        //                 }
-        //             ]
-        //         }
-        //     ]
+        //     typeQuotation: TypeQuotationE.SHOWROOM,
         // }
+        let where: any = {
+            and: [
+                {
+                    typeQuotation: TypeQuotationE.SHOWROOM,
+                },
+                {
+                    or: [
+                        {
+                            status: QuotationProductStatusE.SHOWROOM,
+                        },
+                        {
+                            status: QuotationProductStatusE.BODEGA_NACIONAL,
+                        }
+                    ]
+                }
+            ]
+        }
         if (branchId) {
             where.branchesId = [branchId];
         }
