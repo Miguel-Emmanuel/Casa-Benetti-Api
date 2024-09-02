@@ -311,7 +311,18 @@
                     </td>
                     <td>{{this.quantity}}</td>
                     <td>{{this.percentage}}%</td>
+
+                    {{#if currencyEuro}}
                     <td>{{this.subtotal}}€</td>
+                    {{/if}}
+
+                    {{#if currencyUSD}}
+                    <td>${{this.subtotal}}</td>
+                    {{/if}}
+
+                    {{#if currencyPesoMexicano}}
+                    <td>${{this.subtotal}}</td>
+                    {{/if}}
                 </tr>
                 {{/each}}
             </tbody>

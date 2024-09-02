@@ -239,7 +239,10 @@ export class QuotationService {
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 percentage: quotationProducts?.percentageDiscountProduct,
-                subtotal: quotationProducts?.subtotal
+                subtotal: quotationProducts?.subtotal,
+                currencyEuro: quotationProducts?.currency === CurrencyE.EURO,
+                currencyUSD: quotationProducts?.currency === CurrencyE.USD,
+                currencyPesoMexicano: quotationProducts?.currency === CurrencyE.PESO_MEXICANO,
             })
         }
 
@@ -278,7 +281,10 @@ export class QuotationService {
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: iterator?.quantity,
                 percentage: iterator?.percentageDiscountProduct,
-                subtotal: iterator?.subtotal
+                subtotal: iterator?.subtotal,
+                currencyEuro: quotationProducts?.currency === CurrencyE.EURO,
+                currencyUSD: quotationProducts?.currency === CurrencyE.USD,
+                currencyPesoMexicano: quotationProducts?.currency === CurrencyE.PESO_MEXICANO,
             })
         }
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
