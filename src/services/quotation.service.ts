@@ -1325,6 +1325,18 @@ export class QuotationService {
                 line: line,
                 brand: brand,
                 document: document,
+                discountProduct: iterator?.discountProduct,
+                quantity: iterator?.quantity,
+                originCost: iterator?.originCost,
+                price: iterator?.price,
+                factor: iterator?.factor,
+                subtotal: iterator?.subtotal,
+                percentageDiscountProduct: iterator?.percentageDiscountProduct,
+                subtotalDiscount: iterator?.subtotalDiscount,
+                typeSale: iterator?.typeSale,
+                reservationDays: iterator?.reservationDays,
+                loanInitialDate: iterator?.loanInitialDate,
+                loanEndDate: iterator?.loanEndDate,
             })
         }
 
