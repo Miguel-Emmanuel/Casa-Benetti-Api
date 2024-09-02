@@ -108,6 +108,7 @@ export enum QuotationProductStatusE {
     PROCESO_ADUANA = 'Proceso Aduana',
     BODEGA_INTERNACIONAL = 'Bodega Internacional',
     SHOWROOM = 'Showroom',
+    BODEGA = 'Bodega',
     ENTREGADO = 'Entregado',
 }
 
