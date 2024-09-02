@@ -738,21 +738,29 @@ export class ContainerService {
         const include: InclusionFilter[] = [
             {
                 relation: 'purchaseOrders',
+            },
+            {
+                relation: 'collection',
+                scope: {
+                    include: [
+                        {
+                            relation: 'purchaseOrders'
+                        }
+                    ]
+                }
             }
         ]
         const container = await this.containerRepository.findById(containerId, {include});
-        const {purchaseOrders} = container;
-        if (purchaseOrders) {
-            for (let index = 0; index < purchaseOrders.length; index++) {
-                const element = purchaseOrders[index];
-                if (status === ContainerStatus.EN_TRANSITO) {
-                    await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL})
-                    await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.TRANSITO_INTERNACIONAL})
-                }
-                if (status === ContainerStatus.ENTREGADO) {
-                    await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.PROCESO_ADUANA})
-                    await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.PROCESO_ADUANA})
-                }
+        const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
+        for (let index = 0; index < purchaseOrdersFor.length; index++) {
+            const element = purchaseOrdersFor[index];
+            if (status === ContainerStatus.EN_TRANSITO) {
+                await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL})
+                await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.TRANSITO_INTERNACIONAL})
+            }
+            if (status === ContainerStatus.ENTREGADO) {
+                await this.purchaseOrdersRepository.updateById(element.id, {status: PurchaseOrdersStatus.PROCESO_ADUANA})
+                await this.quotationProductsRepository.updateAll({purchaseOrdersId: element.id}, {status: QuotationProductStatusE.PROCESO_ADUANA})
             }
         }
     }
@@ -761,6 +769,16 @@ export class ContainerService {
         const include: InclusionFilter[] = [
             {
                 relation: 'purchaseOrders',
+            },
+            {
+                relation: 'collection',
+                scope: {
+                    include: [
+                        {
+                            relation: 'purchaseOrders'
+                        }
+                    ]
+                }
             }
         ]
         const container = await this.containerRepository.findById(containerId, {include});
@@ -772,25 +790,27 @@ export class ContainerService {
         else if (ETDDate) {
             arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
         }
-        const {purchaseOrders} = container;
-        if (purchaseOrders) {
-            for (let index = 0; index < purchaseOrders.length; index++) {
-                const element = purchaseOrders[index];
-                if (arrivalDate) {
-                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    return;
-                }
-                const {productionEndDate, productionRealEndDate} = element;
-                if (productionRealEndDate) {
-                    const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
-                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    return;
-                }
-                if (productionEndDate) {
-                    const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
-                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    return;
-                }
+        console.log('ssss: ', container.purchaseOrders)
+        console.log('ssss: ', container.collection)
+
+        const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
+        for (let index = 0; index < purchaseOrdersFor.length; index++) {
+            const element = purchaseOrdersFor[index];
+            console.log('ssss: ', element.id)
+            if (arrivalDate) {
+                await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                return;
+            }
+            const {productionEndDate, productionRealEndDate} = element;
+            if (productionRealEndDate) {
+                const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
+                await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                return;
+            }
+            if (productionEndDate) {
+                const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
+                await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                return;
             }
         }
     }
