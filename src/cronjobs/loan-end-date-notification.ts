@@ -4,7 +4,7 @@ import {repository} from '@loopback/repository';
 import {inject} from '@loopback/core';
 import dayjs from 'dayjs';
 import {SendgridServiceBindings} from '../keys';
-import {QuotationProductsRepository, UserRepository} from '../repositories';
+import {QuotationProductsStockRepository, UserRepository} from '../repositories';
 import {SendgridService, SendgridTemplates} from '../services';
 
 @cronJob()
@@ -12,8 +12,8 @@ export class LoanEndDateNotificationCronJob extends CronJob {
     constructor(
         @inject(SendgridServiceBindings.SENDGRID_SERVICE)
         public sendgridService: SendgridService,
-        @repository(QuotationProductsRepository)
-        public quotationProductsRepository: QuotationProductsRepository,
+        @repository(QuotationProductsStockRepository)
+        public quotationProductsStockRepository: QuotationProductsStockRepository,
         @repository(UserRepository)
         public userRepository: UserRepository,
     ) {
@@ -37,7 +37,7 @@ export class LoanEndDateNotificationCronJob extends CronJob {
         console.log('startDay: ', startDay)
         console.log('endDay: ', endDay)
 
-        const quotationProducts = await this.quotationProductsRepository.find({
+        const quotationProducts = await this.quotationProductsStockRepository.find({
             where: {
                 and: [
                     {

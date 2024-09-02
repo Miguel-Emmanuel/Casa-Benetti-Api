@@ -1,7 +1,7 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {TypeSaleE} from '../enums';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
-import {Quotation} from './quotation.model';
+import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
     settings: {
@@ -143,6 +143,7 @@ export class QuotationProductsStock extends Entity {
 export interface QuotationProductsStockRelations {
     // describe navigational properties here
     quotationProducts: QuotationProductsWithRelations
+    quotation: QuotationWithRelations
 }
 
 export type QuotationProductsStockWithRelations = QuotationProductsStock & QuotationProductsStockRelations;
