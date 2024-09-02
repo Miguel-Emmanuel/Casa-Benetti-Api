@@ -106,11 +106,16 @@ export class InventoryMovementsService {
                     return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
                 const quotationProduct = await this.validateQuotationProduct(destinationQuotationProductsId);
 
+                if (!quotationProduct?.purchaseOrdersId)
+                    return this.responseService.badRequest('El producto no se encuentra en una orden de compra');
+
                 let inventorie: any;
                 if (destinationWarehouseId) {
                     inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: destinationQuotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                    await this.quotationProductsRepository.updateById(destinationQuotationProductsId, {status: QuotationProductStatusE.BODEGA}) //Bodega es warehouse
                 } else {
                     inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: destinationQuotationProductsId}, {branchId: destinationBranchId}]}})
+                    await this.quotationProductsRepository.updateById(destinationQuotationProductsId, {status: QuotationProductStatusE.SHOWROOM}) // SHOWROOM es branch
                 }
                 if (!inventorie) {
                     inventorie = await this.inventoriesRepository.create({stock: destinationQuantity, quotationProductsId: destinationQuotationProductsId, warehouseId: destinationWarehouseId, branchId: destinationBranchId})
@@ -127,6 +132,13 @@ export class InventoryMovementsService {
                 if (!branchId && !warehouseId)
                     return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
                 const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
+
+                if (!quotationProduct?.purchaseOrdersId)
+                    return this.responseService.badRequest('El producto no se encuentra en una orden de compra');
+
+                if (quotationProduct?.status != QuotationProductStatusE.ENTREGADO)
+                    return this.responseService.badRequest('El producto aun no se encuentra con estatus de entregado.');
+
                 const project = await this.validateDataEntry(projectId, branchId, warehouseId);
                 try {
                     let inventorie: any;
