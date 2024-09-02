@@ -1525,7 +1525,8 @@ export class QuotationService {
             if (isRejected === true)
                 status = StatusQuotationE.RECHAZADA;
             else {
-                if (quotation?.typeQuotation === TypeQuotationE.GENERAL) {
+                console.log(this.user.isMaster)
+                if (quotation?.typeQuotation === TypeQuotationE.GENERAL && this.user.isMaster === false) {
                     await this.validateAdvanceCustomerAndEnsamblado(id);
                 }
                 status = StatusQuotationE.CERRADA;
