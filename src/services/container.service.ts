@@ -790,27 +790,26 @@ export class ContainerService {
         else if (ETDDate) {
             arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
         }
-        console.log('ssss: ', container.purchaseOrders)
-        console.log('ssss: ', container.collection)
 
         const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
+        console.log('purchaseOrdersFor: ', purchaseOrdersFor)
         for (let index = 0; index < purchaseOrdersFor.length; index++) {
             const element = purchaseOrdersFor[index];
-            console.log('ssss: ', element.id)
+            console.log('orden de compra id: ', element.id)
             if (arrivalDate) {
                 await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                return;
+                continue;
             }
             const {productionEndDate, productionRealEndDate} = element;
             if (productionRealEndDate) {
                 const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
                 await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                return;
+                continue;
             }
             if (productionEndDate) {
                 const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
                 await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                return;
+                continue;
             }
         }
     }
