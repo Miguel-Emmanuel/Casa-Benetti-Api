@@ -107,6 +107,7 @@ export class MyUserService implements UserService<User, Credentials> {
       organizationId,
       accessLevel,
       branchId: user.branchId,
+      isMaster: user.isMaster,
     };
 
     return userProfile;
