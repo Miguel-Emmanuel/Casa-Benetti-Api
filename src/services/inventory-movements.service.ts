@@ -126,7 +126,7 @@ export class InventoryMovementsService {
                 await this.inventoryMovementsRepository.create({quantity: destinationQuantity, projectId: quotationProduct?.quotation?.project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment: commentEntry, createdById: this.user.id});
                 await this.addQuotationProductsToStock(destinationQuotationProductsId, destinationQuantity, quotationProduct.stock);
                 await this.validateWareHouseMexicoAndItalia(destinationQuotationProductsId, destinationWarehouseId)
-
+                await this.purchaseOrdersRepository.updateById(quotationProduct?.purchaseOrdersId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL});
             } else {
                 const {branchId, warehouseId, quotationProductsId, quantity, projectId, comment} = data
                 if (!branchId && !warehouseId)
@@ -142,10 +142,14 @@ export class InventoryMovementsService {
                 const project = await this.validateDataEntry(projectId, branchId, warehouseId);
                 try {
                     let inventorie: any;
-                    if (branchId)
+                    if (branchId) {
                         inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
-                    else if (warehouseId)
+                        await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.SHOWROOM}) // SHOWROOM es branch
+                    }
+                    else if (warehouseId) {
                         inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
+                        await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.BODEGA}) //Bodega es warehouse
+                    }
 
                     if (!inventorie) {
                         inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
@@ -156,6 +160,7 @@ export class InventoryMovementsService {
                     await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment, createdById: this.user.id});
                     await this.addQuotationProductsToStock(quotationProductsId, quantity, quotationProduct.stock);
                     await this.validateWareHouseMexicoAndItalia(quotationProductsId, warehouseId)
+                    await this.purchaseOrdersRepository.updateById(quotationProduct?.purchaseOrdersId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL});
                 } catch (error) {
                     throw this.responseService.badRequest(error.message ?? error)
                 }
