@@ -173,6 +173,7 @@ export class ContainerService {
             worksheet.getCell('A1').alignment = {vertical: 'middle', horizontal: 'center'};
 
             const purchaseOrders = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
+            console.log(purchaseOrders.length)
             for (let index = 0; index < purchaseOrders.length; index++) {
                 const element = purchaseOrders[index];
                 for (let index = 0; index < element?.quotationProducts?.length; index++) {
@@ -193,16 +194,13 @@ export class ContainerService {
                         const fileName = elementProduct?.product?.document?.fileURL?.split('/').pop();
                         if (fileName) {
                             const localFile = this.validateFileName(fileName);
-                            console.log('localFile: ', localFile)
                             await fs.access(localFile)
                             file = localFile
                         }
                     } catch (error) {
-                        console.log('error: ', error)
                     }
                     // Primero, agrega la imagen al workbook
                     let imageId = null
-                    console.log('file: ', file)
                     if (file) {
                         const extension = path.extname(file).slice(1);
                         imageId = workbook.addImage({
@@ -210,7 +208,7 @@ export class ContainerService {
                             extension: extension === 'png' ? 'png' : 'jpeg' // Cambia la extensión según el tipo de imagen
                         });
                     }
-                    console.log('imageId: ', imageId)
+                    console.log('Product: ', index)
                     const newRow = worksheet.addRow({
                         codigo: elementProduct?.SKU,
                         numeroFactura: elementProduct?.invoiceNumber,
@@ -839,7 +837,34 @@ export class ContainerService {
                     scope: {
                         include: [
                             {
-                                relation: 'proforma',
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'document'
+                                                    },
+                                                    {
+                                                        relation: 'line'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
                                 scope: {
                                     include: [
                                         {
@@ -860,47 +885,6 @@ export class ContainerService {
                                                         }
                                                     }
                                                 ],
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    relation: 'collection',
-                    scope: {
-                        include: [
-                            {
-                                relation: 'purchaseOrders',
-                                scope: {
-                                    include: [
-                                        {
-                                            relation: 'proforma',
-                                            scope: {
-                                                include: [
-                                                    {
-                                                        relation: 'quotationProducts',
-                                                        scope: {
-                                                            include: [
-                                                                {
-                                                                    relation: 'product',
-                                                                    scope: {
-                                                                        include: [
-                                                                            {
-                                                                                relation: 'document'
-                                                                            },
-                                                                            {
-                                                                                relation: 'line'
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            ],
-                                                        }
-                                                    }
-                                                ]
                                             }
                                         }
                                     ]
@@ -929,15 +913,13 @@ export class ContainerService {
                     const {purchaseOrders} = collection;
                     for (let index = 0; index < purchaseOrders?.length; index++) {
                         const element = purchaseOrders[index];
-                        const {proforma} = element;
-                        const {quotationProducts} = proforma;
+                        const {quotationProducts} = element;
                         quantity += quotationProducts?.length ?? 0;
                     }
                 }
                 for (let index = 0; index < purchaseOrders?.length; index++) {
                     const element = purchaseOrders[index];
-                    const {proforma} = element;
-                    const {quotationProducts} = proforma;
+                    const {quotationProducts} = element;
                     quantity += quotationProducts?.length ?? 0;
                 }
                 return {
@@ -1038,7 +1020,37 @@ export class ContainerService {
                     scope: {
                         include: [
                             {
-                                relation: 'proforma',
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'document'
+                                                    },
+                                                    {
+                                                        relation: 'line'
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'documents'
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders',
                                 scope: {
                                     include: [
                                         {
@@ -1066,50 +1078,6 @@ export class ContainerService {
                             }
                         ]
                     }
-                },
-                {
-                    relation: 'documents'
-                },
-                {
-                    relation: 'collection',
-                    scope: {
-                        include: [
-                            {
-                                relation: 'purchaseOrders',
-                                scope: {
-                                    include: [
-                                        {
-                                            relation: 'proforma',
-                                            scope: {
-                                                include: [
-                                                    {
-                                                        relation: 'quotationProducts',
-                                                        scope: {
-                                                            include: [
-                                                                {
-                                                                    relation: 'product',
-                                                                    scope: {
-                                                                        include: [
-                                                                            {
-                                                                                relation: 'document'
-                                                                            },
-                                                                            {
-                                                                                relation: 'line'
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            ],
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
                 }
             ]
             if (filter?.include)
@@ -1127,6 +1095,7 @@ export class ContainerService {
             const container = await this.containerRepository.findById(id, filter);
             const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection, createdAt} = container;
             const purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
+            console.log('purchaseOrdersContainers: ', purchaseOrdersContainers.length)
             return {
                 pedimento,
                 createdAt,
@@ -1149,8 +1118,7 @@ export class ContainerService {
                     }
                 }),
                 purchaseOrders: purchaseOrdersContainers ? purchaseOrdersContainers?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
-                    const {id: purchaseOrderid, proforma} = value;
-                    const {quotationProducts} = proforma;
+                    const {id: purchaseOrderid, proforma, quotationProducts} = value;
                     return {
                         id: purchaseOrderid,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
