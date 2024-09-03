@@ -10,7 +10,7 @@ import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
+import {DayExchangeRate, Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
 import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProductsStockRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
@@ -1513,6 +1513,12 @@ export class QuotationService {
     async validateIfExistCustomer(quotation: Quotation) {
         if (!quotation?.customerId)
             throw this.responseService.badRequest("La cotizacion debe tener un cliente asignado.");
+    }
+
+    async createDayExchangeRates(id: number, dayExchangeRate: Omit<DayExchangeRate, 'id'>,) {
+        await this.quotationRepository.updateById(id, {...dayExchangeRate});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+
     }
 
     async changeStatusToClose(id: number, body: {isRejected: boolean, comment: string}) {

@@ -19,7 +19,7 @@ import {
 } from '@loopback/rest';
 import {CreateRequestBody, QuotationFindResponseSwagger, QuotationGteByIdResponse, UpdateRequestBody} from '../RequestBody/quotation.request';
 import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse, UpdateQuotation} from '../interface';
-import {Document, Quotation} from '../models';
+import {DayExchangeRate, Document, Quotation} from '../models';
 import {QuotationService} from '../services';
 
 @authenticate('jwt')
@@ -212,5 +212,27 @@ export class QuotationController {
         body: {isRejected: boolean, comment: string},
     ): Promise<object> {
         return this.quotationService.changeStatusToClose(id, body);
+    }
+
+    @patch('/quotations/day-exchange-rates/{id}')
+    @response(200, {
+        description: 'DayExchangeRate model instance',
+        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate, {})}},
+    })
+    async createDayExchangeRates(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: getModelSchemaRef(DayExchangeRate, {
+                        title: 'NewDayExchangeRate',
+                        exclude: ['id', 'createdAt', 'updatedAt'],
+                    }),
+                },
+            },
+        })
+        dayExchangeRate: Omit<DayExchangeRate, 'id'>,
+    ): Promise<Object> {
+        return this.quotationService.createDayExchangeRates(id, dayExchangeRate);
     }
 }
