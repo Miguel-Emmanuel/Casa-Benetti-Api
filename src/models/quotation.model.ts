@@ -230,6 +230,54 @@ export class Quotation extends BaseEntity {
     @hasOne(() => Document, {keyTo: 'clientQuoteId'})
     clientQuote: Document;
 
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    euroToPeso: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    euroToDolar: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    dolarToPeso: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    dolarToEuro: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    mxnToEuro: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    mxnToDolar: number;
+
     //************************************************ COTIZACION EN EUROS *********************************** */
 
     //Subtotal

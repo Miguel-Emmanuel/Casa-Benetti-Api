@@ -371,7 +371,7 @@ export class InventoriesService {
                 ]
             });
 
-            const calculateCost = await this.calculateCost(currency, originCost)
+            const calculateCost = await this.calculateCost(currency, originCost, quotation.id)
             return {
                 id,
                 image: document?.fileURL ?? null,
@@ -417,15 +417,15 @@ export class InventoriesService {
         }
     }
 
-    async calculateCost(currency: CurrencyE, originCost: number) {
+    async calculateCost(currency: CurrencyE, originCost: number, quotationId: number) {
         if (currency === CurrencyE.PESO_MEXICANO) {
-            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnTo();
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnToQuotation(quotationId);
             // return {amount: originCost * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
             return {amount: originCost * EUR, parity: EUR}
         }
 
         if (currency === CurrencyE.USD) {
-            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarTo();
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarToQuotation(quotationId);
             // return {amount: originCost * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
             return {amount: originCost * EUR, parity: EUR}
         }
