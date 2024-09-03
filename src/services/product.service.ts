@@ -290,6 +290,22 @@ export class ProductService {
                         },
                         {
                             status: QuotationProductStatusE.BODEGA_NACIONAL,
+                        },
+                        {
+                            status: QuotationProductStatusE.PEDIDO,
+                        },
+                        {
+                            status: QuotationProductStatusE.RECOLECCION,
+                        },
+                        {
+                            status: QuotationProductStatusE.BODEGA_INTERNACIONAL,
+                        }
+                        ,
+                        {
+                            status: QuotationProductStatusE.TRANSITO_INTERNACIONAL,
+                        },
+                        {
+                            status: QuotationProductStatusE.PROCESO_ADUANA,
                         }
                     ]
                 }

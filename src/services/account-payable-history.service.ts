@@ -50,7 +50,7 @@ export class AccountPayableHistoryService {
         const {total, purchaseOrders, proforma} = accountPayable;
 
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
-            const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
+            const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId, proforma.project.quotationId)
             const newTotalPaid = accountPayable.totalPaid + newAmount
             const newBalance = accountPayable.balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
@@ -99,7 +99,7 @@ export class AccountPayableHistoryService {
         const {totalPaid, balance, total, purchaseOrders, proforma} = await this.findAccountPayable(accountPayableId);
 
         if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
-            const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId)
+            const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId, proforma.project.quotationId)
             const newTotalPaid = this.roundToTwoDecimals(totalPaid + newAmount)
             const newBalance = balance - newAmount
             await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: newTotalPaid, balance: this.roundToTwoDecimals(newBalance)})
@@ -223,6 +223,13 @@ export class AccountPayableHistoryService {
             include: [
                 {
                     relation: 'proforma',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'project'
+                            }
+                        ]
+                    }
                 },
                 {
                     relation: 'purchaseOrders',
@@ -239,7 +246,7 @@ export class AccountPayableHistoryService {
 
 
 
-    async convertCurrency(accountPayableAmount: number, accountPayableCurrency: ExchangeRateE, accountPayableId: number): Promise<number> {
+    async convertCurrency(accountPayableAmount: number, accountPayableCurrency: ExchangeRateE, accountPayableId: number, quotationId: number): Promise<number> {
         const findAccountProforma = await this.accountPayableRepository.findOne({
             where: {id: accountPayableId},
             include: [{relation: "proforma"}]
@@ -249,7 +256,7 @@ export class AccountPayableHistoryService {
         if (findAccountProforma && findAccountProforma?.proforma) {
             const proformaCurrency = findAccountProforma?.proforma?.currency
             if (proformaCurrency === ProformaCurrencyE.EURO) {
-                const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroTo();
+                const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroToQuotation(quotationId);
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToEUR.MXN
@@ -266,7 +273,7 @@ export class AccountPayableHistoryService {
                 }
             }
             else if (proformaCurrency === ProformaCurrencyE.PESO_MEXICANO) {
-                const {USD, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnTo();
+                const {USD, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnToQuotation(quotationId);
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToMXN.MXN
@@ -282,7 +289,7 @@ export class AccountPayableHistoryService {
                 }
             }
             else if (proformaCurrency === ProformaCurrencyE.USD) {
-                const {MXN, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarTo();
+                const {MXN, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarToQuotation(quotationId);
 
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToUSD.MXN

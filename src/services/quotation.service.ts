@@ -10,7 +10,7 @@ import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
+import {DayExchangeRate, Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
 import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProductsStockRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
@@ -435,6 +435,7 @@ export class QuotationService {
 
     async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number, showroomManagerId: number) {
         const data = this.convertExchangeRateQuotation(quotation);
+        const dayExchangeRate = await this.dayExchancheCalculateToService.getdayExchangeRatAll();
         const bodyQuotation = {
             ...data,
             // exchangeRateAmount: 15,
@@ -443,7 +444,8 @@ export class QuotationService {
             isDraft,
             branchId,
             userId,
-            showroomManagerId
+            showroomManagerId,
+            ...dayExchangeRate
         }
         return this.quotationRepository.create(bodyQuotation);
     }
@@ -869,6 +871,7 @@ export class QuotationService {
 
     async createQuatationShowRoom(quotation: QuotationI, isDraft: boolean, userId: number, branchesId: number[], showroomManagerId: number, showRoomDestination: ShowRoomDestinationE, branchId: number) {
         const data = this.convertExchangeRateQuotation(quotation);
+        const dayExchangeRate = await this.dayExchancheCalculateToService.getdayExchangeRatAll();
         const bodyQuotation = {
             ...data,
             status: isDraft ? StatusQuotationE.ENPROCESO : StatusQuotationE.ENREVISIONSM,
@@ -879,7 +882,8 @@ export class QuotationService {
             showroomManagerId,
             mainProjectManagerId: this.user.id,
             showRoomDestination,
-            branchId
+            branchId,
+            ...dayExchangeRate
         }
         return this.quotationRepository.create(bodyQuotation);
     }
@@ -1511,6 +1515,12 @@ export class QuotationService {
             throw this.responseService.badRequest("La cotizacion debe tener un cliente asignado.");
     }
 
+    async createDayExchangeRates(id: number, dayExchangeRate: Omit<DayExchangeRate, 'id'>,) {
+        await this.quotationRepository.updateById(id, {...dayExchangeRate});
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+
+    }
+
     async changeStatusToClose(id: number, body: {isRejected: boolean, comment: string}) {
         const transaction = await this.quotationRepository.dataSource.beginTransaction(IsolationLevel.SERIALIZABLE);
         try {
@@ -1603,7 +1613,7 @@ export class QuotationService {
         if (exchangeRateQuotation == ExchangeRateQuotationE.EUR) {
             let bodyMXN = {};
             let bodyUSD = {};
-            const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroTo();
+            const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroToQuotation(quotation.id);
             // const USD = 1.074;
             // const MXN = 19.28;
             const {subtotalEUR, percentageAdditionalDiscount, additionalDiscountEUR, percentageIva, ivaEUR, totalEUR, percentageAdvanceEUR,
