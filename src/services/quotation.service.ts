@@ -7,12 +7,13 @@ import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {AccessLevelRolE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
-import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation} from '../interface';
+import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation, UpdateQuotationI, UpdateQuotationProject} from '../interface';
+import {schemaUpdateQuotitionProject} from '../joi.validation.ts/quotation-project.validation';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {DayExchangeRate, Document, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
-import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProductsStockRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProjectRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProductsStockRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {PdfService} from './pdf.service';
 import {ProjectService} from './project.service';
@@ -66,6 +67,8 @@ export class QuotationService {
         public dayExchancheCalculateToService: DayExchancheCalculateToService,
         @repository(QuotationProductsStockRepository)
         public quotationProductsStockRepository: QuotationProductsStockRepository,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository,
     ) { }
 
     async create(data: CreateQuotation) {
@@ -130,8 +133,12 @@ export class QuotationService {
     }
 
     async downloadPdfClientQuote(id: number) {
-        const findQuotation = await this.findQuotationById(id);
-        return await this.createPdfToCustomer(findQuotation.id);
+        try {
+            const findQuotation = await this.findQuotationById(id);
+            return await this.createPdfToCustomer(findQuotation.id);
+        } catch (error) {
+            return this.responseService.badRequest(error?.message ?? error);
+        }
     }
 
     async uploadPdfClientQuote(id: number, data: {document: Document}) {
@@ -1751,6 +1758,66 @@ export class QuotationService {
             return {...bodyMXN, ...bodyEUR}
         }
         return {}
+    }
+
+    async updateQuotationProject(id: number, data: UpdateQuotationProject,) {
+        try {
+            const project = await this.projectRepository.findOne({where: {id}})
+            if (!project)
+                return this.responseService.notFound('El proyecto no se ha encontrado.')
+
+            await this.validateBodyQuotationProject(data);
+
+            const {customer: {customerId}, quotation, projectManagers, designers, products, productsStock, proofPaymentQuotation} = data;
+
+            const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
+
+            await this.validateCustomer(customerId);
+            await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
+            if (isReferencedCustomer === true)
+                await this.findUserById(quotation.referenceCustomerId);
+
+            const showroomManagerId = await this.getSM(mainProjectManagerId);
+            const findQuotation = await this.findQuotationById(project.quotationId);
+
+            await this.updateQuotationProjectMaster(quotation, id, showroomManagerId);
+            await this.deleteManyQuotation(findQuotation, projectManagers, designers, products, productsStock);
+            await this.updateManyQuotition(projectManagers, designers, products, findQuotation.id, productsStock);
+            await this.updateProofPayments(proofPaymentQuotation, id);
+            await this.updatecreateComissionPmClasification(findQuotation.id, mainProjectManagerCommissions)
+            return this.findQuotationById(id);
+        } catch (error) {
+            return this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async updateQuotationProjectMaster(quotation: UpdateQuotationI, quotationId: number, showroomManagerId: number) {
+        const data = this.convertExchangeRateQuotation(quotation);
+        const bodyQuotation = {
+            ...data,
+            showroomManagerId
+        }
+        await this.quotationRepository.updateById(quotationId, bodyQuotation)
+    }
+
+    async validateCustomer(customerId: number) {
+        const customer = await this.customerRepository.findOne({where: {id: customerId}});
+        if (!customer)
+            throw this.responseService.notFound('El cliente no se ha encontrado.')
+    }
+
+    async validateBodyQuotationProject(data: UpdateQuotationProject) {
+        try {
+            await schemaUpdateQuotitionProject.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`Dato requerido: ${key}`)
+
+            throw this.responseService.unprocessableEntity(message)
+        }
     }
 
 }

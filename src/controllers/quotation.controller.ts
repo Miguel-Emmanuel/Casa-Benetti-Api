@@ -17,8 +17,9 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {UpdateQuotationProjectBody} from '../RequestBody/project.request';
 import {CreateRequestBody, QuotationFindResponseSwagger, QuotationGteByIdResponse, UpdateRequestBody} from '../RequestBody/quotation.request';
-import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse, UpdateQuotation} from '../interface';
+import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse, UpdateQuotation, UpdateQuotationProject} from '../interface';
 import {DayExchangeRate, Document, Quotation} from '../models';
 import {QuotationService} from '../services';
 
@@ -234,5 +235,24 @@ export class QuotationController {
         dayExchangeRate: Omit<DayExchangeRate, 'id'>,
     ): Promise<Object> {
         return this.quotationService.createDayExchangeRates(id, dayExchangeRate);
+    }
+
+    @post('/quotations/{id}/project')
+    @response(200, {
+        description: 'Quotation model instance',
+        content: {
+            'application/json': {
+                schema: {
+
+                }
+            }
+        },
+    })
+    async updateQuotationProject(
+        @param.path.number('id') id: number,
+        @requestBody(UpdateQuotationProjectBody)
+        data: UpdateQuotationProject,
+    ): Promise<any> {
+        return this.quotationService.updateQuotationProject(id, data);
     }
 }
