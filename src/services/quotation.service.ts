@@ -213,7 +213,7 @@ export class QuotationService {
 
 
         let productsTemplate = [];
-        for (const product of products) {
+        for (const product of products ?? []) {
             const {brand, document, quotationProducts, line, name} = product;
             const descriptionParts = [
                 line?.name,
