@@ -14,6 +14,17 @@ export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
                     typeQuotation: {
                         type: 'string'
                     },
+                    showRoomDestination: {
+                        type: 'string',
+                        nullable: true
+                    },
+                    branchesId: {
+                        type: 'array',
+                        nullable: true,
+                        items: {
+                            type: 'number'
+                        }
+                    },
                     customer: {
                         type: 'object',
                         properties: {

@@ -301,3 +301,27 @@ export const schemaChangeStatusClose = Joi.object({
     isRejected: Joi.boolean().required(),
     comment: Joi.when('isRejected', {is: true, then: Joi.string().required()}),
 })
+
+
+
+export const schemaCreateQuotitionShowRoomMaster = Joi.object({
+    id: Joi.number().allow(null),
+    typeQuotation: Joi.string().valid(...Object.values(TypeQuotationE)).messages({
+        'any.only': `El tipo de cotizacion debe ser igual a uno de los valores permitidos.`
+    }).required(),
+    products: Joi.array().items(products).required(),
+    quotation: Joi.object({
+        subtotal: Joi.number().allow(null),
+        percentageAdditionalDiscount: Joi.number().allow(null),
+        additionalDiscount: Joi.number().allow(null),
+        percentageIva: Joi.number().allow(null),
+        iva: Joi.number().allow(null),
+        total: Joi.number().allow(null),
+        exchangeRate: Joi.string().valid(...Object.values(ExchangeRateE)).messages({
+            'any.only': `El tipo de cambio debe ser igual a uno de los valores permitidos.`
+        }).allow(null),
+        exchangeRateQuotation: Joi.string().valid(...Object.values(ExchangeRateQuotationE)).messages({
+            'any.only': `El tipo de cambio en la cotizacion debe ser igual a uno de los valores permitidos.`
+        }).required(),
+    }),
+})
