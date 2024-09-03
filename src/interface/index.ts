@@ -393,4 +393,7 @@ export interface UpdateQuotationProject {
     quotation: UpdateQuotationI
     productsStock: ProductsStock[],
     proofPaymentQuotation: ProofPaymentQuotationCreate[],
+
+    branchesId: number[];
+    showRoomDestination: ShowRoomDestinationE
 }
