@@ -1063,11 +1063,11 @@ export class QuotationService {
 
     }
 
-    async quotationShowRoomMaster(project: Project, data: UpdateQuotationProject) {
+    async quotationShowRoomMaster(id: number, project: Project, data: UpdateQuotationProject) {
         const branchId = this.user.branchId;
         if (!branchId)
             throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
-        const {id, quotation, branchesId, products, showRoomDestination} = data;
+        const {quotation, branchesId, products, showRoomDestination} = data;
         await this.validateBodyQuotationShowroomMaster(data);
         await this.validateBrancId(branchesId)
         try {
@@ -2079,7 +2079,7 @@ export class QuotationService {
 
                 return this.findQuotationById(id);
             } else {
-                return this.quotationShowRoomMaster(project, data);
+                return this.quotationShowRoomMaster(id, project, data);
             }
 
         } catch (error) {

@@ -8,9 +8,9 @@ export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
             schema: {
                 type: 'object',
                 properties: {
-                    id: {
-                        type: 'number',
-                    },
+                    // id: {
+                    //     type: 'number',
+                    // },
                     typeQuotation: {
                         type: 'string'
                     },
