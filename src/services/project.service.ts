@@ -799,6 +799,45 @@ export class ProjectService {
                                 }
                             },
                             {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'mainMaterialImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'mainFinishImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'secondaryMaterialImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'secondaryFinishingImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    'brand', 'document', 'line'
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
                                 relation: 'quotationProductsStocks',
                                 scope: {
                                     include: [
