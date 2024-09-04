@@ -8,7 +8,7 @@ import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation, UpdateQuotationI, UpdateQuotationProject} from '../interface';
-import {schemaUpdateQuotitionProject} from '../joi.validation.ts/quotation-project.validation';
+import {schemaCreateQuotitionShowRoomMaster, schemaUpdateQuotitionProject} from '../joi.validation.ts/quotation-project.validation';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
 import {ResponseServiceBindings} from '../keys';
 import {DayExchangeRate, Document, Project, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
@@ -1217,7 +1217,7 @@ export class QuotationService {
 
     async validateBodyQuotationShowroomMaster(data: UpdateQuotationProject) {
         try {
-            await schemaCreateQuotitionShowRoom.validateAsync(data);
+            await schemaCreateQuotitionShowRoomMaster.validateAsync(data);
         }
         catch (err) {
             const {details} = err;
