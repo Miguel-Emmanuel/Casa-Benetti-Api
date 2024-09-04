@@ -1,6 +1,6 @@
 import {getModelSchemaRef, RequestBodyObject} from '@loopback/rest';
 import {ExchangeRateE} from '../enums';
-import {ProofPaymentQuotationCreate, QuotationProductsCreate} from '../models';
+import {QuotationProductsCreate} from '../models';
 
 export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
     content: {
@@ -8,9 +8,6 @@ export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
             schema: {
                 type: 'object',
                 properties: {
-                    // id: {
-                    //     type: 'number',
-                    // },
                     typeQuotation: {
                         type: 'string'
                     },
@@ -23,156 +20,6 @@ export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
                         nullable: true,
                         items: {
                             type: 'number'
-                        }
-                    },
-                    customer: {
-                        type: 'object',
-                        properties: {
-                            customerId: {
-                                type: 'number',
-                            },
-                            name: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            email: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            lastName: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            secondLastName: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            address: {
-                                type: 'object',
-                                properties: {
-                                    state: {
-                                        type: 'string',
-                                        nullable: true
-                                    },
-                                    city: {
-                                        type: 'string',
-                                        nullable: true
-                                    },
-                                    street: {
-                                        type: 'string',
-                                        nullable: true
-                                    },
-                                    suburb: {
-                                        type: 'string',
-                                        nullable: true
-                                    },
-                                    zipCode: {
-                                        type: 'string',
-                                        nullable: true
-                                    },
-                                    extNum: {
-                                        type: 'string',
-                                        nullable: true
-                                    },
-                                    intNum: {
-                                        type: 'string',
-                                        nullable: true
-                                    },
-                                    country: {
-                                        type: 'string',
-                                        nullable: true
-                                    }
-                                }
-                            },
-                            addressDescription: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            phone: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            invoice: {
-                                type: 'boolean',
-                                nullable: true
-                            },
-                            rfc: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            businessName: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            regimen: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            groupId: {
-                                type: 'number',
-                                nullable: true
-                            },
-                            groupName: {
-                                type: 'string',
-                                nullable: true
-                            }
-                        }
-                    },
-                    projectManagers: {
-                        type: 'array',
-                        items: {
-                            type: 'object',
-                            properties: {
-                                userId: {
-                                    type: 'number'
-                                },
-                                projectManagerCommissions: {
-                                    type: 'array',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            classificationId: {
-                                                type: 'number'
-                                            },
-                                            commissionPercentage: {
-                                                type: 'number'
-                                            },
-                                            id: {
-                                                type: 'number'
-                                            },
-
-                                        }
-                                    }
-                                },
-                            }
-                        }
-                    },
-                    designers: {
-                        type: 'array',
-                        items: {
-                            type: 'object',
-                            properties: {
-                                userId: {
-                                    type: 'number'
-                                },
-                                commissionPercentageDesigner: {
-                                    type: 'array',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            classificationId: {
-                                                type: 'number'
-                                            },
-                                            commissionPercentage: {
-                                                type: 'number'
-                                            },
-                                            id: {
-                                                type: 'number'
-                                            },
-                                        }
-                                    }
-                                },
-                            }
                         }
                     },
                     products: {
@@ -232,58 +79,6 @@ export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
                     quotation: {
                         type: 'object',
                         properties: {
-                            mainProjectManagerId: {
-                                type: 'number',
-                            },
-                            mainProjectManagerCommissions: {
-                                type: 'array',
-                                items: {
-                                    type: 'object',
-                                    properties: {
-                                        classificationId: {
-                                            type: 'number'
-                                        },
-                                        commissionPercentage: {
-                                            type: 'number'
-                                        },
-                                        id: {
-                                            type: 'number'
-                                        },
-                                    }
-                                }
-                            },
-                            referenceCustomerId: {
-                                type: 'number',
-                                nullable: true
-                            },
-                            isArchitect: {
-                                type: 'boolean',
-                                nullable: true
-                            },
-                            architectName: {
-                                type: 'string',
-                                nullable: true
-                            },
-                            commissionPercentageArchitect: {
-                                type: 'number',
-                                nullable: true
-                            },
-                            isReferencedCustomer: {
-                                type: 'boolean',
-                                nullable: true
-                            },
-                            commissionPercentagereferencedCustomer: {
-                                type: 'number',
-                                nullable: true
-                            },
-                            isProjectManager: {
-                                type: 'boolean',
-                                nullable: true
-                            },
-                            isDesigner: {
-                                type: 'boolean',
-                                nullable: true
-                            },
                             subtotal: {
                                 type: 'number',
                                 nullable: true
@@ -333,12 +128,12 @@ export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
                                 type: 'number',
                                 nullable: true
                             },
+                            exchangeRateQuotation: {
+                                type: 'string',
+                                nullable: true
+                            },
                         }
                     },
-                    proofPaymentQuotation: {
-                        type: 'array',
-                        items: getModelSchemaRef(ProofPaymentQuotationCreate, {exclude: ['createdAt', 'quotationId']})
-                    }
                 }
             }
         },
