@@ -237,6 +237,17 @@ export class QuotationController {
         return this.quotationService.createDayExchangeRates(id, dayExchangeRate);
     }
 
+    @get('/quotations/day-exchange-rates/{id}')
+    @response(200, {
+        description: 'DayExchangeRate model instance',
+        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate, {})}},
+    })
+    async geteDayExchangeRates(
+        @param.path.number('id') id: number,
+    ): Promise<Object> {
+        return this.quotationService.geteDayExchangeRates(id);
+    }
+
     @post('/quotations/{id}/project')
     @response(200, {
         description: 'Quotation model instance',

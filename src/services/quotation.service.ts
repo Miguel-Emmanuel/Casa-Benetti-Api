@@ -1791,6 +1791,20 @@ export class QuotationService {
 
     }
 
+    async geteDayExchangeRates(id: number) {
+        const {euroToPeso, euroToDolar, dolarToPeso, dolarToEuro, mxnToEuro, mxnToDolar} = await this.quotationRepository.findById(id)
+        return {
+            id,
+            euroToPeso,
+            euroToDolar,
+            dolarToPeso,
+            dolarToEuro,
+            mxnToEuro,
+            mxnToDolar
+        }
+
+    }
+
     async changeStatusToClose(id: number, body: {isRejected: boolean, comment: string}) {
         const transaction = await this.quotationRepository.dataSource.beginTransaction(IsolationLevel.SERIALIZABLE);
         try {
