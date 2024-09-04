@@ -351,21 +351,6 @@ export interface UpdateContainerProducts {
 
 
 export interface UpdateQuotationI {
-    mainProjectManagerId: number;
-    mainProjectManagerCommissions?: MainProjectManagerCommissionsI[];
-
-    isArchitect: boolean;
-    architectName: string;
-    commissionPercentageArchitect: number;
-
-    isReferencedCustomer: boolean;
-    referenceCustomerId: number;
-    commissionPercentagereferencedCustomer: number;
-
-    isDesigner: boolean;
-
-    isProjectManager: boolean;
-
     subtotal: number;//showroom
     percentageAdditionalDiscount: number;//showroom
     additionalDiscount: number;//showroom
@@ -378,22 +363,15 @@ export interface UpdateQuotationI {
     advanceCustomer: number;
     conversionAdvance: number;
     balance: number;
-
     exchangeRateQuotation: ExchangeRateQuotationE; //showroom
 }
 
 
 export interface UpdateQuotationProject {
-    // id: number,
     typeQuotation: TypeQuotationE;
-    customer: Customer,
-    projectManagers: ProjectManagers[],
-    designers: Designers[],
-    products: QuotationProductsCreate[],
     quotation: UpdateQuotationI
+    products: QuotationProductsCreate[],
     productsStock: ProductsStock[],
-    proofPaymentQuotation: ProofPaymentQuotationCreate[],
-
     branchesId: number[];
     showRoomDestination: ShowRoomDestinationE
 }
