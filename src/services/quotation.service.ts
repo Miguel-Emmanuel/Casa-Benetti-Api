@@ -5,7 +5,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation, UpdateQuotationI, UpdateQuotationProject} from '../interface';
 import {schemaUpdateQuotitionProject} from '../joi.validation.ts/quotation-project.validation';
@@ -13,7 +13,7 @@ import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, sc
 import {ResponseServiceBindings} from '../keys';
 import {DayExchangeRate, Document, Project, ProofPaymentQuotationCreate, Quotation, QuotationProductsCreate} from '../models';
 import {DocumentSchema} from '../models/base/document.model';
-import {AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CommissionPaymentRecordRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProjectRepository, ProofPaymentQuotationRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProductsStockRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, ClassificationPercentageMainpmRepository, ClassificationRepository, CommissionPaymentRecordRepository, CustomerRepository, DayExchangeRateRepository, DocumentRepository, GroupRepository, ProductRepository, ProformaRepository, ProjectRepository, ProofPaymentQuotationRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProductsStockRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
@@ -78,6 +78,10 @@ export class QuotationService {
         public advancePaymentRecordRepository: AdvancePaymentRecordRepository,
         @service()
         public letterNumberService: LetterNumberService,
+        @repository(PurchaseOrdersRepository)
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ProformaRepository)
+        public proformaRepository: ProformaRepository
     ) { }
 
     async create(data: CreateQuotation) {
@@ -2449,11 +2453,21 @@ export class QuotationService {
         const {proofPaymentQuotations, exchangeRateQuotation, percentageIva, customerId, id, createdAt, isFractionate, typeFractional} = quotation;
         if (isFractionate) {
             if (typeFractional.EUR == true) {
-                const {totalEUR, ivaEUR} = quotation;
+                const {totalEUR, advanceEUR} = quotation;
                 // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: totalEUR ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalEUR ?? 0, typeCurrency: ExchangeRateQuotationE.EUR});
                 const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: ExchangeRateQuotationE.EUR}})
                 if (accountsReceivable) {
-                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalEUR ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalEUR ?? 0, isPaid: false})
+                    if (totalEUR > (accountsReceivable?.totalSale ?? 0)) {
+                        await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalEUR ?? 0, isPaid: false})
+                    } else {
+                        if (accountsReceivable.totalPaid >= totalEUR) {
+                            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalEUR ?? 0, isPaid: true})
+                            await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+                        } else {
+                            await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+
+                        }
+                    }
                 }
             }
 
@@ -2462,7 +2476,17 @@ export class QuotationService {
                 // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: totalMXN ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalMXN ?? 0, typeCurrency: ExchangeRateQuotationE.MXN});
                 const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: ExchangeRateQuotationE.MXN}})
                 if (accountsReceivable) {
-                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalMXN ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalMXN ?? 0, isPaid: false})
+                    if (totalMXN > (accountsReceivable?.totalSale ?? 0)) {
+                        await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalMXN ?? 0, isPaid: false})
+                    } else {
+                        if (accountsReceivable.totalPaid >= totalMXN) {
+                            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalMXN ?? 0, isPaid: true})
+                            await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+                        } else {
+                            await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+
+                        }
+                    }
                 }
             }
 
@@ -2471,7 +2495,17 @@ export class QuotationService {
                 // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: totalUSD ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalUSD ?? 0, typeCurrency: ExchangeRateQuotationE.USD});
                 const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: ExchangeRateQuotationE.USD}})
                 if (accountsReceivable) {
-                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalUSD ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalUSD ?? 0, isPaid: false})
+                    if (totalUSD > (accountsReceivable?.totalSale ?? 0)) {
+                        await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalUSD ?? 0, isPaid: false})
+                    } else {
+                        if (accountsReceivable.totalPaid >= totalUSD) {
+                            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalUSD ?? 0, isPaid: true})
+                            await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+                        } else {
+                            await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+
+                        }
+                    }
                 }
             }
         } else {
@@ -2479,10 +2513,96 @@ export class QuotationService {
             // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0, typeCurrency: exchangeRateQuotation});
             const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: exchangeRateQuotation}})
             if (accountsReceivable) {
-                await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0, isPaid: false})
+                if ((total ?? 0) > (accountsReceivable?.totalSale ?? 0)) {
+                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: total ?? 0, isPaid: false})
+                } else {
+                    if (accountsReceivable.totalPaid >= (total ?? 0)) {
+                        await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: total ?? 0, isPaid: true})
+                        await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+                    } else {
+                        await this.createPurchaseOrders(projectId, accountsReceivable.id, accountsReceivable.totalPaid, accountsReceivable.typeCurrency)
+
+                    }
+                }
             }
 
         }
+    }
+
+
+    async createPurchaseOrders(projectId: number, accountsReceivableId: number, totalPaid: number, typeCurrency: string) {
+        const findProjectQuotation = await this.findProjectQuotation(projectId)
+
+        const {id: quotationId} = findProjectQuotation.quotation
+        const {advance} = this.getPricesQuotation(findProjectQuotation.quotation);
+
+        if (advance && totalPaid >= advance) {
+            // await this.findProjectProforma(projectId, accountsReceivableId, quotationId, typeCurrency)
+            await this.createPurchaseOrderPaid(projectId, accountsReceivableId, quotationId, typeCurrency);
+        }
+    }
+
+    async findProjectQuotation(id: number) {
+
+        const findProjectQuotation = await this.projectRepository.findOne({where: {id}, include: [{relation: "quotation"}]})
+        if (!findProjectQuotation)
+            throw this.responseService.badRequest("El proyecto no existe.");
+        return findProjectQuotation
+    }
+
+    async createPurchaseOrderPaid(projectId: number, accountsReceivableId: number, quotationId: number, typeCurrency: string) {
+        /**
+         * Buscar dentro de cotizacion para sabes si es isFractionate
+         * Si no es fraccionada
+         * entonces buscares con un find las proformas donde el projectId
+         * despues de consultar cada proforma traero su cuenta por pagar y buscare si la cuenta por pagar ya tiene una orden de compra, si no le voy a crear una
+         *
+         * Si es fraccionada
+         * entonces tomare el typeCurrency de account-receible (cuenta por cobrar)
+         * buscares con un find las proformas donde el projectId y el currency sea igual a typeCurrency de account-receible
+         * me traera solo una proforma y su accoun payable (cuenta por pagar)
+         * despues de consultar cada proforma traero su cuenta por pagar y buscare si la cuenta por pagar ya tiene una orden de compra, si no le voy a crear una
+         */
+
+        const quotation = await this.quotationRepository.findById(quotationId);
+        if (quotation.isFractionate) {
+            // const cuentaPorCobrar = await this.accountsReceivableRepository.findOne({where: {quotationId: quotation.id, typeCurrency}});
+            const proforma = await this.proformaRepository.findOne({where: {projectId, currency: typeCurrency === ExchangeRateQuotationE.EUR ? ProformaCurrencyE.EURO : typeCurrency === ExchangeRateQuotationE.MXN ? ProformaCurrencyE.PESO_MEXICANO : ProformaCurrencyE.USD}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
+            if (proforma && proforma?.accountPayable && !proforma?.purchaseOrders) {
+                const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: proforma.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: proforma.id, accountsReceivableId, projectId}, /*{transaction}*/)
+                const findQuotationProducts = await this.quotationProductsRepository.find({
+                    where: {
+                        proformaId: proforma.id,
+                        providerId: proforma.providerId,
+                        brandId: proforma.brandId
+                    }
+                })
+                for (let index = 0; index < findQuotationProducts?.length; index++) {
+                    const element = findQuotationProducts[index];
+                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+                }
+            }
+        } else {
+            const proformas = await this.proformaRepository.find({where: {projectId}, include: [{relation: "accountPayable"}, {relation: "purchaseOrders"}]})
+            for (let index = 0; index < proformas.length; index++) {
+                const element = proformas[index];
+                if (element && element?.accountPayable && !element?.purchaseOrders) {
+                    const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: element.accountPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId: element.id, accountsReceivableId, projectId}, /*{transaction}*/)
+                    const findQuotationProducts = await this.quotationProductsRepository.find({
+                        where: {
+                            proformaId: element.id,
+                            providerId: element.providerId,
+                            brandId: element.brandId
+                        }
+                    })
+                    for (let index = 0; index < findQuotationProducts?.length; index++) {
+                        const element = findQuotationProducts[index];
+                        await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id});
+                    }
+                }
+            }
+        }
+
     }
 
     async updateQuotationProjectMaster(quotation: UpdateQuotationI, quotationId: number, showroomManagerId: number) {
