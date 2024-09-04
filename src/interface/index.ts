@@ -384,7 +384,7 @@ export interface UpdateQuotationI {
 
 
 export interface UpdateQuotationProject {
-    id: number,
+    // id: number,
     typeQuotation: TypeQuotationE;
     customer: Customer,
     projectManagers: ProjectManagers[],

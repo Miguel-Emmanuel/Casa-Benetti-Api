@@ -136,7 +136,7 @@ const productsStock = Joi.object({
 })
 
 export const schemaUpdateQuotitionProject = Joi.object({
-    id: Joi.number().allow(null),
+    // id: Joi.number().allow(null),
     typeQuotation: Joi.string().valid(...Object.values(TypeQuotationE)).messages({
         'any.only': `El tipo de cotizacion debe ser igual a uno de los valores permitidos.`
     }).required(),
