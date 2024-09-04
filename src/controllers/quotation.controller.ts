@@ -248,7 +248,7 @@ export class QuotationController {
         return this.quotationService.geteDayExchangeRates(id);
     }
 
-    @post('/quotations/{id}/project')
+    @patch('/quotations/{id}/project')
     @response(200, {
         description: 'Quotation model instance',
         content: {
