@@ -1144,7 +1144,7 @@ export class ProjectService {
 
 
         let productsTemplate = [];
-        for (const product of products) {
+        for (const product of products ?? []) {
             const {brand, document, quotationProducts, line, name} = product;
             const descriptionParts = [
                 line?.name,
@@ -1272,7 +1272,7 @@ export class ProjectService {
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
         let prodcutsArray = [];
-        for (const product of products) {
+        for (const product of products ?? []) {
             const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
             const descriptionParts = [
                 line?.name,

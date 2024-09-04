@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
+import {SecurityBindings, UserProfile} from '@loopback/security';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, TypeQuotationE, TypeUserE} from '../enums';
@@ -36,6 +37,8 @@ export class ProformaService {
         public userRepository: UserRepository,
         @repository(AccountsReceivableRepository)
         public accountsReceivableRepository: AccountsReceivableRepository,
+        @inject(SecurityBindings.USER)
+        private user: UserProfile,
     ) { }
 
     async create(data: {proforma: Omit<Proforma, 'id'>, document: Document}) {
@@ -489,7 +492,20 @@ export class ProformaService {
         const accountsPayable = await this.accountPayableRepository.create({currency: currencyAccountPayable, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
 
         //cambiar totalpagado
-        if (typeQuotation === TypeQuotationE.GENERAL) {
+        if (typeQuotation === TypeQuotationE.SHOWROOM || this.user.isMaster === true) {
+            const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
+            const findQuotationProducts = await this.quotationProductsRepository.find({
+                where: {
+                    proformaId: proformaId,
+                    providerId: proforma.providerId,
+                    brandId: proforma.brandId
+                }
+            }, {transaction})
+            for (let index = 0; index < findQuotationProducts?.length; index++) {
+                const element = findQuotationProducts[index];
+                await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
+            }
+        } else if (typeQuotation === TypeQuotationE.GENERAL) {
             if (advance && totalPaid >= advance) {
                 //guardar el id de accounttspayableid
                 const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
@@ -506,19 +522,6 @@ export class ProformaService {
 
                 }
 
-            }
-        } else if (typeQuotation === TypeQuotationE.SHOWROOM) {
-            const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
-            const findQuotationProducts = await this.quotationProductsRepository.find({
-                where: {
-                    proformaId: proformaId,
-                    providerId: proforma.providerId,
-                    brandId: proforma.brandId
-                }
-            }, {transaction})
-            for (let index = 0; index < findQuotationProducts?.length; index++) {
-                const element = findQuotationProducts[index];
-                await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
             }
         }
 
