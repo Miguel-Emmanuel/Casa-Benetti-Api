@@ -892,23 +892,25 @@ export class ProjectService {
                 };
             const project = await this.projectRepository.findById(id, filter);
             const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
-            const {closingDate, products, exchangeRateQuotation, typeQuotation, quotationProductsStocks} = quotation;
+            const {closingDate, products, exchangeRateQuotation, typeQuotation, quotationProductsStocks, showRoomDestination, branchesId} = quotation;
             const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
             const productsArray = [];
-            for (const iterator of products ?? []) {
+            for (const iterator of quotation?.quotationProducts ?? []) {
+                const {line, name, document, brand} = iterator.product;
+
                 const descriptionParts = [
-                    iterator?.line?.name,
-                    iterator?.name,
-                    iterator.quotationProducts?.mainMaterial,
-                    iterator.quotationProducts?.mainFinish,
-                    iterator.quotationProducts?.secondaryMaterial,
-                    iterator.quotationProducts?.secondaryFinishing
+                    line?.name,
+                    name,
+                    iterator?.mainMaterial,
+                    iterator?.mainFinish,
+                    iterator?.secondaryMaterial,
+                    iterator?.secondaryFinishing
                 ];
                 const measuresParts = [
-                    iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
-                    iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
-                    iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
-                    iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
+                    iterator?.measureWide ? `Ancho: ${iterator?.measureWide}` : "",
+                    iterator?.measureHigh ? `Alto: ${iterator?.measureHigh}` : "",
+                    iterator?.measureDepth ? `Prof: ${iterator?.measureDepth}` : "",
+                    iterator?.measureCircumference ? `Circ: ${iterator?.measureCircumference}` : ""
                 ];
 
                 const description = descriptionParts
@@ -919,42 +921,62 @@ export class ProjectService {
                     .join(' ');  // Únelas con un espacio
                 productsArray.push({
                     id: iterator?.id,
-                    image: iterator?.document ? iterator?.document?.fileURL : '',
+                    image: document ? document?.fileURL : '',
                     brandName: iterator?.brand?.brandName ?? '',
                     description,
                     measures,
-                    price: iterator?.quotationProducts?.price,
-                    listPrice: iterator?.quotationProducts?.originCost,
-                    factor: iterator?.quotationProducts?.factor,
-                    quantity: iterator?.quotationProducts?.quantity,
+                    price: iterator?.price,
+                    listPrice: iterator?.originCost,
+                    factor: iterator?.factor,
+                    quantity: iterator?.quantity,
                     // provider: iterator?.provider?.name,
-                    status: iterator?.quotationProducts?.status,
-                    mainFinish: iterator?.quotationProducts?.mainFinish,
-                    mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
-                    secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
-                    secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
-                    typeQuotation: iterator.quotationProducts?.typeQuotation
+                    status: iterator?.status,
+                    mainFinish: iterator?.mainFinish,
+                    mainFinishImage: iterator?.mainFinishImage?.fileURL,
+                    secondaryFinishing: iterator?.secondaryFinishing,
+                    secondaryFinishingImage: iterator?.secondaryFinishingImage?.fileURL,
+                    typeQuotation: iterator?.typeQuotation,
+                    productDetail: {
+                        ...iterator,
+                        SKU: iterator?.SKU,
+                        brandName: iterator?.brand?.brandName ?? '',
+                        status: iterator.status,
+                        description: `${line?.name} ${name} ${iterator.mainMaterial} ${iterator.mainFinish} ${iterator.secondaryMaterial} ${iterator.secondaryFinishing} ${iterator.measureWide}`,
+                        image: document ? document?.fileURL : '',
+                        quantity: iterator.quantity,
+                        percentageDiscountProduct: iterator.percentageDiscountProduct,
+                        discountProduct: iterator.discountProduct,
+                        percentageMaximumDiscount: iterator.percentageMaximumDiscount,
+                        maximumDiscount: iterator.maximumDiscount,
+                        subtotal: iterator.subtotal,
+                        mainMaterialImage: iterator?.mainMaterialImage ?? null,
+                        mainFinishImage: iterator?.mainFinishImage ?? null,
+                        secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
+                        secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
+                        line: line,
+                        brand: brand,
+                        document: document,
+                    }
                 })
             }
 
-            for (const iterator of quotationProductsStocks ?? []) {
-                const {quotationProducts} = iterator;
-                const {product} = quotationProducts;
-                const {line, document, brand} = product;
+            for (const element of quotationProductsStocks ?? []) {
+                const {quotationProducts: iterator} = element;
+                const {line, name, document, brand} = iterator.product;
 
                 const descriptionParts = [
                     line?.name,
-                    product?.name,
-                    iterator.quotationProducts?.mainMaterial,
-                    iterator.quotationProducts?.mainFinish,
-                    iterator.quotationProducts?.secondaryMaterial,
-                    iterator.quotationProducts?.secondaryFinishing
+                    name,
+                    iterator?.mainMaterial,
+                    iterator?.mainFinish,
+                    iterator?.secondaryMaterial,
+                    iterator?.secondaryFinishing
                 ];
                 const measuresParts = [
-                    iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
-                    iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
-                    iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
-                    iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
+                    iterator?.measureWide ? `Ancho: ${iterator?.measureWide}` : "",
+                    iterator?.measureHigh ? `Alto: ${iterator?.measureHigh}` : "",
+                    iterator?.measureDepth ? `Prof: ${iterator?.measureDepth}` : "",
+                    iterator?.measureCircumference ? `Circ: ${iterator?.measureCircumference}` : ""
                 ];
 
                 const description = descriptionParts
@@ -974,12 +996,45 @@ export class ProjectService {
                     factor: iterator?.factor,
                     quantity: iterator?.quantity,
                     // provider: iterator?.provider?.name,
-                    status: iterator?.quotationProducts?.status,
-                    mainFinish: iterator?.quotationProducts?.mainFinish,
-                    mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
-                    secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
-                    secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
-                    typeQuotation: iterator.quotationProducts?.typeQuotation
+                    status: iterator?.status,
+                    mainFinish: iterator?.mainFinish,
+                    mainFinishImage: iterator?.mainFinishImage?.fileURL,
+                    secondaryFinishing: iterator?.secondaryFinishing,
+                    secondaryFinishingImage: iterator?.secondaryFinishingImage?.fileURL,
+                    typeQuotation: iterator?.typeQuotation,
+                    productDetail: {
+                        ...iterator,
+                        SKU: iterator?.SKU,
+                        brandName: iterator?.brand?.brandName ?? '',
+                        status: iterator.status,
+                        description: `${line?.name} ${name} ${iterator.mainMaterial} ${iterator.mainFinish} ${iterator.secondaryMaterial} ${iterator.secondaryFinishing} ${iterator.measureWide}`,
+                        image: document ? document?.fileURL : '',
+                        // quantity: iterator.quantity,
+                        // percentageDiscountProduct: iterator.percentageDiscountProduct,
+                        // discountProduct: iterator.discountProduct,
+                        percentageMaximumDiscount: iterator.percentageMaximumDiscount,
+                        maximumDiscount: iterator.maximumDiscount,
+                        // subtotal: iterator.subtotal,
+                        mainMaterialImage: iterator?.mainMaterialImage ?? null,
+                        mainFinishImage: iterator?.mainFinishImage ?? null,
+                        secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
+                        secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
+                        line: line,
+                        brand: brand,
+                        document: document,
+                        discountProduct: element?.discountProduct,
+                        quantity: element?.quantity,
+                        originCost: element?.originCost,
+                        price: element?.price,
+                        factor: element?.factor,
+                        subtotal: element?.subtotal,
+                        percentageDiscountProduct: element?.percentageDiscountProduct,
+                        subtotalDiscount: element?.subtotalDiscount,
+                        typeSale: element?.typeSale,
+                        reservationDays: element?.reservationDays,
+                        loanInitialDate: element?.loanInitialDate,
+                        loanEndDate: element?.loanEndDate,
+                    }
                 })
             }
             return {
@@ -991,6 +1046,8 @@ export class ProjectService {
                 balance,
                 products: productsArray,
                 typeQuotation,
+                showRoomDestination,
+                branchesId,
                 advancePaymentRecords: advancePaymentRecords?.map(value => {
                     const {documents, ...body} = value;
                     return {
