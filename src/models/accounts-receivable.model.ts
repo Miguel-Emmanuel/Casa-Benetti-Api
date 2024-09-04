@@ -109,6 +109,13 @@ export class AccountsReceivable extends Entity {
     typeCurrency: string
     // typeCurrency: ExchangeRateQuotationE
 
+    //Esta pagado
+    @property({
+        type: 'boolean',
+        default: false
+    })
+    isPaid: boolean;
+
 
     constructor(data?: Partial<AccountsReceivable>) {
         super(data);

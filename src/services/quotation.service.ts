@@ -2453,7 +2453,7 @@ export class QuotationService {
                 // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: totalEUR ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalEUR ?? 0, typeCurrency: ExchangeRateQuotationE.EUR});
                 const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: ExchangeRateQuotationE.EUR}})
                 if (accountsReceivable) {
-                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalEUR ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalEUR ?? 0, })
+                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalEUR ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalEUR ?? 0, isPaid: false})
                 }
             }
 
@@ -2462,7 +2462,7 @@ export class QuotationService {
                 // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: totalMXN ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalMXN ?? 0, typeCurrency: ExchangeRateQuotationE.MXN});
                 const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: ExchangeRateQuotationE.MXN}})
                 if (accountsReceivable) {
-                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalMXN ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalMXN ?? 0})
+                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalMXN ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalMXN ?? 0, isPaid: false})
                 }
             }
 
@@ -2471,7 +2471,7 @@ export class QuotationService {
                 // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: totalUSD ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalUSD ?? 0, typeCurrency: ExchangeRateQuotationE.USD});
                 const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: ExchangeRateQuotationE.USD}})
                 if (accountsReceivable) {
-                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalUSD ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalUSD ?? 0, })
+                    await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: totalUSD ?? 0, totalPaid: 0, updatedTotal: 0, balance: totalUSD ?? 0, isPaid: false})
                 }
             }
         } else {
@@ -2479,7 +2479,7 @@ export class QuotationService {
             // const accountsReceivable = await this.accountsReceivableRepository.create({quotationId: id, projectId, customerId, totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0, typeCurrency: exchangeRateQuotation});
             const accountsReceivable = await this.accountsReceivableRepository.findOne({where: {quotationId: id, projectId, typeCurrency: exchangeRateQuotation}})
             if (accountsReceivable) {
-                await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0, })
+                await this.accountsReceivableRepository.updateById(accountsReceivable.id, {totalSale: total ?? 0, totalPaid: 0, updatedTotal: 0, balance: total ?? 0, isPaid: false})
             }
 
         }
