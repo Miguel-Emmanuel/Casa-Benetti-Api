@@ -373,5 +373,5 @@ export interface UpdateQuotationProject {
     products: QuotationProductsCreate[],
     productsStock: ProductsStock[],
     branchesId: number[];
-    showRoomDestination: ShowRoomDestinationE
+    // showRoomDestination: ShowRoomDestinationE
 }

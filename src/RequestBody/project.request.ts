@@ -11,10 +11,10 @@ export const UpdateQuotationProjectBody: Partial<RequestBodyObject> = {
                     typeQuotation: {
                         type: 'string'
                     },
-                    showRoomDestination: {
-                        type: 'string',
-                        nullable: true
-                    },
+                    // showRoomDestination: {
+                    //     type: 'string',
+                    //     nullable: true
+                    // },
                     branchesId: {
                         type: 'array',
                         nullable: true,

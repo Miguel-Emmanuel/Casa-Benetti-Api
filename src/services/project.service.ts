@@ -1112,7 +1112,21 @@ export class ProjectService {
                     },
                     advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
                     documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
-                }
+                },
+                quotation: {
+                    subtotal: subtotal,
+                    additionalDiscount: additionalDiscount,
+                    percentageIva: percentageIva,
+                    iva: iva,
+                    total: total,
+                    advance: advance,
+                    exchangeRate: exchangeRate,
+                    balance: balance,
+                    percentageAdditionalDiscount: percentageAdditionalDiscount,
+                    advanceCustomer: advanceCustomer,
+                    conversionAdvance: conversionAdvance,
+                    branchesId
+                },
             }
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);

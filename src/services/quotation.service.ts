@@ -1166,13 +1166,13 @@ export class QuotationService {
         const branchId = this.user.branchId;
         if (!branchId)
             throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
-        const {quotation, products, branchesId, showRoomDestination} = data;
+        const {quotation, products, branchesId} = data;
         await this.validateBodyQuotationShowroomMaster(data);
         try {
             const findQuotation = await this.findQuotationByIdMaster(id);
             await this.deleteProdcuts(findQuotation, products);
             await this.updateProducts(products, findQuotation.id, branchesId)
-            await this.updateQuotationShowroomMaster(quotation, findQuotation.id, showRoomDestination, branchesId);
+            await this.updateQuotationShowroomMaster(quotation, findQuotation.id, branchesId);
 
             await this.updatePdfToCustomer(project.quotationId, project.id);
             await this.updatePdfToProvider(project.quotationId, project.id);
@@ -1331,11 +1331,10 @@ export class QuotationService {
         await this.quotationRepository.updateById(quotationId, bodyQuotation)
     }
 
-    async updateQuotationShowroomMaster(quotation: UpdateQuotationI, quotationId: number, showRoomDestination: ShowRoomDestinationE, branchesId: number[]) {
+    async updateQuotationShowroomMaster(quotation: UpdateQuotationI, quotationId: number, branchesId: number[]) {
         const data = this.convertExchangeRateQuotationMaster(quotation);
         const bodyQuotation = {
             ...data,
-            showRoomDestination,
             branchesId,
         }
         await this.quotationRepository.updateById(quotationId, bodyQuotation)
