@@ -268,10 +268,11 @@ export const schemaChangeStatusClose = Joi.object({
 
 
 export const schemaCreateQuotitionShowRoomMaster = Joi.object({
-    id: Joi.number().allow(null),
+    // id: Joi.number().allow(null),
     typeQuotation: Joi.string().valid(...Object.values(TypeQuotationE)).messages({
         'any.only': `El tipo de cotizacion debe ser igual a uno de los valores permitidos.`
     }).required(),
+    branchesId: Joi.array().items(Joi.number()).optional(),
     products: Joi.array().items(products).required(),
     quotation: Joi.object({
         subtotal: Joi.number().allow(null),
