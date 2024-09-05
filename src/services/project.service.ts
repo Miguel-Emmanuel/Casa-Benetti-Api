@@ -784,7 +784,7 @@ export class ProjectService {
                 {
                     relation: 'quotation',
                     scope: {
-                        fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR', 'typeQuotation'],
+                        // fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR', 'typeQuotation'],
                         include: [
                             {
                                 relation: 'mainProjectManager',
@@ -1114,6 +1114,8 @@ export class ProjectService {
                     documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
                 },
                 quotation: {
+                    clientQuote: quotation?.clientQuote ?? null,
+                    mainProjectManagerCommissions: quotation?.classificationPercentageMainpms,
                     subtotal: subtotal,
                     additionalDiscount: additionalDiscount,
                     percentageIva: percentageIva,
@@ -1122,10 +1124,22 @@ export class ProjectService {
                     advance: advance,
                     exchangeRate: exchangeRate,
                     balance: balance,
+                    isArchitect: quotation.isArchitect,
+                    architectName: quotation.architectName,
+                    commissionPercentageArchitect: quotation.commissionPercentageArchitect,
+                    isReferencedCustomer: quotation.isReferencedCustomer,
+                    referenceCustomerId: quotation.referenceCustomerId,
+                    commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
                     percentageAdditionalDiscount: percentageAdditionalDiscount,
                     advanceCustomer: advanceCustomer,
                     conversionAdvance: conversionAdvance,
-                    branchesId
+                    status: quotation.status,
+                    mainProjectManagerId: quotation?.mainProjectManagerId,
+                    rejectedComment: quotation?.comment,
+                    typeQuotation: quotation?.typeQuotation,
+                    branchId: quotation?.branchId,
+                    showRoomDestination: quotation?.showRoomDestination,
+                    branchesId: quotation?.branchesId
                 },
             }
         } catch (error) {
