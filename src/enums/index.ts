@@ -281,6 +281,7 @@ export enum InventoriesIssueE {
     ENTREGA_CLIENTE = 'Entrega a cliente',
     CONTENEDOR = 'Contenedor',
     OTRO = 'Otro',
+    REPARACION = 'Reparación',
 }
 
 

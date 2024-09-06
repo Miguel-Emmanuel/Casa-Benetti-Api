@@ -2151,7 +2151,7 @@ export class QuotationService {
 
                 const findQuotation = await this.findQuotationById(project.quotationId);
 
-                await this.updateQuotationProjectMaster(quotation, id);
+                await this.updateQuotationProjectMaster(quotation, project.quotationId);
                 await this.deleteManyQuotationMaster(findQuotation, products, productsStock);
                 await this.updateManyQuotitionMaster(products, findQuotation.id, productsStock);
 
@@ -2162,9 +2162,9 @@ export class QuotationService {
                 await this.updatePdfToProvider(project.quotationId, project.id);
                 await this.updatePdfToAdvance(project.quotationId, project.id);
 
-                return this.findQuotationById(id);
+                return this.findQuotationById(project.quotationId);
             } else {
-                return this.quotationShowRoomMaster(id, project, data);
+                return this.quotationShowRoomMaster(project.quotationId, project, data);
             }
 
         } catch (error) {
