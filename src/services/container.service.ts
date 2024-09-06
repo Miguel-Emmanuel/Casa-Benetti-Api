@@ -935,7 +935,7 @@ export class ContainerService {
                     createdAt,
                     ETADate,
                     ETDDate,
-                    arrivalDateWarehouse
+                    arrivalDateWarehouse: arrivalDateWarehouse ?? null
                 }
             })
 
