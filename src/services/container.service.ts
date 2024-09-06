@@ -907,7 +907,7 @@ export class ContainerService {
                 };
             const containers = await this.containerRepository.find(filter);
             return containers.map(value => {
-                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders, createdAt, collection} = value;
+                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders, createdAt, collection, ETADate, ETDDate, } = value;
                 let quantity = 0;
                 if (collection) {
                     const {purchaseOrders} = collection;
@@ -929,7 +929,9 @@ export class ContainerService {
                     shippingDate,
                     arrivalDate,
                     status,
-                    createdAt
+                    createdAt,
+                    ETADate,
+                    ETDDate
                 }
             })
 
