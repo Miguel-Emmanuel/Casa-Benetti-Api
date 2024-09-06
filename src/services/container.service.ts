@@ -784,9 +784,12 @@ export class ContainerService {
         let arrivalDate;
         if (ETADate) {
             arrivalDate = dayjs(ETADate).add(10, 'days').toDate()
+            await this.containerRepository.updateById(containerId, {arrivalDateWarehouse: arrivalDate})
+
         }
         else if (ETDDate) {
             arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
+            await this.containerRepository.updateById(containerId, {arrivalDateWarehouse: arrivalDate})
         }
 
         const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
@@ -907,7 +910,7 @@ export class ContainerService {
                 };
             const containers = await this.containerRepository.find(filter);
             return containers.map(value => {
-                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders, createdAt, collection, ETADate, ETDDate, } = value;
+                const {id, containerNumber, arrivalDate, status, shippingDate, purchaseOrders, createdAt, collection, ETADate, ETDDate, arrivalDateWarehouse} = value;
                 let quantity = 0;
                 if (collection) {
                     const {purchaseOrders} = collection;
@@ -931,7 +934,8 @@ export class ContainerService {
                     status,
                     createdAt,
                     ETADate,
-                    ETDDate
+                    ETDDate,
+                    arrivalDateWarehouse: arrivalDateWarehouse ?? null
                 }
             })
 

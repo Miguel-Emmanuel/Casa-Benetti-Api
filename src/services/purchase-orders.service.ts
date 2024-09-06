@@ -474,9 +474,11 @@ export class PurchaseOrdersService {
             let arrivalDate;
             if (ETADate) {
                 arrivalDate = dayjs(ETADate).add(10, 'days').toDate()
+                await this.containerRepository.updateById(collectionFind.containerId, {arrivalDateWarehouse: arrivalDate})
             }
             else if (ETDDate) {
                 arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
+                await this.containerRepository.updateById(collectionFind.containerId, {arrivalDateWarehouse: arrivalDate})
             }
             const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
             for (let index = 0; index < purchaseOrdersFor.length; index++) {
