@@ -99,6 +99,12 @@ export class Container extends BaseEntity {
     })
     arrivalDate?: Date;
 
+    //Fecha estimada de llegada a bodega mexico
+    @property({
+        type: 'date',
+    })
+    arrivalDateWarehouse: Date;
+
     constructor(data?: Partial<Container>) {
         super(data);
     }
