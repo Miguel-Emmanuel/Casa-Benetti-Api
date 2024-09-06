@@ -457,6 +457,16 @@ export class PurchaseOrdersService {
             const include: InclusionFilter[] = [
                 {
                     relation: 'purchaseOrders',
+                },
+                {
+                    relation: 'collection',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'purchaseOrders'
+                            }
+                        ]
+                    }
                 }
             ]
             const container = await this.containerRepository.findById(collectionFind.containerId, {include});
@@ -468,26 +478,23 @@ export class PurchaseOrdersService {
             else if (ETDDate) {
                 arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
             }
-            const {collection} = container;
-            const {purchaseOrders} = collection;
-            if (purchaseOrders) {
-                for (let index = 0; index < purchaseOrders.length; index++) {
-                    const element = purchaseOrders[index];
-                    if (arrivalDate) {
-                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                        return;
-                    }
-                    const {productionEndDate, productionRealEndDate} = element;
-                    if (productionRealEndDate) {
-                        const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
-                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                        return;
-                    }
-                    if (productionEndDate) {
-                        const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
-                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                        return;
-                    }
+            const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
+            for (let index = 0; index < purchaseOrdersFor.length; index++) {
+                const element = purchaseOrdersFor[index];
+                if (arrivalDate) {
+                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                    return;
+                }
+                const {productionEndDate, productionRealEndDate} = element;
+                if (productionRealEndDate) {
+                    const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
+                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                    return;
+                }
+                if (productionEndDate) {
+                    const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
+                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                    return;
                 }
             }
         }
