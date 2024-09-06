@@ -31,7 +31,7 @@ export class ResertvationDayCronJob extends CronJob {
 
 	async notifyCustomer() {
 		console.log('ResertvationDayCronJob');
-		const lastDay = dayjs();
+		const lastDay = dayjs().add(1, 'days');
 		const startDay = lastDay.startOf('day').toDate();
 		const endDay = lastDay.endOf('day').toDate();
 		const quotationProducts = await this.quotationProductsStockRepository.find({
@@ -68,7 +68,7 @@ export class ResertvationDayCronJob extends CronJob {
 							{
 								relation: 'customer',
 								scope: {
-									fields: ['id', 'name', 'lastName', 'secondLastName'],
+									fields: ['id', 'name', 'lastName', 'secondLastName', 'email'],
 								},
 							},
 						],
@@ -85,9 +85,8 @@ export class ResertvationDayCronJob extends CronJob {
 					},
 				},
 			],
-			fields: ['id', 'quotationId', 'reservationDays', 'dateReservationDays'],
 		});
-		for (const quotationProduct of quotationProducts) {
+		for (const quotationProduct of quotationProducts ?? []) {
 			const {quotation, dateReservationDays, quotationProducts} = quotationProduct;
 			const {product} = quotationProducts
 			const {customer} = quotation;
