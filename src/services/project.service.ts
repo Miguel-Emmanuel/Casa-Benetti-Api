@@ -1114,6 +1114,7 @@ export class ProjectService {
                     documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
                 },
                 quotation: {
+                    quotationId: quotation?.id,
                     clientQuote: quotation?.clientQuote ?? null,
                     mainProjectManagerCommissions: quotation?.classificationPercentageMainpms,
                     subtotal: subtotal,
