@@ -485,18 +485,18 @@ export class PurchaseOrdersService {
                 const element = purchaseOrdersFor[index];
                 if (arrivalDate) {
                     await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    return;
+                    continue;
                 }
                 const {productionEndDate, productionRealEndDate} = element;
                 if (productionRealEndDate) {
                     const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
                     await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    return;
+                    continue;
                 }
                 if (productionEndDate) {
                     const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
                     await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    return;
+                    continue;
                 }
             }
         }
