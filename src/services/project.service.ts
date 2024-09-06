@@ -84,95 +84,99 @@ export class ProjectService {
         return this.projectRepository.count(where);
     }
     async getProducts(projectId: number) {
-        const project = await this.projectRepository.findById(projectId, {
-            include: [
-                {
-                    relation: 'quotation',
-                    scope: {
-                        fields: ['id', 'quotationProducts'],
-                        include: [
-                            {
-                                relation: 'quotationProducts',
-                                scope: {
-                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId', 'proformaPrice'],
-                                    include: [
-                                        {
-                                            relation: 'provider'
-                                        },
-                                        {
-                                            relation: 'product',
-                                            scope: {
-                                                fields: ['id', 'name', 'lineId', 'document'],
-                                                include: [
-                                                    {
-                                                        relation: 'line',
-                                                        scope: {
-                                                            fields: ['id', 'name']
+        try {
+            const project = await this.projectRepository.findById(projectId, {
+                include: [
+                    {
+                        relation: 'quotation',
+                        scope: {
+                            fields: ['id', 'quotationProducts'],
+                            include: [
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId', 'proformaPrice'],
+                                        include: [
+                                            {
+                                                relation: 'provider'
+                                            },
+                                            {
+                                                relation: 'product',
+                                                scope: {
+                                                    fields: ['id', 'name', 'lineId', 'document'],
+                                                    include: [
+                                                        {
+                                                            relation: 'line',
+                                                            scope: {
+                                                                fields: ['id', 'name']
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'document',
                                                         }
-                                                    },
-                                                    {
-                                                        relation: 'document',
-                                                    }
-                                                ]
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                relation: 'brand',
+                                                scope: {
+                                                    fields: ['id', 'brandName']
+                                                }
                                             }
-                                        },
-                                        {
-                                            relation: 'brand',
-                                            scope: {
-                                                fields: ['id', 'brandName']
-                                            }
-                                        }
-                                    ]
+                                        ]
+                                    }
                                 }
-                            }
-                        ]
+                            ]
+                        }
                     }
+                ]
+            });
+            const {quotation} = project;
+            const {quotationProducts} = quotation;
+            return quotationProducts.map(value => {
+
+                const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
+                const {name, line, document} = product;
+                const descriptionParts = [
+                    line?.name,
+                    name,
+                    mainMaterial,
+                    mainFinish,
+                    secondaryMaterial,
+                    secondaryFinishing
+                ];
+                const measuresParts = [
+                    measureWide ? `Ancho: ${measureWide}` : "",
+                    measureHigh ? `Alto: ${measureHigh}` : "",
+                    measureDepth ? `Prof: ${measureDepth}` : "",
+                    measureCircumference ? `Circ: ${measureCircumference}` : ""
+                ];
+                const measures = measuresParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+
+                const description = descriptionParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+
+                return {
+                    id,
+                    SKU,
+                    provider: provider?.name ?? '',
+                    providerId,
+                    name,
+                    brand: brand?.brandName ?? '',
+                    brandId,
+                    price,
+                    description,
+                    measures,
+                    proformaPrice: proformaPrice ?? null,
+                    image: document?.fileURL
                 }
-            ]
-        });
-        const {quotation} = project;
-        const {quotationProducts} = quotation;
-        return quotationProducts.map(value => {
-
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
-            const {name, line, document} = product;
-            const descriptionParts = [
-                line?.name,
-                name,
-                mainMaterial,
-                mainFinish,
-                secondaryMaterial,
-                secondaryFinishing
-            ];
-            const measuresParts = [
-                measureWide ? `Ancho: ${measureWide}` : "",
-                measureHigh ? `Alto: ${measureHigh}` : "",
-                measureDepth ? `Prof: ${measureDepth}` : "",
-                measureCircumference ? `Circ: ${measureCircumference}` : ""
-            ];
-            const measures = measuresParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-
-            const description = descriptionParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-
-            return {
-                id,
-                SKU,
-                provider: provider?.name ?? '',
-                providerId,
-                name,
-                brand: brand?.brandName ?? '',
-                brandId,
-                price,
-                description,
-                measures,
-                proformaPrice: proformaPrice ?? null,
-                image: document?.fileURL
-            }
-        })
+            })
+        } catch (error) {
+            return this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
     async getProductsInventories(projectId: string) {
