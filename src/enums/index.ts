@@ -138,6 +138,7 @@ export enum ProjectStatusE {
     NUEVO = 'Nuevo',
     ENTREGA_PARCIAL = 'Entrega parcial',
     ENTREGA_TOTAL = 'Entrega total',
+    CERRADO = 'Cerrado',
 }
 
 export enum AdvancePaymentStatusE {

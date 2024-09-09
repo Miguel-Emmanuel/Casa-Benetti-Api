@@ -1207,6 +1207,19 @@ export class ProjectService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
+    async closure(id: number) {
+        const project = await this.findByIdProjectClosure(id);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async findByIdProjectClosure(id?: number) {
+        const project = await this.projectRepository.findOne({where: {id}});
+        if (!project)
+            throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        return project;
+    }
+
     async findByIdProject(id?: number) {
         const project = await this.projectRepository.findOne({where: {id}});
         if (!project)
