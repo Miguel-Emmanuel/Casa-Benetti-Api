@@ -3,7 +3,7 @@ import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopb
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, TypeQuotationE, TypeUserE} from '../enums';
+import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, ProjectStatusE, PurchaseOrdersStatus, TypeQuotationE, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Document, Proforma, ProformaWithRelations, Quotation} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
@@ -51,6 +51,11 @@ export class ProformaService {
                     relation: "quotation",
                 }]
             }, {transaction})
+
+            if (findProject.status === ProjectStatusE.CERRADO) {
+                await transaction.commit();
+                return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
+            }
 
             const findQuotationProducts = await this.quotationProductsRepository.find({
                 where: {

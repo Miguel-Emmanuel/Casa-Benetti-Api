@@ -135,9 +135,7 @@ export enum StatusQuotationE {
 }
 
 export enum ProjectStatusE {
-    NUEVO = 'Nuevo',
-    ENTREGA_PARCIAL = 'Entrega parcial',
-    ENTREGA_TOTAL = 'Entrega total',
+    EN_PROCESO = 'En proceso', //En proceso
     CERRADO = 'Cerrado',
 }
 
