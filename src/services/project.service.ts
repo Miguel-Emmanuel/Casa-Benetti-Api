@@ -5,11 +5,11 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, DeliveryRequestStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ProjectStatusE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
-import {ProformaWithRelations, Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {ProformaWithRelations, Project, ProjectWithRelations, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
@@ -621,6 +621,11 @@ export class ProjectService {
         await this.validateBodyDeliveryRequest(data);
         const {projectId, purchaseOrders, deliveryDay, comment} = data;
         const projectRes = await this.findByIdProject(projectId);
+
+        if (projectRes.status === ProjectStatusE.CERRADO) {
+            return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
+        }
+
         await this.validatePurchaseOrderas(purchaseOrders);
         const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment, customerId: projectRes.customerId})
         for (let index = 0; index < purchaseOrders.length; index++) {
@@ -638,7 +643,7 @@ export class ProjectService {
             else
                 await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: deliveryRequestCreate.id})
         }
-        await this.notifyLogistics(projectId, deliveryDay);
+        this.notifyLogistics(projectId, deliveryDay);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
@@ -934,7 +939,7 @@ export class ProjectService {
                     ]
                 };
             const project = await this.projectRepository.findById(id, filter);
-            const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
+            const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference, status} = project;
             const {closingDate, products, exchangeRateQuotation, typeQuotation, quotationProductsStocks, showRoomDestination, branchesId} = quotation;
             const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
             const productsArray = [];
@@ -1082,6 +1087,7 @@ export class ProjectService {
             }
             return {
                 id,
+                status,
                 customerName: customer ? `${customer?.name} ${customer?.lastName}` : null,
                 closingDate,
                 total,
@@ -1194,7 +1200,9 @@ export class ProjectService {
     }
 
     async uploadDocuments(id: number, data: {document: {fileURL: string, name: string, extension: string, id?: number}[]},) {
-        await this.findByIdProject(id);
+        const project = await this.findByIdProject(id);
+        if (project.status === ProjectStatusE.CERRADO)
+            return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
         const {document} = data
         for (let index = 0; index < document?.length; index++) {
             const element = document[index];
@@ -1205,6 +1213,120 @@ export class ProjectService {
             }
         }
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async closure(id: number) {
+        const project = await this.findByIdProjectClosure(id);
+        if (project.status === ProjectStatusE.CERRADO)
+            return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
+
+        await this.validateAccountsReceivable(project);
+        await this.validateAccountPayable(project);
+        await this.validateDeliveryRequest(project);
+        await this.validatePurchaseOrders(project);
+        await this.validatePurchaseOrdersProducts(project);
+        await this.projectRepository.updateById(id, {status: ProjectStatusE.CERRADO})
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async validateAccountsReceivable(project: ProjectWithRelations) {
+        const accountsReceivableLength = project?.accountsReceivables.length;
+        const accountsReceivableIsPaid = project?.accountsReceivables.filter(value => value.isPaid == true).length;
+        if (accountsReceivableLength !== accountsReceivableIsPaid) {
+            throw this.responseService.badRequest('Es necesario que la cuenta por cobrar relacionada sea saldada para poder realizar el cierre.')
+        }
+    }
+
+    async validateDeliveryRequest(project: ProjectWithRelations) {
+        const deliveryRequestsLength = project?.deliveryRequests.length;
+        const deliveryRequestsCompleta = project?.deliveryRequests.filter(value => value.status == DeliveryRequestStatusE.ENTREGA_COMPLETA).length;
+        if (deliveryRequestsLength !== deliveryRequestsCompleta) {
+            throw this.responseService.badRequest('Es necesario que las entregas programadas sean completadas para poder realizar el cierre.')
+        }
+    }
+
+    async validateAccountPayable(project: ProjectWithRelations) {
+        const proformas = project?.proformas;
+        let isPaid = true;
+        for (let index = 0; index < proformas?.length; index++) {
+            const {accountPayable} = proformas[index];
+            if (accountPayable?.isPaid === false) {
+                isPaid = false;
+            }
+        }
+        if (isPaid === false) {
+            throw this.responseService.badRequest('Es necesario que las cuentas por pagar relacionadas sean saldadas para poder realizar el cierre.')
+        }
+    }
+
+    async validatePurchaseOrders(project: ProjectWithRelations) {
+        const proformas = project?.proformas;
+        let entrega = true;
+        for (let index = 0; index < proformas?.length; index++) {
+            const {purchaseOrders} = proformas[index];
+            if (purchaseOrders?.status !== PurchaseOrdersStatus.ENTREGA) {
+                entrega = false;
+            }
+        }
+        if (entrega === false) {
+            throw this.responseService.badRequest('Es necesario que las ordenes de compra esten en estatus Entregada para poder realizar el cierre.')
+        }
+    }
+
+    async validatePurchaseOrdersProducts(project: ProjectWithRelations) {
+        const proformas = project?.proformas;
+        let entrega = true;
+        for (let index = 0; index < proformas?.length; index++) {
+            const {purchaseOrders} = proformas[index];
+            for (let index = 0; index < purchaseOrders?.quotationProducts?.length; index++) {
+                const element = purchaseOrders?.quotationProducts[index];
+                if (element?.status !== QuotationProductStatusE.ENTREGADO) {
+                    entrega = false;
+                }
+
+            }
+        }
+        if (entrega === false) {
+            throw this.responseService.badRequest('Es necesario que los productos esten en estatus Entregado para poder realizar el cierre.')
+        }
+    }
+
+    async findByIdProjectClosure(id?: number) {
+        const project = await this.projectRepository.findOne({
+            where: {id}, include:
+                [
+                    {
+                        relation: 'accountsReceivables'
+                    },
+                    {
+                        relation: 'proformas',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'accountPayable'
+                                },
+                                {
+                                    relation: 'purchaseOrders',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'quotationProducts'
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        relation: 'deliveryRequests'
+                    },
+                ]
+        });
+        if (!project)
+            throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        return project;
     }
 
     async findByIdProject(id?: number) {

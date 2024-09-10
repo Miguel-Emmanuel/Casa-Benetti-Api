@@ -5,7 +5,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ProformaCurrencyE, PurchaseOrdersStatus, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ProformaCurrencyE, ProjectStatusE, PurchaseOrdersStatus, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation, UpdateQuotationI, UpdateQuotationProject} from '../interface';
 import {schemaCreateQuotitionShowRoomMaster, schemaUpdateQuotitionProject} from '../joi.validation.ts/quotation-project.validation';
@@ -2142,6 +2142,9 @@ export class QuotationService {
             const project = await this.projectRepository.findOne({where: {id}})
             if (!project)
                 return this.responseService.notFound('El proyecto no se ha encontrado.')
+
+            if (project.status === ProjectStatusE.CERRADO)
+                return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
 
             const {quotation, products, productsStock, typeQuotation} = data;
 

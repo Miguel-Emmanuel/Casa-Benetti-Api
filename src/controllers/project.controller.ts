@@ -536,4 +536,25 @@ export class ProjectController {
     // async deleteById(@param.path.number('id') id: number): Promise<void> {
     //     await this.projectRepository.deleteById(id);
     // }
+
+
+    @patch('/projects/closure/{id}')
+    @response(201, {
+        description: 'project closure',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        message: {type: 'string', example: 'En hora buena! La acción se ha realizado con éxito'}
+                    }
+                }
+            },
+        },
+    })
+    async closure(
+        @param.path.number('id') id: number,
+    ): Promise<void> {
+        await this.projectService.closure(id);
+    }
 }
