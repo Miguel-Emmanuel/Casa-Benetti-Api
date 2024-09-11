@@ -1230,16 +1230,16 @@ export class ProjectService {
     }
 
     async validateAccountsReceivable(project: ProjectWithRelations) {
-        const accountsReceivableLength = project?.accountsReceivables.length;
-        const accountsReceivableIsPaid = project?.accountsReceivables.filter(value => value.isPaid == true).length;
+        const accountsReceivableLength = project?.accountsReceivables?.length ?? 0;
+        const accountsReceivableIsPaid = project?.accountsReceivables?.filter(value => value.isPaid == true).length ?? 0;
         if (accountsReceivableLength !== accountsReceivableIsPaid) {
             throw this.responseService.badRequest('Es necesario que la cuenta por cobrar relacionada sea saldada para poder realizar el cierre.')
         }
     }
 
     async validateDeliveryRequest(project: ProjectWithRelations) {
-        const deliveryRequestsLength = project?.deliveryRequests.length;
-        const deliveryRequestsCompleta = project?.deliveryRequests.filter(value => value.status == DeliveryRequestStatusE.ENTREGA_COMPLETA).length;
+        const deliveryRequestsLength = project?.deliveryRequests?.length ?? 0;
+        const deliveryRequestsCompleta = project?.deliveryRequests?.filter(value => value.status == DeliveryRequestStatusE.ENTREGA_COMPLETA).length ?? 0;
         if (deliveryRequestsLength !== deliveryRequestsCompleta) {
             throw this.responseService.badRequest('Es necesario que las entregas programadas sean completadas para poder realizar el cierre.')
         }
