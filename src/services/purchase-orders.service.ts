@@ -447,11 +447,11 @@ export class PurchaseOrdersService {
     async saveProductionRealEndDate(id: number, data: {productionRealEndDate: string},) {
         const {collectionId} = await this.findPurchaseOrderById(id);
         await this.purchaseOrdersRepository.updateById(id, {productionRealEndDate: data.productionRealEndDate})
-        await this.calculateArrivalDatePurchaseOrder(collectionId);
+        await this.calculateArrivalDatePurchaseOrder(id, collectionId);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
-    async calculateArrivalDatePurchaseOrder(collectionId?: number) {
+    async calculateArrivalDatePurchaseOrder(id: number, collectionId?: number) {
         if (collectionId) {
             const collectionFind = await this.collectionRepository.findById(collectionId);
             const include: InclusionFilter[] = [
@@ -498,6 +498,16 @@ export class PurchaseOrdersService {
                     await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
                     continue;
                 }
+            }
+        } else {
+            const {productionEndDate, productionRealEndDate} = await this.findPurchaseOrderById(id);
+            if (productionRealEndDate) {
+                const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
+                await this.purchaseOrdersRepository.updateById(id, {arrivalDate})
+            }
+            if (productionEndDate) {
+                const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
+                await this.purchaseOrdersRepository.updateById(id, {arrivalDate})
             }
         }
     }
