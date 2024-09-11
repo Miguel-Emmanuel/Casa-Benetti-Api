@@ -447,11 +447,12 @@ export class PurchaseOrdersService {
     async saveProductionRealEndDate(id: number, data: {productionRealEndDate: string},) {
         const {collectionId} = await this.findPurchaseOrderById(id);
         await this.purchaseOrdersRepository.updateById(id, {productionRealEndDate: data.productionRealEndDate})
-        await this.calculateArrivalDatePurchaseOrder(collectionId);
+        await this.calculateArrivalDatePurchaseOrder(id, collectionId);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
     }
 
-    async calculateArrivalDatePurchaseOrder(collectionId?: number) {
+    async calculateArrivalDatePurchaseOrder(id: number, collectionId?: number) {
+        console.log(collectionId)
         if (collectionId) {
             const collectionFind = await this.collectionRepository.findById(collectionId);
             const include: InclusionFilter[] = [
@@ -469,35 +470,70 @@ export class PurchaseOrdersService {
                     }
                 }
             ]
-            const container = await this.containerRepository.findById(collectionFind.containerId, {include});
-            const {ETDDate, ETADate} = container;
-            let arrivalDate;
-            if (ETADate) {
-                arrivalDate = dayjs(ETADate).add(10, 'days').toDate()
-                await this.containerRepository.updateById(collectionFind.containerId, {arrivalDateWarehouse: arrivalDate})
+            const container = await this.containerRepository.findOne({where: {id: collectionFind.containerId}, include});
+            if (container) {
+                const {ETDDate, ETADate} = container;
+                let arrivalDate;
+                if (ETADate) {
+                    arrivalDate = dayjs(ETADate).add(10, 'days').toDate()
+                    await this.containerRepository.updateById(collectionFind.containerId, {arrivalDateWarehouse: arrivalDate})
+                }
+                else if (ETDDate) {
+                    arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
+                    await this.containerRepository.updateById(collectionFind.containerId, {arrivalDateWarehouse: arrivalDate})
+                }
+                const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
+                for (let index = 0; index < purchaseOrdersFor.length; index++) {
+                    const element = purchaseOrdersFor[index];
+                    if (arrivalDate) {
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        continue;
+                    }
+                    const {productionEndDate, productionRealEndDate} = element;
+                    if (productionRealEndDate) {
+                        const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        continue;
+                    }
+                    if (productionEndDate) {
+                        const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        continue;
+                    }
+                }
+            } else {
+                const include: InclusionFilter[] = [
+                    {
+                        relation: 'purchaseOrders',
+                    },
+
+                ]
+                const collectionFind = await this.collectionRepository.findById(collectionId, {include});
+                const purchaseOrdersFor = [...collectionFind?.purchaseOrders ?? []];
+                for (let index = 0; index < purchaseOrdersFor.length; index++) {
+                    const element = purchaseOrdersFor[index];
+                    const {productionEndDate, productionRealEndDate} = element;
+                    if (productionRealEndDate) {
+                        const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        continue;
+                    }
+                    if (productionEndDate) {
+                        const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
+                        await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
+                        continue;
+                    }
+                }
             }
-            else if (ETDDate) {
-                arrivalDate = dayjs(ETDDate).add(31, 'days').toDate()
-                await this.containerRepository.updateById(collectionFind.containerId, {arrivalDateWarehouse: arrivalDate})
+        } else {
+            const {productionEndDate, productionRealEndDate} = await this.findPurchaseOrderById(id);
+            if (productionRealEndDate) {
+                const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
+                await this.purchaseOrdersRepository.updateById(id, {arrivalDate})
             }
-            const purchaseOrdersFor = [...container?.purchaseOrders ?? [], ...container?.collection?.purchaseOrders ?? []];
-            for (let index = 0; index < purchaseOrdersFor.length; index++) {
-                const element = purchaseOrdersFor[index];
-                if (arrivalDate) {
-                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    continue;
-                }
-                const {productionEndDate, productionRealEndDate} = element;
-                if (productionRealEndDate) {
-                    const arrivalDate = dayjs(productionRealEndDate).add(53, 'days').toDate()
-                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    continue;
-                }
-                if (productionEndDate) {
-                    const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
-                    await this.purchaseOrdersRepository.updateById(element.id, {arrivalDate})
-                    continue;
-                }
+            if (productionEndDate) {
+                const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
+                await this.purchaseOrdersRepository.updateById(id, {arrivalDate})
             }
         }
     }
