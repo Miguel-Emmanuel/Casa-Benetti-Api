@@ -131,7 +131,8 @@ export class AccountPayableHistoryService {
                     let scheduledDate = new Date();
                     const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0);
                     console.log('productionEndDate: ', productionEndDate)
-                    await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, productionStartDate: dayjs().add(1, 'days').toDate(), status: PurchaseOrdersStatus.EN_PRODUCCION})
+                    const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
+                    await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, productionStartDate: dayjs().add(1, 'days').toDate(), status: PurchaseOrdersStatus.EN_PRODUCCION, arrivalDate})
                 }
             }
         }
