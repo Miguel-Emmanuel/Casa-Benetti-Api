@@ -79,7 +79,7 @@ export class InternalExpensesService {
     }
 
     async findProjectByProjectId(projectReference: string) {
-        const project = await this.projectRepository.findOne({where: {projectId: projectReference}});
+        const project = await this.projectRepository.findOne({where: {reference: projectReference}});
         if (!project)
             throw this.responseService.badRequest('La referencia no existe.')
     }
