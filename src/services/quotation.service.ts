@@ -330,7 +330,7 @@ export class QuotationService {
                 advanceCustomer: convertToMoney(advanceCustomer ?? 0),
                 conversionAdvance: convertToMoney(conversionAdvance ?? 0),
                 balance: convertToMoney(balance ?? 0),
-                exchangeRate,
+                exchangeRate: "Paridad",
                 percentageAdvance,
                 emailPM: mainProjectManager?.email,
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
