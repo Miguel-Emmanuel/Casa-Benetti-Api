@@ -1,11 +1,11 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import dayjs from 'dayjs';
-import {DeliveryRequestStatusE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
+import {DeliveryRequestStatusE, InventoryMovementsTypeE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {schemaDeliveryRequestPatch, schemaDeliveryRequestPatchFeedback, schemaDeliveryRequestPatchStatus} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {DeliveryRequest, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {DeliveryRequestRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
+import {DeliveryRequestRepository, DocumentRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -28,6 +28,10 @@ export class DeliveryRequestService {
         public sendgridService: SendgridService,
         @repository(DocumentRepository)
         public documentRepository: DocumentRepository,
+        @repository(InventoriesRepository)
+        public inventoriesRepository: InventoriesRepository,
+        @repository(InventoryMovementsRepository)
+        public inventoryMovementsRepository: InventoryMovementsRepository,
     ) { }
 
     async find(filter?: Filter<DeliveryRequest>,) {
@@ -478,12 +482,18 @@ export class DeliveryRequestService {
         await this.validateBodyDeliveryRequestPatchFeedback(data);
         const {status, feedbackComment, purchaseOrders, documents} = data;
         await this.deliveryRequestRepository.updateById(id, {status, feedbackComment})
+
         for (let index = 0; index < purchaseOrders?.length; index++) {
+
             const {products, id: purchaseOrderId} = purchaseOrders[index];
             for (let index = 0; index < products.length; index++) {
                 const {id, isSelected} = products[index];
-                if (isSelected)
+                if (isSelected) {
                     await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO})
+                    const isUpdated = await this.updateInventory(id);
+                    if (!isUpdated)
+                        return this.responseService.badRequest("No se ha podido completar la entrega por que la cantidad de articulos supera el stock");
+                }
             }
             const searchSelected = products.filter(value => value.isSelected === true);
 
@@ -493,6 +503,7 @@ export class DeliveryRequestService {
             else
                 await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: id})
         }
+
         if (status === DeliveryRequestStatusE.RECHAZADA)
             await this.notifyLogisticsRejected(id);
 
@@ -660,5 +671,40 @@ export class DeliveryRequestService {
         if (!deliveryRequest)
             throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
         return deliveryRequest;
+    }
+
+    async updateInventory(orderProductId: number) {
+        const purchaseOrderProduct = await this.quotationProductsRepository.findById(orderProductId, {
+            fields: ["id", "quantity", "quotationId"]
+        });
+
+        const inventory = await this.inventoriesRepository.findOne({
+            where: {quotationProductsId: orderProductId},
+            fields: ["id", "quotationProductsId", "containerId", "collectionId", "warehouseId", "stock"]
+        });
+
+        const currentStock: number = inventory?.stock ? inventory?.stock : 0
+        const productQuantity: number = purchaseOrderProduct.quantity ? purchaseOrderProduct.quantity : 0;
+
+        const newStock = currentStock - productQuantity;
+
+        if (newStock < 0)
+            return false;
+
+        const getProjectId = await this.projectRepository.findOne({
+            where: {quotationId: purchaseOrderProduct.quotationId},
+            fields: ["id", "quotationId"]
+        })
+
+        await this.inventoriesRepository.updateById(inventory?.id, {stock: newStock});
+        await this.inventoryMovementsRepository.create({
+            quantity: productQuantity,
+            type: InventoryMovementsTypeE.SALIDA,
+            inventoriesId: inventory?.id,
+            containerId: inventory?.containerId,
+            collectionId: inventory?.collectionId,
+            projectId: getProjectId?.id
+        })
+        return true;
     }
 }
