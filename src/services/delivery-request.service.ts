@@ -9,6 +9,24 @@ import {DeliveryRequestRepository, DocumentRepository, InventoriesRepository, In
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
+type NewOrder = {
+    inventoryUpdate?: {
+        id?: number | undefined,
+        data?: {
+            stock?: number
+        }
+    } | null,
+    inventoryMovementCreate?: {
+        quantity?: number,
+        type?: InventoryMovementsTypeE,
+        inventoriesId?: number,
+        containerId?: number,
+        collectionId?: number,
+        projectId?: number
+    } | null,
+    error: boolean
+};
+
 @injectable({scope: BindingScope.TRANSIENT})
 export class DeliveryRequestService {
     constructor(
@@ -481,7 +499,8 @@ export class DeliveryRequestService {
         await this.validateDeloveryRequestById(id);
         await this.validateBodyDeliveryRequestPatchFeedback(data);
         const {status, feedbackComment, purchaseOrders, documents} = data;
-        await this.deliveryRequestRepository.updateById(id, {status, feedbackComment})
+
+        let ordersToUpdate: NewOrder[] = [];
 
         for (let index = 0; index < purchaseOrders?.length; index++) {
 
@@ -489,10 +508,13 @@ export class DeliveryRequestService {
             for (let index = 0; index < products.length; index++) {
                 const {id, isSelected} = products[index];
                 if (isSelected) {
-                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO})
-                    const isUpdated = await this.updateInventory(id);
-                    if (!isUpdated)
+                    const isUpdated: NewOrder = await this.updateInventory(id);
+                    if (isUpdated.error)
                         return this.responseService.badRequest("No se ha podido completar la entrega por que la cantidad de articulos supera el stock");
+
+                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO});
+
+                    ordersToUpdate.push(isUpdated);
                 }
             }
             const searchSelected = products.filter(value => value.isSelected === true);
@@ -503,6 +525,18 @@ export class DeliveryRequestService {
             else
                 await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: id})
         }
+
+        ordersToUpdate.forEach(async (newOrder: NewOrder) => {
+            if (newOrder?.inventoryUpdate?.data && newOrder.inventoryMovementCreate) {
+                await this.inventoriesRepository.updateById(
+                    newOrder?.inventoryUpdate?.id, newOrder?.inventoryUpdate?.data
+                );
+                await this.inventoryMovementsRepository.create(newOrder?.inventoryMovementCreate);
+            }
+            return;
+        });
+
+        await this.deliveryRequestRepository.updateById(id, {status, feedbackComment});
 
         if (status === DeliveryRequestStatusE.RECHAZADA)
             await this.notifyLogisticsRejected(id);
@@ -689,22 +723,31 @@ export class DeliveryRequestService {
         const newStock = currentStock - productQuantity;
 
         if (newStock < 0)
-            return false;
+            return {
+                inventoryUpdate: null,
+                inventoryMovementCreate: null,
+                error: true
+            };
 
         const getProjectId = await this.projectRepository.findOne({
             where: {quotationId: purchaseOrderProduct.quotationId},
             fields: ["id", "quotationId"]
         })
 
-        await this.inventoriesRepository.updateById(inventory?.id, {stock: newStock});
-        await this.inventoryMovementsRepository.create({
-            quantity: productQuantity,
-            type: InventoryMovementsTypeE.SALIDA,
-            inventoriesId: inventory?.id,
-            containerId: inventory?.containerId,
-            collectionId: inventory?.collectionId,
-            projectId: getProjectId?.id
-        })
-        return true;
+        return {
+            inventoryUpdate: {
+                id: inventory?.id,
+                data: {stock: newStock}
+            },
+            inventoryMovementCreate: {
+                quantity: productQuantity,
+                type: InventoryMovementsTypeE.SALIDA,
+                inventoriesId: inventory?.id,
+                containerId: inventory?.containerId,
+                collectionId: inventory?.collectionId,
+                projectId: getProjectId?.id
+            },
+            error: false
+        };
     }
 }
