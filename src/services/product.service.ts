@@ -5,7 +5,7 @@ import {QuotationProductStatusE, TypeQuotationE} from '../enums';
 import {schemaActivateDeactivate, schemaCreateProduct, schemaUpdateProforma} from '../joi.validation.ts/product.validation';
 import {ResponseServiceBindings} from '../keys';
 import {AssembledProducts, Document, Product, ProductCreate, ProductProvider} from '../models';
-import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductProviderRepository, ProductRepository, ProviderRepository, QuotationProductsRepository, UserRepository} from '../repositories';
+import {AssembledProductsRepository, BrandRepository, ClassificationRepository, DocumentRepository, LineRepository, ProductProviderRepository, ProductRepository, ProviderRepository, QuotationProductsRepository, QuotationProductsStockRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -34,7 +34,9 @@ export class ProductService {
         @repository(ProductProviderRepository)
         public productProviderRepository: ProductProviderRepository,
         @repository(QuotationProductsRepository)
-        public quotationProductsRepository: QuotationProductsRepository
+        public quotationProductsRepository: QuotationProductsRepository,
+        @repository(QuotationProductsStockRepository)
+        public quotationProductsStockRepository: QuotationProductsStockRepository
     ) { }
 
     async create(data: {product: Omit<ProductCreate, 'id'>, document: Document, assembledProducts: {assembledProduct: AssembledProducts, document: Document}[]}) {
@@ -275,8 +277,43 @@ export class ProductService {
     }
 
     async findShowRoom(branchId?: number, filter?: Filter<Product>,) {
+
+        console.log('AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+        // let where: any = {
+        //     typeQuotation: TypeQuotationE.SHOWROOM,
+        // }
         let where: any = {
-            typeQuotation: TypeQuotationE.SHOWROOM,
+            and: [
+                {
+                    typeQuotation: TypeQuotationE.SHOWROOM,
+                },
+                {
+                    or: [
+                        {
+                            status: QuotationProductStatusE.SHOWROOM,
+                        },
+                        {
+                            status: QuotationProductStatusE.BODEGA_NACIONAL,
+                        },
+                        {
+                            status: QuotationProductStatusE.PEDIDO,
+                        },
+                        {
+                            status: QuotationProductStatusE.RECOLECCION,
+                        },
+                        {
+                            status: QuotationProductStatusE.BODEGA_INTERNACIONAL,
+                        }
+                        ,
+                        {
+                            status: QuotationProductStatusE.TRANSITO_INTERNACIONAL,
+                        },
+                        {
+                            status: QuotationProductStatusE.PROCESO_ADUANA,
+                        }
+                    ]
+                }
+            ]
         }
         if (branchId) {
             where.branchesId = [branchId];
@@ -298,6 +335,9 @@ export class ProductService {
                 relation: 'quotationProducts',
                 scope: {
                     include: [
+                        {
+                            relation: 'quotationProductsStocks',
+                        },
                         {
                             relation: 'mainMaterialImage',
                             scope: {
@@ -351,7 +391,13 @@ export class ProductService {
                 element.updatedBy = {id: updatedBy?.id, avatar: updatedBy?.avatar, name: updatedBy && `${updatedBy?.firstName} ${updatedBy?.lastName}`};
             }
         }
-        return products.filter(value => value.quotationProducts);
+        const productosFilter = products.filter(value => value.quotationProducts);
+        for (let index = 0; index < productosFilter?.length; index++) {
+            const {quotationProducts} = productosFilter[index];
+            const {quotationProductsStocks} = quotationProducts;
+            quotationProducts.quantity = quotationProductsStocks?.length ?? 0
+        }
+        return productosFilter;
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<Product>) {

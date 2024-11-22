@@ -161,6 +161,8 @@ export class AdvancePaymentRecordService {
             const {project} = accountsReceivable;
             const {projectId, quotation, customer} = project;
             const {mainProjectManager, quotationProducts} = quotation;
+            await this.accountsReceivableRepository.updateById(accountsReceivable.id, {isPaid: true});
+
             if (productType === ProductTypeE.STOCK)
                 await this.notifyStock(mainProjectManager.email, projectId, customer.name, quotationProducts);
             else

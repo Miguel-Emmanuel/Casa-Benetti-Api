@@ -87,6 +87,22 @@ export interface Images {
 //     quotationId: number;
 //     images: Images[]
 // }
+
+export interface ProductsStock {
+    id: number; //ID del quotationProduct
+    typeSale: TypeSaleE;
+    reservationDays: number;
+    loanInitialDate: Date;
+    loanEndDate: Date;
+    discountProduct: number;
+    quantity: number;
+    originCost: number;
+    price: number;
+    factor: number;
+    subtotal: number;
+    percentageDiscountProduct: number;
+    subtotalDiscount: number;
+}
 export interface CreateQuotation {
     id: number,
     isDraft: boolean;
@@ -101,7 +117,8 @@ export interface CreateQuotation {
     designers: Designers[],
     products: QuotationProductsCreate[],
     quotation: QuotationI
-    proofPaymentQuotation: ProofPaymentQuotationCreate[]
+    proofPaymentQuotation: ProofPaymentQuotationCreate[],
+    productsStock: ProductsStock[],
 }
 
 export interface BodyProofPayment {
@@ -330,4 +347,31 @@ export interface UpdateContainer {
 
 export interface UpdateContainerProducts {
     purchaseOrders: PurchaseOrdersContainer[]
+}
+
+
+export interface UpdateQuotationI {
+    subtotal: number;//showroom
+    percentageAdditionalDiscount: number;//showroom
+    additionalDiscount: number;//showroom
+    percentageIva: number;//showroom
+    iva: number;//showroom
+    total: number;//showroom
+    percentageAdvance: number;
+    advance: number;
+    exchangeRate: ExchangeRateE;
+    advanceCustomer: number;
+    conversionAdvance: number;
+    balance: number;
+    exchangeRateQuotation: ExchangeRateQuotationE; //showroom
+}
+
+
+export interface UpdateQuotationProject {
+    typeQuotation: TypeQuotationE;
+    quotation: UpdateQuotationI
+    products: QuotationProductsCreate[],
+    productsStock: ProductsStock[],
+    branchesId: number[];
+    // showRoomDestination: ShowRoomDestinationE
 }

@@ -1,4 +1,4 @@
-import {Entity, belongsTo, hasOne, model, property, referencesMany} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, hasOne, model, property, referencesMany} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {CurrencyE, QuotationProductStatusE, TypeQuotationE, TypeSaleE} from '../enums';
 import {DocumentSchema} from './base/document.model';
@@ -8,7 +8,8 @@ import {Document} from './document.model';
 import {Product, ProductWithRelations} from './product.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Provider, ProviderWithRelations} from './provider.model';
-import {PurchaseOrders} from './purchase-orders.model';
+import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
+import {QuotationProductsStock, QuotationProductsStockWithRelations} from './quotation-products-stock.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
@@ -210,6 +211,9 @@ export class QuotationProducts extends Entity {
 
     @referencesMany(() => Branch, {name: 'branches'})
     branchesId: number[];
+
+    @hasMany(() => QuotationProductsStock)
+    quotationProductsStocks: QuotationProductsStockWithRelations[];
 
     //Medidas (alto)
     @property({
@@ -478,6 +482,7 @@ export interface QuotationProductsRelations {
     brand: BrandWithRelations
     quotation: QuotationWithRelations
     proforma: ProformaWithRelations
+    purchaseOrders: PurchaseOrdersWithRelations
 }
 
 export type QuotationProductsWithRelations = QuotationProducts & QuotationProductsRelations;

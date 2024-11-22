@@ -1,10 +1,12 @@
 import {belongsTo, hasMany, hasOne, model, property} from '@loopback/repository';
 import {ProjectStatusE, TypeQuotationE} from '../enums';
+import {AccountsReceivable} from './accounts-receivable.model';
 import {AdvancePaymentRecord} from './advance-payment-record.model';
 import {BaseEntity} from './base/base-entity.model';
 import {Branch, BranchWithRelations} from './branch.model';
 import {CommissionPaymentRecord} from './commission-payment-record.model';
 import {Customer, CustomerWithRelations} from './customer.model';
+import {DeliveryRequest} from './delivery-request.model';
 import {Document} from './document.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Quotation, QuotationWithRelations} from './quotation.model';
@@ -47,7 +49,7 @@ export class Project extends BaseEntity {
     //Estatus del proyecto
     @property({
         type: 'string',
-        default: ProjectStatusE.NUEVO
+        default: ProjectStatusE.EN_PROCESO
     })
     status: ProjectStatusE;
 
@@ -69,6 +71,12 @@ export class Project extends BaseEntity {
     //Registro del pago correspondiente a cada comisión
     @hasMany(() => CommissionPaymentRecord)
     commissionPaymentRecords: CommissionPaymentRecord[];
+
+    @hasMany(() => AccountsReceivable)
+    accountsReceivables: AccountsReceivable[];
+
+    @hasMany(() => DeliveryRequest)
+    deliveryRequests: DeliveryRequest[];
 
     //Registro del pago correspondiente a cada anticipo
     @hasMany(() => AdvancePaymentRecord)

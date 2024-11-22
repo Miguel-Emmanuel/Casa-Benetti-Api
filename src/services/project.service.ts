@@ -5,11 +5,11 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {AccessLevelRolE, AdvancePaymentTypeE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
+import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, DeliveryRequestStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ProjectStatusE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
 import {convertToMoney} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
-import {ProformaWithRelations, Project, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {ProformaWithRelations, Project, ProjectWithRelations, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
@@ -84,95 +84,99 @@ export class ProjectService {
         return this.projectRepository.count(where);
     }
     async getProducts(projectId: number) {
-        const project = await this.projectRepository.findById(projectId, {
-            include: [
-                {
-                    relation: 'quotation',
-                    scope: {
-                        fields: ['id', 'quotationProducts'],
-                        include: [
-                            {
-                                relation: 'quotationProducts',
-                                scope: {
-                                    fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId', 'proformaPrice'],
-                                    include: [
-                                        {
-                                            relation: 'provider'
-                                        },
-                                        {
-                                            relation: 'product',
-                                            scope: {
-                                                fields: ['id', 'name', 'lineId', 'document'],
-                                                include: [
-                                                    {
-                                                        relation: 'line',
-                                                        scope: {
-                                                            fields: ['id', 'name']
+        try {
+            const project = await this.projectRepository.findById(projectId, {
+                include: [
+                    {
+                        relation: 'quotation',
+                        scope: {
+                            fields: ['id', 'quotationProducts'],
+                            include: [
+                                {
+                                    relation: 'quotationProducts',
+                                    scope: {
+                                        fields: ['id', 'quotationId', 'SKU', 'brandId', 'price', 'mainMaterial', 'mainFinish', 'secondaryMaterial', 'secondaryFinishing', 'measureWide', 'providerId', 'productId', 'proformaPrice'],
+                                        include: [
+                                            {
+                                                relation: 'provider'
+                                            },
+                                            {
+                                                relation: 'product',
+                                                scope: {
+                                                    fields: ['id', 'name', 'lineId', 'document'],
+                                                    include: [
+                                                        {
+                                                            relation: 'line',
+                                                            scope: {
+                                                                fields: ['id', 'name']
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'document',
                                                         }
-                                                    },
-                                                    {
-                                                        relation: 'document',
-                                                    }
-                                                ]
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                relation: 'brand',
+                                                scope: {
+                                                    fields: ['id', 'brandName']
+                                                }
                                             }
-                                        },
-                                        {
-                                            relation: 'brand',
-                                            scope: {
-                                                fields: ['id', 'brandName']
-                                            }
-                                        }
-                                    ]
+                                        ]
+                                    }
                                 }
-                            }
-                        ]
+                            ]
+                        }
                     }
+                ]
+            });
+            const {quotation} = project;
+            const {quotationProducts} = quotation;
+            return quotationProducts.map(value => {
+
+                const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
+                const {name, line, document} = product;
+                const descriptionParts = [
+                    line?.name,
+                    name,
+                    mainMaterial,
+                    mainFinish,
+                    secondaryMaterial,
+                    secondaryFinishing
+                ];
+                const measuresParts = [
+                    measureWide ? `Ancho: ${measureWide}` : "",
+                    measureHigh ? `Alto: ${measureHigh}` : "",
+                    measureDepth ? `Prof: ${measureDepth}` : "",
+                    measureCircumference ? `Circ: ${measureCircumference}` : ""
+                ];
+                const measures = measuresParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+
+                const description = descriptionParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+
+                return {
+                    id,
+                    SKU,
+                    provider: provider?.name ?? '',
+                    providerId,
+                    name,
+                    brand: brand?.brandName ?? '',
+                    brandId,
+                    price,
+                    description,
+                    measures,
+                    proformaPrice: proformaPrice ?? null,
+                    image: document?.fileURL
                 }
-            ]
-        });
-        const {quotation} = project;
-        const {quotationProducts} = quotation;
-        return quotationProducts.map(value => {
-
-            const {id, SKU, product, price, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, measureWide, provider, providerId, brandId, brand, proformaPrice, measureHigh, measureDepth, measureCircumference} = value;
-            const {name, line, document} = product;
-            const descriptionParts = [
-                line?.name,
-                name,
-                mainMaterial,
-                mainFinish,
-                secondaryMaterial,
-                secondaryFinishing
-            ];
-            const measuresParts = [
-                measureWide ? `Ancho: ${measureWide}` : "",
-                measureHigh ? `Alto: ${measureHigh}` : "",
-                measureDepth ? `Prof: ${measureDepth}` : "",
-                measureCircumference ? `Circ: ${measureCircumference}` : ""
-            ];
-            const measures = measuresParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-
-            const description = descriptionParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
-
-            return {
-                id,
-                SKU,
-                provider: provider?.name ?? '',
-                providerId,
-                name,
-                brand: brand?.brandName ?? '',
-                brandId,
-                price,
-                description,
-                measures,
-                proformaPrice: proformaPrice ?? null,
-                image: document?.fileURL
-            }
-        })
+            })
+        } catch (error) {
+            return this.responseService.badRequest(error?.message ?? error)
+        }
     }
 
     async getProductsInventories(projectId: string) {
@@ -327,11 +331,152 @@ export class ProjectService {
                                 }
                             ]
                         }
+                    },
+                    {
+                        relation: 'quotation',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'quotationProductsStocks',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'quotationProducts',
+                                                scope: {
+                                                    include: [
+                                                        {
+                                                            relation: 'mainMaterialImage',
+                                                            scope: {
+                                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'mainFinishImage',
+                                                            scope: {
+                                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'secondaryMaterialImage',
+                                                            scope: {
+                                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'secondaryFinishingImage',
+                                                            scope: {
+                                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'product',
+                                                            scope: {
+                                                                include: [
+                                                                    'brand', 'document', 'line'
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            relation: 'purchaseOrders',
+                                                            scope: {
+                                                                include: [
+                                                                    {
+                                                                        relation: 'proforma',
+                                                                        scope: {
+                                                                            include: [
+                                                                                {
+                                                                                    relation: 'provider'
+                                                                                },
+                                                                                {
+                                                                                    relation: 'brand'
+                                                                                },
+                                                                                {
+                                                                                    relation: 'accountPayable'
+                                                                                },
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        relation: 'collection',
+                                                                        scope: {
+                                                                            include: [
+                                                                                {
+                                                                                    relation: 'container'
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
                     }
                 ]
             })
+            let purchaseOrderStock = [];
+            try {
+                const {quotation} = project
+                const {quotationProductsStocks} = quotation
+                for (let index = 0; index < quotationProductsStocks?.length; index++) {
+                    const {quotationProducts, quantity: quantityStock, originCost} = quotationProductsStocks[index];
+                    const {purchaseOrders} = quotationProducts
+                    if (purchaseOrders) {
+                        const {id: purchaseOrderId, status, productionEndDate, productionRealEndDate, collection, arrivalDate, proforma} = purchaseOrders;
+                        const {provider, brand, accountPayable, proformaId} = proforma;
+                        purchaseOrderStock.push(
+                            {
+                                id: purchaseOrderId,
+                                providerName: `${provider.name}`,
+                                brandName: `${brand.brandName}`,
+                                status,
+                                accountPayableId: accountPayable.id,
+                                proformaId,
+                                productionEndDate: productionEndDate ?? null,
+                                productionRealEndDate: productionRealEndDate ?? null,
+                                containerNumber: collection?.container?.containerNumber ?? null,
+                                arrivalDate: arrivalDate ?? null,
+                                products: () => {
+                                    const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, quantity, proformaPrice, numberBoxes, status} = quotationProducts;
+                                    const {document, line, name} = product;
+                                    const descriptionParts = [
+                                        line?.name,
+                                        name,
+                                        mainMaterial,
+                                        mainFinish,
+                                        secondaryMaterial,
+                                        secondaryFinishing
+                                    ];
+                                    const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                                    return {
+                                        id: productId,
+                                        SKU,
+                                        image: document?.fileURL,
+                                        description,
+                                        quantity: quantityStock,
+                                        originCost,
+                                        proformaPrice,
+                                        proformaPriceQuantity: quantity * proformaPrice,
+                                        numberBoxes,
+                                        status
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            } catch (error) {
+
+            }
+
             const {proformas} = project
-            return proformas?.map((value: ProformaWithRelations) => {
+            const proformaMap = proformas?.map((value: ProformaWithRelations) => {
                 const {purchaseOrders, provider, brand, accountPayable, proformaId, quotationProducts} = value;
                 if (purchaseOrders) {
                     const {id: purchaseOrderId, status, productionEndDate, productionRealEndDate, collection, arrivalDate} = purchaseOrders;
@@ -374,6 +519,7 @@ export class ProjectService {
                     }
                 }
             }).filter(value => value != null) ?? []
+            return [...purchaseOrderStock, ...proformaMap]
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error)
         }
@@ -475,6 +621,11 @@ export class ProjectService {
         await this.validateBodyDeliveryRequest(data);
         const {projectId, purchaseOrders, deliveryDay, comment} = data;
         const projectRes = await this.findByIdProject(projectId);
+
+        if (projectRes.status === ProjectStatusE.CERRADO) {
+            return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
+        }
+
         await this.validatePurchaseOrderas(purchaseOrders);
         const deliveryRequestCreate = await this.deliveryRequestRepository.create({deliveryDay, projectId, comment, customerId: projectRes.customerId})
         for (let index = 0; index < purchaseOrders.length; index++) {
@@ -492,7 +643,7 @@ export class ProjectService {
             else
                 await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: deliveryRequestCreate.id})
         }
-        await this.notifyLogistics(projectId, deliveryDay);
+        this.notifyLogistics(projectId, deliveryDay);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
@@ -642,7 +793,7 @@ export class ProjectService {
                 {
                     relation: 'quotation',
                     scope: {
-                        fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR', 'typeQuotation'],
+                        // fields: ['id', 'mainProjectManagerId', 'mainProjectManager', 'customerId', 'branchId', 'exchangeRateQuotation', 'totalEUR', 'totalMXN', 'totalUSD', 'closingDate', 'balanceMXN', 'balanceUSD', 'balanceEUR', 'typeQuotation'],
                         include: [
                             {
                                 relation: 'mainProjectManager',
@@ -656,6 +807,91 @@ export class ProjectService {
                                     include: ['brand', 'document', 'line', {relation: 'quotationProducts', scope: {include: ['mainMaterialImage', 'mainFinishImage', 'secondaryMaterialImage', 'secondaryFinishingImage']}}]
                                 }
                             },
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'mainMaterialImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'mainFinishImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'secondaryMaterialImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'secondaryFinishingImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    'brand', 'document', 'line'
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                relation: 'quotationProductsStocks',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'mainMaterialImage',
+                                                        scope: {
+                                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                                        }
+                                                    },
+                                                    {
+                                                        relation: 'mainFinishImage',
+                                                        scope: {
+                                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                                        }
+                                                    },
+                                                    {
+                                                        relation: 'secondaryMaterialImage',
+                                                        scope: {
+                                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                                        }
+                                                    },
+                                                    {
+                                                        relation: 'secondaryFinishingImage',
+                                                        scope: {
+                                                            fields: ['fileURL', 'name', 'extension', 'id']
+                                                        }
+                                                    },
+                                                    {
+                                                        relation: 'product',
+                                                        scope: {
+                                                            include: [
+                                                                'brand', 'document', 'line'
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    ]
+                                }
+                            }
                         ]
                     }
                 },
@@ -703,24 +939,26 @@ export class ProjectService {
                     ]
                 };
             const project = await this.projectRepository.findById(id, filter);
-            const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference} = project;
-            const {closingDate, products, exchangeRateQuotation, typeQuotation} = quotation;
+            const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference, status} = project;
+            const {closingDate, products, exchangeRateQuotation, typeQuotation, quotationProductsStocks, showRoomDestination, branchesId} = quotation;
             const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
             const productsArray = [];
-            for (const iterator of products ?? []) {
+            for (const iterator of quotation?.quotationProducts ?? []) {
+                const {line, name, document, brand} = iterator.product;
+
                 const descriptionParts = [
-                    iterator?.line?.name,
-                    iterator?.name,
-                    iterator.quotationProducts?.mainMaterial,
-                    iterator.quotationProducts?.mainFinish,
-                    iterator.quotationProducts?.secondaryMaterial,
-                    iterator.quotationProducts?.secondaryFinishing
+                    line?.name,
+                    name,
+                    iterator?.mainMaterial,
+                    iterator?.mainFinish,
+                    iterator?.secondaryMaterial,
+                    iterator?.secondaryFinishing
                 ];
                 const measuresParts = [
-                    iterator?.quotationProducts?.measureWide ? `Ancho: ${iterator?.quotationProducts?.measureWide}` : "",
-                    iterator?.quotationProducts?.measureHigh ? `Alto: ${iterator?.quotationProducts?.measureHigh}` : "",
-                    iterator?.quotationProducts?.measureDepth ? `Prof: ${iterator?.quotationProducts?.measureDepth}` : "",
-                    iterator?.quotationProducts?.measureCircumference ? `Circ: ${iterator?.quotationProducts?.measureCircumference}` : ""
+                    iterator?.measureWide ? `Ancho: ${iterator?.measureWide}` : "",
+                    iterator?.measureHigh ? `Alto: ${iterator?.measureHigh}` : "",
+                    iterator?.measureDepth ? `Prof: ${iterator?.measureDepth}` : "",
+                    iterator?.measureCircumference ? `Circ: ${iterator?.measureCircumference}` : ""
                 ];
 
                 const description = descriptionParts
@@ -731,24 +969,125 @@ export class ProjectService {
                     .join(' ');  // Únelas con un espacio
                 productsArray.push({
                     id: iterator?.id,
-                    image: iterator?.document ? iterator?.document?.fileURL : '',
+                    image: document ? document?.fileURL : '',
                     brandName: iterator?.brand?.brandName ?? '',
                     description,
                     measures,
-                    price: iterator?.quotationProducts?.price,
-                    listPrice: iterator?.quotationProducts?.originCost,
-                    factor: iterator?.quotationProducts?.factor,
-                    quantity: iterator?.quotationProducts?.quantity,
+                    price: iterator?.price,
+                    listPrice: iterator?.originCost,
+                    factor: iterator?.factor,
+                    quantity: iterator?.quantity,
                     // provider: iterator?.provider?.name,
-                    status: iterator?.quotationProducts?.status,
-                    mainFinish: iterator?.quotationProducts?.mainFinish,
-                    mainFinishImage: iterator?.quotationProducts?.mainFinishImage?.fileURL,
-                    secondaryFinishing: iterator?.quotationProducts?.secondaryFinishing,
-                    secondaryFinishingImage: iterator?.quotationProducts?.secondaryFinishingImage?.fileURL,
+                    status: iterator?.status,
+                    mainFinish: iterator?.mainFinish,
+                    mainFinishImage: iterator?.mainFinishImage?.fileURL,
+                    secondaryFinishing: iterator?.secondaryFinishing,
+                    secondaryFinishingImage: iterator?.secondaryFinishingImage?.fileURL,
+                    typeQuotation: iterator?.typeQuotation,
+                    productDetail: {
+                        ...iterator,
+                        SKU: iterator?.SKU,
+                        brandName: iterator?.brand?.brandName ?? '',
+                        status: iterator.status,
+                        description: `${line?.name} ${name} ${iterator.mainMaterial} ${iterator.mainFinish} ${iterator.secondaryMaterial} ${iterator.secondaryFinishing} ${iterator.measureWide}`,
+                        image: document ? document?.fileURL : '',
+                        quantity: iterator.quantity,
+                        percentageDiscountProduct: iterator.percentageDiscountProduct,
+                        discountProduct: iterator.discountProduct,
+                        percentageMaximumDiscount: iterator.percentageMaximumDiscount,
+                        maximumDiscount: iterator.maximumDiscount,
+                        subtotal: iterator.subtotal,
+                        mainMaterialImage: iterator?.mainMaterialImage ?? null,
+                        mainFinishImage: iterator?.mainFinishImage ?? null,
+                        secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
+                        secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
+                        line: line,
+                        brand: brand,
+                        document: document,
+                    }
+                })
+            }
+
+            for (const element of quotationProductsStocks ?? []) {
+                const {quotationProducts: iterator} = element;
+                const {line, name, document, brand} = iterator.product;
+
+                const descriptionParts = [
+                    line?.name,
+                    name,
+                    iterator?.mainMaterial,
+                    iterator?.mainFinish,
+                    iterator?.secondaryMaterial,
+                    iterator?.secondaryFinishing
+                ];
+                const measuresParts = [
+                    iterator?.measureWide ? `Ancho: ${iterator?.measureWide}` : "",
+                    iterator?.measureHigh ? `Alto: ${iterator?.measureHigh}` : "",
+                    iterator?.measureDepth ? `Prof: ${iterator?.measureDepth}` : "",
+                    iterator?.measureCircumference ? `Circ: ${iterator?.measureCircumference}` : ""
+                ];
+
+                const description = descriptionParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+                const measures = measuresParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
+                productsArray.push({
+                    id: iterator?.id,
+                    image: document ? document?.fileURL : '',
+                    brandName: brand?.brandName ?? '',
+                    description,
+                    measures,
+                    price: iterator?.price,
+                    listPrice: iterator?.originCost,
+                    factor: iterator?.factor,
+                    quantity: iterator?.quantity,
+                    // provider: iterator?.provider?.name,
+                    status: iterator?.status,
+                    mainFinish: iterator?.mainFinish,
+                    mainFinishImage: iterator?.mainFinishImage?.fileURL,
+                    secondaryFinishing: iterator?.secondaryFinishing,
+                    secondaryFinishingImage: iterator?.secondaryFinishingImage?.fileURL,
+                    typeQuotation: iterator?.typeQuotation,
+                    productDetail: {
+                        ...iterator,
+                        SKU: iterator?.SKU,
+                        brandName: iterator?.brand?.brandName ?? '',
+                        status: iterator.status,
+                        description: `${line?.name} ${name} ${iterator.mainMaterial} ${iterator.mainFinish} ${iterator.secondaryMaterial} ${iterator.secondaryFinishing} ${iterator.measureWide}`,
+                        image: document ? document?.fileURL : '',
+                        // quantity: iterator.quantity,
+                        // percentageDiscountProduct: iterator.percentageDiscountProduct,
+                        // discountProduct: iterator.discountProduct,
+                        percentageMaximumDiscount: iterator.percentageMaximumDiscount,
+                        maximumDiscount: iterator.maximumDiscount,
+                        // subtotal: iterator.subtotal,
+                        mainMaterialImage: iterator?.mainMaterialImage ?? null,
+                        mainFinishImage: iterator?.mainFinishImage ?? null,
+                        secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
+                        secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
+                        line: line,
+                        brand: brand,
+                        document: document,
+                        discountProduct: element?.discountProduct,
+                        quantity: element?.quantity,
+                        originCost: element?.originCost,
+                        price: element?.price,
+                        factor: element?.factor,
+                        subtotal: element?.subtotal,
+                        percentageDiscountProduct: element?.percentageDiscountProduct,
+                        subtotalDiscount: element?.subtotalDiscount,
+                        typeSale: element?.typeSale,
+                        reservationDays: element?.reservationDays,
+                        loanInitialDate: element?.loanInitialDate,
+                        loanEndDate: element?.loanEndDate,
+                    }
                 })
             }
             return {
                 id,
+                status,
                 customerName: customer ? `${customer?.name} ${customer?.lastName}` : null,
                 closingDate,
                 total,
@@ -756,6 +1095,8 @@ export class ProjectService {
                 balance,
                 products: productsArray,
                 typeQuotation,
+                showRoomDestination,
+                branchesId,
                 advancePaymentRecords: advancePaymentRecords?.map(value => {
                     const {documents, ...body} = value;
                     return {
@@ -781,7 +1122,36 @@ export class ProjectService {
                     },
                     advanceFile: advanceFile?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, extension: value?.extension, }}),
                     documents: documents?.map(value => {return {fileURL: value.fileURL, name: value?.name, createdAt: value?.createdAt, id: value?.id, extension: value?.extension}}),
-                }
+                },
+                quotation: {
+                    quotationId: quotation?.id,
+                    clientQuote: quotation?.clientQuote ?? null,
+                    mainProjectManagerCommissions: quotation?.classificationPercentageMainpms,
+                    subtotal: subtotal,
+                    additionalDiscount: additionalDiscount,
+                    percentageIva: percentageIva,
+                    iva: iva,
+                    total: total,
+                    advance: advance,
+                    exchangeRate: exchangeRate,
+                    balance: balance,
+                    isArchitect: quotation.isArchitect,
+                    architectName: quotation.architectName,
+                    commissionPercentageArchitect: quotation.commissionPercentageArchitect,
+                    isReferencedCustomer: quotation.isReferencedCustomer,
+                    referenceCustomerId: quotation.referenceCustomerId,
+                    commissionPercentagereferencedCustomer: quotation.commissionPercentagereferencedCustomer,
+                    percentageAdditionalDiscount: percentageAdditionalDiscount,
+                    advanceCustomer: advanceCustomer,
+                    conversionAdvance: conversionAdvance,
+                    status: quotation.status,
+                    mainProjectManagerId: quotation?.mainProjectManagerId,
+                    rejectedComment: quotation?.comment,
+                    typeQuotation: quotation?.typeQuotation,
+                    branchId: quotation?.branchId,
+                    showRoomDestination: quotation?.showRoomDestination,
+                    branchesId: quotation?.branchesId
+                },
             }
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);
@@ -830,7 +1200,9 @@ export class ProjectService {
     }
 
     async uploadDocuments(id: number, data: {document: {fileURL: string, name: string, extension: string, id?: number}[]},) {
-        await this.findByIdProject(id);
+        const project = await this.findByIdProject(id);
+        if (project.status === ProjectStatusE.CERRADO)
+            return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
         const {document} = data
         for (let index = 0; index < document?.length; index++) {
             const element = document[index];
@@ -843,6 +1215,120 @@ export class ProjectService {
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
+    async closure(id: number) {
+        const project = await this.findByIdProjectClosure(id);
+        if (project.status === ProjectStatusE.CERRADO)
+            return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
+
+        await this.validateAccountsReceivable(project);
+        await this.validateAccountPayable(project);
+        await this.validateDeliveryRequest(project);
+        await this.validatePurchaseOrders(project);
+        await this.validatePurchaseOrdersProducts(project);
+        await this.projectRepository.updateById(id, {status: ProjectStatusE.CERRADO})
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async validateAccountsReceivable(project: ProjectWithRelations) {
+        const accountsReceivableLength = project?.accountsReceivables?.length ?? 0;
+        const accountsReceivableIsPaid = project?.accountsReceivables?.filter(value => value.isPaid == true).length ?? 0;
+        if (accountsReceivableLength !== accountsReceivableIsPaid) {
+            throw this.responseService.badRequest('Es necesario que la cuenta por cobrar relacionada sea saldada para poder realizar el cierre.')
+        }
+    }
+
+    async validateDeliveryRequest(project: ProjectWithRelations) {
+        const deliveryRequestsLength = project?.deliveryRequests?.length ?? 0;
+        const deliveryRequestsCompleta = project?.deliveryRequests?.filter(value => value.status == DeliveryRequestStatusE.ENTREGA_COMPLETA).length ?? 0;
+        if (deliveryRequestsLength !== deliveryRequestsCompleta) {
+            throw this.responseService.badRequest('Es necesario que las entregas programadas sean completadas para poder realizar el cierre.')
+        }
+    }
+
+    async validateAccountPayable(project: ProjectWithRelations) {
+        const proformas = project?.proformas;
+        let isPaid = true;
+        for (let index = 0; index < proformas?.length; index++) {
+            const {accountPayable} = proformas[index];
+            if (accountPayable?.isPaid === false) {
+                isPaid = false;
+            }
+        }
+        if (isPaid === false) {
+            throw this.responseService.badRequest('Es necesario que las cuentas por pagar relacionadas sean saldadas para poder realizar el cierre.')
+        }
+    }
+
+    async validatePurchaseOrders(project: ProjectWithRelations) {
+        const proformas = project?.proformas;
+        let entrega = true;
+        for (let index = 0; index < proformas?.length; index++) {
+            const {purchaseOrders} = proformas[index];
+            if (purchaseOrders?.status !== PurchaseOrdersStatus.ENTREGA) {
+                entrega = false;
+            }
+        }
+        if (entrega === false) {
+            throw this.responseService.badRequest('Es necesario que las ordenes de compra esten en estatus Entregada para poder realizar el cierre.')
+        }
+    }
+
+    async validatePurchaseOrdersProducts(project: ProjectWithRelations) {
+        const proformas = project?.proformas;
+        let entrega = true;
+        for (let index = 0; index < proformas?.length; index++) {
+            const {purchaseOrders} = proformas[index];
+            for (let index = 0; index < purchaseOrders?.quotationProducts?.length; index++) {
+                const element = purchaseOrders?.quotationProducts[index];
+                if (element?.status !== QuotationProductStatusE.ENTREGADO) {
+                    entrega = false;
+                }
+
+            }
+        }
+        if (entrega === false) {
+            throw this.responseService.badRequest('Es necesario que los productos esten en estatus Entregado para poder realizar el cierre.')
+        }
+    }
+
+    async findByIdProjectClosure(id?: number) {
+        const project = await this.projectRepository.findOne({
+            where: {id}, include:
+                [
+                    {
+                        relation: 'accountsReceivables'
+                    },
+                    {
+                        relation: 'proformas',
+                        scope: {
+                            include: [
+                                {
+                                    relation: 'accountPayable'
+                                },
+                                {
+                                    relation: 'purchaseOrders',
+                                    scope: {
+                                        include: [
+                                            {
+                                                relation: 'quotationProducts'
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        relation: 'deliveryRequests'
+                    },
+                ]
+        });
+        if (!project)
+            throw this.responseService.notFound("El proyecto no se ha encontrado.")
+
+        return project;
+    }
+
     async findByIdProject(id?: number) {
         const project = await this.projectRepository.findOne({where: {id}});
         if (!project)
@@ -853,14 +1339,63 @@ export class ProjectService {
 
 
     async createPdfToCustomer(quotationId: number, projectId: number, transaction: any) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]}, {transaction});
-        const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
+        const quotation = await this.quotationRepository.findById(quotationId, {
+            include: [
+                {
+                    relation: 'quotationProductsStocks',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'mainMaterialImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'mainFinishImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'secondaryMaterialImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'secondaryFinishingImage',
+                                            scope: {
+                                                fields: ['fileURL', 'name', 'extension', 'id']
+                                            }
+                                        },
+                                        {
+                                            relation: 'product',
+                                            scope: {
+                                                include: [
+                                                    'brand', 'document', 'line'
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                        ]
+                    }
+                },
+                {relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}]}}]
+        }, {transaction});
+        const {customer, mainProjectManager, referenceCustomer, products, project, quotationProductsStocks} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         // console.log("QUOTATIONCUSTOMER", quotation);
 
 
         let productsTemplate = [];
-        for (const product of products) {
+        for (const product of products ?? []) {
             const {brand, document, quotationProducts, line, name} = product;
             console.log("QUOTATIONCUSTOMER - document", document);
             const descriptionParts = [
@@ -894,7 +1429,51 @@ export class ProjectService {
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 percentage: quotationProducts?.percentageDiscountProduct,
-                subtotal: quotationProducts?.subtotal
+                subtotal: quotationProducts?.subtotal,
+                currencyEuro: quotationProducts?.currency === CurrencyE.EURO,
+                currencyUSD: quotationProducts?.currency === CurrencyE.USD,
+                currencyPesoMexicano: quotationProducts?.currency === CurrencyE.PESO_MEXICANO,
+            })
+        }
+        for (const iterator of quotationProductsStocks ?? []) {
+            const {quotationProducts} = iterator;
+            const {product} = quotationProducts;
+            const {line, document, brand} = product;
+            const descriptionParts = [
+                line?.name,
+                product?.name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+            productsTemplate.push({
+                brandName: brand?.brandName,
+                status: quotationProducts?.status,
+                description,
+                measures,
+                image: document?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
+                quantity: iterator?.quantity,
+                percentage: iterator?.percentageDiscountProduct,
+                subtotal: iterator?.subtotal,
+                currencyEuro: quotationProducts?.currency === CurrencyE.EURO,
+                currencyUSD: quotationProducts?.currency === CurrencyE.USD,
+                currencyPesoMexicano: quotationProducts?.currency === CurrencyE.PESO_MEXICANO,
             })
         }
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
@@ -926,7 +1505,9 @@ export class ProjectService {
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
 
             }
-            const nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            let nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            if (quotation.typeQuotation === TypeQuotationE.SHOWROOM)
+                nameFile = `showroom_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
@@ -943,7 +1524,7 @@ export class ProjectService {
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
         let prodcutsArray = [];
-        for (const product of products) {
+        for (const product of products ?? []) {
             const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
             const descriptionParts = [
                 line?.name,
@@ -979,7 +1560,7 @@ export class ProjectService {
                 quantity: quotationProducts?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
                 originCode: quotationProducts?.originCode,
-                assembledProducts: assembledProducts
+                assembledProducts: quotationProducts?.assembledProducts ?? [],
             })
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
@@ -1552,8 +2133,7 @@ export class ProjectService {
                     totalPercentage: 0,
                     balance,
                     advancePaymentRecords: advancePaymentRecords.map(value => {
-                        balanceDetail = balanceDetail - value.subtotalAmountPaid;
-                        return {
+                        const data = {
                             ...value,
                             balanceDetail: balanceDetail.toFixed(2),
                             paymentDate: dayjs(value.paymentDate).format('DD/MM/YYYY'),
@@ -1561,6 +2141,8 @@ export class ProjectService {
                             subtotalAmountPaid: value.subtotalAmountPaid.toFixed(2),
                             conversionAmountPaid: value.subtotalAmountPaid.toFixed(2),
                         }
+                        balanceDetail = balanceDetail - value.subtotalAmountPaid;
+                        return {...data}
                     })
                 })
 

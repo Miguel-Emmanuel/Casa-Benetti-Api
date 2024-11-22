@@ -39,7 +39,8 @@ export class JWTService implements TokenService {
           email: decodedToken.email,
           organizationId: decodedToken.organizationId,
           accessLevel: decodedToken.accessLevel,
-          branchId: decodedToken.branchId
+          branchId: decodedToken.branchId,
+          isMaster: decodedToken.isMaster,
         },
       );
     } catch (error) {
@@ -63,6 +64,7 @@ export class JWTService implements TokenService {
       organizationId: userProfile.organizationId,
       accessLevel: userProfile.accessLevel,
       branchId: userProfile.branchId,
+      isMaster: userProfile.isMaster,
     };
     // Generate a JSON Web Token
     let token: string;

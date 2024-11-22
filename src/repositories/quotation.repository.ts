@@ -3,7 +3,7 @@ import {BelongsToAccessor, HasManyRepositoryFactory, HasManyThroughRepositoryFac
 import {DbDataSource} from '../datasources';
 import {LogModelName} from '../enums';
 import {OperationHookBindings} from '../keys';
-import {Branch, Customer, Organization, Product, Project, ProofPaymentQuotation, Quotation, QuotationDesigner, QuotationProducts, QuotationProjectManager, QuotationRelations, User, ClassificationPercentageMainpm, Document} from '../models';
+import {Branch, Customer, Organization, Product, Project, ProofPaymentQuotation, Quotation, QuotationDesigner, QuotationProducts, QuotationProjectManager, QuotationRelations, User, ClassificationPercentageMainpm, Document, QuotationProductsStock} from '../models';
 import {OperationHook} from '../operation-hooks';
 import {BranchRepository} from './branch.repository';
 import {ClassificationRepository} from './classification.repository';
@@ -19,6 +19,7 @@ import {SoftCrudRepository} from './soft-delete-entity.repository.base';
 import {UserRepository} from './user.repository';
 import {ClassificationPercentageMainpmRepository} from './classification-percentage-mainpm.repository';
 import {DocumentRepository} from './document.repository';
+import {QuotationProductsStockRepository} from './quotation-products-stock.repository';
 
 export class QuotationRepository extends SoftCrudRepository<
   Quotation,
@@ -67,13 +68,17 @@ export class QuotationRepository extends SoftCrudRepository<
 
   public readonly branches: ReferencesManyAccessor<Branch, typeof Quotation.prototype.id>;
 
+  public readonly quotationProductsStocks: HasManyRepositoryFactory<QuotationProductsStock, typeof Quotation.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE)
     public operationHook: Getter<OperationHook>,
-    @repository.getter('QuotationProjectManagerRepository') protected quotationProjectManagerRepositoryGetter: Getter<QuotationProjectManagerRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>, @repository.getter('QuotationDesignerRepository') protected quotationDesignerRepositoryGetter: Getter<QuotationDesignerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('ProofPaymentQuotationRepository') protected proofPaymentQuotationRepositoryGetter: Getter<ProofPaymentQuotationRepository>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('ClassificationPercentageMainpmRepository') protected classificationPercentageMainpmRepositoryGetter: Getter<ClassificationPercentageMainpmRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>,
+    @repository.getter('QuotationProjectManagerRepository') protected quotationProjectManagerRepositoryGetter: Getter<QuotationProjectManagerRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>, @repository.getter('QuotationDesignerRepository') protected quotationDesignerRepositoryGetter: Getter<QuotationDesignerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('CustomerRepository') protected customerRepositoryGetter: Getter<CustomerRepository>, @repository.getter('OrganizationRepository') protected organizationRepositoryGetter: Getter<OrganizationRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('ProofPaymentQuotationRepository') protected proofPaymentQuotationRepositoryGetter: Getter<ProofPaymentQuotationRepository>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('ClassificationRepository') protected classificationRepositoryGetter: Getter<ClassificationRepository>, @repository.getter('ClassificationPercentageMainpmRepository') protected classificationPercentageMainpmRepositoryGetter: Getter<ClassificationPercentageMainpmRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('QuotationProductsStockRepository') protected quotationProductsStockRepositoryGetter: Getter<QuotationProductsStockRepository>,
   ) {
     super(Quotation, dataSource);
+    this.quotationProductsStocks = this.createHasManyRepositoryFactoryFor('quotationProductsStocks', quotationProductsStockRepositoryGetter,);
+    this.registerInclusionResolver('quotationProductsStocks', this.quotationProductsStocks.inclusionResolver);
     this.branches = this.createReferencesManyAccessorFor('branches', branchRepositoryGetter,);
     this.registerInclusionResolver('branches', this.branches.inclusionResolver);
     this.clientQuote = this.createHasOneRepositoryFactoryFor('clientQuote', documentRepositoryGetter);

@@ -24,7 +24,7 @@ const schemaProviderInformation = Joi.object({
     id: Joi.number(),
     providerId: Joi.number().required(),
     model: Joi.string().required(),
-    originCode: Joi.string().allow(null),
+    originCode: Joi.string().allow(null).allow(''),
     originCost: Joi.number().required(),
     currency: Joi.string().valid(...Object.values(CurrencyE)).messages({
         'any.only': `El tipo de moneda debe ser igual a uno de los valores permitidos.`

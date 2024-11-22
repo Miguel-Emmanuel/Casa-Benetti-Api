@@ -1,7 +1,7 @@
 import {Getter, inject} from '@loopback/core';
-import {BelongsToAccessor, DefaultCrudRepository, HasOneRepositoryFactory, repository, ReferencesManyAccessor} from '@loopback/repository';
+import {BelongsToAccessor, DefaultCrudRepository, HasOneRepositoryFactory, repository, ReferencesManyAccessor, HasManyRepositoryFactory} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {Brand, Document, Product, Proforma, Provider, QuotationProducts, QuotationProductsRelations, Quotation, PurchaseOrders, Branch} from '../models';
+import {Brand, Document, Product, Proforma, Provider, QuotationProducts, QuotationProductsRelations, Quotation, PurchaseOrders, Branch, QuotationProductsStock} from '../models';
 import {BrandRepository} from './brand.repository';
 import {DocumentRepository} from './document.repository';
 import {ProductRepository} from './product.repository';
@@ -10,6 +10,7 @@ import {ProviderRepository} from './provider.repository';
 import {QuotationRepository} from './quotation.repository';
 import {PurchaseOrdersRepository} from './purchase-orders.repository';
 import {BranchRepository} from './branch.repository';
+import {QuotationProductsStockRepository} from './quotation-products-stock.repository';
 
 export class QuotationProductsRepository extends DefaultCrudRepository<
   QuotationProducts,
@@ -39,10 +40,14 @@ export class QuotationProductsRepository extends DefaultCrudRepository<
 
   public readonly branches: ReferencesManyAccessor<Branch, typeof QuotationProducts.prototype.id>;
 
+  public readonly quotationProductsStocks: HasManyRepositoryFactory<QuotationProductsStock, typeof QuotationProducts.prototype.id>;
+
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('PurchaseOrdersRepository') protected purchaseOrdersRepositoryGetter: Getter<PurchaseOrdersRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>,
+    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProductRepository') protected productRepositoryGetter: Getter<ProductRepository>, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('DocumentRepository') protected documentRepositoryGetter: Getter<DocumentRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>, @repository.getter('BrandRepository') protected brandRepositoryGetter: Getter<BrandRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>, @repository.getter('PurchaseOrdersRepository') protected purchaseOrdersRepositoryGetter: Getter<PurchaseOrdersRepository>, @repository.getter('BranchRepository') protected branchRepositoryGetter: Getter<BranchRepository>, @repository.getter('QuotationProductsStockRepository') protected quotationProductsStockRepositoryGetter: Getter<QuotationProductsStockRepository>,
   ) {
     super(QuotationProducts, dataSource);
+    this.quotationProductsStocks = this.createHasManyRepositoryFactoryFor('quotationProductsStocks', quotationProductsStockRepositoryGetter,);
+    this.registerInclusionResolver('quotationProductsStocks', this.quotationProductsStocks.inclusionResolver);
     this.branches = this.createReferencesManyAccessorFor('branches', branchRepositoryGetter,);
     this.registerInclusionResolver('branches', this.branches.inclusionResolver);
     this.purchaseOrders = this.createBelongsToAccessorFor('purchaseOrders', purchaseOrdersRepositoryGetter,);

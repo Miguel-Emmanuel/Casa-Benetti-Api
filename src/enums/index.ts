@@ -105,8 +105,10 @@ export enum QuotationProductStatusE {
     TRANSITO_INTERNACIONAL = 'Transito internacional',
     RECOLECCION = 'Recoleccion',
     BODEGA_NACIONAL = 'Bodega nacional',
+    PROCESO_ADUANA = 'Proceso Aduana',
     BODEGA_INTERNACIONAL = 'Bodega Internacional',
     SHOWROOM = 'Showroom',
+    BODEGA = 'Bodega',
     ENTREGADO = 'Entregado',
 }
 
@@ -133,9 +135,8 @@ export enum StatusQuotationE {
 }
 
 export enum ProjectStatusE {
-    NUEVO = 'Nuevo',
-    ENTREGA_PARCIAL = 'Entrega parcial',
-    ENTREGA_TOTAL = 'Entrega total',
+    EN_PROCESO = 'En proceso', //En proceso
+    CERRADO = 'Cerrado',
 }
 
 export enum AdvancePaymentStatusE {
@@ -279,6 +280,7 @@ export enum InventoriesIssueE {
     ENTREGA_CLIENTE = 'Entrega a cliente',
     CONTENEDOR = 'Contenedor',
     OTRO = 'Otro',
+    REPARACION = 'Reparación',
 }
 
 

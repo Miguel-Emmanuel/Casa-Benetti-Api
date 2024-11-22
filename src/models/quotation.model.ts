@@ -10,6 +10,7 @@ import {Product, ProductWithRelations} from './product.model';
 import {Project} from './project.model';
 import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
+import {QuotationProductsStock, QuotationProductsStockWithRelations} from './quotation-products-stock.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {User, UserWithRelations} from './user.model';
@@ -129,6 +130,9 @@ export class Quotation extends BaseEntity {
     @hasMany(() => QuotationProducts)
     quotationProducts: QuotationProductsWithRelations[];
 
+    @hasMany(() => QuotationProductsStock)
+    quotationProductsStocks: QuotationProductsStockWithRelations[];
+
     @belongsTo(() => Organization)
     organizationId: number;
 
@@ -225,6 +229,54 @@ export class Quotation extends BaseEntity {
 
     @hasOne(() => Document, {keyTo: 'clientQuoteId'})
     clientQuote: Document;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    euroToPeso: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    euroToDolar: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    dolarToPeso: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    dolarToEuro: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    mxnToEuro: number;
+
+    @property({
+        type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
+    })
+    mxnToDolar: number;
 
     //************************************************ COTIZACION EN EUROS *********************************** */
 

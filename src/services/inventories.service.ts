@@ -3,9 +3,14 @@ import {repository} from '@loopback/repository';
 import {ConvertCurrencyToEUR, CurrencyE, InventoryMovementsTypeE} from '../enums';
 import {InventorieDataI} from '../interface';
 import {ResponseServiceBindings} from '../keys';
-import {InventoriesRepository, InventoryMovementsRepository, QuotationProductsRepository} from '../repositories';
+import {BranchRepository, InventoriesRepository, InventoryMovementsRepository, QuotationProductsRepository, WarehouseRepository} from '../repositories';
 import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
 import {ResponseService} from './response.service';
+
+type DestinationData = {
+    destinationBranchName?: string,
+    destinationWarehouseName?: string
+}
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class InventoriesService {
@@ -18,6 +23,10 @@ export class InventoriesService {
         public responseService: ResponseService,
         @repository(InventoriesRepository)
         public inventoriesRepository: InventoriesRepository,
+        @repository(BranchRepository)
+        public branchRepository: BranchRepository,
+        @repository(WarehouseRepository)
+        public warehouseRepository: WarehouseRepository,
         @service()
         public dayExchancheCalculateToService: DayExchancheCalculateToService
     ) { }
@@ -336,14 +345,15 @@ export class InventoriesService {
             if (!inventoryMovements)
                 throw this.responseService.badRequest("Producto no encontrado.")
 
-            const {inventories, comment} = inventoryMovements
+
+            const {inventories, comment, destinationBranchId, destinationWarehouseId} = inventoryMovements
             const {quotationProducts, id: inventoryId} = inventories;
             const {product, SKU, quotation, status, model, proforma, originCode, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, id, price, currency, originCost} = quotationProducts;
             const {document, classificationId, lineId, brandId, line, name} = product;
             const {mainProjectManager, project, customer} = quotation;
             const {reference} = project;
             const {purchaseOrders, proformaAmount} = proforma;
-            console.log(purchaseOrders)
+
             const descriptionParts = [
                 line?.name,
                 name,
@@ -371,7 +381,9 @@ export class InventoriesService {
                 ]
             });
 
-            const calculateCost = await this.calculateCost(currency, originCost)
+            const calculateCost = await this.calculateCost(currency, originCost, quotation.id)
+            const destinationName = await this.getDestinationName(destinationBranchId, destinationWarehouseId);
+
             return {
                 id,
                 image: document?.fileURL ?? null,
@@ -381,6 +393,8 @@ export class InventoriesService {
                 customer: `${customer?.name} ${customer?.lastName ?? ''}`,
                 customerId: customer?.id,
                 status,
+                destinationProductBranch: destinationName.destinationBranchName,
+                destinationProductWarehouse: destinationName.destinationWarehouseName,
                 classificationId,
                 lineId,
                 brandId,
@@ -417,19 +431,44 @@ export class InventoriesService {
         }
     }
 
-    async calculateCost(currency: CurrencyE, originCost: number) {
+    async calculateCost(currency: CurrencyE, originCost: number, quotationId: number) {
         if (currency === CurrencyE.PESO_MEXICANO) {
-            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnTo();
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnToQuotation(quotationId);
             // return {amount: originCost * ConvertCurrencyToEUR.MXN, parity: ConvertCurrencyToEUR.MXN}
             return {amount: originCost * EUR, parity: EUR}
         }
 
         if (currency === CurrencyE.USD) {
-            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarTo();
+            const {EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateDollarToQuotation(quotationId);
             // return {amount: originCost * ConvertCurrencyToEUR.USD, parity: ConvertCurrencyToEUR.USD}
             return {amount: originCost * EUR, parity: EUR}
         }
         return {amount: originCost, parity: ConvertCurrencyToEUR.EURO}
+    }
+
+    async getDestinationName(destinationBranchId?: number, destinationWarehouseId?: number) {
+        const destinationName: DestinationData = {
+            destinationBranchName: undefined,
+            destinationWarehouseName: undefined
+        };
+
+        if (destinationBranchId) {
+            const findBranch = await this.branchRepository.findById(destinationBranchId, {
+                fields: ["id", "name"]
+            });
+
+            destinationName.destinationBranchName = findBranch.name;
+        }
+
+        if (destinationWarehouseId) {
+            const findWarehouse = await this.warehouseRepository.findById(destinationWarehouseId, {
+                fields: ["id", "name"]
+            });
+
+            destinationName.destinationWarehouseName = findWarehouse.name
+        }
+
+        return destinationName
     }
 
 }

@@ -63,7 +63,7 @@ export class InventoryMovementsService {
                         }
                         await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, createdById: this.user.id});
                         await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
-                        await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_NACIONAL})
+                        await this.quotationProductsRepository.updateById(element.quotationProductsId, {status: QuotationProductStatusE.BODEGA_NACIONAL})
                     }
                     await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_NACIONAL, containerId})
 
@@ -91,7 +91,7 @@ export class InventoryMovementsService {
                         }
                         await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, createdById: this.user.id});
                         await this.addQuotationProductsToStock(element.quotationProductsId, quantity, quotationProduct.stock);
-                        await this.quotationProductsRepository.updateById(element.quantity, {status: QuotationProductStatusE.BODEGA_INTERNACIONAL})
+                        await this.quotationProductsRepository.updateById(element.quotationProductsId, {status: QuotationProductStatusE.BODEGA_INTERNACIONAL})
                     }
                     await this.purchaseOrdersRepository.updateById(id, {status: PurchaseOrdersStatus.BODEGA_INTERNACIONAL, collectionId})
                 }
@@ -106,11 +106,16 @@ export class InventoryMovementsService {
                     return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
                 const quotationProduct = await this.validateQuotationProduct(destinationQuotationProductsId);
 
+                if (!quotationProduct?.purchaseOrdersId)
+                    return this.responseService.badRequest('El producto no se encuentra en una orden de compra');
+
                 let inventorie: any;
                 if (destinationWarehouseId) {
                     inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: destinationQuotationProductsId}, {warehouseId: destinationWarehouseId}]}})
+                    await this.quotationProductsRepository.updateById(destinationQuotationProductsId, {status: QuotationProductStatusE.BODEGA}) //Bodega es warehouse
                 } else {
                     inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: destinationQuotationProductsId}, {branchId: destinationBranchId}]}})
+                    await this.quotationProductsRepository.updateById(destinationQuotationProductsId, {status: QuotationProductStatusE.SHOWROOM}) // SHOWROOM es branch
                 }
                 if (!inventorie) {
                     inventorie = await this.inventoriesRepository.create({stock: destinationQuantity, quotationProductsId: destinationQuotationProductsId, warehouseId: destinationWarehouseId, branchId: destinationBranchId})
@@ -121,19 +126,30 @@ export class InventoryMovementsService {
                 await this.inventoryMovementsRepository.create({quantity: destinationQuantity, projectId: quotationProduct?.quotation?.project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment: commentEntry, createdById: this.user.id});
                 await this.addQuotationProductsToStock(destinationQuotationProductsId, destinationQuantity, quotationProduct.stock);
                 await this.validateWareHouseMexicoAndItalia(destinationQuotationProductsId, destinationWarehouseId)
-
+                await this.purchaseOrdersRepository.updateById(quotationProduct?.purchaseOrdersId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL});
             } else {
                 const {branchId, warehouseId, quotationProductsId, quantity, projectId, comment} = data
                 if (!branchId && !warehouseId)
                     return this.responseService.badRequest('"Debe ingresar al menos un identificador: branchId o warehouseId');
                 const quotationProduct = await this.validateQuotationProduct(quotationProductsId);
+
+                if (!quotationProduct?.purchaseOrdersId)
+                    return this.responseService.badRequest('El producto no se encuentra en una orden de compra');
+
+                if (quotationProduct?.status != QuotationProductStatusE.ENTREGADO)
+                    return this.responseService.badRequest('El producto aun no se encuentra con estatus de entregado.');
+
                 const project = await this.validateDataEntry(projectId, branchId, warehouseId);
                 try {
                     let inventorie: any;
-                    if (branchId)
+                    if (branchId) {
                         inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {branchId}]}})
-                    else if (warehouseId)
+                        await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.SHOWROOM}) // SHOWROOM es branch
+                    }
+                    else if (warehouseId) {
                         inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId}, {warehouseId}]}})
+                        await this.quotationProductsRepository.updateById(quotationProductsId, {status: QuotationProductStatusE.BODEGA}) //Bodega es warehouse
+                    }
 
                     if (!inventorie) {
                         inventorie = await this.inventoriesRepository.create({stock: quantity, quotationProductsId, warehouseId, branchId})
@@ -144,6 +160,7 @@ export class InventoryMovementsService {
                     await this.inventoryMovementsRepository.create({quantity, projectId: project?.id, type: InventoryMovementsTypeE.ENTRADA, inventoriesId: inventorie.id, reasonEntry, comment, createdById: this.user.id});
                     await this.addQuotationProductsToStock(quotationProductsId, quantity, quotationProduct.stock);
                     await this.validateWareHouseMexicoAndItalia(quotationProductsId, warehouseId)
+                    await this.purchaseOrdersRepository.updateById(quotationProduct?.purchaseOrdersId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL});
                 } catch (error) {
                     throw this.responseService.badRequest(error.message ?? error)
                 }
@@ -196,22 +213,15 @@ export class InventoryMovementsService {
                 const container = await this.containerRepository.findOne({
                     where: {id: containerId}, include: [
                         {
-                            relation: 'collection',
+                            relation: 'purchaseOrders',
                             scope: {
                                 include: [
                                     {
-                                        relation: 'purchaseOrders',
+                                        relation: 'proforma',
                                         scope: {
                                             include: [
                                                 {
-                                                    relation: 'proforma',
-                                                    scope: {
-                                                        include: [
-                                                            {
-                                                                relation: 'quotationProducts',
-                                                            }
-                                                        ]
-                                                    }
+                                                    relation: 'quotationProducts',
                                                 }
                                             ]
                                         }
@@ -225,15 +235,19 @@ export class InventoryMovementsService {
                     throw this.responseService.notFound('El contenedor no se ha encontrado.');
 
                 const product = await this.validateQuotationProduct(quotationProductsId);
+                console.log('product: ', product)
+                console.log('product?.purchaseOrdersId: ', product?.purchaseOrdersId)
                 if (product?.purchaseOrdersId) {
                     await this.purchaseOrdersRepository.updateById(product?.purchaseOrdersId, {containerId: container.id})
-                }
-                const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}]}})
-                if (inventorie) {
-                    const {stock} = inventorie;
-                    await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                    await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, createdById: this.user.id});
-                    await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (stock - quantity)})
+                    const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}]}})
+                    if (inventorie) {
+                        const {stock} = inventorie;
+                        await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
+                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, createdById: this.user.id});
+                        await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (stock - quantity)})
+                    }
+                } else {
+                    return this.responseService.badRequest('El producto no se encuentra en una orden de compra');
                 }
                 // const {collection} = container
                 // if (!collection)

@@ -17,9 +17,10 @@ import {
     requestBody,
     response
 } from '@loopback/rest';
+import {UpdateQuotationProjectBody} from '../RequestBody/project.request';
 import {CreateRequestBody, QuotationFindResponseSwagger, QuotationGteByIdResponse, UpdateRequestBody} from '../RequestBody/quotation.request';
-import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse, UpdateQuotation} from '../interface';
-import {Document, Quotation} from '../models';
+import {CreateQuotation, QuotationFindOneResponse, QuotationFindResponse, UpdateQuotation, UpdateQuotationProject} from '../interface';
+import {DayExchangeRate, Document, Quotation} from '../models';
 import {QuotationService} from '../services';
 
 @authenticate('jwt')
@@ -212,5 +213,57 @@ export class QuotationController {
         body: {isRejected: boolean, comment: string},
     ): Promise<object> {
         return this.quotationService.changeStatusToClose(id, body);
+    }
+
+    @patch('/quotations/day-exchange-rates/{id}')
+    @response(200, {
+        description: 'DayExchangeRate model instance',
+        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate, {})}},
+    })
+    async createDayExchangeRates(
+        @param.path.number('id') id: number,
+        @requestBody({
+            content: {
+                'application/json': {
+                    schema: getModelSchemaRef(DayExchangeRate, {
+                        title: 'NewDayExchangeRate',
+                        exclude: ['id', 'createdAt', 'updatedAt'],
+                    }),
+                },
+            },
+        })
+        dayExchangeRate: Omit<DayExchangeRate, 'id'>,
+    ): Promise<Object> {
+        return this.quotationService.createDayExchangeRates(id, dayExchangeRate);
+    }
+
+    @get('/quotations/day-exchange-rates/{id}')
+    @response(200, {
+        description: 'DayExchangeRate model instance',
+        content: {'application/json': {schema: getModelSchemaRef(DayExchangeRate, {})}},
+    })
+    async geteDayExchangeRates(
+        @param.path.number('id') id: number,
+    ): Promise<Object> {
+        return this.quotationService.geteDayExchangeRates(id);
+    }
+
+    @patch('/quotations/{id}/project')
+    @response(200, {
+        description: 'Quotation model instance',
+        content: {
+            'application/json': {
+                schema: {
+
+                }
+            }
+        },
+    })
+    async updateQuotationProject(
+        @param.path.number('id') id: number,
+        @requestBody(UpdateQuotationProjectBody)
+        data: UpdateQuotationProject,
+    ): Promise<any> {
+        return this.quotationService.updateQuotationProject(id, data);
     }
 }
