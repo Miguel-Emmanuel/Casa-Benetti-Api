@@ -100,6 +100,11 @@ export class PurchaseOrdersController {
         return this.purchaseOrdersService.downloadPurchaseOrder(id);
     }
 
+    @get('/purchase-orders/update-collection-status')
+    async purchaseOrderUpdate(): Promise<any> {
+        return this.purchaseOrdersService.getPurchaseOrderToUpdate();
+    }
+
     @patch('/purchase-orders/{id}')
     @response(204, {
         description: 'PurchaseOrders PATCH success',
