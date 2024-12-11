@@ -5,6 +5,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
+import moment from 'moment';
 import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE, TypeQuotationE} from '../enums';
 import {schameUpdateStatusPurchase} from '../joi.validation.ts/purchase-order.validation';
 import {ResponseServiceBindings} from '../keys';
@@ -452,7 +453,7 @@ export class PurchaseOrdersService {
     }
 
     async calculateArrivalDatePurchaseOrder(id: number, collectionId?: number) {
-        console.log(collectionId)
+        console.log("collectionId:", collectionId)
         if (collectionId) {
             const collectionFind = await this.collectionRepository.findById(collectionId);
             const include: InclusionFilter[] = [
@@ -590,4 +591,57 @@ export class PurchaseOrdersService {
             }
         })
     }
+
+    async getPurchaseOrderToUpdate() {
+        const currentDate = moment();
+        const endDay = currentDate.endOf('day').toDate();
+
+        const purchaseOrdersRealEndDate = await this.purchaseOrdersRepository.find({
+            where: {
+                productionRealEndDate: {
+                    lte: endDay,
+                },
+                status: PurchaseOrdersStatus.EN_PRODUCCION
+            },
+            include: [
+                {
+                    relation: "accountPayable",
+                }
+            ]
+        });
+
+        const purchaseOrdersEndDate = await this.purchaseOrdersRepository.find({
+            where: {
+                productionEndDate: {
+                    lte: endDay,
+                },
+                productionRealEndDate: undefined,
+                status: PurchaseOrdersStatus.EN_PRODUCCION
+            },
+            include: [
+                {
+                    relation: "accountPayable",
+                }
+            ]
+        });
+
+        const purchaseOrders = purchaseOrdersRealEndDate.concat(purchaseOrdersEndDate)
+
+        let purchaseOrderUpdatedCount = 0;
+
+        for (const purchaseOrder of purchaseOrders) {
+            const {accountPayable} = purchaseOrder;
+
+            if (accountPayable.totalPaid >= accountPayable.total) {
+                await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {
+                    status: PurchaseOrdersStatus.EN_RECOLECCION
+                })
+                purchaseOrderUpdatedCount++
+            }
+
+        }
+
+        console.log("purchaseOrderUpdatedCount: ", purchaseOrderUpdatedCount)
+    }
+
 }
