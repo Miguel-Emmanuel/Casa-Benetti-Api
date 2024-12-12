@@ -6,13 +6,14 @@ import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
 import moment from 'moment';
-import {AccessLevelRolE, PurchaseOrdersStatus, TypeArticleE, TypeQuotationE} from '../enums';
+import {AccessLevelRolE, PurchaseOrdersStatus, QuotationProductStatusE, TypeArticleE, TypeQuotationE} from '../enums';
 import {schameUpdateStatusPurchase} from '../joi.validation.ts/purchase-order.validation';
-import {ResponseServiceBindings} from '../keys';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {PurchaseOrders, QuotationProductsWithRelations} from '../models';
-import {CollectionRepository, ContainerRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository} from '../repositories';
+import {AccountPayableRepository, CollectionRepository, ContainerRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository, UserRepository} from '../repositories';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class PurchaseOrdersService {
@@ -39,6 +40,12 @@ export class PurchaseOrdersService {
         public containerRepository: ContainerRepository,
         @repository(CollectionRepository)
         public collectionRepository: CollectionRepository,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
+        @repository(AccountPayableRepository)
+        public accountPayableRepository: AccountPayableRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService
     ) { }
 
 
@@ -449,7 +456,72 @@ export class PurchaseOrdersService {
         const {collectionId} = await this.findPurchaseOrderById(id);
         await this.purchaseOrdersRepository.updateById(id, {productionRealEndDate: data.productionRealEndDate})
         await this.calculateArrivalDatePurchaseOrder(id, collectionId);
+        await this.updateToCollectionStatus(id);
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito'});
+    }
+
+    async updateToCollectionStatus(purchaseOrderId: number) {
+        const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId, {
+            include: [
+                {
+                    relation: 'accountPayable'
+                },
+                {
+                    relation: 'proforma',
+                    scope: {
+                        fields: ['id', 'quotationProducts'],
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    fields: ['id', 'proformaId']
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        })
+
+        const currentDate = moment();
+        let endDate = purchaseOrder?.productionEndDate;
+
+        if (purchaseOrder?.productionRealEndDate)
+            endDate = purchaseOrder.productionRealEndDate;
+
+        const isAfterEndDate = moment(endDate).isSameOrBefore(currentDate);
+
+        if (purchaseOrder?.accountPayable?.totalPaid >= purchaseOrder?.accountPayable?.total && isAfterEndDate) {
+
+            await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION, isPaid: true})
+            await this.accountPayableRepository.updateById(purchaseOrder?.accountPayable?.id, {isPaid: true})
+            const {proforma} = purchaseOrder
+            const {quotationProducts} = proforma;
+            for (let index = 0; index < quotationProducts.length; index++) {
+                const element = quotationProducts[index];
+                await this.quotationProductsRepository.updateById(element.id, {status: QuotationProductStatusE.RECOLECCION})
+            }
+            await this.notifyLogistics(purchaseOrder.id);
+        }
+
+        return false;
+    }
+
+    async notifyLogistics(purchaseOrderId?: number) {
+        const users = await this.userRepository.find({where: {isLogistics: true}})
+        const emails = users.map(value => value.email);
+        for (let index = 0; index < emails?.length; index++) {
+            const elementMail = emails[index];
+            const options = {
+                to: elementMail,
+                templateId: SendgridTemplates.NOTIFICATION_LOGISTIC.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.NOTIFICATION_LOGISTIC.subject,
+                    purchaseOrderId
+                }
+            };
+            await this.sendgridService.sendNotification(options);
+        }
     }
 
     async calculateArrivalDatePurchaseOrder(id: number, collectionId?: number) {
