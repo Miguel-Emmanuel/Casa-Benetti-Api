@@ -2,6 +2,7 @@ import { /* inject, */ BindingScope, inject, injectable, service} from '@loopbac
 import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
+import moment from 'moment';
 import {AccountPayableHistoryStatusE, ExchangeRateE, ProformaCurrencyE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {AccountPayableHistory, AccountPayableHistoryCreate, Document, PurchaseOrders} from '../models';
@@ -139,25 +140,36 @@ export class AccountPayableHistoryService {
     }
 
     async settleAccountPayable(totalPaid: number, total: number, accountPayableId: number, purchaseOrderId?: number) {
-        if (totalPaid >= total) {
-            const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId, {
-                include: [
-                    {
-                        relation: 'proforma',
-                        scope: {
-                            fields: ['id', 'quotationProducts'],
-                            include: [
-                                {
-                                    relation: 'quotationProducts',
-                                    scope: {
-                                        fields: ['id', 'proformaId']
-                                    }
+        const purchaseOrder = await this.purchaseOrdersRepository.findById(purchaseOrderId, {
+            include: [
+                {
+                    relation: 'proforma',
+                    scope: {
+                        fields: ['id', 'quotationProducts'],
+                        include: [
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    fields: ['id', 'proformaId']
                                 }
-                            ]
-                        }
+                            }
+                        ]
                     }
-                ]
-            })
+                }
+            ]
+        })
+
+        const currentDate = moment();
+        let endDate = purchaseOrder?.productionEndDate;
+
+        if (purchaseOrder?.productionRealEndDate)
+            endDate = purchaseOrder.productionRealEndDate;
+
+        const isAfterEndDate = moment(endDate).isSameOrBefore(currentDate);
+
+        console.log("endDate:", endDate, "currentDate:", currentDate, "isAfterEndDate:", isAfterEndDate)
+        if (totalPaid >= total && isAfterEndDate) {
+
             await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION, isPaid: true})
             await this.accountPayableRepository.updateById(accountPayableId, {isPaid: true})
             const {proforma} = purchaseOrder

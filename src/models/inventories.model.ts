@@ -57,7 +57,7 @@ export class Inventories extends Entity {
 
     //Producto
     @belongsTo(() => QuotationProducts)
-    quotationProductsId: number;
+    quotationProductsId?: number;
 
     @hasMany(() => InventoryMovements)
     inventoryMovements: InventoryMovements[];
