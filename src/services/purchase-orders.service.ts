@@ -628,6 +628,9 @@ export class PurchaseOrdersService {
                         }
                     ]
                 }
+            },
+            {
+                relation: "project"
             }
         ]
         const and: any = [
@@ -647,7 +650,7 @@ export class PurchaseOrdersService {
         })
 
         return purchaseOrders.map(value => {
-            const {id: purchaseOrderid, proforma, productionEndDate, productionRealEndDate, productionStartDate} = value;
+            const {id: purchaseOrderid, projectId, proforma, productionEndDate, productionRealEndDate, productionStartDate} = value;
             const {proformaId, provider, brand, quotationProducts} = proforma;
             const {name} = provider;
             const {brandName} = brand;
@@ -659,7 +662,9 @@ export class PurchaseOrdersService {
                 quantity: quotationProducts?.length ?? 0,
                 productionEndDate: productionEndDate ?? null,
                 productionRealEndDate: productionRealEndDate ?? null,
-                productionStartDate: productionStartDate ?? null
+                productionStartDate: productionStartDate ?? null,
+                projectId,
+                project: value?.project
             }
         })
     }

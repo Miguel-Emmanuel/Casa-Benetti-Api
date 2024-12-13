@@ -3,7 +3,7 @@ import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopba
 import {CollectionDestinationE, CollectionStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
 import {schemaCollectionCreate, schemaCollectionPatchFeedback} from '../joi.validation.ts/collection.validation';
 import {ResponseServiceBindings} from '../keys';
-import {Collection, CollectionWithRelations, PurchaseOrders, PurchaseOrdersRelations, PurchaseOrdersWithRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {Collection, CollectionWithRelations, Project, PurchaseOrders, PurchaseOrdersRelations, PurchaseOrdersWithRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {CollectionRepository, ContainerRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
@@ -52,6 +52,9 @@ export class CollectionService {
                         }
                     ]
                 }
+            },
+            {
+                relation: "project"
             }
         ]
         const and: any = [
@@ -71,10 +74,12 @@ export class CollectionService {
         })
 
         return purchaseOrders.map(value => {
-            const {id: purchaseOrderid, proforma} = value;
+            const {id: purchaseOrderid, proforma, projectId} = value;
             const {quotationProducts} = proforma;
             return {
                 id: purchaseOrderid,
+                projectId,
+                project: value?.project,
                 products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                     const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
                     const {document, line, name} = product;
@@ -128,10 +133,13 @@ export class CollectionService {
                             {
                                 relation: 'proforma',
                                 scope: {
-                                    fields: ['id', 'providerId'],
+                                    fields: ['id', 'providerId', 'projectId'],
                                     include: [
                                         {
                                             relation: 'provider'
+                                        },
+                                        {
+                                            relation: 'project'
                                         }
                                     ]
                                 }
@@ -155,8 +163,16 @@ export class CollectionService {
             const collectios = await this.collectionRepository.find(filter);
             return collectios?.map((value: CollectionWithRelations) => {
                 const {id, dateCollection, purchaseOrders, status} = value;
+                const projectData = purchaseOrders.reduce((acc: {project?: Project, projectId?: number}, purchaseOrderData: any) => {
+                    acc.project = purchaseOrderData?.project;
+                    acc.projectId = purchaseOrderData?.projectId;
+                    return acc;
+                }, {});
+
                 return {
                     id,
+                    projectId: projectData.projectId,
+                    project: projectData.project,
                     dateCollection,
                     providers: purchaseOrders?.map((value: PurchaseOrdersWithRelations) => value?.proforma?.provider?.name)?.join(', '),
                     status
