@@ -121,6 +121,7 @@ export interface PurchaseOrdersRelations {
   proforma: ProformaWithRelations
   collection: CollectionWithRelations
   accountPayable: AccountPayableWithRelations
+  project: Project
 }
 
 export type PurchaseOrdersWithRelations = PurchaseOrders & PurchaseOrdersRelations;
