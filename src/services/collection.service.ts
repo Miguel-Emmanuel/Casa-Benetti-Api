@@ -163,7 +163,7 @@ export class CollectionService {
             const collectios = await this.collectionRepository.find(filter);
             return collectios?.map((value: CollectionWithRelations) => {
                 const {id, dateCollection, purchaseOrders, status} = value;
-                const projectData = purchaseOrders.reduce((acc: {project?: Project, projectId?: number}, purchaseOrderData: any) => {
+                const projectData = purchaseOrders?.reduce((acc: {project?: Project, projectId?: number}, purchaseOrderData: any) => {
                     acc.project = purchaseOrderData?.project;
                     acc.projectId = purchaseOrderData?.projectId;
                     return acc;
