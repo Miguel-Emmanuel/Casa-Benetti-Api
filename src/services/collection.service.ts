@@ -171,8 +171,8 @@ export class CollectionService {
 
                 return {
                     id,
-                    projectId: projectData.projectId,
-                    project: projectData.project,
+                    projectId: projectData?.projectId,
+                    project: projectData?.project,
                     dateCollection,
                     providers: purchaseOrders?.map((value: PurchaseOrdersWithRelations) => value?.proforma?.provider?.name)?.join(', '),
                     status

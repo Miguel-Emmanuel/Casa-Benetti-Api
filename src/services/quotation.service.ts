@@ -1360,7 +1360,8 @@ export class QuotationService {
 
     async find(filter?: Filter<Quotation>,) {
         const accessLevel = this.user.accessLevel;
-        let where: any = {status: {neq: StatusQuotationE.CERRADA}};
+        // let where: any = {status: {neq: StatusQuotationE.CERRADA}};
+        let where: any = {};
         if (accessLevel === AccessLevelRolE.SUCURSAL) {
             where = {...where, branchId: this.user.branchId}
         }
