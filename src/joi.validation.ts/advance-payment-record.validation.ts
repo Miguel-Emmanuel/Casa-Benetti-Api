@@ -31,6 +31,7 @@ export const schameCreateAdvancePayment = Joi.object({
     }).required(),
     vouchers: Joi.array().items(documents).optional(),
     salesDeviation: Joi.number().required(),
+    status: Joi.string().optional(),
 })
 
 export const schameCreateAdvancePaymentUpdate = Joi.object({

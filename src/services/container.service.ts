@@ -1124,9 +1124,10 @@ export class ContainerService {
                     }
                 }),
                 purchaseOrders: purchaseOrdersContainers ? purchaseOrdersContainers?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
-                    const {id: purchaseOrderid, proforma, quotationProducts} = value;
+                    const {id: purchaseOrderid, proforma, projectId, quotationProducts} = value;
                     return {
                         id: purchaseOrderid,
+                        projectId,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                             const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS, descriptionPedimiento, quantity} = value;
                             const {document, line, name} = product;
