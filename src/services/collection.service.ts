@@ -128,7 +128,7 @@ export class CollectionService {
                 {
                     relation: 'purchaseOrders',
                     scope: {
-                        fields: ['id', 'collectionId', 'proformaId'],
+                        fields: ['id', 'collectionId', 'proformaId', 'projectId'],
                         include: [
                             {
                                 relation: 'proforma',
@@ -143,6 +143,9 @@ export class CollectionService {
                                         }
                                     ]
                                 }
+                            },
+                            {
+                                relation: 'project'
                             }
                         ]
                     }
@@ -222,6 +225,9 @@ export class CollectionService {
                                         }
                                     ]
                                 }
+                            },
+                            {
+                                relation: 'project'
                             }
                         ]
                     }
@@ -240,8 +246,17 @@ export class CollectionService {
                 };
             const collection = await this.collectionRepository.findById(id, filter);
             const {purchaseOrders, destination, dateCollection} = collection;
+
+            const projectData = purchaseOrders?.reduce((acc: {project?: Project, projectId?: number}, purchaseOrderData: any) => {
+                acc.project = purchaseOrderData?.project;
+                acc.projectId = purchaseOrderData?.projectId;
+                return acc;
+            }, {});
+
             return {
                 id,
+                projectId: projectData?.projectId,
+                project: projectData?.project,
                 destination,
                 dateCollection,
                 purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
