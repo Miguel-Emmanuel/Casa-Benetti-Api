@@ -663,7 +663,7 @@ export class PurchaseOrdersService {
                 productionEndDate: productionEndDate ?? null,
                 productionRealEndDate: productionRealEndDate ?? null,
                 productionStartDate: productionStartDate ?? null,
-                projectId,
+                projectId: value?.project?.projectId,
                 project: value?.project
             }
         })
