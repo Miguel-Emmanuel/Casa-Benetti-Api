@@ -55,7 +55,7 @@ export class CommissionPaymentRecordService {
             {
                 relation: 'project',
                 scope: {
-                    fields: ['id', 'branchId'],
+                    fields: ['id', 'branchId', 'projectId'],
                 }
             },
         ]
@@ -79,7 +79,7 @@ export class CommissionPaymentRecordService {
                 createdAt,
                 name: userName ?? `${user?.firstName} ${user?.lastName}`,
                 type,
-                projectId,
+                projectId: project?.projectId,
                 commissionPercentage,
                 commissionAmount,
                 totalPaid,

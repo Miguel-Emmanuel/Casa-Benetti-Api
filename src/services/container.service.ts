@@ -1078,6 +1078,9 @@ export class ContainerService {
                                                     }
                                                 ],
                                             }
+                                        },
+                                        {
+                                            relation: 'project'
                                         }
                                     ]
                                 }
@@ -1127,7 +1130,7 @@ export class ContainerService {
                     const {id: purchaseOrderid, proforma, projectId, quotationProducts} = value;
                     return {
                         id: purchaseOrderid,
-                        projectId,
+                        projectId: value?.project?.projectId,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                             const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS, descriptionPedimiento, quantity} = value;
                             const {document, line, name} = product;

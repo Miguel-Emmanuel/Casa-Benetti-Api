@@ -307,7 +307,7 @@ export class CollectionService {
             const element = purchaseOrders[index];
             const where: any = {id: element, collectionId: {eq: null}}
             const purchaseOrder = await this.purchaseOrdersRepository.findOne({where});
-            console
+
             if (!purchaseOrder)
                 throw this.responseService.badRequest(`La orden de compra ya se encuetra relacionada a una recoleccion: ${element}`)
         }

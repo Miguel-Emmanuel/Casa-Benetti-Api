@@ -412,6 +412,9 @@ export class DeliveryRequestService {
                             }
                         ]
                     }
+                },
+                {
+                    relation: 'project'
                 }
             ]
             if (filter?.include)
@@ -440,7 +443,7 @@ export class DeliveryRequestService {
                 quantity += quotationProducts?.length ?? 0
             }
             return {
-                id: projectId,
+                id: deliveryRequest?.project?.projectId,
                 customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 customerAddress: customer?.address,
                 addressDescription: customer?.addressDescription,

@@ -235,17 +235,20 @@ export class InventoryMovementsService {
                     throw this.responseService.notFound('El contenedor no se ha encontrado.');
 
                 const product = await this.validateQuotationProduct(quotationProductsId);
-                console.log('product: ', product)
-                console.log('product?.purchaseOrdersId: ', product?.purchaseOrdersId)
+
                 if (product?.purchaseOrdersId) {
-                    await this.purchaseOrdersRepository.updateById(product?.purchaseOrdersId, {containerId: container.id})
-                    const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId}]}})
-                    if (inventorie) {
+                    const inventorie = await this.inventoriesRepository.findOne({where: {and: [{quotationProductsId: quotationProductsId, or: [{warehouseId: data.warehouseId, branchId: data.branchId}]}]}});
+
+                    const newQuantity = (inventorie?.stock ?? 0) - quantity;
+                    if (inventorie && newQuantity >= 0) {
                         const {stock} = inventorie;
                         await this.inventoriesRepository.updateById(inventorie.id, {stock: (stock - quantity)})
-                        await this.inventoryMovementsRepository.create({quantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, createdById: this.user.id});
+                        await this.inventoryMovementsRepository.create({quantity: newQuantity, type: InventoryMovementsTypeE.SALIDA, inventoriesId: inventorie.id, reasonIssue, createdById: this.user.id});
                         await this.quotationProductsRepository.updateById(quotationProductsId, {stock: (stock - quantity)})
+                    } else {
+                        return this.responseService.badRequest('La cantidad a retirar es mayor a la cantidad en stock.');
                     }
+                    await this.purchaseOrdersRepository.updateById(product?.purchaseOrdersId, {containerId: container.id})
                 } else {
                     return this.responseService.badRequest('El producto no se encuentra en una orden de compra');
                 }

@@ -83,10 +83,13 @@ export class AccountsReceivableService {
     async getAccountStatement(id: number) {
 
         const accountsReceivable = await this.findAccountReceivable(id);
-        const advancePaymentRecordsFind = await this.accountsReceivableRepository.find({where: {projectId: accountsReceivable.projectId}, include: ['advancePaymentRecords']});
+        const advancePaymentRecordsFind = await this.accountsReceivableRepository.find({
+            where: {projectId: accountsReceivable.projectId},
+            include: ['advancePaymentRecords', 'project']
+        });
 
         const project = await this.findProjectById(accountsReceivable.projectId);
-        const {projectId, customer, quotation} = project;
+        const {customer, quotation} = project;
         const {showroomManager, mainProjectManager, closingDate} = quotation;
         let data = [];
         for (let index = 0; index < advancePaymentRecordsFind.length; index++) {
@@ -96,7 +99,7 @@ export class AccountsReceivableService {
                 let balanceDetail = totalSale;
                 data.push({
                     today: dayjs().format('DD/MM/YYYY'),
-                    projectId,
+                    projectId: project?.projectId,
                     customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                     projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                     showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
@@ -106,7 +109,8 @@ export class AccountsReceivableService {
                     totalPaid,
                     totalPercentage: 0,
                     balance,
-                    advancePaymentRecords: advancePaymentRecords.map(value => {
+                    advancePaymentRecords: advancePaymentRecords.map((value: any) => {
+                        value.projectId = value?.project?.projectId
                         const data = {
                             ...value,
                             balanceDetail: balanceDetail.toFixed(2),

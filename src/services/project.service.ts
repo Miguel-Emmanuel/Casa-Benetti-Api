@@ -1093,6 +1093,7 @@ export class ProjectService {
                 total,
                 totalPay: advanceCustomer,
                 balance,
+                projectId: project.projectId,
                 products: productsArray,
                 typeQuotation,
                 showRoomDestination,
@@ -2109,7 +2110,10 @@ export class ProjectService {
 
     async getAccountStatement(id: number) {
         const project = await this.findProjectById(id);
-        const advancePaymentRecordsFind = await this.accountsReceivableRepository.find({where: {projectId: id}, include: ['advancePaymentRecords']});
+        const advancePaymentRecordsFind = await this.accountsReceivableRepository.find({
+            where: {projectId: id},
+            include: ['advancePaymentRecords', 'project']
+        });
         const {projectId, customer, quotation} = project;
         const {showroomManager, mainProjectManager, closingDate} = quotation;
         let data = [];
@@ -2131,7 +2135,8 @@ export class ProjectService {
                     totalPaid,
                     totalPercentage: 0,
                     balance,
-                    advancePaymentRecords: advancePaymentRecords.map(value => {
+                    advancePaymentRecords: advancePaymentRecords.map((value: any) => {
+                        value.projectId = value?.project?.projectId
                         const data = {
                             ...value,
                             balanceDetail: balanceDetail.toFixed(2),
