@@ -186,6 +186,7 @@ export class AdvancePaymentRecord extends Entity {
 export interface AdvancePaymentRecordRelations {
     // describe navigational properties here
     accountsReceivable: AccountsReceivableWithRelations
+    project: Project
 }
 
 export type AdvancePaymentRecordWithRelations = AdvancePaymentRecord & AdvancePaymentRecordRelations;

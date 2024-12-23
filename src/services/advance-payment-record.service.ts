@@ -92,6 +92,9 @@ export class AdvancePaymentRecordService {
                     fields: ['id', 'totalSale']
                 }
             },
+            {
+                relation: 'project'
+            }
 
         ]
         if (filter?.include)
