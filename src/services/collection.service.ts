@@ -78,7 +78,7 @@ export class CollectionService {
             const {quotationProducts} = proforma;
             return {
                 id: purchaseOrderid,
-                projectId,
+                projectId: value?.project?.projectId,
                 project: value?.project,
                 products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                     const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
@@ -168,7 +168,7 @@ export class CollectionService {
                 const {id, dateCollection, purchaseOrders, status} = value;
                 const projectData = purchaseOrders?.reduce((acc: {project?: Project, projectId?: number}, purchaseOrderData: any) => {
                     acc.project = purchaseOrderData?.project;
-                    acc.projectId = purchaseOrderData?.projectId;
+                    acc.projectId = purchaseOrderData?.project?.projectId;
                     return acc;
                 }, {});
 
