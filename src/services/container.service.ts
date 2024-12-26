@@ -9,8 +9,8 @@ import {ContainerStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '..
 import {Docs, PurchaseOrdersContainer, UpdateContainer, UpdateContainerProducts} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer, schemaUpdateContainerProduct} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings, STORAGE_DIRECTORY} from '../keys';
-import {Container, ContainerCreate, Document, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {ContainerRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
+import {Container, ContainerCreate, Document, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {ContainerRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -24,6 +24,8 @@ export class ContainerService {
         public documentRepository: DocumentRepository,
         @repository(QuotationProductsRepository)
         public quotationProductsRepository: QuotationProductsRepository,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository,
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
         @inject(STORAGE_DIRECTORY) private storageDirectory: string,
@@ -1101,10 +1103,18 @@ export class ContainerService {
                     ]
                 };
 
+
+
             const container = await this.containerRepository.findById(id, filter);
             const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection, createdAt} = container;
-            const purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
-            console.log('purchaseOrdersContainers: ', purchaseOrdersContainers.length)
+            let purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
+            let purchaseOrdersContainersWithProjectId = [];
+
+            for (const pO of purchaseOrdersContainers) {
+                const getProject = await this.projectRepository.findById(pO?.projectId!, {fields: ["id", "projectId"]});
+                purchaseOrdersContainersWithProjectId.push({...pO, projectId: getProject?.projectId})
+            }
+
             return {
                 pedimento,
                 createdAt,
@@ -1126,12 +1136,13 @@ export class ContainerService {
                         name, extension
                     }
                 }),
-                purchaseOrders: purchaseOrdersContainers ? purchaseOrdersContainers?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                purchaseOrders: purchaseOrdersContainersWithProjectId ? purchaseOrdersContainersWithProjectId?.map((value: any) => {
                     const {id: purchaseOrderid, proforma, projectId, quotationProducts} = value;
-                    const projectIdData = value?.project?.projectId
+
+                    const projectIdData = projectId;
                     return {
                         id: purchaseOrderid,
-                        projectId: projectIdData,
+                        projectId: projectIdData ?? null,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                             const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS, descriptionPedimiento, quantity} = value;
                             const {document, line, name} = product;
