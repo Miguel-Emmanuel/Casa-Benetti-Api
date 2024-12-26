@@ -255,7 +255,7 @@ export class CollectionService {
 
             return {
                 id,
-                projectId: projectData?.projectId,
+                projectId: projectData?.project?.projectId,
                 project: projectData?.project,
                 destination,
                 dateCollection,
