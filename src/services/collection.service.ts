@@ -375,13 +375,13 @@ export class CollectionService {
         }
     }
 
-    async setFeedback(id: number, data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+    async setFeedback(id: number, data: {destination: CollectionDestinationE, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
         await this.validateCollectionById(id);
         await this.validateBodyCollectionPatchFeedback(data);
         const {containerId, documents, destination, dateCollection} = data;
-        await this.collectionRepository.updateById(id, {containerId, destination, dateCollection, status: CollectionStatus.COMPLETADA})
         await this.createDocument(id, documents);
-        await this.validaIfContainer(id, destination);
+        await this.validaIfContainer(id, destination, data?.purchaseOrders);
+        await this.collectionRepository.updateById(id, {containerId, destination, dateCollection, status: CollectionStatus.COMPLETADA})
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
 
@@ -392,7 +392,7 @@ export class CollectionService {
         }
     }
 
-    async validaIfContainer(collectionId: number, destination: CollectionDestinationE) {
+    async validaIfContainer(collectionId: number, destination: CollectionDestinationE, products: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
         if (destination === CollectionDestinationE.CONTENEDOR) {
             const collection = await this.collectionRepository.findById(collectionId, {
                 include: [
@@ -432,17 +432,18 @@ export class CollectionService {
                     }
                 ]
             });
-            const {purchaseOrders} = collection;
+            // const {purchaseOrders} = collection;
+            const purchaseOrders = products;
             for (let index = 0; index < purchaseOrders?.length; index++) {
-                const element = purchaseOrders[index];
-                const {id: purchaseOrderid, proforma} = element;
-                const {quotationProducts} = proforma;
-                await this.purchaseOrdersRepository.updateById(purchaseOrderid, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL});
-                for (let index = 0; index < quotationProducts?.length; index++) {
-                    const element = quotationProducts[index];
-                    const {id: quotationProductId} = element;
-                    await this.quotationProductsRepository.updateById(quotationProductId, {status: QuotationProductStatusE.TRANSITO_INTERNACIONAL});
+                const {products, id: purchaseOrderId} = purchaseOrders[index];
+                for (let index = 0; index < products.length; index++) {
+                    const {id, isSelected} = products[index];
+                    if (isSelected) {
+                        await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.TRANSITO_INTERNACIONAL});
+                    }
                 }
+
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL});
             }
         }
     }

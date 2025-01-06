@@ -207,6 +207,31 @@ export class CollectionController {
                                 type: 'string',
                                 format: 'date-time'
                             },
+                            purchaseOrders: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: {
+                                            type: 'number'
+                                        },
+                                        products: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'number'
+                                                    },
+                                                    isSelected: {
+                                                        type: 'boolean'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
                             documents: {
                                 type: 'array',
                                 items: {
@@ -223,7 +248,7 @@ export class CollectionController {
                 },
             },
         })
-        data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, documents: {fileURL: string, name: string, extension: string, id?: number}[]},
+        data: {destination: CollectionDestinationE, dateCollection: Date, containerId: number, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], documents: {fileURL: string, name: string, extension: string, id?: number}[]},
     ): Promise<void> {
         await this.collectionService.setFeedback(id, data);
     }
