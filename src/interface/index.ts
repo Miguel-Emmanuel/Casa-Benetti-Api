@@ -343,6 +343,7 @@ export interface UpdateContainer {
     status: ContainerStatus;
     docs: Docs[],
     purchaseOrders: PurchaseOrdersContainer[]
+    newPurchaseOrders: {id: number}[]
 }
 
 export interface UpdateContainerProducts {

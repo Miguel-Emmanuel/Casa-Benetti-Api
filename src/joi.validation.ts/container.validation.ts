@@ -35,6 +35,10 @@ const schemaPurchaseOrders = Joi.object({
     products: Joi.array().items(schemaProducts).required(),
 })
 
+const schemaNewPurchaseOrders = Joi.object({
+    id: Joi.number().required()
+})
+
 export const schemaUpdateContainer = Joi.object({
     pedimento: Joi.string().allow(null).allow(''),
     grossWeight: Joi.string().allow(null).allow(''),
@@ -45,6 +49,7 @@ export const schemaUpdateContainer = Joi.object({
     }).allow(null).allow(''),
     docs: Joi.array().items(documents).optional(),
     purchaseOrders: Joi.array().items(schemaPurchaseOrders).optional(),
+    newPurchaseOrders: Joi.array().items(schemaNewPurchaseOrders).optional()
 })
 
 
