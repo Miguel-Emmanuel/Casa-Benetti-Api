@@ -4,6 +4,16 @@ import {CollectionDestinationE} from '../enums';
 
 export const schemaPurchaseOrders = Joi.number().required()
 
+const schemaProducts = Joi.object({
+    id: Joi.number().required(),
+    isSelected: Joi.boolean().required(),
+})
+
+const schemaPurchaseOrdersData = Joi.object({
+    id: Joi.number().required(),
+    products: Joi.array().items(schemaProducts).required(),
+})
+
 export const schemaCollectionCreate = Joi.object({
     destination: Joi.string().valid(...Object.values(CollectionDestinationE)).messages({
         'any.only': `El destino debe ser igual a uno de los valores permitidos.`
@@ -26,4 +36,5 @@ export const schemaCollectionPatchFeedback = Joi.object({
     containerId: Joi.when('destination', {is: [CollectionDestinationE.CONTENEDOR], then: Joi.number().required(), otherwise: Joi.forbidden()}),
     dateCollection: Joi.date().required(),
     documents: Joi.array().items(documents).optional(),
+    purchaseOrders: Joi.array().items(schemaPurchaseOrdersData).required(),
 })
