@@ -45,6 +45,45 @@ export class ContainerService {
         }
     }
 
+    async getPurchaseOrdersForContainer() {
+        try {
+            let purchaseOrders = await this.purchaseOrdersRepository.find({
+                where: {
+                    status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL,
+                    containerId: undefined
+                },
+                include: [
+                    {
+                        relation: "project",
+                    },
+                    {
+                        relation: "quotationProducts"
+                    }
+                ]
+            });
+
+            purchaseOrders = purchaseOrders.filter(pO => !pO.containerId);
+
+            return purchaseOrders.map(pO => {
+                return {
+                    id: pO.id,
+                    projectId: pO?.project?.projectId,
+                    products: pO?.quotationProducts?.map(qProducts => {
+                        return {
+                            id: qProducts.id,
+                            SKU: qProducts.SKU,
+                            mainFinishImage: qProducts.mainFinishImage,
+                            description: qProducts?.descriptionPedimiento
+                        }
+                    })
+                }
+            }) ?? [];
+
+        } catch (error) {
+            return this.responseService.internalServerError(error?.message ? error.message : error);
+        }
+    }
+
     async createCartaTraduccion(id: number) {
         try {
             const container = await this.containerRepository.findById(id, {
@@ -709,17 +748,24 @@ export class ContainerService {
             const container = await this.containerRepository.findOne({where: {id}});
             if (!container)
                 throw this.responseService.badRequest("El contenedor no existe.")
-            const {docs, purchaseOrders, status, ...body} = data;
+            const {docs, purchaseOrders, status, newPurchaseOrders, ...body} = data;
             const date = await this.calculateArrivalDateAndShippingDate(status);
             await this.containerRepository.updateById(id, {...body, ...date, status});
             await this.calculateArrivalDatePurchaseOrder(id);
             await this.setStatusPurchaseOrder(id, status);
             await this.updateDocument(id, docs);
             await this.updateProducts(purchaseOrders);
+            await this.addNewPurchaseOrdersToContainer(newPurchaseOrders, id);
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
         } catch (error) {
             console.log(error)
             throw this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async addNewPurchaseOrdersToContainer(newPurchaseOrders: {id: number}[], containerId: number) {
+        for (let index = 0; index < newPurchaseOrders?.length; index++) {
+            await this.purchaseOrdersRepository.updateById(newPurchaseOrders[index].id, {containerId})
         }
     }
 
