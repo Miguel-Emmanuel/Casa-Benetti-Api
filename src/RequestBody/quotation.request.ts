@@ -244,6 +244,7 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                         properties: {
                             mainProjectManagerId: {
                                 type: 'number',
+                                nullable: true
                             },
                             mainProjectManagerCommissions: {
                                 type: 'array',
@@ -563,6 +564,7 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                         properties: {
                             mainProjectManagerId: {
                                 type: 'number',
+                                nullable: true
                             },
                             mainProjectManagerCommissions: {
                                 type: 'array',
