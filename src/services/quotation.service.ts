@@ -87,18 +87,25 @@ export class QuotationService {
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation, typeQuotation, productsStock} = data;
         if (typeQuotation === TypeQuotationE.GENERAL) {
+            let showroomManagerId = undefined
             const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
             const branchId = this.user.branchId;
+
             if (!branchId)
                 throw this.responseService.badRequest("El usuario creacion no cuenta con una sucursal asignada.");
             //Falta agregar validacion para saber cuando es borrador o no
             await this.validateBodyQuotation(data);
-            await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
+            if (mainProjectManagerId) {
+                await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
+            }
+
             if (isReferencedCustomer === true)
                 await this.findUserById(quotation.referenceCustomerId);
             let groupId = null;
             let customerId = null;
-            const showroomManagerId = await this.getSM(mainProjectManagerId);
+            if (mainProjectManagerId) {
+                showroomManagerId = await this.getSM(mainProjectManagerId);
+            }
             try {
                 groupId = await this.createOrGetGroup(customer);
                 customerId = await this.createOrGetCustomer({...customer}, groupId);
@@ -453,7 +460,7 @@ export class QuotationService {
         await this.quotationRepository.updateById(quotationId, bodyQuotation)
     }
 
-    async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number, showroomManagerId: number) {
+    async createQuatation(quotation: QuotationI, isDraft: boolean, customerId: number | undefined, userId: number, branchId: number, showroomManagerId?: number) {
         const data = this.convertExchangeRateQuotation(quotation);
         const dayExchangeRate = await this.dayExchancheCalculateToService.getdayExchangeRatAll();
         const bodyQuotation = {

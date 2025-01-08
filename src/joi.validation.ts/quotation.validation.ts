@@ -172,7 +172,7 @@ export const schemaCreateQuotition = Joi.object({
     products: Joi.array().items(products).required(),
     productsStock: Joi.array().items(productsStock).optional(),
     quotation: Joi.object({
-        mainProjectManagerId: Joi.number().required(),
+        mainProjectManagerId: Joi.number().optional(),
         mainProjectManagerCommissions: Joi.array().items(schemaMainProjectManagerCommissions).optional(),
         commissionPercentageArchitect: Joi.number().allow(null),
         isArchitect: Joi.boolean().allow(null),

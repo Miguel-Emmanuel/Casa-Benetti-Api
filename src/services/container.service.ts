@@ -9,8 +9,8 @@ import {ContainerStatus, PurchaseOrdersStatus, QuotationProductStatusE} from '..
 import {Docs, PurchaseOrdersContainer, UpdateContainer, UpdateContainerProducts} from '../interface';
 import {schemaCreateContainer, schemaUpdateContainer, schemaUpdateContainerProduct} from '../joi.validation.ts/container.validation';
 import {ResponseServiceBindings, STORAGE_DIRECTORY} from '../keys';
-import {Container, ContainerCreate, Document, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
-import {ContainerRepository, DocumentRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
+import {Container, ContainerCreate, Document, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {ContainerRepository, DocumentRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository} from '../repositories';
 import {ResponseService} from './response.service';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -24,6 +24,8 @@ export class ContainerService {
         public documentRepository: DocumentRepository,
         @repository(QuotationProductsRepository)
         public quotationProductsRepository: QuotationProductsRepository,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository,
         @repository(PurchaseOrdersRepository)
         public purchaseOrdersRepository: PurchaseOrdersRepository,
         @inject(STORAGE_DIRECTORY) private storageDirectory: string,
@@ -40,6 +42,45 @@ export class ContainerService {
             return containerRes;
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async getPurchaseOrdersForContainer() {
+        try {
+            let purchaseOrders = await this.purchaseOrdersRepository.find({
+                where: {
+                    status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL,
+                    containerId: undefined
+                },
+                include: [
+                    {
+                        relation: "project",
+                    },
+                    {
+                        relation: "quotationProducts"
+                    }
+                ]
+            });
+
+            purchaseOrders = purchaseOrders.filter(pO => !pO.containerId);
+
+            return purchaseOrders.map(pO => {
+                return {
+                    id: pO.id,
+                    projectId: pO?.project?.projectId,
+                    products: pO?.quotationProducts?.map(qProducts => {
+                        return {
+                            id: qProducts.id,
+                            SKU: qProducts.SKU,
+                            mainFinishImage: qProducts.mainFinishImage,
+                            description: qProducts?.descriptionPedimiento
+                        }
+                    })
+                }
+            }) ?? [];
+
+        } catch (error) {
+            return this.responseService.internalServerError(error?.message ? error.message : error);
         }
     }
 
@@ -707,17 +748,24 @@ export class ContainerService {
             const container = await this.containerRepository.findOne({where: {id}});
             if (!container)
                 throw this.responseService.badRequest("El contenedor no existe.")
-            const {docs, purchaseOrders, status, ...body} = data;
+            const {docs, purchaseOrders, status, newPurchaseOrders, ...body} = data;
             const date = await this.calculateArrivalDateAndShippingDate(status);
             await this.containerRepository.updateById(id, {...body, ...date, status});
             await this.calculateArrivalDatePurchaseOrder(id);
             await this.setStatusPurchaseOrder(id, status);
             await this.updateDocument(id, docs);
             await this.updateProducts(purchaseOrders);
+            await this.addNewPurchaseOrdersToContainer(newPurchaseOrders, id);
             return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
         } catch (error) {
             console.log(error)
             throw this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async addNewPurchaseOrdersToContainer(newPurchaseOrders: {id: number}[], containerId: number) {
+        for (let index = 0; index < newPurchaseOrders?.length; index++) {
+            await this.purchaseOrdersRepository.updateById(newPurchaseOrders[index].id, {containerId})
         }
     }
 
@@ -1078,6 +1126,9 @@ export class ContainerService {
                                                     }
                                                 ],
                                             }
+                                        },
+                                        {
+                                            relation: 'project'
                                         }
                                     ]
                                 }
@@ -1098,10 +1149,18 @@ export class ContainerService {
                     ]
                 };
 
+
+
             const container = await this.containerRepository.findById(id, filter);
             const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection, createdAt} = container;
-            const purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
-            console.log('purchaseOrdersContainers: ', purchaseOrdersContainers.length)
+            let purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
+            let purchaseOrdersContainersWithProjectId = [];
+
+            for (const pO of purchaseOrdersContainers) {
+                const getProject = await this.projectRepository.findById(pO?.projectId!, {fields: ["id", "projectId"]});
+                purchaseOrdersContainersWithProjectId.push({...pO, projectId: getProject?.projectId})
+            }
+
             return {
                 pedimento,
                 createdAt,
@@ -1123,11 +1182,13 @@ export class ContainerService {
                         name, extension
                     }
                 }),
-                purchaseOrders: purchaseOrdersContainers ? purchaseOrdersContainers?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                purchaseOrders: purchaseOrdersContainersWithProjectId ? purchaseOrdersContainersWithProjectId?.map((value: any) => {
                     const {id: purchaseOrderid, proforma, projectId, quotationProducts} = value;
+
+                    const projectIdData = projectId;
                     return {
                         id: purchaseOrderid,
-                        projectId,
+                        projectId: projectIdData ?? null,
                         products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
                             const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, invoiceNumber, grossWeight, netWeight, numberBoxes, NOMS, descriptionPedimiento, quantity} = value;
                             const {document, line, name} = product;
@@ -1149,6 +1210,7 @@ export class ContainerService {
                                 invoiceNumber,
                                 grossWeight,
                                 netWeight,
+                                projectId: projectIdData,
                                 numberBoxes,
                                 NOMS,
                                 quantity
