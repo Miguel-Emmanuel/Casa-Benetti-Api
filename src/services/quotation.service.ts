@@ -86,6 +86,7 @@ export class QuotationService {
 
     async create(data: CreateQuotation) {
         const {id, customer, projectManagers, designers, products, quotation, isDraft, proofPaymentQuotation, typeQuotation, productsStock} = data;
+
         if (typeQuotation === TypeQuotationE.GENERAL) {
             let showroomManagerId = undefined
             const {isReferencedCustomer, mainProjectManagerId, mainProjectManagerCommissions} = quotation;
@@ -99,18 +100,23 @@ export class QuotationService {
                 await this.validateMainPMAndSecondary(mainProjectManagerId, projectManagers);
             }
 
+
             if (isReferencedCustomer === true)
                 await this.findUserById(quotation.referenceCustomerId);
             let groupId = null;
             let customerId = null;
+
             if (mainProjectManagerId) {
                 showroomManagerId = await this.getSM(mainProjectManagerId);
             }
             try {
+
                 groupId = await this.createOrGetGroup(customer);
                 customerId = await this.createOrGetCustomer({...customer}, groupId);
                 const userId = this.user.id;
                 delete quotation.mainProjectManagerCommissions;
+
+
                 if (id === null || id == undefined) {
                     const createQuotation = await this.createQuatation(quotation, isDraft, customerId, userId, branchId, showroomManagerId);
                     await this.createProofPayments(proofPaymentQuotation, createQuotation.id);

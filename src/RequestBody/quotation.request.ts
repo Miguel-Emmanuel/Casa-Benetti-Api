@@ -142,7 +142,8 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                         type: 'object',
                                         properties: {
                                             classificationId: {
-                                                type: 'number'
+                                                type: 'number',
+                                                nullable: true
                                             },
                                             commissionPercentage: {
                                                 type: 'number'
@@ -171,7 +172,8 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                         type: 'object',
                                         properties: {
                                             classificationId: {
-                                                type: 'number'
+                                                type: 'number',
+                                                nullable: true
                                             },
                                             commissionPercentage: {
                                                 type: 'number'
@@ -252,7 +254,8 @@ export const CreateRequestBody: Partial<RequestBodyObject> = {
                                     type: 'object',
                                     properties: {
                                         classificationId: {
-                                            type: 'number'
+                                            type: 'number',
+                                            nullable: true
                                         },
                                         commissionPercentage: {
                                             type: 'number'
@@ -473,7 +476,8 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                         type: 'object',
                                         properties: {
                                             classificationId: {
-                                                type: 'number'
+                                                type: 'number',
+                                                nullable: true
                                             },
                                             commissionPercentage: {
                                                 type: 'number'
@@ -502,7 +506,8 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                         type: 'object',
                                         properties: {
                                             classificationId: {
-                                                type: 'number'
+                                                type: 'number',
+                                                nullable: true
                                             },
                                             commissionPercentage: {
                                                 type: 'number'
@@ -572,7 +577,8 @@ export const UpdateRequestBody: Partial<RequestBodyObject> = {
                                     type: 'object',
                                     properties: {
                                         classificationId: {
-                                            type: 'number'
+                                            type: 'number',
+                                            nullable: true
                                         },
                                         commissionPercentage: {
                                             type: 'number'
@@ -859,7 +865,8 @@ export const QuotationGteByIdResponse: ResponseModelOrSpec = {
                                                 type: 'object',
                                                 properties: {
                                                     classificationId: {
-                                                        type: 'number'
+                                                        type: 'number',
+                                                        nullable: true
                                                     },
                                                     commissionPercentage: {
                                                         type: 'number'
@@ -887,7 +894,8 @@ export const QuotationGteByIdResponse: ResponseModelOrSpec = {
                                                 type: 'object',
                                                 properties: {
                                                     classificationId: {
-                                                        type: 'number'
+                                                        type: 'number',
+                                                        nullable: true
                                                     },
                                                     commissionPercentage: {
                                                         type: 'number'
