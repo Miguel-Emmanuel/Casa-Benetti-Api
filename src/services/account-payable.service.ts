@@ -268,7 +268,10 @@ export class AccountPayableService {
             };
         try {
             const findAccountPayable = await this.accountPayableRepository.find(filter);
-            let accountPayableByProviders = findAccountPayable.map(value => {
+            let accountPayableByProviders = findAccountPayable.map((value, index) => {
+                if (index == 0) {
+
+                }
                 const accountPayables = findAccountPayable.filter(item => item.proforma.provider.name === value.proforma.provider.name);
                 const totalPaid = accountPayables.reduce((acc, item) => acc + item.totalPaid, 0);
                 const total = accountPayables.reduce((acc, item) => acc + item.total, 0);
@@ -279,7 +282,7 @@ export class AccountPayableService {
                     providerId: value.proforma.provider.id,
                     totalPaid,
                     total,
-                    balance
+                    balance,
                 }
             });
             accountPayableByProviders = this.removeDuplicates(accountPayableByProviders);
@@ -432,10 +435,9 @@ export class AccountPayableService {
         }
     }
 
-    async findByIdProvider(id: number, filter?: Filter<AccountPayable>) {
+    async findByIdProvider(id: number, filter?: Filter<AccountPayable>, providerId: number = 0) {
         try {
-
-            const getProvider = await this.providerRepository.findById(id, {fields: ['id', 'name']});
+            const getProvider = await this.providerRepository.findById(providerId, {fields: ['id', 'name']});
 
             const include: InclusionFilter[] = [
                 {
@@ -538,16 +540,18 @@ export class AccountPayableService {
             let accountPayableHistories = [];
 
             for (const accPayable of accountPayableByProvider) {
-                for (const accPayHistories of accPayable.accountPayableHistories) {
-                    accountPayableHistories.push({
-                        id: accPayHistories?.id,
-                        concept: accPayHistories?.concept,
-                        currency: accPayHistories?.currency,
-                        amount: accPayHistories?.amount,
-                        paymentDate: accPayHistories?.paymentDate,
-                        documents: accPayHistories.documents,
-                        status: accPayHistories?.status,
-                    });
+                if (accPayable?.accountPayableHistories) {
+                    for (const accPayHistories of accPayable?.accountPayableHistories) {
+                        accountPayableHistories.push({
+                            id: accPayHistories?.id,
+                            concept: accPayHistories?.concept,
+                            currency: accPayHistories?.currency,
+                            amount: accPayHistories?.amount,
+                            paymentDate: accPayHistories?.paymentDate,
+                            documents: accPayHistories.documents,
+                            status: accPayHistories?.status,
+                        });
+                    }
                 }
             }
 
@@ -568,7 +572,7 @@ export class AccountPayableService {
         }
     }
 
-    async findProjectsByProvider(id: number, filter?: Filter<AccountPayable>) {
+    async findProjectsByProvider(id: number, filter?: Filter<AccountPayable>, providerId: number = 0) {
 
         const include: InclusionFilter[] = [
             {
@@ -649,11 +653,9 @@ export class AccountPayableService {
                     ...include
                 ]
             };
-
         try {
-            const getProvider = await this.providerRepository.findById(id, {fields: ['id', 'name']});
+            const getProvider = await this.providerRepository.findById(providerId, {fields: ['id', 'name']});
             const findAccountPayable = await this.accountPayableRepository.find(filter);
-
             let accountPayableByProvider = findAccountPayable.filter(value => value.proforma.provider.name === getProvider.name);
             return accountPayableByProvider;
         } catch (error) {
