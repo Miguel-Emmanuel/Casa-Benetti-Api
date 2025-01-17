@@ -276,6 +276,7 @@ export class AccountPayableService {
                 return {
                     id: value.id,
                     provider: value.proforma.provider.name,
+                    providerId: value.proforma.provider.id,
                     totalPaid,
                     total,
                     balance
