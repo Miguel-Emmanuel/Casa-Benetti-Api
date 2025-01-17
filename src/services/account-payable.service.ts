@@ -283,7 +283,6 @@ export class AccountPayableService {
                     totalPaid,
                     total,
                     balance,
-                    providerId: value.proforma.providerId
                 }
             });
             accountPayableByProviders = this.removeDuplicates(accountPayableByProviders);
