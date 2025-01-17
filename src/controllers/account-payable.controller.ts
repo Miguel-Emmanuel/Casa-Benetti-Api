@@ -111,9 +111,10 @@ export class AccountPayableController {
   })
   async findByIdProvider(
     @param.path.number('id') id: number,
+    @param.query.number('providerId') providerId: number,
     @param.filter(AccountPayable, {exclude: 'where'}) filter?: FilterExcludingWhere<AccountPayable>
   ): Promise<object> {
-    return this.accountPayableService.findByIdProvider(id, filter);
+    return this.accountPayableService.findByIdProvider(id, filter, providerId);
   }
 
   @get('/account-payables/provider/{id}/projects')
@@ -130,9 +131,10 @@ export class AccountPayableController {
   })
   async findByIdProviderWithProjects(
     @param.path.number('id') id: number,
+    @param.query.number('providerId') providerId: number,
     @param.filter(AccountPayable, {exclude: 'where'}) filter?: FilterExcludingWhere<AccountPayable>
   ): Promise<object> {
-    return this.accountPayableService.findProjectsByProvider(id, filter);
+    return this.accountPayableService.findProjectsByProvider(id, filter, providerId);
   }
 
   @get('/account-payables/{id}')
