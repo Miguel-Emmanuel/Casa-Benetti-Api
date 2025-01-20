@@ -380,7 +380,7 @@ export class CollectionService {
         await this.validateBodyCollectionPatchFeedback(data);
         const {containerId, documents, destination, dateCollection} = data;
         await this.createDocument(id, documents);
-        await this.validaIfContainer(id, destination, data?.purchaseOrders);
+        await this.validaIfContainer(id, containerId ? containerId : undefined, destination, data?.purchaseOrders);
         await this.collectionRepository.updateById(id, {containerId, destination, dateCollection, status: CollectionStatus.COMPLETADA})
         return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
     }
@@ -392,7 +392,7 @@ export class CollectionService {
         }
     }
 
-    async validaIfContainer(collectionId: number, destination: CollectionDestinationE, products: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
+    async validaIfContainer(collectionId: number, containerId: number | undefined, destination: CollectionDestinationE, products: {id: number, products: {id: number, isSelected: boolean}[]}[]) {
         if (destination === CollectionDestinationE.CONTENEDOR) {
             const collection = await this.collectionRepository.findById(collectionId, {
                 include: [
@@ -443,7 +443,7 @@ export class CollectionService {
                     }
                 }
 
-                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL});
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.TRANSITO_INTERNACIONAL, containerId});
             }
         }
     }

@@ -79,6 +79,64 @@ export class AccountPayableController {
     return this.accountPayableService.find(filter);
   }
 
+  @get('/account-payables/providers')
+  @response(200, {
+    description: 'Array of AccountPayable by providers model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(AccountPayable, {includeRelations: false}),
+        },
+      },
+    },
+  })
+  async findByProviders(
+    @param.filter(AccountPayable) filter?: Filter<AccountPayable>,
+  ): Promise<object> {
+    return this.accountPayableService.findByProvider(filter);
+  }
+
+  @get('/account-payables/provider/{id}')
+  @response(200, {
+    description: 'AccountPayable by provider model instance',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(AccountPayable, {includeRelations: false}),
+        },
+      },
+    },
+  })
+  async findByIdProvider(
+    @param.path.number('id') id: number,
+    @param.query.number('providerId') providerId: number,
+    @param.filter(AccountPayable, {exclude: 'where'}) filter?: FilterExcludingWhere<AccountPayable>
+  ): Promise<object> {
+    return this.accountPayableService.findByIdProvider(id, filter, providerId);
+  }
+
+  @get('/account-payables/provider/{id}/projects')
+  @response(200, {
+    description: 'AccountPayable by provider model instance',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(AccountPayable, {includeRelations: false}),
+        },
+      },
+    },
+  })
+  async findByIdProviderWithProjects(
+    @param.path.number('id') id: number,
+    @param.query.number('providerId') providerId: number,
+    @param.filter(AccountPayable, {exclude: 'where'}) filter?: FilterExcludingWhere<AccountPayable>
+  ): Promise<object> {
+    return this.accountPayableService.findProjectsByProvider(id, filter, providerId);
+  }
+
   @get('/account-payables/{id}')
   @response(200, {
     description: 'AccountPayable model instance',

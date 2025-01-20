@@ -1,4 +1,4 @@
-import {belongsTo, hasMany, model, property} from '@loopback/repository';
+import {belongsTo, hasMany, Model, model, property} from '@loopback/repository';
 import {getJsonSchema} from '@loopback/rest';
 import {AccountPayableHistoryStatusE, ExchangeRateE} from '../enums';
 import {AccountPayable} from './account-payable.model';
@@ -101,6 +101,29 @@ export interface AccountPayableHistoryRelations {
 
 export type AccountPayableHistoryWithRelations = AccountPayableHistory & AccountPayableHistoryRelations;
 
+export class AccountPayablesData extends Model {
+    @property({
+        type: 'number',
+    })
+    id: number;
+
+    @property({
+        type: 'number',
+    })
+    amount: number;
+
+    @property({
+        type: 'number',
+    })
+    totalPaid: number;
+
+    @property({
+        type: 'number',
+    })
+    balance: number;
+
+}
+
 export class AccountPayableHistoryCreate extends AccountPayableHistory {
     @property({
         type: 'array',
@@ -110,4 +133,16 @@ export class AccountPayableHistoryCreate extends AccountPayableHistory {
         }
     })
     images?: DocumentSchema[];
+
+    @property({
+        type: 'array',
+        jsonSchema: {
+            type: 'array',
+            items: getJsonSchema(AccountPayablesData)
+        }
+    })
+    accountsToPay?: AccountPayablesData[];
+
 }
+
+

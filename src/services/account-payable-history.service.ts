@@ -45,22 +45,39 @@ export class AccountPayableHistoryService {
 
 
     async create(accountPayableHistory: Omit<AccountPayableHistoryCreate, 'id'>,) {
-        const {accountPayableId, images} = accountPayableHistory;
-        const accountPayable = await this.findAccountPayable(accountPayableId);
+        const {accountPayableId, images, accountsToPay} = accountPayableHistory;
 
-        const {total, purchaseOrders, proforma} = accountPayable;
+        let accountPayableHistoryRes = [];
 
-        if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
-            const newAmount = await this.convertCurrency(accountPayableHistory.amount, accountPayableHistory.currency, accountPayableId, proforma.project.quotationId)
-            const newTotalPaid = accountPayable.totalPaid + newAmount
-            const newBalance = accountPayable.balance - newAmount
-            await this.accountPayableRepository.updateById(accountPayableId, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
-            await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.providerId, proforma.brandId,)
-            await this.settleAccountPayable(newTotalPaid, total, accountPayableId, purchaseOrders.id);
+        for (const account of (accountsToPay ?? [])) {
+            const accountPayable = await this.findAccountPayable(account.id);
+            const {total, purchaseOrders, proforma, } = accountPayable;
+            if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
+                const newAmount = await this.convertCurrency((account?.amount ?? 0), accountPayableHistory.currency, account.id, proforma?.project?.quotationId)
+                const newTotalPaid = account.totalPaid + newAmount
+                const newBalance = account.balance - newAmount
+                await this.accountPayableRepository.updateById(account.id, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
+                await this.validateProductionEndDate(newTotalPaid, total, purchaseOrders, proforma.providerId, proforma.brandId,)
+                await this.settleAccountPayable(newTotalPaid, total, account.id, purchaseOrders.id);
+            }
+
+            delete accountPayableHistory?.images;
+            delete accountPayableHistory?.accountsToPay;
+
+            const accountPayableHistoryData = await this.accountPayableHistoryRepository.create({
+                concept: accountPayableHistory.concept,
+                currency: accountPayableHistory.currency,
+                amount: account.amount,
+                paymentDate: accountPayableHistory.paymentDate,
+                status: accountPayableHistory.status,
+                providerId: proforma?.providerId,
+                accountPayableId: account.id
+            });
+            accountPayableHistoryRes.push(accountPayableHistoryData);
+            await this.createDocument(accountPayableHistoryData.id, images);
         }
-        delete accountPayableHistory.images;
-        const accountPayableHistoryRes = await this.accountPayableHistoryRepository.create({...accountPayableHistory, providerId: accountPayable.proforma?.providerId});
-        await this.createDocument(accountPayableHistoryRes.id, images);
+
+
         return accountPayableHistoryRes;
     }
 

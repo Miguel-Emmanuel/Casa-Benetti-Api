@@ -41,7 +41,7 @@ export class AccountPayableHistoryController {
             },
         })
         accountPayableHistory: Omit<AccountPayableHistoryCreate, 'id'>,
-    ): Promise<AccountPayableHistory> {
+    ): Promise<object> {
         return this.accountPayableHistoryService.create(accountPayableHistory);
     }
 
