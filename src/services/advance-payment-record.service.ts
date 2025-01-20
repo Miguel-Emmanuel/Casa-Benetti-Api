@@ -41,7 +41,7 @@ export class AdvancePaymentRecordService {
     async create(advancePaymentRecord: Omit<AdvancePaymentRecordCreate, 'id'>,) {
         try {
             await this.validateBodyAdvancePayment(advancePaymentRecord);
-            const {accountsReceivableId, vouchers} = advancePaymentRecord;
+            const {accountsReceivableId, vouchers, status} = advancePaymentRecord;
             const accountsReceivable = await this.findAccountReceivable(accountsReceivableId);
             const {advancePaymentRecords} = accountsReceivable;
             let consecutiveId = 1;
@@ -52,6 +52,36 @@ export class AdvancePaymentRecordService {
             const advancePaymentRecordRes = await this.advancePaymentRecordRepository.create({...advancePaymentRecord, consecutiveId});
 
             await this.createDocuments(advancePaymentRecordRes.id, vouchers);
+            const payment = await this.findAdvancePayment(advancePaymentRecordRes.id);
+            const {accountsReceivable: accountsReceivablePay} = payment;
+            let {totalSale, totalPaid} = accountsReceivablePay;
+
+            // Si el status es "PAGADO", actualizar balance y total pagado
+            if (status && status === AdvancePaymentStatusE.PAGADO) {
+                const {conversionAmountPaid} = advancePaymentRecord;
+                let totalVenta = totalSale;
+
+
+                const {balance: balanceOld} = await this.accountsReceivableRepository.findById(accountsReceivableId);
+
+                const balance = balanceOld - conversionAmountPaid;
+                const totalPaidNew = this.roundToTwoDecimals(totalPaid + conversionAmountPaid);
+
+                await this.accountsReceivableRepository.updateById(accountsReceivable.id, {
+                    balance: this.roundToTwoDecimals(balance),
+                    totalPaid: totalPaidNew
+                });
+
+                await this.createPurchaseOrders(
+                    accountsReceivable.projectId,
+                    accountsReceivable.id,
+                    totalPaidNew,
+                    accountsReceivable.typeCurrency
+                );
+
+                await this.validatePaid(accountsReceivable, totalPaidNew, totalVenta, advancePaymentRecord.productType);
+            }
+
             return advancePaymentRecordRes;
         } catch (error) {
             throw this.responseService.badRequest(error.message ?? error);
