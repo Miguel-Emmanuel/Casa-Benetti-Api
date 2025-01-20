@@ -46,14 +46,13 @@ export class AccountPayableHistoryService {
 
     async create(accountPayableHistory: Omit<AccountPayableHistoryCreate, 'id'>,) {
         const {accountPayableId, images, accountsToPay} = accountPayableHistory;
-
         let accountPayableHistoryRes = [];
-
+        let newAmount;
         for (const account of (accountsToPay ?? [])) {
             const accountPayable = await this.findAccountPayable(account.id);
             const {total, purchaseOrders, proforma, } = accountPayable;
             if (accountPayableHistory.status === AccountPayableHistoryStatusE.PAGADO) {
-                const newAmount = await this.convertCurrency((account?.amount ?? 0), accountPayableHistory.currency, account.id, proforma?.project?.quotationId)
+                newAmount = await this.convertCurrency((account?.amount ?? 0), accountPayableHistory.currency, account.id, proforma?.project?.quotationId)
                 const newTotalPaid = account.totalPaid + newAmount
                 const newBalance = account.balance - newAmount
                 await this.accountPayableRepository.updateById(account.id, {totalPaid: this.roundToTwoDecimals(newTotalPaid), balance: this.roundToTwoDecimals(newBalance)})
@@ -67,7 +66,7 @@ export class AccountPayableHistoryService {
             const accountPayableHistoryData = await this.accountPayableHistoryRepository.create({
                 concept: accountPayableHistory.concept,
                 currency: accountPayableHistory.currency,
-                amount: account.amount,
+                amount: newAmount,
                 paymentDate: accountPayableHistory.paymentDate,
                 status: accountPayableHistory.status,
                 providerId: proforma?.providerId,
@@ -133,22 +132,14 @@ export class AccountPayableHistoryService {
 
     async validateProductionEndDate(totalPaid: number, total: number, purchaseOrder: PurchaseOrders, providerId?: number, brandId?: number) {
         if (purchaseOrder) {
-            console.log('purchaseOrder: ', purchaseOrder)
-            console.log('!purchaseOrder.productionEndDate: ', !purchaseOrder?.productionEndDate)
             if (!purchaseOrder?.productionEndDate) {
                 let {advanceConditionPercentage} = await this.providerRepository.findById(providerId);
-                console.log('providerId: ', providerId)
                 advanceConditionPercentage = advanceConditionPercentage ?? 100;
-                console.log('advanceConditionPercentage: ', advanceConditionPercentage)
                 const porcentage = ((totalPaid / total) * 100);
-                console.log('porcentage: ', porcentage)
                 if (porcentage >= advanceConditionPercentage) {
                     let {productionTime} = await this.brandRepository.findById(brandId);
-                    console.log('brandId: ', brandId)
-                    console.log('productionTime: ', productionTime)
                     let scheduledDate = new Date();
                     const productionEndDate = this.calculateScheledDateService.addBusinessDays(scheduledDate, productionTime ?? 0);
-                    console.log('productionEndDate: ', productionEndDate)
                     const arrivalDate = dayjs(productionEndDate).add(53, 'days').toDate()
                     await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {productionEndDate, productionStartDate: dayjs().add(1, 'days').toDate(), status: PurchaseOrdersStatus.EN_PRODUCCION, arrivalDate})
                 }
@@ -184,7 +175,6 @@ export class AccountPayableHistoryService {
 
         const isAfterEndDate = moment(endDate).isSameOrBefore(currentDate);
 
-        console.log("endDate:", endDate, "currentDate:", currentDate, "isAfterEndDate:", isAfterEndDate)
         if (totalPaid >= total && isAfterEndDate) {
 
             await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.EN_RECOLECCION, isPaid: true})
@@ -281,13 +271,14 @@ export class AccountPayableHistoryService {
             where: {id: accountPayableId},
             include: [{relation: "proforma"}]
         })
-
+        // console.log('proformaCurrency', findAccountProforma?.proforma?.currency) // euro
         let mount = 0
         if (findAccountProforma && findAccountProforma?.proforma) {
             const proformaCurrency = findAccountProforma?.proforma?.currency
             if (proformaCurrency === ProformaCurrencyE.EURO) {
                 const {USD, MXN} = await this.dayExchancheCalculateToService.getdayExchangeRateEuroToQuotation(quotationId);
-
+                // console.log('USD, MXN', USD, MXN) // 1.0012 21.6301
+                // console.log('accountPayableCurrency', accountPayableCurrency) // MXN
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToEUR.MXN
                     mount = accountPayableAmount * MXN
@@ -299,12 +290,11 @@ export class AccountPayableHistoryService {
                 else {
                     // mount = accountPayableAmount * ConvertCurrencyToEUR.EURO
                     mount = accountPayableAmount;
-
                 }
+
             }
             else if (proformaCurrency === ProformaCurrencyE.PESO_MEXICANO) {
                 const {USD, EUR} = await this.dayExchancheCalculateToService.getdayExchangeRateMxnToQuotation(quotationId);
-
                 if (accountPayableCurrency === ExchangeRateE.MXN) {
                     // mount = accountPayableAmount * ConvertCurrencyToMXN.MXN
                     mount = accountPayableAmount;

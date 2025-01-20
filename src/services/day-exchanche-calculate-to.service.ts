@@ -57,17 +57,17 @@ export class DayExchancheCalculateToService {
     }
 
     async getdayExchangeRateEuroToQuotation(quotationId: number) {
-        const {euroToDolar, euroToPeso} = await this.quotationRepository.findById(quotationId, {fields: ['id', 'dolarToEuro', 'dolarToPeso', 'mxnToDolar', 'mxnToEuro', 'euroToDolar', 'euroToPeso']});
-        return {USD: euroToDolar, MXN: euroToPeso}
+        const {dolarToEuro, mxnToEuro} = await this.quotationRepository.findById(quotationId, {fields: ['id', 'dolarToEuro', 'dolarToPeso', 'mxnToDolar', 'mxnToEuro', 'euroToDolar', 'euroToPeso']});
+        return {USD: dolarToEuro, MXN: mxnToEuro}
     }
 
     async getdayExchangeRateMxnToQuotation(quotationId: number) {
-        const {mxnToDolar, mxnToEuro} = await this.quotationRepository.findById(quotationId, {fields: ['id', 'dolarToEuro', 'dolarToPeso', 'mxnToDolar', 'mxnToEuro', 'euroToDolar', 'euroToPeso']});
-        return {USD: mxnToDolar, EUR: mxnToEuro}
+        const {dolarToPeso, euroToPeso} = await this.quotationRepository.findById(quotationId, {fields: ['id', 'dolarToEuro', 'dolarToPeso', 'mxnToDolar', 'mxnToEuro', 'euroToDolar', 'euroToPeso']});
+        return {USD: dolarToPeso, EUR: euroToPeso}
     }
 
     async getdayExchangeRateDollarToQuotation(quotationId: number) {
-        const {dolarToEuro, dolarToPeso} = await this.quotationRepository.findById(quotationId, {fields: ['id', 'dolarToEuro', 'dolarToPeso', 'mxnToDolar', 'mxnToEuro', 'euroToDolar', 'euroToPeso']});
-        return {EUR: dolarToEuro, MXN: dolarToPeso}
+        const {euroToDolar, euroToPeso} = await this.quotationRepository.findById(quotationId, {fields: ['id', 'dolarToEuro', 'dolarToPeso', 'mxnToDolar', 'mxnToEuro', 'euroToDolar', 'euroToPeso']});
+        return {EUR: euroToDolar, MXN: euroToPeso}
     }
 }
