@@ -1153,15 +1153,14 @@ export class ContainerService {
 
             const container = await this.containerRepository.findById(id, filter);
             const {pedimento, containerNumber, grossWeight, numberBoxes, measures, status, arrivalDate, shippingDate, ETDDate, ETADate, invoiceNumber, documents, purchaseOrders, collection, createdAt} = container;
-            let purchaseOrdersContainers = [...purchaseOrders ?? [], ...collection?.purchaseOrders ?? []]
             let purchaseOrdersContainersWithProjectId = [];
-
+            let purchaseOrdersContainers = await this.mergePurchaseOrders(purchaseOrders, collection.purchaseOrders)
             for (const pO of purchaseOrdersContainers) {
                 const getProject = await this.projectRepository.findById(pO?.projectId!, {fields: ["id", "projectId"]});
                 purchaseOrdersContainersWithProjectId.push({...pO, projectId: getProject?.projectId})
             }
 
-            return {
+            const result = {
                 pedimento,
                 createdAt,
                 containerNumber,
@@ -1184,7 +1183,6 @@ export class ContainerService {
                 }),
                 purchaseOrders: purchaseOrdersContainersWithProjectId ? purchaseOrdersContainersWithProjectId?.map((value: any) => {
                     const {id: purchaseOrderid, proforma, projectId, quotationProducts} = value;
-
                     const projectIdData = projectId;
                     return {
                         id: purchaseOrderid,
@@ -1219,6 +1217,7 @@ export class ContainerService {
                     }
                 }) : [],
             }
+            return result
         } catch (error) {
             throw this.responseService.badRequest(error?.message ?? error)
         }
@@ -1299,4 +1298,29 @@ export class ContainerService {
             }
         }
     }
+    async mergePurchaseOrders(orders1: any, orders2: any) {
+        // Crear un mapa para rastrear las órdenes por sus claves únicas
+        const orderMap = new Map();
+
+        [...orders1, ...orders2].forEach(order => {
+            // Crear una clave única basada en los campos de comparación
+            const key = `${order.id}-${order.containerId}-${order.collectionId}-${order.accountsReceivableId}-${order.projectId}`;
+
+            if (orderMap.has(key)) {
+                // Fusionar los objetos en caso de coincidencia
+                orderMap.set(key, {
+                    ...orderMap.get(key),  // Datos anteriores
+                    ...order,               // Nuevos datos (sobreescribe si es necesario)
+                    quotationProducts: order.quotationProducts
+
+                });
+            } else {
+                // Si no existe en el mapa, agregarlo
+                orderMap.set(key, order);
+            }
+        });
+
+        // Convertir el resultado del mapa de vuelta a un array
+        return Array.from(orderMap.values());
+    };
 }
