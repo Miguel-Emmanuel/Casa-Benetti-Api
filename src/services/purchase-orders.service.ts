@@ -637,10 +637,11 @@ export class PurchaseOrdersService {
             {
                 status: PurchaseOrdersStatus.EN_RECOLECCION
             },
-            {
-                collectionId: {eq: null}
-            }
+            // {
+            //     collectionId: {eq: null}
+            // }
         ]
+
         const purchaseOrders = await this.purchaseOrdersRepository.find({
             where: {
                 and: [
@@ -648,7 +649,6 @@ export class PurchaseOrdersService {
                 ]
             }, include: [...include]
         })
-
         return purchaseOrders.map(value => {
             const {id: purchaseOrderid, projectId, proforma, productionEndDate, productionRealEndDate, productionStartDate} = value;
             const {proformaId, provider, brand, quotationProducts} = proforma;
