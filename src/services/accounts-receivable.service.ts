@@ -94,12 +94,12 @@ export class AccountsReceivableService {
         let data = [];
         for (let index = 0; index < advancePaymentRecordsFind.length; index++) {
             const element = advancePaymentRecordsFind[index];
-            const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords} = element;
+            const {totalSale, updatedTotal, totalPaid, balance, advancePaymentRecords, projectId} = element;
             try {
                 let balanceDetail = totalSale;
                 data.push({
                     today: dayjs().format('DD/MM/YYYY'),
-                    projectId: project?.projectId,
+                    projectId,
                     customer: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                     projectManager: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
                     showroomManager: `${showroomManager?.firstName} ${showroomManager?.lastName ?? ''}`,
@@ -107,10 +107,12 @@ export class AccountsReceivableService {
                     totalSale,
                     updatedTotal,
                     totalPaid,
-                    totalPercentage: 0,
+                    totalPercentage: advancePaymentRecords.reduce((acc, record) => {
+                        return acc + (record.paymentPercentage || 0);
+                    }, 0),
                     balance,
                     advancePaymentRecords: advancePaymentRecords.map((value: any) => {
-                        value.projectId = value?.project?.projectId
+                        value.projectId = element?.project?.projectId
                         const data = {
                             ...value,
                             balanceDetail: balanceDetail.toFixed(2),
