@@ -222,7 +222,7 @@
         </div>
         <div class="column column-3">
             <div class="property">
-                <div class="property-name">Cliente:</div>
+                <div class="property-name">Customer:</div>
                 <div class="property-value">
                     {{#if isTypeQuotationGeneral}}
                     {{customerName}}
@@ -232,7 +232,7 @@
                 </div>
             </div>
             <div class="property">
-                <div class="property-name">Cotización:</div>
+                <div class="property-name">Quotation:</div>
                 <div class="property-value">{{quotationId}}</div>
             </div>
             <div class="property">
@@ -240,11 +240,11 @@
                 <div class="property-value">{{projectManager}}</div>
             </div>
             <div class="property">
-                <div class="property-name">Fecha:</div>
+                <div class="property-name">Date:</div>
                 <div class="property-value">{{createdAt}}</div>
             </div>
             <div class="property">
-                <div class="property-name">Referencia:</div>
+                <div class="property-name">Reference:</div>
                 <div class="property-value">{{referenceCustomer}}</div>
             </div>
         </div>
@@ -254,14 +254,15 @@
         <table>
             <thead>
                 <tr>
-                    <th>MARCA</th>
-                    <th>CODIGO</th>
+                    <th>BRAND</th>
+                    <th>CODE</th>
                     <th>STATUS</th>
-                    <th>DESCRIPCIÓN</th>
-                    <th>MEDIDAS</th>
-                    <th>IMAGEN</th>
-                    <th>ACABADOS</th>
-                    <th>CANTIDAD</th>
+                    <th>DESCRIPTION</th>
+                    <th>MEASUREMENTS</th>
+                    <th>IMAGE</th>
+                    <th>FINISHES</th>
+                    <th>QUANTITY</th>
+                    <th>PRICE LIST</th>
                 </tr>
             </thead>
             <tbody>
@@ -284,6 +285,8 @@
                         </div>
                     </td>
                     <td>{{this.quantity}}</td>
+                    <td>{{this.originCost}}</td>
+
                 </tr>
                 {{#each this.assembledProducts}}
                 <tr style="">
@@ -300,6 +303,8 @@
                     </td>
                     <td>{{this.mainFinish}}</td>
                     <td>{{this.quantity}}</td>
+                    <td>{{this.originCost}}</td>
+
                 </tr>
                 {{/each}}
 
@@ -322,6 +327,7 @@
                         </div>
                     </td>
                     <td>{{this.quantity}}</td>
+                    <td>{{this.originCost}}</td>
                 </tr>
                 {{/if}}
                 {{/each}}

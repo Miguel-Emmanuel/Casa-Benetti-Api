@@ -940,6 +940,7 @@ export class ProjectService {
                 };
             const project = await this.projectRepository.findById(id, filter);
             const {customer, quotation, advancePaymentRecords, clientQuoteFile, providerFile, advanceFile, documents, reference, status} = project;
+
             const {closingDate, products, exchangeRateQuotation, typeQuotation, quotationProductsStocks, showRoomDestination, branchesId} = quotation;
             const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance} = this.getPricesQuotation(quotation);
             const productsArray = [];
@@ -1392,7 +1393,6 @@ export class ProjectService {
         }, {transaction});
         const {customer, mainProjectManager, referenceCustomer, products, project, quotationProductsStocks} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
-        // console.log("QUOTATIONCUSTOMER", quotation);
 
 
         let productsTemplate = [];
@@ -1520,7 +1520,6 @@ export class ProjectService {
     async createPdfToProvider(quotationId: number, projectId: number, transaction: any) {
         const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]}, {transaction});
         const {customer, mainProjectManager, referenceCustomer, products, project} = quotation;
-        console.log("QUOTATION", quotation);
 
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
@@ -1560,6 +1559,13 @@ export class ProjectService {
                 mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
                 quantity: quotationProducts?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
+                originCost:
+                    quotationProducts?.originCost
+                        ? `${quotationProducts?.originCost.toLocaleString('es-MX', {
+                            style: 'currency',
+                            currency: 'MXN',
+                        })}`.replace('$', '€')
+                        : '€0.00',
                 originCode: quotationProducts?.originCode,
                 assembledProducts: quotationProducts?.assembledProducts ?? [],
             })
@@ -1568,7 +1574,6 @@ export class ProjectService {
         try {
             const reference = `${project?.reference ?? ""}`
             const referenceCustomerName = reference.trim() === "" ? "-" : reference
-            console.log("REFERENCE", {reference, referenceCustomerName});
 
             const properties: any = {
                 "logo": logo,
@@ -1578,10 +1583,12 @@ export class ProjectService {
                 "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
                 "referenceCustomer": referenceCustomerName,
                 "products": prodcutsArray,
-                "type": 'COTIZACION',
+                "type": 'Orden de compra',
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
-            const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+
+            const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
