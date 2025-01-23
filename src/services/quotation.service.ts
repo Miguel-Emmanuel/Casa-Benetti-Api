@@ -320,6 +320,7 @@ export class QuotationService {
                 currencyPesoMexicano: quotationProducts?.currency === CurrencyE.PESO_MEXICANO,
             })
         }
+        console.log('productsTemplate: ', productsTemplate)
         const {subtotal, additionalDiscount, percentageIva, iva, total, advance, exchangeRate, balance, percentageAdditionalDiscount, advanceCustomer, conversionAdvance, percentageAdvance} = this.getPricesQuotation(quotation);
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
