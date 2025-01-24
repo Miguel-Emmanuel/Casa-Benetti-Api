@@ -54,6 +54,9 @@ export class ProductProvider extends Entity {
     //Costo Origen
     @property({
         type: 'number',
+        postgresql: {
+            dataType: 'double precision',
+        },
     })
     originCost: number;
 
