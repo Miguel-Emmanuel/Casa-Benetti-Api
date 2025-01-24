@@ -2306,7 +2306,6 @@ export class QuotationService {
         });
         const {customer, mainProjectManager, referenceCustomer, products, project, quotationProductsStocks} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
-        console.log("QUOTATIONCUSTOMER", quotation);
 
 
         let productsTemplate = [];
@@ -2474,6 +2473,13 @@ export class QuotationService {
                 quantity: quotationProducts?.quantity,
                 typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
                 originCode: quotationProducts?.originCode,
+                originCost:
+                    quotationProducts?.originCost
+                        ? `${quotationProducts?.originCost.toLocaleString('es-MX', {
+                            style: 'currency',
+                            currency: 'MXN',
+                        })}`.replace('$', '€')
+                        : '€0.00',
                 assembledProducts: quotationProducts?.assembledProducts ?? [],
             })
         }
@@ -2481,7 +2487,6 @@ export class QuotationService {
         try {
             const reference = `${project?.reference ?? ""}`
             const referenceCustomerName = reference.trim() === "" ? "-" : reference
-            console.log("REFERENCE", {reference, referenceCustomerName});
 
             const properties: any = {
                 "logo": logo,
@@ -2494,7 +2499,7 @@ export class QuotationService {
                 "type": 'COTIZACION',
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
-            const nameFile = `cotizacion_proveedor_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
             await this.projectRepository.providerFile(projectId).delete();
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
