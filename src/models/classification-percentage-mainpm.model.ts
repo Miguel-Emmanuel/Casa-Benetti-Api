@@ -18,12 +18,6 @@ import {Quotation} from './quotation.model';
                 entityKey: 'id',
                 foreignKey: 'quotationid',
             },
-            fk_quotation_classificationId: {
-                name: 'fk_quotation_classificationId',
-                entity: 'Quotation',
-                entityKey: 'id',
-                foreignKey: 'classificationid',
-            },
         }
     }
 })

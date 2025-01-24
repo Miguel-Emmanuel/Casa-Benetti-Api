@@ -11,6 +11,8 @@ import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.valid
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {ProformaWithRelations, Project, ProjectWithRelations, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
 import {AccountPayableRepository, AccountsReceivableRepository, AdvancePaymentRecordRepository, BranchRepository, CommissionPaymentRecordRepository, DeliveryRequestRepository, DocumentRepository, ProformaRepository, ProjectRepository, PurchaseOrdersRepository, QuotationDesignerRepository, QuotationProductsRepository, QuotationProjectManagerRepository, QuotationRepository, UserRepository} from '../repositories';
+import {DayExchancheCalculateToService} from './day-exchanche-calculate-to.service';
+import {DayExchangeRateService} from './day-exchange-rate.service';
 import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
@@ -61,6 +63,10 @@ export class ProjectService {
         public userRepository: UserRepository,
         @inject(RestBindings.Http.RESPONSE)
         private response: Response,
+        @service()
+        public dayExchancheCalculateToService: DayExchancheCalculateToService,
+        @service()
+        public dayExchangeRateService: DayExchangeRateService
     ) { }
 
     async create(body: {quotationId: number}, transaction: any) {
@@ -2037,17 +2043,21 @@ export class ProjectService {
                 // const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
                 // const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
                 // await this.createAdvancePaymentRecordRepository(accountsReceivable.id, projectId, paymentPercentage, subtotalAmountPaid, iva ?? 0, conversionAmountPaid, proofPaymentType, percentageIva, exchangeRateAmount, exchangeRate, conversionAdvance, paymentType, transaction, documents, paymentDate);
-                console.log('conversionAdvance: ', conversionAdvance)
-                console.log('exchangeRateAmount: ', exchangeRateAmount)
-                console.log('percentageIva: ', percentageIva)
-                console.log('total: ', total)
-                const conversionAmountPaid = this.bigNumberDividedBy(conversionAdvance || advanceCustomer, exchangeRateAmount || 1); //importe pagado
+                let conversionAmountPaid: any
+                if (proofPaymentQuotations[index].proofPaymentType == 'MXN') {
+                    const {mxnToEuro} = await this.dayExchangeRateService.findById(1);
+
+                    conversionAmountPaid = this.bigNumberMultipliedBy(advanceCustomer, mxnToEuro || 1); //importe pagado
+                }
+                if (proofPaymentQuotations[index].proofPaymentType == 'USD') {
+                    const {dolarToEuro} = await this.dayExchangeRateService.findById(1);
+                    conversionAmountPaid = this.bigNumberMultipliedBy(advanceCustomer, dolarToEuro || 1); //importe pagado
+                }
+                if (proofPaymentQuotations[index].proofPaymentType == 'EUR') {
+                    conversionAmountPaid = this.bigNumberMultipliedBy(advanceCustomer, 1); //importe pagado
+                }
                 const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                 const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
-                console.log('conversionAmountPaid: ', conversionAmountPaid)
-                console.log('subtotalAmountPaid: ', subtotalAmountPaid)
-                console.log('paymentPercentage: ', paymentPercentage)
-
                 await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, this.roundToTwoDecimals(conversionAmountPaid), this.roundToTwoDecimals(subtotalAmountPaid), this.roundToTwoDecimals(paymentPercentage), projectId, accountsReceivable.id, transaction, documents, paymentDate);
 
             }
