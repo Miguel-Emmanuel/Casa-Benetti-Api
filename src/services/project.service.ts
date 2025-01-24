@@ -6,7 +6,7 @@ import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, DeliveryRequestStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ProjectStatusE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
-import {convertToMoney} from '../helpers/convertMoney';
+import {convertToMoney, convertToMoneyEuro} from '../helpers/convertMoney';
 import {schemaDeliveryRequest} from '../joi.validation.ts/delivery-request.validation';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {ProformaWithRelations, Project, ProjectWithRelations, Quotation, QuotationProducts, QuotationProductsWithRelations} from '../models';
@@ -1503,9 +1503,9 @@ export class ProjectService {
                 iva,
                 total,
                 advance,
-                advanceCustomer: convertToMoney(advanceCustomer ?? 0),
-                conversionAdvance: convertToMoney(conversionAdvance ?? 0),
-                balance: convertToMoney(balance ?? 0),
+                advanceCustomer: exchangeRate == 'EUR' ? convertToMoneyEuro(advanceCustomer ?? 0) : convertToMoney(advanceCustomer ?? 0),
+                conversionAdvance: convertToMoneyEuro(conversionAdvance ?? 0),
+                balance: convertToMoneyEuro(balance ?? 0),
                 exchangeRate,
                 percentageAdvance,
                 emailPM: mainProjectManager?.email,
@@ -1624,7 +1624,7 @@ export class ProjectService {
                 letterNumber = `${letterNumber} ${this.separeteDecimal(amountPaid)}/100 MN`;
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
-                    advanceCustomer: amountPaid,
+                    advanceCustomer: paymentCurrency == 'MXN' ? convertToMoney(amountPaid) : convertToMoneyEuro(amountPaid),
                     conversionAdvance: conversionAmountPaid ? conversionAmountPaid.toFixed(2) : 0,
                     proofPaymentType: paymentCurrency,
                     paymentType: paymentMethod,
