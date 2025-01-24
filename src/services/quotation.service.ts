@@ -6,7 +6,7 @@ import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, ExchangeRateE, ExchangeRateQuotationE, ProformaCurrencyE, ProjectStatusE, PurchaseOrdersStatus, ShowRoomDestinationE, StatusQuotationE, TypeArticleE, TypeCommisionE, TypeQuotationE} from '../enums';
-import {convertToMoney} from '../helpers/convertMoney';
+import {convertToMoney, convertToMoneyEuro} from '../helpers/convertMoney';
 import {CreateQuotation, Customer, Designers, DesignersById, MainProjectManagerCommissionsI, ProductsStock, ProjectManagers, ProjectManagersById, QuotationFindOneResponse, QuotationI, UpdateQuotation, UpdateQuotationI, UpdateQuotationProject} from '../interface';
 import {schemaCreateQuotitionShowRoomMaster, schemaUpdateQuotitionProject} from '../joi.validation.ts/quotation-project.validation';
 import {schemaChangeStatusClose, schemaChangeStatusSM, schemaCreateQuotition, schemaCreateQuotitionShowRoom, schemaUpdateQuotition} from '../joi.validation.ts/quotation.validation';
@@ -340,9 +340,9 @@ export class QuotationService {
                 iva,
                 total,
                 advance,
-                advanceCustomer: convertToMoney(advanceCustomer ?? 0),
-                conversionAdvance: convertToMoney(conversionAdvance ?? 0),
-                balance: convertToMoney(balance ?? 0),
+                advanceCustomer: exchangeRate == 'EUR' ? convertToMoneyEuro(advanceCustomer ?? 0) : convertToMoney(advanceCustomer ?? 0),
+                conversionAdvance: convertToMoneyEuro(conversionAdvance ?? 0),
+                balance: convertToMoneyEuro(balance ?? 0),
                 exchangeRate: "Paridad",
                 percentageAdvance,
                 emailPM: mainProjectManager?.email,
@@ -2306,8 +2306,6 @@ export class QuotationService {
         });
         const {customer, mainProjectManager, referenceCustomer, products, project, quotationProductsStocks} = quotation;
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
-
-
         let productsTemplate = [];
         for (const product of products) {
             const {brand, document, quotationProducts, line, name} = product;
@@ -2409,9 +2407,9 @@ export class QuotationService {
                 iva,
                 total,
                 advance,
-                advanceCustomer: convertToMoney(advanceCustomer ?? 0),
-                conversionAdvance: convertToMoney(conversionAdvance ?? 0),
-                balance: convertToMoney(balance ?? 0),
+                advanceCustomer: exchangeRate == 'EUR' ? convertToMoneyEuro(advanceCustomer ?? 0) : convertToMoney(advanceCustomer ?? 0),
+                conversionAdvance: convertToMoneyEuro(conversionAdvance ?? 0),
+                balance: convertToMoneyEuro(balance ?? 0),
                 exchangeRate,
                 percentageAdvance,
                 emailPM: mainProjectManager?.email,
@@ -2525,12 +2523,14 @@ export class QuotationService {
             }
             for (let index = 0; index < advancePaymentRecord?.length; index++) {
                 const {paymentDate, amountPaid, parity, currencyApply, paymentMethod, conversionAmountPaid, paymentCurrency, reference} = advancePaymentRecord[index];
+
                 let letterNumber = this.letterNumberService.convertNumberToWords(amountPaid)
                 letterNumber = `${letterNumber} ${this.separeteDecimal(amountPaid)}/100 MN`;
+
                 const propertiesAdvance: any = {
                     ...propertiesGeneral,
-                    advanceCustomer: amountPaid,
-                    conversionAdvance: conversionAmountPaid ? conversionAmountPaid.toFixed(2) : 0,
+                    advanceCustomer: paymentCurrency == 'MXN' ? convertToMoney(amountPaid) : convertToMoneyEuro(amountPaid),
+                    conversionAdvance: paymentCurrency == 'MXN' ? convertToMoney(conversionAmountPaid).replace('$', '') : convertToMoneyEuro(conversionAmountPaid).replace('€', ''),
                     proofPaymentType: paymentCurrency,
                     paymentType: paymentMethod,
                     exchangeRateAmount: parity,
