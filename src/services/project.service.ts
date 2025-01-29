@@ -2043,22 +2043,27 @@ export class ProjectService {
                 // const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1))
                 // const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
                 // await this.createAdvancePaymentRecordRepository(accountsReceivable.id, projectId, paymentPercentage, subtotalAmountPaid, iva ?? 0, conversionAmountPaid, proofPaymentType, percentageIva, exchangeRateAmount, exchangeRate, conversionAdvance, paymentType, transaction, documents, paymentDate);
-                let conversionAmountPaid: any
-                if (proofPaymentQuotations[index].proofPaymentType == 'MXN') {
-                    const {mxnToEuro} = await this.dayExchangeRateService.findById(1);
 
+                let currentexchangeRateAmount: any
+                let conversionAmountPaid: any
+                if (proofPaymentType == 'MXN') {
+                    const {mxnToEuro} = await this.dayExchangeRateService.findById(1);
+                    currentexchangeRateAmount = mxnToEuro
                     conversionAmountPaid = this.bigNumberMultipliedBy(advanceCustomer, mxnToEuro || 1); //importe pagado
                 }
-                if (proofPaymentQuotations[index].proofPaymentType == 'USD') {
+                if (proofPaymentType == 'USD') {
                     const {dolarToEuro} = await this.dayExchangeRateService.findById(1);
+                    currentexchangeRateAmount = dolarToEuro
                     conversionAmountPaid = this.bigNumberMultipliedBy(advanceCustomer, dolarToEuro || 1); //importe pagado
                 }
-                if (proofPaymentQuotations[index].proofPaymentType == 'EUR') {
+                if (proofPaymentType == 'EUR') {
+                    currentexchangeRateAmount = 1
                     conversionAmountPaid = this.bigNumberMultipliedBy(advanceCustomer, 1); //importe pagado
                 }
+
                 const subtotalAmountPaid = this.bigNumberDividedBy(conversionAmountPaid, ((percentageIva / 100) + 1)) //importe pagado sin iva
                 const paymentPercentage = this.calculatePercentage(conversionAmountPaid, total ?? 0)
-                await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, exchangeRateAmount, percentageIva, exchangeRateQuotation, this.roundToTwoDecimals(conversionAmountPaid), this.roundToTwoDecimals(subtotalAmountPaid), this.roundToTwoDecimals(paymentPercentage), projectId, accountsReceivable.id, transaction, documents, paymentDate);
+                await this.createAdvancePaymentRecordRepository(`${reference}-${ExchangeRateQuotationE.EUR}`, paymentType, advanceCustomer, exchangeRate, currentexchangeRateAmount, percentageIva, exchangeRateQuotation, this.roundToTwoDecimals(conversionAmountPaid), this.roundToTwoDecimals(subtotalAmountPaid), this.roundToTwoDecimals(paymentPercentage), projectId, accountsReceivable.id, transaction, documents, paymentDate);
 
             }
 
