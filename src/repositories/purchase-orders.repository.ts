@@ -2,7 +2,7 @@ import {Getter, inject} from '@loopback/core';
 import {BelongsToAccessor, DefaultCrudRepository, HasManyRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {OperationHookBindings} from '../keys';
-import {AccountPayable, AccountsReceivable, Collection, Container, DeliveryRequest, Proforma, Project, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts} from '../models';
+import {AccountPayable, AccountsReceivable, Collection, Container, DeliveryRequest, Proforma, Project, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, Provider, Quotation} from '../models';
 import {PurchaseOrderHook} from '../operation-hooks/purchase-order.hook';
 import {AccountPayableRepository} from './account-payable.repository';
 import {AccountsReceivableRepository} from './accounts-receivable.repository';
@@ -13,6 +13,7 @@ import {ProformaRepository} from './proforma.repository';
 import {ProjectRepository} from './project.repository';
 import {ProviderRepository} from './provider.repository';
 import {QuotationProductsRepository} from './quotation-products.repository';
+import {QuotationRepository} from './quotation.repository';
 
 export class PurchaseOrdersRepository extends DefaultCrudRepository<
   PurchaseOrders,
@@ -36,12 +37,20 @@ export class PurchaseOrdersRepository extends DefaultCrudRepository<
 
   public readonly quotationProducts: HasManyRepositoryFactory<QuotationProducts, typeof PurchaseOrders.prototype.id>;
 
+  public readonly provider: BelongsToAccessor<Provider, typeof PurchaseOrders.prototype.id>;
+
+  public readonly quotation: BelongsToAccessor<Quotation, typeof PurchaseOrders.prototype.id>;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource, @repository.getter('ProviderRepository') protected providerRepositoryGetter: Getter<ProviderRepository>, @repository.getter('AccountPayableRepository') protected accountPayableRepositoryGetter: Getter<AccountPayableRepository>, @repository.getter('ProformaRepository') protected proformaRepositoryGetter: Getter<ProformaRepository>, @repository.getter('AccountsReceivableRepository') protected accountsReceivableRepositoryGetter: Getter<AccountsReceivableRepository>, @repository.getter('DeliveryRequestRepository') protected deliveryRequestRepositoryGetter: Getter<DeliveryRequestRepository>, @repository.getter('CollectionRepository') protected collectionRepositoryGetter: Getter<CollectionRepository>,
     @inject.getter(OperationHookBindings.OPERATION_SERVICE_PURCHASE)
-    public operationHook: Getter<PurchaseOrderHook>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('ContainerRepository') protected containerRepositoryGetter: Getter<ContainerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>,
+    public operationHook: Getter<PurchaseOrderHook>, @repository.getter('ProjectRepository') protected projectRepositoryGetter: Getter<ProjectRepository>, @repository.getter('ContainerRepository') protected containerRepositoryGetter: Getter<ContainerRepository>, @repository.getter('QuotationProductsRepository') protected quotationProductsRepositoryGetter: Getter<QuotationProductsRepository>, @repository.getter('QuotationRepository') protected quotationRepositoryGetter: Getter<QuotationRepository>,
   ) {
     super(PurchaseOrders, dataSource);
+    this.quotation = this.createBelongsToAccessorFor('quotation', quotationRepositoryGetter,);
+    this.registerInclusionResolver('quotation', this.quotation.inclusionResolver);
+    this.provider = this.createBelongsToAccessorFor('provider', providerRepositoryGetter,);
+    this.registerInclusionResolver('provider', this.provider.inclusionResolver);
     this.quotationProducts = this.createHasManyRepositoryFactoryFor('quotationProducts', quotationProductsRepositoryGetter,);
     this.registerInclusionResolver('quotationProducts', this.quotationProducts.inclusionResolver);
     this.container = this.createBelongsToAccessorFor('container', containerRepositoryGetter,);

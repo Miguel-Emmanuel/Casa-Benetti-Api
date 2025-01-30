@@ -12,12 +12,6 @@ import {PurchaseOrders} from './purchase-orders.model';
       table: 'proforma_AccountPayable' // Nombre de la tabla en PostgreSQL
     },
     foreignKeys: {
-      fk_accountPayable_proformaId: {
-        name: 'fk_accountPayable_proformaId',
-        entity: 'Proforma',
-        entityKey: 'id',
-        foreignKey: 'proformaid',
-      },
     }
   }
 })

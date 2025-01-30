@@ -61,6 +61,14 @@ export class QuotationController {
         return this.quotationService.find(filter);
     }
 
+    @get('/quotations/{id}/generate/purchase-orders')
+    @response(200, QuotationFindResponseSwagger)
+    async generatePurchaseOrdersByQuotation(
+        @param.path.number('id') id: number,
+    ): Promise<object> {
+        return this.quotationService.createInitialPurchaseOrders(id);
+    }
+
 
     @get('/quotations/{id}')
     @response(200, QuotationGteByIdResponse)

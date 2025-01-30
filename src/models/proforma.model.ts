@@ -9,6 +9,7 @@ import {Project, ProjectWithRelations} from './project.model';
 import {Provider, ProviderWithRelations} from './provider.model';
 import {PurchaseOrders, PurchaseOrdersWithRelations} from './purchase-orders.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
+import {Quotation, QuotationWithRelations} from './quotation.model';
 
 @model({
   settings: {
@@ -27,12 +28,6 @@ import {QuotationProducts, QuotationProductsWithRelations} from './quotation-pro
         entity: 'Provider',
         entityKey: 'id',
         foreignKey: 'providerid',
-      },
-      fk_proforma_projectId: {
-        name: 'fk_proforma_projectid',
-        entity: 'Project',
-        entityKey: 'id',
-        foreignKey: 'projectid',
       },
       fk_proforma_branchId: {
         name: 'fk_proforma_branchId',
@@ -103,6 +98,9 @@ export class Proforma extends BaseEntity {
   @hasOne(() => PurchaseOrders)
   purchaseOrders: PurchaseOrdersWithRelations;
 
+  @belongsTo(() => Quotation)
+  quotationId: number;
+
   @belongsTo(() => Brand)
   brandId: number;
 
@@ -110,7 +108,7 @@ export class Proforma extends BaseEntity {
   document: Document;
 
   @belongsTo(() => Project)
-  projectId: number;
+  projectId?: number;
 
   @hasMany(() => QuotationProducts)
   quotationProducts: QuotationProducts[];
@@ -127,6 +125,7 @@ export interface ProformaRelations {
   project: ProjectWithRelations,
   provider: ProviderWithRelations,
   brand: BrandWithRelations
+  quotation: QuotationWithRelations
   quotationProducts: QuotationProductsWithRelations[]
 
 }
