@@ -970,6 +970,27 @@ export class QuotationService {
             return acc;
         }, {});
 
+        // Valida y elimina los proveedores que ya tienen una purchaseOrder existente
+        for (const providerId in productsByProvider) {
+            const quotationId = productsByProvider[providerId][0].quotationId;
+
+            // Verifica si ya existe una purchaseOrder con el providerId y quotationId
+            const existingPurchaseOrder = await this.purchaseOrdersRepository.findOne({
+                where: {
+                    providerId: parseInt(providerId),
+                    quotationId
+                }
+            });
+
+            // Si existe una purchaseOrder, elimina el objeto con la key del providerId
+            if (existingPurchaseOrder) {
+                delete productsByProvider[providerId];
+            }
+        }
+
+
+        let purchaseOrderDocuments = [];
+
         // Crea una orden de compra por cada proveedor
         for (const providerId in productsByProvider) {
             const products = productsByProvider[providerId];
@@ -989,23 +1010,58 @@ export class QuotationService {
             for (const product of products) {
                 await this.quotationProductsRepository.updateById(product.id, {purchaseOrdersId: purchaseOrder.id});
             }
-        }
-        const document = await this.createPdfToProvider(quotationId);
 
-        return this.responseService.ok({
-            quotationId,
-            fileName: document?.nameFile
-        });
+            const document = await this.createPdfToProvider(quotationId, parseInt(providerId));
+            purchaseOrderDocuments.push({
+                quotationId,
+                fileName: document?.nameFile
+            })
+        }
+
+
+        return this.responseService.ok(purchaseOrderDocuments);
     }
 
-    async createPdfToProvider(quotationId: number) {
-        const quotation = await this.quotationRepository.findById(quotationId, {include: [{relation: 'customer'}, {relation: "project"}, {relation: 'mainProjectManager'}, {relation: 'referenceCustomer'}, {relation: 'products', scope: {include: ['line', 'brand', 'document', {relation: 'quotationProducts', scope: {include: ['mainFinishImage']}}, {relation: 'assembledProducts', scope: {include: ['document']}}]}}]});
+    async createPdfToProvider(quotationId: number, providerId: number) {
+        const quotation: any = await this.quotationRepository.findById(quotationId, {
+            include: [
+                {relation: 'customer'},
+                {relation: 'project'},
+                {relation: 'mainProjectManager'},
+                {relation: 'referenceCustomer'},
+                {
+                    relation: 'products',
+                    scope: {
+                        include: [
+                            'line',
+                            'brand',
+                            'document',
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: ['mainFinishImage'],
+                                    where: {provider: providerId}
+                                }
+                            },
+                            {
+                                relation: 'assembledProducts',
+                                scope: {include: ['document']}
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+
+        // Filtra los productos que no contengan quotationProducts
+        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts && product?.quotationProducts.length > 0);
         const {customer, mainProjectManager, referenceCustomer, products} = quotation;
 
+        const newProducts = products.filter((product: any) => product.quotationProducts && product.quotationProducts.length > 0);
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
         let prodcutsArray = [];
-        for (const product of products ?? []) {
+        for (const product of newProducts ?? []) {
             const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
             const descriptionParts = [
                 line?.name,
