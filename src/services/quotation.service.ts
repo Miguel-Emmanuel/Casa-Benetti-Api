@@ -1694,6 +1694,9 @@ export class QuotationService {
                                     'brand', 'document', 'line'
                                 ]
                             }
+                        },
+                        {
+                            relation: 'provider'
                         }
                     ]
                 }
@@ -1828,7 +1831,7 @@ export class QuotationService {
                 secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
                 line: line,
                 brand: brand,
-                document: document,
+                document: document
             })
         }
 
