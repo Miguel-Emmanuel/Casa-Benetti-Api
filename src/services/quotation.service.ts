@@ -1646,6 +1646,9 @@ export class QuotationService {
                                                 'brand', 'document', 'line'
                                             ]
                                         }
+                                    },
+                                    {
+                                        relation: 'provider'
                                     }
                                 ]
                             }
@@ -1725,6 +1728,7 @@ export class QuotationService {
                 percentageMaximumDiscount: iterator.percentageMaximumDiscount,
                 maximumDiscount: iterator.maximumDiscount,
                 subtotal: iterator.subtotal,
+                provider: iterator.provider,
                 mainMaterialImage: iterator?.mainMaterialImage ?? null,
                 mainFinishImage: iterator?.mainFinishImage ?? null,
                 secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
