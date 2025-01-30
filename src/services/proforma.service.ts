@@ -96,7 +96,18 @@ export class ProformaService {
         try {
 
             const proformas = await this.proformaRepository.find({
-                where: {quotationId}
+                where: {quotationId},
+                include: [
+                    {
+                        relation: "provider"
+                    },
+                    {
+                        relation: "brand"
+                    },
+                    {
+                        relation: "document"
+                    }
+                ]
             })
 
             return proformas;
