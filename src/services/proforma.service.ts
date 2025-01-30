@@ -464,18 +464,17 @@ export class ProformaService {
 
         //productquote, filtrarlo por provedor y marca, el primer elemento tomo currency,
         //find proyecto, AccountsReceivable y projectid toimar total pagado, si veo que es mas de 1 filtrar por el currency
-
-        const findQuotationProducts = await this.quotationProductsRepository.findOne({
+        const findQuotationProducts: any = await this.quotationProductsRepository.findOne({
             where: {
                 quotationId,
-                proformaId,
+                // proformaId,
                 providerId: proforma.providerId,
                 brandId: proforma.brandId
             }
         })
 
         if (!findQuotationProducts)
-            throw this.responseService.notFound("No se han encontrado productos relacionados con proforma")
+            return this.responseService.notFound("No se han encontrado productos relacionados con proforma")
 
         const findAccountsReceivable = await this.accountsReceivableRepository.find({
             where: {
