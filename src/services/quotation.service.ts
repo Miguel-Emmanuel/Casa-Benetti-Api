@@ -981,6 +981,7 @@ export class QuotationService {
                 proformaId: proformaId ? proformaId : undefined,
                 accountsReceivableId: undefined, // Asume que no hay cuenta por cobrar al inicio
                 projectId: undefined, // Asume que no hay projectId al inicio
+                providerId: parseInt(providerId),
                 quotationId
             });
 
@@ -1713,6 +1714,7 @@ export class QuotationService {
         const products: any[] = [];
         const projectManagers: ProjectManagersById[] = [];
         const designers: DesignersById[] = [];
+
         for (const iterator of quotation?.quotationProducts ?? []) {
             const {line, name, document, brand} = iterator.product;
             products.push({
