@@ -956,6 +956,7 @@ export class QuotationService {
         // Busca la cotización por su id
         const quotation = await this.quotationRepository.findById(quotationId);
         const {customerId, isFractionate} = quotation;
+        let purchaseOrderDocuments = [];
 
         // Busca los productos de la cotización
         const quotationProducts = await this.quotationProductsRepository.find({where: {quotationId}});
@@ -979,17 +980,20 @@ export class QuotationService {
                 where: {
                     providerId: parseInt(providerId),
                     quotationId
-                }
+                },
+                include: ['document']
             });
 
             // Si existe una purchaseOrder, elimina el objeto con la key del providerId
             if (existingPurchaseOrder) {
+                purchaseOrderDocuments.push({
+                    quotationId,
+                    fileName: existingPurchaseOrder?.document?.fileURL
+                });
                 delete productsByProvider[providerId];
             }
         }
 
-
-        let purchaseOrderDocuments = [];
 
         // Crea una orden de compra por cada proveedor
         for (const providerId in productsByProvider) {
@@ -1011,7 +1015,7 @@ export class QuotationService {
                 await this.quotationProductsRepository.updateById(product.id, {purchaseOrdersId: purchaseOrder.id});
             }
 
-            const document = await this.createPdfToProvider(quotationId, parseInt(providerId));
+            const document = await this.createPdfToProvider(quotationId, parseInt(providerId), purchaseOrder.id!);
             purchaseOrderDocuments.push({
                 quotationId,
                 fileName: document?.nameFile
@@ -1022,7 +1026,7 @@ export class QuotationService {
         return this.responseService.ok(purchaseOrderDocuments);
     }
 
-    async createPdfToProvider(quotationId: number, providerId: number) {
+    async createPdfToProvider(quotationId: number, providerId: number, purchaseOrderId: number) {
         const quotation: any = await this.quotationRepository.findById(quotationId, {
             include: [
                 {relation: 'customer'},
@@ -1129,7 +1133,7 @@ export class QuotationService {
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
 
             // await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
-            await this.documentRepository.create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
+            await this.purchaseOrdersRepository.document(purchaseOrderId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
             return {nameFile};
         } catch (error) {
             console.log('error: ', error)

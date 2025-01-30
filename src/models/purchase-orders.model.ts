@@ -1,4 +1,4 @@
-import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property, hasOne} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
 import {AccountPayable, AccountPayableWithRelations} from './account-payable.model';
 import {AccountsReceivable} from './accounts-receivable.model';
@@ -10,6 +10,7 @@ import {Project} from './project.model';
 import {Provider} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {Quotation} from './quotation.model';
+import {Document} from './document.model';
 
 //Ordenes de compra
 @model({
@@ -86,6 +87,8 @@ export class PurchaseOrders extends Entity {
   @belongsTo(() => Provider)
   providerId: number;
 
+  @hasOne(() => Document)
+  document: Document;
   @belongsTo(() => Quotation)
   quotationId: number;
 
