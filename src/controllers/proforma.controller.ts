@@ -74,6 +74,21 @@ export class ProformaController {
         return this.proformaService.count(where);
     }
 
+    @get('/proformas/by-quotation/{quotationId}')
+    @response(200, {
+        description: 'Proformas por cotizacion',
+        content: {
+            'application/json': {
+                schema: getModelSchemaRef(Proforma, {includeRelations: false}),
+            },
+        },
+    })
+    async proformasByQuotation(
+        @param.path.number('quotationId') quotationId: number,
+    ): Promise<object> {
+        return this.proformaService.proformasByQuotationId(quotationId);
+    }
+
     @get('/proformas')
     @response(200, {
         description: 'Array of Proforma model instances',

@@ -952,6 +952,46 @@ export class QuotationService {
         return quotation;
     }
 
+    async createInitialPurchaseOrders(quotationId: number) {
+        // Busca la cotización por su id
+        const quotation = await this.quotationRepository.findById(quotationId);
+        const {customerId, isFractionate} = quotation;
+
+        // Busca los productos de la cotización
+        const quotationProducts = await this.quotationProductsRepository.find({where: {quotationId}});
+
+        // Agrupa los productos por proveedor
+        const productsByProvider = quotationProducts.reduce((acc: any, product) => {
+            const providerId = product.providerId;
+            if (!acc[providerId]) {
+                acc[providerId] = [];
+            }
+            acc[providerId].push(product);
+            return acc;
+        }, {});
+
+        // Crea una orden de compra por cada proveedor
+        for (const providerId in productsByProvider) {
+            const products = productsByProvider[providerId];
+            const proformaId = products[0]?.proformaId; // Asume que todos los productos tienen el mismo proformaId
+
+            const purchaseOrder = await this.purchaseOrdersRepository.create({
+                accountPayableId: undefined, // Asume que no hay cuenta por pagar al inicio
+                status: PurchaseOrdersStatus.NUEVA,
+                proformaId: proformaId ? proformaId : undefined,
+                accountsReceivableId: undefined, // Asume que no hay cuenta por cobrar al inicio
+                projectId: undefined, // Asume que no hay projectId al inicio
+                quotationId
+            });
+
+            // Actualiza los productos con el ID de la orden de compra
+            for (const product of products) {
+                await this.quotationProductsRepository.updateById(product.id, {purchaseOrdersId: purchaseOrder.id});
+            }
+        }
+        return this.responseService.ok("¡En hora buena! La acción se ha realizado con éxito.");
+    }
+
     async validateBodyQuotation(data: CreateQuotation) {
         try {
             await schemaCreateQuotition.validateAsync(data);
