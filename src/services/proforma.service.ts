@@ -328,7 +328,7 @@ export class ProformaService {
 
             await this.findByIdProforma(id)
             await this.findByIdProvider(proforma.providerId)
-            await this.findByIdProject(proforma.projectId)
+            // await this.findByIdProject(proforma.projectId)
             await this.findByIdBrand(proforma.brandId)
             const findProviderBrand = await this.findProviderBrandUpdate(id, proforma)
             const findProformaAccount = await this.findAccountPayable(id)
@@ -365,19 +365,29 @@ export class ProformaService {
                         fields: ['id', 'fileURL', 'name', 'extension', 'proformaId']
                     }
                 },
+                // {
+                //     relation: 'project',
+                //     scope: {
+                //         fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
+                //         include: [
+                //             {
+                //                 relation: 'customer',
+                //                 scope: {
+                //                     fields: ['id', 'name', 'lastName', 'secondLastName']
+                //                 }
+                //             },
+                //             {
+                //                 relation: 'quotation'
+                //             }
+                //         ]
+                //     }
+                // },
                 {
-                    relation: 'project',
+                    relation: 'quotation',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
                         include: [
                             {
-                                relation: 'customer',
-                                scope: {
-                                    fields: ['id', 'name', 'lastName', 'secondLastName']
-                                }
-                            },
-                            {
-                                relation: 'quotation'
+                                relation: 'customer'
                             }
                         ]
                     }
@@ -443,14 +453,15 @@ export class ProformaService {
                 currencyNew: currency,
             }
         }
-        const {projectId, project, proformaId: proId} = oldData;
-        const {customer, quotation} = project
+        const {quotation, proformaId: proId} = oldData;
+        const {customer} = quotation;
+
         const option = {
             templateId: SendgridTemplates.UPDATE_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.UPDATE_PROFORMA.subject,
-                projectId: project.projectId,
+                // projectId: project.projectId,
                 // customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
                 customerName: quotation?.typeQuotation === TypeQuotationE.GENERAL ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 proformaId: proId,
