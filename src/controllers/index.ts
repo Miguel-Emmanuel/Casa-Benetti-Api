@@ -47,9 +47,10 @@ export * from './delivery-request.controller';
 export * from './internal-expenses.controller';
 export * from './inventories.controller';
 
-export * from './types-expenses.controller';
-export * from './purchase-orders-quotation-products.controller';
-export * from './inventory-movements-user.controller';
-export * from './inventory-movements-branch.controller';
-export * from './inventory-movements-warehouse.controller';
 export * from './day-exchange-rate.controller';
+export * from './inventory-movements-branch.controller';
+export * from './inventory-movements-user.controller';
+export * from './inventory-movements-warehouse.controller';
+export * from './purchase-orders-quotation-products.controller';
+export * from './types-expenses.controller';
+

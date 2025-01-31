@@ -1,12 +1,12 @@
 import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
-import {Filter, InclusionFilter, IsolationLevel, Where, repository} from '@loopback/repository';
+import {Filter, InclusionFilter, Where, repository} from '@loopback/repository';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import dayjs from 'dayjs';
 import fs from "fs/promises";
-import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, ProjectStatusE, PurchaseOrdersStatus, TypeQuotationE, TypeUserE} from '../enums';
+import {CurrencyE, ExchangeRateQuotationE, ProformaCurrencyE, TypeQuotationE, TypeUserE} from '../enums';
 import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
 import {Document, Proforma, ProformaWithRelations, Quotation} from '../models';
-import {AccountPayableRepository, AccountsReceivableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
+import {AccountPayableRepository, AccountsReceivableRepository, BrandRepository, DocumentRepository, ProformaRepository, ProjectRepository, ProviderRepository, PurchaseOrdersRepository, QuotationProductsRepository, QuotationRepository, UserRepository} from '../repositories';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
 
@@ -35,6 +35,8 @@ export class ProformaService {
         public sendgridService: SendgridService,
         @repository(UserRepository)
         public userRepository: UserRepository,
+        @repository(QuotationRepository)
+        public quotationRepository: QuotationRepository,
         @repository(AccountsReceivableRepository)
         public accountsReceivableRepository: AccountsReceivableRepository,
         @inject(SecurityBindings.USER)
@@ -42,28 +44,23 @@ export class ProformaService {
     ) { }
 
     async create(data: {proforma: Omit<Proforma, 'id'>, document: Document}) {
-        const transaction = await this.projectRepository.dataSource.beginTransaction(IsolationLevel.SERIALIZABLE);
         try {
             const {proforma, document} = data
 
-            const findProject = await this.projectRepository.findById(proforma.projectId, {
-                include: [{
-                    relation: "quotation",
-                }]
-            }, {transaction})
+            const findQuotation = await this.quotationRepository.findById(proforma.quotationId);
 
-            if (findProject.status === ProjectStatusE.CERRADO) {
-                await transaction.commit();
-                return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
-            }
+            // if (findProject.status === ProjectStatusE.CERRADO) {
+            //     await transaction.commit();
+            //     return this.responseService.badRequest("El proyecto ha sido cerrado y no es posible realizar actualizaciones.");
+            // }
 
             const findQuotationProducts = await this.quotationProductsRepository.find({
                 where: {
-                    quotationId: findProject.quotationId,
+                    quotationId: proforma.quotationId,
                     providerId: proforma.providerId,
                     brandId: proforma.brandId
                 }
-            }, {transaction})
+            })
 
 
             const findProviderBrand = await this.findProviderBrand(proforma)
@@ -74,30 +71,55 @@ export class ProformaService {
             if (!document)
                 return this.responseService.badRequest('¡Oh, no! Debes subir un documento de Proforma');
 
-            const newProforma = await this.proformaRepository.create({...proforma, branchId: findProject.branchId, }, {transaction});
+            const newProforma = await this.proformaRepository.create({...proforma, branchId: findQuotation.branchId});
 
             if (findQuotationProducts.length > 0) {
                 findQuotationProducts.map(async (item) => {
                     await this.quotationProductsRepository.updateById(item.id, {
                         proformaId: newProforma.id
-                    }, {transaction})
+                    })
                 })
             }
-            await this.createDocument(newProforma.id, document, transaction)
-            await this.sendEmailProforma(newProforma.id, document.fileURL, transaction);
-            await this.createAdvancePaymentAccount(proforma, newProforma.id!, findProject.typeQuotation, transaction)
+            await this.createDocument(newProforma.id, document)
+            await this.sendEmailProforma(newProforma.id, document.fileURL);
+            await this.createAdvancePaymentAccount(proforma, newProforma.id!, findQuotation.typeQuotation)
 
-            await transaction.commit()
             return {newProforma}
         } catch (error) {
-            transaction.rollback()
             return this.responseService.internalServerError(
                 error.message ? error.message : error
             );
         }
     }
 
-    async sendEmailProforma(proformaId?: number, fileURL?: string, transaction?: any) {
+    async proformasByQuotationId(quotationId: number) {
+        try {
+
+            const proformas = await this.proformaRepository.find({
+                where: {quotationId},
+                include: [
+                    {
+                        relation: "provider"
+                    },
+                    {
+                        relation: "brand"
+                    },
+                    {
+                        relation: "document"
+                    }
+                ]
+            })
+
+            return proformas;
+        } catch (error) {
+            return this.responseService.internalServerError(
+                error.message ? error.message : error
+            );
+
+        }
+    }
+
+    async sendEmailProforma(proformaId?: number, fileURL?: string) {
 
         const users = await this.userRepository.find({where: {typeUser: TypeUserE.ADMINISTRADOR}})
         let attachments = undefined;
@@ -119,19 +141,29 @@ export class ProformaService {
         }
         const proforma = await this.proformaRepository.findById(proformaId, {
             include: [
+                // {
+                //     relation: 'project',
+                //     scope: {
+                //         fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
+                //         include: [
+                //             {
+                //                 relation: 'customer',
+                //                 scope: {
+                //                     fields: ['id', 'name', 'lastName', 'secondLastName']
+                //                 }
+                //             },
+                //             {
+                //                 relation: 'quotation'
+                //             }
+                //         ]
+                //     }
+                // },
                 {
-                    relation: 'project',
+                    relation: 'quotation',
                     scope: {
-                        fields: ['id', 'customerId', 'quotationId', 'projectId', 'quotation'],
                         include: [
                             {
-                                relation: 'customer',
-                                scope: {
-                                    fields: ['id', 'name', 'lastName', 'secondLastName']
-                                }
-                            },
-                            {
-                                relation: 'quotation'
+                                relation: 'customer'
                             }
                         ]
                     }
@@ -149,15 +181,17 @@ export class ProformaService {
                     }
                 },
             ]
-        }, {transaction})
-        const {projectId, project, provider, brand, proformaDate, proformaAmount, currency, proformaId: proId} = proforma
-        const {customer, quotation} = project
+        })
+        const {quotation, provider, brand, proformaDate, proformaAmount, currency, proformaId: proId} = proforma
+
+        const {customer} = quotation;
+
         const option = {
             templateId: SendgridTemplates.NEW_PROFORMA.id,
             attachments: attachments,
             dynamicTemplateData: {
                 subject: SendgridTemplates.NEW_PROFORMA.subject,
-                projectId: project.projectId,
+                // projectId: project.projectId, // TODO: Cambiar por el id del proyecto
                 customerName: quotation?.typeQuotation === TypeQuotationE.GENERAL ? `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}` : 'Showroom',
                 proformaId: proId,
                 providerName: provider.name,
@@ -186,13 +220,13 @@ export class ProformaService {
         return currency === ProformaCurrencyE.EURO ? `${proformaAmount}€` : `$${proformaAmount}`
     }
 
-    async createDocument(proformaId: number | undefined, document: Document, transaction: any) {
+    async createDocument(proformaId: number | undefined, document: Document) {
 
         if (proformaId) {
             if (document && !document?.id) {
-                await this.proformaRepository.document(proformaId).create(document, {transaction});
+                await this.proformaRepository.document(proformaId).create(document);
             } else if (document) {
-                await this.documentRepository.updateById(document.id, {...document}, {transaction});
+                await this.documentRepository.updateById(document.id, {...document});
             }
         }
     }
@@ -308,7 +342,7 @@ export class ProformaService {
             if (!document)
                 return this.responseService.badRequest('¡Oh, no! Debes subir un documento de Proforma');
 
-            await this.createDocument(id, document, 'transaction')
+            await this.createDocument(id, document)
             const oldData = await this.getDataProforma(id);
             await this.proformaRepository.updateById(id, proforma);
             await this.accountPayableUpdate(findProformaAccount?.accountPayable?.id, proforma)
@@ -435,33 +469,30 @@ export class ProformaService {
         }
     }
 
-    async createAdvancePaymentAccount(proforma: Proforma, proformaId: number, typeQuotation: TypeQuotationE, transaction: any) {
-        const {projectId} = proforma
-        const findQuotation = await this.projectRepository.findById(proforma.projectId, {
-            include: [{
-                relation: "quotation",
-            }]
-        }, {transaction})
+    async createAdvancePaymentAccount(proforma: Proforma, proformaId: number, typeQuotation: TypeQuotationE) {
+        const {quotationId} = proforma
+        const findQuotation = await this.quotationRepository.findById(quotationId)
 
         //productquote, filtrarlo por provedor y marca, el primer elemento tomo currency,
         //find proyecto, AccountsReceivable y projectid toimar total pagado, si veo que es mas de 1 filtrar por el currency
-
-        const findQuotationProducts = await this.quotationProductsRepository.findOne({
+        const findQuotationProducts: any = await this.quotationProductsRepository.findOne({
             where: {
-                proformaId,
+                quotationId,
+                // proformaId,
                 providerId: proforma.providerId,
                 brandId: proforma.brandId
             }
-        }, {transaction})
+        })
 
         if (!findQuotationProducts)
-            throw this.responseService.notFound("No se han encontrado productos relacionados con proforma")
+            return this.responseService.notFound("No se han encontrado productos relacionados con proforma")
 
         const findAccountsReceivable = await this.accountsReceivableRepository.find({
             where: {
-                projectId
+                quotationId
             }
-        }, {transaction})
+        })
+
         let totalPaid = 0
         let accountsReceivableId = undefined
         let newCurrency = ExchangeRateQuotationE.EUR
@@ -480,58 +511,54 @@ export class ProformaService {
             accountsReceivableId = findAccountsReceivable.find((item) => item.typeCurrency === newCurrency)?.id ?? undefined
         }
 
-        const {quotation} = findQuotation
         const currencyAccountPayable = proforma.currency === ProformaCurrencyE.USD ? ExchangeRateQuotationE.USD : ProformaCurrencyE.PESO_MEXICANO ? ExchangeRateQuotationE.MXN : ExchangeRateQuotationE.EUR
 
         let advance = 0
         if (newCurrency === ExchangeRateQuotationE.EUR) {
-            advance = quotation.advanceEUR
+            advance = findQuotation.advanceEUR
         }
         else if (newCurrency === ExchangeRateQuotationE.USD) {
-            advance = quotation.advanceUSD
+            advance = findQuotation.advanceUSD
         }
         if (newCurrency === ExchangeRateQuotationE.MXN) {
-            advance = quotation.advanceMXN
+            advance = findQuotation.advanceMXN
         }
 
-        const accountsPayable = await this.accountPayableRepository.create({currency: currencyAccountPayable, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0}, {transaction});
+        const accountsPayable = await this.accountPayableRepository.create({currency: currencyAccountPayable, total: proforma.proformaAmount ?? 0, proformaId, balance: proforma.proformaAmount ?? 0});
 
         //cambiar totalpagado
         if (typeQuotation === TypeQuotationE.SHOWROOM || this.user.isMaster === true) {
-            const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
-            const findQuotationProducts = await this.quotationProductsRepository.find({
+            // const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId})
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({
                 where: {
-                    proformaId: proformaId,
+                    quotationId,
                     providerId: proforma.providerId,
-                    brandId: proforma.brandId
                 }
-            }, {transaction})
-            for (let index = 0; index < findQuotationProducts?.length; index++) {
-                const element = findQuotationProducts[index];
-                await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
-            }
+            });
+
+            if (!purchaseOrder)
+                return this.responseService.notFound("No se ha encontrado la orden de compra");
+
+            await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {accountPayableId: accountsPayable.id, proformaId, accountsReceivableId});
         } else if (typeQuotation === TypeQuotationE.GENERAL) {
             if (advance && totalPaid >= advance) {
-                //guardar el id de accounttspayableid
-                const purchaseorder = await this.purchaseOrdersRepository.create({accountPayableId: accountsPayable.id, status: PurchaseOrdersStatus.NUEVA, proformaId, accountsReceivableId, projectId}, {transaction})
-                const findQuotationProducts = await this.quotationProductsRepository.find({
+                const purchaseOrder = await this.purchaseOrdersRepository.findOne({
                     where: {
-                        proformaId: proformaId,
+                        quotationId,
                         providerId: proforma.providerId,
-                        brandId: proforma.brandId
                     }
-                }, {transaction})
-                for (let index = 0; index < findQuotationProducts?.length; index++) {
-                    const element = findQuotationProducts[index];
-                    await this.quotationProductsRepository.updateById(element.id, {purchaseOrdersId: purchaseorder.id}, {transaction});
-                }
+                });
+
+                if (!purchaseOrder)
+                    return this.responseService.notFound("No se ha encontrado la orden de compra");
+
+                await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {accountPayableId: accountsPayable.id, proformaId, accountsReceivableId});
 
             }
         }
 
-
-
     }
+
     getPricesQuotation(quotation: Quotation) {
         const {exchangeRateQuotation, } = quotation;
         if (exchangeRateQuotation === ExchangeRateQuotationE.EUR) {
@@ -623,10 +650,10 @@ export class ProformaService {
         return findProformaAccount
     }
     async findProviderBrand(proforma: Proforma): Promise<boolean> {
-        const {projectId, providerId, brandId} = proforma
+        const {quotationId, providerId, brandId} = proforma
         const findProviderBrand = await this.proformaRepository.findOne({
             where: {
-                projectId,
+                quotationId,
                 providerId,
                 brandId,
             }

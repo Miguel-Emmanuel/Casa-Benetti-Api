@@ -14,6 +14,7 @@ import {QuotationProductsStock, QuotationProductsStockWithRelations} from './quo
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {User, UserWithRelations} from './user.model';
+import {Proforma} from './proforma.model';
 
 @model({
     settings: {
@@ -290,6 +291,7 @@ export class Quotation extends BaseEntity {
     })
     subtotalEUR: number;
 
+
     //Porcentaje descuento adicional
     // @property({
     //     type: 'number',
@@ -302,6 +304,8 @@ export class Quotation extends BaseEntity {
 
 
     //Porcentaje descuento adicional
+  @hasMany(() => Proforma)
+  proformas: Proforma[];
     @property({
         type: 'number',
         required: false,

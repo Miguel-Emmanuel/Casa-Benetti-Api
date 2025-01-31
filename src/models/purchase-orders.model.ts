@@ -1,4 +1,4 @@
-import {Entity, belongsTo, hasMany, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasMany, model, property, hasOne} from '@loopback/repository';
 import {PurchaseOrdersStatus} from '../enums';
 import {AccountPayable, AccountPayableWithRelations} from './account-payable.model';
 import {AccountsReceivable} from './accounts-receivable.model';
@@ -7,7 +7,10 @@ import {Container} from './container.model';
 import {DeliveryRequest} from './delivery-request.model';
 import {Proforma, ProformaWithRelations} from './proforma.model';
 import {Project} from './project.model';
+import {Provider} from './provider.model';
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
+import {Quotation} from './quotation.model';
+import {Document} from './document.model';
 
 //Ordenes de compra
 @model({
@@ -16,18 +19,6 @@ import {QuotationProducts, QuotationProductsWithRelations} from './quotation-pro
       table: 'proforma_PurchaseOrders' // Nombre de la tabla en PostgreSQL
     },
     foreignKeys: {
-      fk_purchaseOrders_accountPayableId: {
-        name: 'fk_purchaseOrders_accountPayableId',
-        entity: 'AccountPayable',
-        entityKey: 'id',
-        foreignKey: 'accountpayableid',
-      },
-      fk_purchaseOrders_proformaId: {
-        name: 'fk_purchaseOrders_proformaId',
-        entity: 'Proforma',
-        entityKey: 'id',
-        foreignKey: 'proformaid',
-      },
     }
   }
 })
@@ -85,12 +76,21 @@ export class PurchaseOrders extends Entity {
   @hasMany(() => QuotationProducts)
   quotationProducts: QuotationProductsWithRelations[];
 
+
   //Esta pagado
   @property({
     type: 'boolean',
     default: false
   })
   isPaid: boolean;
+
+  @belongsTo(() => Provider)
+  providerId: number;
+
+  @hasOne(() => Document)
+  document: Document;
+  @belongsTo(() => Quotation)
+  quotationId: number;
 
   @belongsTo(() => Container)
   containerId: number;
@@ -105,10 +105,10 @@ export class PurchaseOrders extends Entity {
   accountsReceivableId?: number;
 
   @belongsTo(() => AccountPayable)
-  accountPayableId: number;
+  accountPayableId?: number;
 
   @belongsTo(() => Proforma)
-  proformaId: number;
+  proformaId?: number;
 
 
   constructor(data?: Partial<PurchaseOrders>) {

@@ -115,7 +115,7 @@ export class DateCollectionNotificationCronJob extends CronJob {
     }
 
     groupByProformaId = (array: PurchaseOrdersWithRelations[]): PurchaseOrdersWithRelations[][] => {
-        const grouped: {[key: number]: any[]} = array.reduce((acc, item) => {
+        const grouped: {[key: number]: any[]} = array.reduce((acc, item: any) => {
             if (!acc[item.proformaId]) {
                 acc[item.proformaId] = [];
             }

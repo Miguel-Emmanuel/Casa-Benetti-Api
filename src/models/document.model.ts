@@ -137,6 +137,11 @@ export class Document extends BaseEntity {
   })
   clientQuoteId?: number;
 
+  @property({
+    type: 'number',
+  })
+  purchaseOrdersId?: number;
+
   constructor(data?: Partial<Document>) {
     super(data);
   }

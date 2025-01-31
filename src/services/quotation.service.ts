@@ -952,6 +952,198 @@ export class QuotationService {
         return quotation;
     }
 
+    async createInitialPurchaseOrders(quotationId: number) {
+        // Busca la cotización por su id
+        const quotation = await this.quotationRepository.findById(quotationId);
+        const {customerId, isFractionate} = quotation;
+        let purchaseOrderDocuments = [];
+
+        // Busca los productos de la cotización
+        const quotationProducts = await this.quotationProductsRepository.find({where: {quotationId}});
+
+        // Agrupa los productos por proveedor
+        const productsByProvider = quotationProducts.reduce((acc: any, product) => {
+            const providerId = product.providerId;
+            if (!acc[providerId]) {
+                acc[providerId] = [];
+            }
+            acc[providerId].push(product);
+            return acc;
+        }, {});
+
+        // Valida y elimina los proveedores que ya tienen una purchaseOrder existente
+        for (const providerId in productsByProvider) {
+            const quotationId = productsByProvider[providerId][0].quotationId;
+
+            // Verifica si ya existe una purchaseOrder con el providerId y quotationId
+            const existingPurchaseOrder = await this.purchaseOrdersRepository.findOne({
+                where: {
+                    providerId: parseInt(providerId),
+                    quotationId
+                },
+                include: ['document']
+            });
+
+            // Si existe una purchaseOrder, elimina el objeto con la key del providerId
+            if (existingPurchaseOrder) {
+                purchaseOrderDocuments.push({
+                    quotationId,
+                    fileName: existingPurchaseOrder?.document?.fileURL
+                });
+                delete productsByProvider[providerId];
+            }
+        }
+
+
+        // Crea una orden de compra por cada proveedor
+        for (const providerId in productsByProvider) {
+            const products = productsByProvider[providerId];
+            const proformaId = products[0]?.proformaId; // Asume que todos los productos tienen el mismo proformaId
+
+            const purchaseOrder = await this.purchaseOrdersRepository.create({
+                accountPayableId: undefined, // Asume que no hay cuenta por pagar al inicio
+                status: PurchaseOrdersStatus.NUEVA,
+                proformaId: proformaId ? proformaId : undefined,
+                accountsReceivableId: undefined, // Asume que no hay cuenta por cobrar al inicio
+                projectId: undefined, // Asume que no hay projectId al inicio
+                providerId: parseInt(providerId),
+                quotationId
+            });
+
+            // Actualiza los productos con el ID de la orden de compra
+            for (const product of products) {
+                await this.quotationProductsRepository.updateById(product.id, {purchaseOrdersId: purchaseOrder.id});
+            }
+
+            const document = await this.createPdfToProvider(quotationId, parseInt(providerId), purchaseOrder.id!);
+            purchaseOrderDocuments.push({
+                quotationId,
+                fileName: document?.nameFile
+            })
+        }
+
+
+        return this.responseService.ok(purchaseOrderDocuments);
+    }
+
+    async createPdfToProvider(quotationId: number, providerId: number, purchaseOrderId: number) {
+        const quotation: any = await this.quotationRepository.findById(quotationId, {
+            include: [
+                {relation: 'customer'},
+                {relation: 'project'},
+                {relation: 'mainProjectManager'},
+                {relation: 'referenceCustomer'},
+                {
+                    relation: 'products',
+                    scope: {
+                        include: [
+                            'line',
+                            'brand',
+                            'document',
+                            {
+                                relation: 'quotationProducts',
+                                scope: {
+                                    include: ['mainFinishImage'],
+                                    where: {provider: providerId}
+                                }
+                            },
+                            {
+                                relation: 'assembledProducts',
+                                scope: {include: ['document']}
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+
+        // Filtra los productos que no contengan quotationProducts
+        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts && product?.quotationProducts.length > 0);
+        const {customer, mainProjectManager, referenceCustomer, products} = quotation;
+
+        const newProducts = products.filter((product: any) => product.quotationProducts && product.quotationProducts.length > 0);
+        const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
+        //aqui
+        let prodcutsArray = [];
+        for (const product of newProducts ?? []) {
+            const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
+            const descriptionParts = [
+                line?.name,
+                name,
+                quotationProducts?.mainMaterial,
+                quotationProducts?.mainFinish,
+                quotationProducts?.secondaryMaterial,
+                quotationProducts?.secondaryFinishing
+            ];
+
+            const description = descriptionParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
+            const measuresParts = [
+                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+            ];
+            const measures = measuresParts
+                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                .join(' ');  // Únelas con un espacio
+
+            prodcutsArray.push({
+                brandName: brand?.brandName,
+                status: quotationProducts?.status,
+                description,
+                measures,
+                image: document?.fileURL ?? defaultImage,
+                mainFinish: quotationProducts?.mainFinish,
+                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
+                quantity: quotationProducts?.quantity,
+                typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
+                originCost:
+                    quotationProducts?.originCost
+                        ? `${quotationProducts?.originCost.toLocaleString('es-MX', {
+                            style: 'currency',
+                            currency: 'MXN',
+                        })}`.replace('$', '€')
+                        : '€0.00',
+                originCode: quotationProducts?.originCode,
+                assembledProducts: quotationProducts?.assembledProducts ?? [],
+            })
+        }
+        const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
+        try {
+            const reference = this.getNumberReference(quotation?.showroomManager?.firstName ? quotation?.showroomManager?.firstName : "");
+            const referenceCustomerName = reference.trim() === "" ? "-" : reference
+
+            const properties: any = {
+                "logo": logo,
+                "customerName": `${customer?.name} ${customer?.lastName}`,
+                "quotationId": quotationId,
+                "projectManager": `${mainProjectManager?.firstName} ${mainProjectManager?.lastName}`,
+                "createdAt": dayjs(quotation?.createdAt).format('DD/MM/YYYY'),
+                "referenceCustomer": referenceCustomerName,
+                "products": prodcutsArray,
+                "type": 'Orden de compra',
+                isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
+            }
+
+            const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+
+            // await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
+            await this.purchaseOrdersRepository.document(purchaseOrderId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
+            return {nameFile};
+        } catch (error) {
+            console.log('error: ', error)
+        }
+    }
+
+    getNumberReference(nameShowroom: string, reference?: string) {
+        return reference ? `${Number(reference.match(/\d+/g)!.join('')) + 1}${nameShowroom.charAt(0).toUpperCase()}` : `1${nameShowroom.charAt(0).toUpperCase()}`;
+    }
+
     async validateBodyQuotation(data: CreateQuotation) {
         try {
             await schemaCreateQuotition.validateAsync(data);
@@ -1562,6 +1754,9 @@ export class QuotationService {
                                     'brand', 'document', 'line'
                                 ]
                             }
+                        },
+                        {
+                            relation: 'provider'
                         }
                     ]
                 }
@@ -1606,6 +1801,9 @@ export class QuotationService {
                                                 'brand', 'document', 'line'
                                             ]
                                         }
+                                    },
+                                    {
+                                        relation: 'provider'
                                     }
                                 ]
                             }
@@ -1670,6 +1868,7 @@ export class QuotationService {
         const products: any[] = [];
         const projectManagers: ProjectManagersById[] = [];
         const designers: DesignersById[] = [];
+
         for (const iterator of quotation?.quotationProducts ?? []) {
             const {line, name, document, brand} = iterator.product;
             products.push({
@@ -1685,13 +1884,14 @@ export class QuotationService {
                 percentageMaximumDiscount: iterator.percentageMaximumDiscount,
                 maximumDiscount: iterator.maximumDiscount,
                 subtotal: iterator.subtotal,
+                provider: iterator.provider,
                 mainMaterialImage: iterator?.mainMaterialImage ?? null,
                 mainFinishImage: iterator?.mainFinishImage ?? null,
                 secondaryMaterialImage: iterator?.secondaryMaterialImage ?? null,
                 secondaryFinishingImage: iterator?.secondaryFinishingImage ?? null,
                 line: line,
                 brand: brand,
-                document: document,
+                document: document
             })
         }
 
