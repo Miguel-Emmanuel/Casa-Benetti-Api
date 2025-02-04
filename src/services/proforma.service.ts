@@ -62,6 +62,15 @@ export class ProformaService {
                 }
             })
 
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({
+                where: {
+                    quotationId: proforma.quotationId,
+                    providerId: proforma.providerId,
+                }
+            });
+
+            if (!purchaseOrder)
+                return this.responseService.badRequest("Antes de crear la proforma, es necesario generar una orden de compra desde la cotización");
 
             const findProviderBrand = await this.findProviderBrand(proforma)
 
