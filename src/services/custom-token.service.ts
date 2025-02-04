@@ -37,7 +37,10 @@ export class JWTService implements TokenService {
           name: decodedToken.name,
           id: decodedToken.id,
           email: decodedToken.email,
-          organizationId: decodedToken.organizationId
+          organizationId: decodedToken.organizationId,
+          accessLevel: decodedToken.accessLevel,
+          branchId: decodedToken.branchId,
+          isMaster: decodedToken.isMaster,
         },
       );
     } catch (error) {
@@ -49,7 +52,6 @@ export class JWTService implements TokenService {
   }
 
   async generateToken(userProfile: UserProfile): Promise<string> {
-    console.log(userProfile)
     if (!userProfile) {
       throw new HttpErrors.Unauthorized(
         'Error generating token : userProfile is null',
@@ -59,7 +61,10 @@ export class JWTService implements TokenService {
       id: userProfile[securityId],
       name: userProfile.name,
       email: userProfile.email,
-      organizationId: userProfile.organizationId
+      organizationId: userProfile.organizationId,
+      accessLevel: userProfile.accessLevel,
+      branchId: userProfile.branchId,
+      isMaster: userProfile.isMaster,
     };
     // Generate a JSON Web Token
     let token: string;

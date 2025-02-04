@@ -27,7 +27,7 @@ export class RoleService {
 
   async create(userRole: any, token: string) {
     const {organizationId} = this.userService.getTokenData(token);
-    const orgValidator = await this.organizationRepository.findById(organizationId, {include: ['userRoles']});
+    const orgValidator = await this.organizationRepository.findById(organizationId, {include: ['roles']});
     if (!orgValidator || !orgValidator.isActive) {
       return this.responseService.badRequest('¡Oh, no! La organización no es válida o está desactivada, revisa por favor e intenta de nuevo.');
     }
@@ -41,12 +41,13 @@ export class RoleService {
 
     const savedRole = await this.roleRepository.create({...userRole, organizationId});
     for (const roleModule of roleModules) {
-      const savedRoleModule = await this.roleModuleRepository.create({...roleModule, userRoleId: savedRole.id});
+      const savedRoleModule = await this.roleModuleRepository.create({...roleModule, roleId: savedRole.id, moduleId: roleModule.moduleId});
     }
 
     const roleModuleResponse = await this.roleModuleRepository.find({where: {roleId: savedRole.id}});
 
     return {...savedRole, roleModules: roleModuleResponse};
+
   }
 
   async deactivateById(id: number, body: {activateDeactivateComment: string}, token: string) {
@@ -75,7 +76,7 @@ export class RoleService {
       filter = {...filter, where: {organizationId: tokenData.organizationId, isDeleted: false}};
     }
 
-    return await Promise.all((await this.roleRepository.find(filter)).map(async (b: any) => {
+    return Promise.all((await this.roleRepository.find(filter)).map(async (b: any) => {
       const createdBy = await this.userRepository.findByIdOrDefault(b.createdBy);
       const updatedBy = await this.userRepository.findByIdOrDefault(b.updatedBy);
       const assignedUsers = await this.userRepository.count({roleId: b.id});
@@ -120,11 +121,11 @@ export class RoleService {
         update: value.update,
         del: value.del,
         moduleId: value.moduleId,
-        userRoleId: value.roleId,
+        roleId: value.roleId,
         module: value?.module,
       }
     })
-    let groupList = roleModuleTransform.reduce((previousValue: any, currentValue: any) => {
+    const groupList = roleModuleTransform.reduce((previousValue: any, currentValue: any) => {
       const {module, ...current} = currentValue;
       if (!module)
         return previousValue;
@@ -133,8 +134,8 @@ export class RoleService {
       return previousValue;
     }, {});
 
-    let list = Object.keys(groupList);
-    let newList = list?.map(module => ({
+    const list = Object.keys(groupList);
+    const newList = list?.map(module => ({
       category: module,
       modules: groupList[module]
     }))

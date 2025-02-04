@@ -1,4 +1,5 @@
 import {belongsTo, model, property} from '@loopback/repository';
+import {Address} from './base/address.model';
 import {BaseEntity} from './base/base-entity.model';
 import {User} from './user.model';
 
@@ -7,15 +8,15 @@ import {User} from './user.model';
     postgresql: {
       table: 'user_UserData', // Nombre de la tabla en PostgreSQL
     },
-    foreignKeys: {
-      fk_user_userId: {
-        name: 'fk_user_userId',
-        entity: 'User',
-        entityKey: 'id',
-        foreignKey: 'userid',
+    // foreignKeys: {
+    //   fk_user_userId: {
+    //     name: 'fk_user_userId',
+    //     entity: 'User',
+    //     entityKey: 'id',
+    //     foreignKey: 'userid',
 
-      }
-    }
+    //   }
+    // }
   }
 })
 export class UserData extends BaseEntity {
@@ -29,6 +30,14 @@ export class UserData extends BaseEntity {
 
   @property({
     type: 'string',
+    jsonSchema: {
+      minLength: 10,
+      maxLength: 10,
+      errorMessage: {
+        minLength: 'Name should be at least 10 characters.',
+        maxLength: 'Name should not exceed 10 characters.',
+      }
+    }
   })
   cellphone?: string;
 
@@ -40,6 +49,11 @@ export class UserData extends BaseEntity {
 
   @belongsTo(() => User)
   userId: number;
+
+  @property({
+    type: 'object',
+  })
+  address?: Address;
 
   constructor(data?: Partial<UserData>) {
     super(data);

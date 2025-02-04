@@ -1,5 +1,5 @@
 # Check out https://hub.docker.com/_/node to select a new base image
-FROM node:18-slim AS app
+FROM node:20-bookworm AS app
 
 # Create app directory (with user `node`)
 
@@ -9,7 +9,7 @@ ARG UID=1000
 ARG GID=1000
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential curl libpq-dev \
+  && apt-get install -y --no-install-recommends build-essential curl libpq-dev libfontconfig \
   && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
   && apt-get clean \
   && groupmod -g "${GID}" node && usermod -u "${UID}" -g "${GID}" node \

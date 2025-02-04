@@ -1,0 +1,606 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cotización</title>
+    <style type="text/css">
+        @page {
+            size: 21cm 29.7cm;
+            margin-right: 2cm;
+            margin-left: 2cm;
+            margin-top: 2cm;
+            margin-bottom: 2cm;
+        }
+
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .row {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+        }
+
+        .column {
+            background-color: #ffffff;
+            padding: 20px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            margin-right: 10px;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+
+        }
+
+
+        .column-1 {
+            width: 15%;
+            /* Tamaño de la columna 1 */
+        }
+
+        .column-2 {
+            width: 60%;
+            background-color: #ffffff;
+            padding: 20px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            text-align: center;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+        }
+
+        .column-3 {
+            width: 25%;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            font-size: 6px;
+        }
+
+        .title {
+            color: red;
+            font-size: 10px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 6px;
+        }
+
+        .property {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            margin-bottom: 10px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .property-name {
+            font-weight: bold;
+        }
+
+        .property-value {}
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            /* Espacio entre la tabla y las filas */
+        }
+
+        table th,
+        table td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: center;
+            border: none;
+            font-size: 6px;
+
+        }
+
+        table th {
+            background-color: #BEB5C6;
+            color: black;
+            font-weight: bold;
+            font-size: 6px;
+
+        }
+
+        .contenedor {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: spa;
+            -ms-flex-pack: center;
+            justify-content: center;
+        }
+
+        .seccion1 {
+            width: 40%;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+
+        }
+
+        .seccion1 .header {
+            font-size: 6px;
+            border: 1px solid black;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            background-color: #BEB5C6;
+            height: -webkit-min-content;
+            height: -moz-min-content;
+            height: min-content;
+            width: 200px;
+        }
+
+        .seccion1 .body {
+            height: -webkit-min-content;
+            height: -moz-min-content;
+            height: min-content;
+            width: 200px;
+            border: 1px solid black;
+            border-top: none;
+
+        }
+
+        .seccion2 {
+            font-size: 6px;
+            width: 60%;
+            -webkit-box-pack: end;
+            -ms-flex-pack: end;
+            justify-content: end;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-align: end;
+            -ms-flex-align: end;
+            align-items: end;
+        }
+
+        .grid-container {
+            width: 50%;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-grid-columns: 1fr 2fr 1fr;
+            grid-template-columns: 1fr 2fr 1fr;
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        .grid-item {
+            width: 33.33%;
+            border: 1px solid black;
+            border-top: none;
+            border-left: none;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="row">
+        <div class="column column-1" style="justify-content: end;">
+            <img src="{{{logo}}}" style="width: 80px;" />
+        </div>
+        <div class="column column-2">
+            <p class="title">COTIZACION</p>
+            <p>Pabellón Bosques, Local 153. Prolongación Bosques de Reforma 1813, Lomas de Vista Hermosa. Of. 2167 5008
+                - 2167 5301.</p>
+            <p>Monte Everest 635, Piso 1. Lomas de Chapultepec, Miguel Hidalgo. 11000. Tel: 5035 7988</p>
+            <p>Av. Paseo de los Virreyes 45, Local P4, Puerta de Hierro, 45116, Zapopan, Jalisco</p>
+        </div>
+        <div class="column column-3">
+            <div class="property">
+                <div class="property-name">Cliente:</div>
+                <div class="property-value">
+                    {{#if isTypeQuotationGeneral}}
+                    {{customerName}}
+                    {{else}}
+                    Showroom
+                    {{/if}}
+                </div>
+            </div>
+            <div class="property">
+                <div class="property-name">Cotización:</div>
+                <div class="property-value">{{quotationId}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Project Manager::</div>
+                <div class="property-value">{{projectManager}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Fecha:</div>
+                <div class="property-value">{{createdAt}}</div>
+            </div>
+            <div class="property">
+                <div class="property-name">Referencia:</div>
+                <div class="property-value">{{referenceCustomer}}</div>
+            </div>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>MARCA</th>
+                    <th>STATUS</th>
+                    <th>DESCRIPCIÓN</th>
+                    <th>IMAGEN</th>
+                    <th>ACABADOS</th>
+                    <th>CANTIDAD</th>
+                    <th>DESCUENTO</th>
+                    <th>PRECIO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- <tr>
+                    <td>Dato 1</td>
+                    <td>Dato 2</td>
+                    <td>Dato 3</td>
+                    <td>Dato 4</td>
+                    <td>Dato 5</td>
+                    <td>Dato 6</td>
+                    <td>Dato 7</td>
+                    <td>Dato 8</td>
+                </tr>
+                <tr>
+                    <td>Dato 9</td>
+                    <td>Dato 10</td>
+                    <td>Dato 11</td>
+                    <td>Dato 12</td>
+                    <td>Dato 13</td>
+                    <td>Dato 14</td>
+                    <td>Dato 15</td>
+                    <td>Dato 16</td>
+                </tr> -->
+                {{#each products}}
+                <tr>
+                    <td>{{this.brandName}}</td>
+                    <td>{{this.status}}</td>
+                    <td>{{this.description}}</td>
+                    <td>
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.image}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>
+                        {{this.mainFinish}}
+                        <div class="column column-1" style="justify-content: end;">
+                            <img src="{{{this.mainFinishImage}}}" width="50px" />
+                        </div>
+                    </td>
+                    <td>{{this.quantity}}</td>
+                    <td>{{this.percentage}}%</td>
+
+                    {{#if currencyEuro}}
+                    <td>{{this.subtotal}}€</td>
+                    {{/if}}
+
+                    {{#if currencyUSD}}
+                    <td>${{this.subtotal}}</td>
+                    {{/if}}
+
+                    {{#if currencyPesoMexicano}}
+                    <td>${{this.subtotal}}</td>
+                    {{/if}}
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    <div class="contenedor">
+        <section class="seccion1">
+            <div class="header">
+                DATOS BANCARIOS
+            </div>
+            <div class="body">
+                <p>BENETTI CASA S. DE R.L. DE C.V.</p>
+                <p>R.F.C. BCA150508BCA</p>
+                <p>BANCO: BBVA BANCOMER</p>
+                <p>CUENTA: 0102177005</p>
+                <p>CLABE: 012180001021770051</p>
+                <p>EMAIL: {{emailPM}}</p>
+            </div>
+        </section>
+        <section class="seccion2">
+            <div class="grid-container">
+                <div class="grid-item" style="background-color: #BEB5C6;">SUBTOTAL</div>
+                <div class="grid-item"></div>
+                <div class="grid-item">{{subtotal}}€</div>
+            </div>
+            {{#if percentageAdditionalDiscount}}
+            <div class="grid-container">
+                <div class="grid-item" style="background-color: #BEB5C6;">DESCUENTO ADICIONAL</div>
+                <div class="grid-item">{{percentageAdditionalDiscount}}%</div>
+                <div class="grid-item">{{additionalDiscount}}€</div>
+            </div>
+            {{/if}}
+            <div class="grid-container">
+                <div class="grid-item" style="background-color: #BEB5C6;">IVA</div>
+                <div class="grid-item">{{percentageIva}}%</div>
+                <div class="grid-item">{{iva}}€</div>
+            </div>
+            <div class="grid-container">
+                <div class="grid-item" style="background-color: #BEB5C6;">TOTAL</div>
+                <div class="grid-item"></div>
+                <div class="grid-item">{{total}}€</div>
+            </div>
+
+            </br>
+            {{#if isTypeQuotationGeneral}}
+            <div class="grid-container">
+                <div class="grid-item" style="background-color: #BEB5C6;">ANTICIPO</div>
+                <div class="grid-item">EUROS</div>
+                <div class="grid-item">{{advance}}€</div>
+            </div>
+            <div class="grid-container">
+                <div class="grid-item" style="background-color: #BEB5C6;">T.C. {{exchangeRate}}</div>
+                <div class="grid-item">{{conversionAdvance}}</div>
+                <div class="grid-item">{{advanceCustomer}}</div>
+            </div>
+            </br>
+            </br>
+            <div class="grid-container">
+                <div class="grid-item" style="background-color: #BEB5C6;">SALDO</div>
+                <div class="grid-item">EUROS</div>
+                <div class="grid-item">{{balance}}</div>
+            </div>
+            {{/if}}
+        </section>
+    </div>
+    </br>
+    <div
+        style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex; -webkit-box-pack: center; -ms-flex-pack: center; justify-content: center;font-size: 6px; background-color: #BEB5C6;">
+        CONDICIONES COMERCIALES
+    </div>
+    <div
+        style="display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -ms-flex-direction: column; flex-direction: column;font-size: 6px">
+        <div style="display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <strong>Vigencia de la Cotización:&nbsp;</strong>
+            <p style="color: red;">15 días&nbsp;</p>
+            <p>naturales a partir de esta fecha. Mercancia con descuento de temporada hasta agotar existencias</p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <p>
+                <strong>Precio en Euros:&nbsp;</strong>
+                <span>Todos nuestros productos son europeos y pagan&nbsp;</span>
+                <span style="color: red;">IVA.&nbsp;</span>
+                <span>La presente cotización incluye el Impuesto al Valor Agregado (IVA) en el total, está en Euros,
+                    pagaderos
+                    al tipo de cambio Benetti. En caso de no conocerlo se
+                    tomará el tipo de cambio a.&nbsp;</span>
+                <span style="color: red;">la venta de Bbva.&nbsp;</span>
+                <span>Para anexos en pedidos, implicará una nueva cotización y nueva firma de autorización. Ingresados
+                    los
+                    pedidos previa firma, con los proveedores no se admitirán cambios ni modificaciones
+                    verbales o cancelaciones.</span>
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
+            <p>
+                <strong>Condiciones del Pago:&nbsp;</strong>
+                <span style="color: red;">60% de Anticipo </span>al momento de la confirmación del Pedido y <span
+                    style="color: red;">40% de saldo</span>
+                al llegar al Puerto de Veracruz. En caso de no ser liquidada una semana despues de su llegada al puerto,
+                pasará a un almacén fiscal, y
+                los costos se trasladaron a manos del cliente. Benetti Casa confirmará al cliente vía email o por
+                teléfono que la mercancía está lista para su expedición. No se procederá a la entrega de la mercancía si
+                no se tiene el 100% del pago.
+                Pago del 100% en una sola exhibición para mercancía exhibida de los <span style="color: red;">Showrooms,
+                    cubiertas</span> de cocinas y
+                <span style="color: red;">equipos</span> electrodomesticos. No se aceptan pagos en tarjeta mayores a
+                30.000 treinta mil euros. Pago del
+                10% del total de un
+                posible pedido en mercancia entregada a <span style="color: red;">vistas</span>.
+
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
+            <p>
+                <strong>Firma de aceptación:&nbsp;</strong>
+                Una vez definidos los acabados, el <span style="color: red;">cliente</span> y el <span
+                    style="color: red;">Project manager</span> firmarán la cotización propuesta, con
+                esto se mantendrán los precios acordados y se procederá al cobro del anticipo. Luego de firmada la
+                propuesta no se podrán hacer cambios ni modificaciones. En caso de llegar a ser solicitadas, tendrán un
+                costo extra y cambiarán el tiempo de entrega.
+            </p>
+        </div>
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
+            <p>
+                <strong>Documentación:&nbsp;</strong>
+                Guias mecánicas, Fichas técnicas, Sistemas de iluminación, se entregarán <span
+                    style="color: red;"></span>10 dias después</span> de pagado el
+                60% de Anticipo. Luego se programará revisón de medidas en el lugar de instalación. En caso de no tener
+                el
+                avance necesario, el arquitecto del proyecto se compromete a entregar el espacio de acuerdo a la guia
+                mecánica entregada por Benetticasa.
+            </p>
+        </div>
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
+            <p>
+                <strong>Garantías:&nbsp;</strong>
+                Todos los productos en esta cotización están fabricados con los más altos estándares de calidad y
+                cumplen con las normas emitidas por organismos y asociaciones a nivel Internacional. En base a esto,
+                extendemos una
+                garantía de 1 año contra cualquier defecto de manufactura, directa <span style="color: red;">de la
+                    marca</span>. Esta garantía se pierde
+                en caso de ser manipulada por instaladores ajenos a Benetticasa y queda exenta de reclamación o
+                reposición alguna (Perdida de
+                Garantia). Mercancía identificada como dañada al arribo o entrega en obra, debe ser reportada
+                inmediatamente a nuetsros instaladores o director de proyecto, para proceder a la reposicion bajo
+                estudio fotográfico y antecedente
+                escrito del mismo, con tiempo de entrega igual al de un nuevo pedido. En equipos Electrodomesticos, las
+                garantías son propias de cada marca.
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; ">
+            <p>
+                <strong>Servicios:&nbsp;</strong>
+                El porcentaje de servicios que se menciona en el resumen económico, considera: el producto con <span
+                    style="color: red;">flete,
+                    maniobras de carga y descarga,instalación</span> del producto, eliminación de los residuos generados
+                por el
+                empaque al
+                momento de la entrega. La entrega se considera a pie de calle o por elevador. En caso de ser en otro
+                nivel tiempo un costo adicional. <span style="color: red;">No</span> incluimos <span
+                    style="color: red;">volados ni maniobras por escaleras</span>. Aplican para la CDMX.
+                Si la entrega es fuera del
+                area metropolitana se cotizará por aparte. Guias mecánicas, fichas técnicas y planos de iluminación,
+                sitemas y puertas tardan 10 dias habiles posteriores al anticipo del 60%.
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <p>
+                <strong>Tiempo de entrega:&nbsp;</strong>
+                Se mide a partir del pago del anticipo y la firma de aprobación por parte de el cliente o encargado de
+                la selección final de materiales y acabados. Cualquier cambio requiere autorización y modifica el
+                tiempo. Las
+                vacaciones en Italia no están contempladas dentro del tiempo de fabricación. Semana de Primavera, Semana
+                de Feria de Milan, Agosto completo, mitad de Diciembre, y mitad de Enero. Los tiempos apróximados son:
+                MOBILIARIO Y
+                SISTEMAS DE PARED: <span style="color: red;">120dias</span>, a partir de la selección final de
+                materiales y acabados firmados por el cliente, arquitecto o encargado. COCINAS Y VESTIDORES: <span
+                    style="color: red;">150dias</span>. En
+                equipos Electrodomesticos, closets y puertas. Es importante
+                contar con aceptacion del arquitecto y/o responsable de obra, comprometido en respetar las dimensiones
+                acordadas según Guia mecánica/plano/cotizacion, medIante firma y llenado de cuestionario; solo asi se
+                garantiza producción
+                de estos pedidos, quedando eximida la empresa por cualquier falta a las. mismas. CUSTOM MADE: <span
+                    style="color: red;">180 dias</span>,
+                mobiliario, tapetes y pedidos especiales, condicionados a pago y firma de aceptación en pedido y plano
+                del mueble.
+                LAMPARAS: <span style="color: red;">90 dias</span>, excepto diseños custom made.
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <p>
+                <strong>Lugar de Entrega:&nbsp;</strong>
+                CDMX y el area metropolitana. Si es fuera de la CDMX, se cotiza aparte.
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <p>
+                <strong>Entrega:&nbsp;</strong>
+                Estos precios NO INCLUYEN ENTREGAS FORÁNEAS, por lo que el costo del flete, viáticos, seguros e
+                instalación se cotizará aparte en el caso de que la mercancía tenga que ser instalada fuera del área
+                metropolitana. <span style="color: red;">No
+                    hacemos instalaciones eléctricas</span> de lamparas. En caso de equipos de cocina, corren por cuenta
+                de la
+                marca que vende los equipos y en caso de lamparas corren por cuenta del cliente. En caso de que no se
+                logre realizar la entrega
+                por falta de coordinación con el cliente, <span style="color: red;">se reprogramará hasta nueva fecha
+                    disponible con cargo al
+                    cliente</span> del nuevo flete. La entrega siempre se considera a pie de camión o para subir por
+                elevador, en
+                caso de ser necesario <span style="color: red;">subir por
+                    escaleras tendrá un costo adicional</span>. La instalación debe programarse para una semana después
+                de pagado
+                el saldo.
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <p>
+                <strong>Almacenaje:&nbsp;</strong>
+                La mercancía adquirida cuenta con 60 dias de almacenaje luego de llegar a la bodega benetticasa. Luego
+                de transcurrido éste tiempo se cobrará <span style="color: red;">almacenaje de $1000</span> por m3
+                ocupado.
+            </p>
+        </div>
+
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <p>
+                <strong>Vistas:&nbsp;</strong>
+                Las vistas deben salir de tienda o bodega con cotización firmada por el director. El cliente se
+                compromete a pagar un <span style="color: red;">10% del precio total</span> que será abonado al pago de
+                la mercancía adquirida. Corre por
+                cuenta del cliente el
+                flete y la instalación en caso de no quedarse con ningun producto entregado.
+            </p>
+        </div>
+        <div style="display: -webkit-box;
+           display: -ms-flexbox;
+           display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center;">
+            <p>
+                Para mayor detalle, consultar la página web: https://www.benetticasa.com/condiciones-de-venta/
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

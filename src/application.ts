@@ -4,7 +4,8 @@ import {
   AuthorizationComponent
 } from '@loopback/authorization';
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import {ApplicationConfig, createBindingFromClass} from '@loopback/core';
+import {CronComponent} from '@loopback/cron';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication, RestBindings} from '@loopback/rest';
 import {
@@ -15,13 +16,19 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import * as dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
+import {ChangeStatusToCollection} from './cronjobs/change-status-collection';
+import {DateCollectionNotificationCronJob} from './cronjobs/date-collection-notification';
+import {DeliveryDayNotificationCronJob} from './cronjobs/delivery-day-notification';
+import {LoanEndDateNotificationCronJob} from './cronjobs/loan-end-date-notification';
+import {ResertvationDayCronJob} from './cronjobs/reservation-days';
 import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
-import {AuthServiceBindings, DataSourceBindings, FILE_UPLOAD_SERVICE, OperationHookBindings, PasswordHasherBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings} from './keys';
+import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, ExpenseServiceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
 import {OperationHook} from './operation-hooks';
+import {PurchaseOrderHook} from './operation-hooks/purchase-order.hook';
 import {UserCredentialsRepository, UserRepository} from './repositories';
 import {MySequence} from './sequence';
-import {AuthService, BcryptHasher, JWTService, MyUserService, ResponseService, RoleService, SendgridService} from './services';
+import {AuthService, BcryptHasher, BranchService, BrandService, CustomerService, ExpenseService, GroupService, JWTService, MyUserService, ProviderService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
 export {ApplicationConfig};
 
 export class BaseApiLb4Application extends BootMixin(
@@ -43,6 +50,14 @@ export class BaseApiLb4Application extends BootMixin(
       path: '/explorer',
     });
     this.component(RestExplorerComponent);
+
+
+    this.component(CronComponent);
+    this.add(createBindingFromClass(ResertvationDayCronJob));
+    this.add(createBindingFromClass(DateCollectionNotificationCronJob));
+    this.add(createBindingFromClass(DeliveryDayNotificationCronJob));
+    this.add(createBindingFromClass(LoanEndDateNotificationCronJob));
+    this.add(createBindingFromClass(ChangeStatusToCollection));
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
@@ -94,6 +109,14 @@ export class BaseApiLb4Application extends BootMixin(
     this.bind(PasswordHasherBindings.ROUNDS).to(10);
     this.bind(AuthServiceBindings.AUTH_SERVICE).toClass(AuthService);
     this.bind(RoleBindings.ROLE_SERVICE).toClass(RoleService);
+    this.bind(BranchServiceBindings.BRANCH_SERVICE).toClass(BranchService);
+    this.bind(WarehouseServiceBindings.WAREHOUSE_SERVICE).toClass(WarehouseService);
+    this.bind(ProviderServiceBindings.PROVIDER_SERVICE).toClass(ProviderService);
+    this.bind(BrandServiceBindings.BRAND_SERVICE).toClass(BrandService);
+    this.bind(CustomerServiceBindings.CUSTOMER_SERVICE).toClass(CustomerService);
+    this.bind(GroupServiceBindings.GROUP_SERVICE).toClass(GroupService);
+    this.bind(ExpenseServiceBindings.EXPENSE_SERVICE).toClass(ExpenseService);
+
     //this.bind(ConfigurationBindings.CONFIGURATION_SERVICE).toClass(ConfigurationService);
     this.bind(UserServiceBindings.USER_REPOSITORY).toClass(UserRepository);
     this.bind(UserServiceBindings.USER_CREDENTIALS_REPOSITORY).toClass(UserCredentialsRepository);
@@ -104,6 +127,7 @@ export class BaseApiLb4Application extends BootMixin(
     );
 
     this.bind(OperationHookBindings.OPERATION_SERVICE).toClass(OperationHook);
+    this.bind(OperationHookBindings.OPERATION_SERVICE_PURCHASE).toClass(PurchaseOrderHook);
     this.bind(SendgridServiceBindings.SENDGRID_SERVICE).toClass(
       SendgridService
     );

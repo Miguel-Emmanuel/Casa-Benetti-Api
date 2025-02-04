@@ -1,0 +1,756 @@
+import { /* inject, */ BindingScope, inject, injectable} from '@loopback/core';
+import {Filter, FilterExcludingWhere, InclusionFilter, repository} from '@loopback/repository';
+import dayjs from 'dayjs';
+import {DeliveryRequestStatusE, InventoryMovementsTypeE, PurchaseOrdersStatus, QuotationProductStatusE} from '../enums';
+import {schemaDeliveryRequestPatch, schemaDeliveryRequestPatchFeedback, schemaDeliveryRequestPatchStatus} from '../joi.validation.ts/delivery-request.validation';
+import {ResponseServiceBindings, SendgridServiceBindings} from '../keys';
+import {DeliveryRequest, PurchaseOrders, PurchaseOrdersRelations, QuotationProducts, QuotationProductsWithRelations} from '../models';
+import {DeliveryRequestRepository, DocumentRepository, InventoriesRepository, InventoryMovementsRepository, ProjectRepository, PurchaseOrdersRepository, QuotationProductsRepository, UserRepository} from '../repositories';
+import {ResponseService} from './response.service';
+import {SendgridService, SendgridTemplates} from './sendgrid.service';
+
+type NewOrder = {
+    inventoryUpdate?: {
+        id?: number | undefined,
+        data?: {
+            stock?: number
+        }
+    } | null,
+    inventoryMovementCreate?: {
+        quantity?: number,
+        type?: InventoryMovementsTypeE,
+        inventoriesId?: number,
+        containerId?: number,
+        collectionId?: number,
+        projectId?: number
+    } | null,
+    error: boolean
+};
+
+@injectable({scope: BindingScope.TRANSIENT})
+export class DeliveryRequestService {
+    constructor(
+        @repository(DeliveryRequestRepository)
+        public deliveryRequestRepository: DeliveryRequestRepository,
+        @inject(ResponseServiceBindings.RESPONSE_SERVICE)
+        public responseService: ResponseService,
+        @repository(QuotationProductsRepository)
+        public quotationProductsRepository: QuotationProductsRepository,
+        @repository(PurchaseOrdersRepository)
+        public purchaseOrdersRepository: PurchaseOrdersRepository,
+        @repository(ProjectRepository)
+        public projectRepository: ProjectRepository,
+        @repository(UserRepository)
+        public userRepository: UserRepository,
+        @inject(SendgridServiceBindings.SENDGRID_SERVICE)
+        public sendgridService: SendgridService,
+        @repository(DocumentRepository)
+        public documentRepository: DocumentRepository,
+        @repository(InventoriesRepository)
+        public inventoriesRepository: InventoriesRepository,
+        @repository(InventoryMovementsRepository)
+        public inventoryMovementsRepository: InventoryMovementsRepository,
+    ) { }
+
+    async find(filter?: Filter<DeliveryRequest>,) {
+        if (filter?.order) {
+            filter.order = [...filter.order, 'deliveryDay DESC']
+        } else {
+            filter = {...filter, order: ['deliveryDay DESC']};
+        }
+
+        const include: InclusionFilter[] = [
+            {
+                relation: 'customer',
+            },
+            {
+                relation: 'purchaseOrders',
+                scope: {
+                    include: [
+                        {
+                            relation: 'proforma',
+                            scope: {
+                                include: [
+                                    {
+                                        relation: 'quotationProducts',
+                                        scope: {
+                                            where: {
+                                                status: QuotationProductStatusE.ENTREGADO
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        if (filter?.include)
+            filter.include = [
+                ...filter.include,
+                ...include
+            ]
+        else
+            filter = {
+                ...filter, include: [
+                    ...include
+                ]
+            }
+
+        const deliveryRequest = await this.deliveryRequestRepository.find(filter)
+        return deliveryRequest.map(value => {
+            const {id, customer, purchaseOrders, deliveryDay, status} = value;
+            let quantity = 0;
+            for (let index = 0; index < purchaseOrders?.length; index++) {
+                const element = purchaseOrders[index];
+                const {proforma} = element;
+                const {quotationProducts} = proforma;
+                quantity += quotationProducts?.length ?? 0
+            }
+            return {
+                id,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                quantity,
+                deliveryDay,
+                status
+            }
+        });
+    }
+
+    async findByProjectiD(projectId: number, filter?: Filter<DeliveryRequest>,) {
+        try {
+            if (filter?.order) {
+                filter.order = [...filter.order, 'deliveryDay DESC']
+            } else {
+                filter = {...filter, order: ['deliveryDay DESC']};
+            }
+            if (filter?.where) {
+                filter.where = {...filter.where, projectId}
+            } else {
+                filter = {...filter, where: {projectId}};
+            }
+
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'customer',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                where: {
+                                                    status: QuotationProductStatusE.ENTREGADO
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                }
+
+            const deliveryRequest = await this.deliveryRequestRepository.find(filter)
+            return deliveryRequest?.map(value => {
+                const {id, customer, purchaseOrders, deliveryDay, status} = value;
+                let quantity = 0;
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const element = purchaseOrders[index];
+                    const {proforma} = element;
+                    const {quotationProducts} = proforma;
+                    quantity += quotationProducts?.length ?? 0
+                }
+                return {
+                    id,
+                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    quantity,
+                    deliveryDay,
+                    status,
+                    purchaseOrders: purchaseOrders?.map(value => value.id)
+                }
+            });
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
+    }
+
+    async findLogistic(filter?: Filter<DeliveryRequest>,) {
+        try {
+            if (filter?.order) {
+                filter.order = [...filter.order, 'deliveryDay DESC']
+            } else {
+                filter = {...filter, order: ['deliveryDay DESC']};
+            }
+
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'customer',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts'
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                }
+
+            const deliveryRequest = await this.deliveryRequestRepository.find(filter)
+            return deliveryRequest.map(value => {
+                const {id, customer, purchaseOrders, deliveryDay, status, createdAt} = value;
+                let quantity = 0;
+                for (let index = 0; index < purchaseOrders?.length; index++) {
+                    const element = purchaseOrders[index];
+                    const {proforma} = element;
+                    const {quotationProducts} = proforma;
+                    quantity += quotationProducts?.length ?? 0
+                }
+                return {
+                    id,
+                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    quantity,
+                    deliveryDay,
+                    status,
+                    createdAt
+                }
+            });
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error)
+        }
+    }
+
+    async findById(id: number, filter?: FilterExcludingWhere<DeliveryRequest>) {
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'documents',
+                },
+                {
+                    relation: 'customer',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                include: [
+                                                    {
+                                                        relation: 'product',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ],
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+
+            const deliveryRequest = await this.deliveryRequestRepository.findOne({where: {id}, ...filter});
+            if (!deliveryRequest)
+                throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
+
+
+            const {purchaseOrders, deliveryDay, status, comment, feedbackComment, documents, reasonRejected} = deliveryRequest;
+            return {
+                id,
+                deliveryDay,
+                status,
+                feedback: {
+                    feedbackComment,
+                    documents: documents?.map(value => {
+                        const {id, fileURL, name, extension, createdAt} = value;
+                        return {
+                            id, fileURL, name, extension, createdAt
+                        }
+                    }) ?? []
+                },
+                comment,
+                reasonRejected,
+                purchaseOrders: purchaseOrders.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                    const {id: purchaseOrderid, proforma} = value;
+                    const {quotationProducts} = proforma;
+                    return {
+                        id: purchaseOrderid,
+                        products: quotationProducts.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                                isSelected: statusProduct === QuotationProductStatusE.ENTREGADO ? true : false
+                            }
+                        })
+                    }
+                }),
+            };
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async findByIdLogistic(id: number, filter?: FilterExcludingWhere<DeliveryRequest>) {
+        try {
+            const include: InclusionFilter[] = [
+                {
+                    relation: 'customer',
+                },
+                {
+                    relation: 'purchaseOrders',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'proforma',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'quotationProducts',
+                                            scope: {
+                                                where: {
+                                                    status: QuotationProductStatusE.ENTREGADO
+                                                },
+                                                include: [
+                                                    {
+                                                        relation: 'product',
+                                                        scope: {
+                                                            include: [
+                                                                {
+                                                                    relation: 'document'
+                                                                },
+                                                                {
+                                                                    relation: 'line'
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ],
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    relation: 'project'
+                }
+            ]
+            if (filter?.include)
+                filter.include = [
+                    ...filter.include,
+                    ...include
+                ]
+            else
+                filter = {
+                    ...filter, include: [
+                        ...include
+                    ]
+                };
+
+            const deliveryRequest = await this.deliveryRequestRepository.findOne({where: {id}, ...filter});
+            if (!deliveryRequest)
+                throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
+
+
+            const {purchaseOrders, deliveryDay, status, customer, projectId, comment} = deliveryRequest;
+            let quantity = 0;
+            for (let index = 0; index < purchaseOrders?.length; index++) {
+                const element = purchaseOrders[index];
+                const {proforma} = element;
+                const {quotationProducts} = proforma;
+                quantity += quotationProducts?.length ?? 0
+            }
+            return {
+                id: deliveryRequest?.project?.projectId,
+                customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                customerAddress: customer?.address,
+                addressDescription: customer?.addressDescription,
+                quantity,
+                deliveryDay,
+                status,
+                comment,
+                purchaseOrders: purchaseOrders?.map((value: PurchaseOrders & PurchaseOrdersRelations) => {
+                    const {id: purchaseOrderid, proforma} = value;
+                    const {quotationProducts} = proforma;
+                    return {
+                        id: purchaseOrderid,
+                        products: quotationProducts?.map((value: QuotationProducts & QuotationProductsWithRelations) => {
+                            const {id: productId, product, SKU, mainMaterial, mainFinish, secondaryMaterial, secondaryFinishing, status: statusProduct} = value;
+                            const {document, line, name} = product;
+                            const descriptionParts = [
+                                line?.name,
+                                name,
+                                mainMaterial,
+                                mainFinish,
+                                secondaryMaterial,
+                                secondaryFinishing
+                            ];
+                            const description = descriptionParts.filter(part => part !== null && part !== undefined && part !== '').join(' ');
+                            return {
+                                id: productId,
+                                SKU,
+                                image: document?.fileURL,
+                                description,
+                                isSelected: statusProduct === QuotationProductStatusE.ENTREGADO ? true : false
+                            }
+                        }) ?? []
+                    }
+                }),
+            };
+        } catch (error) {
+            throw this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+
+    async updateDeliveryRequest(id: number, data: {status: DeliveryRequestStatusE, reason?: string},) {
+        try {
+            await this.validateDeloveryRequestById(id);
+            await this.validateBodyDeliveryRequestPatchStatus(data);
+            const {status, reason} = data;
+            await this.deliveryRequestRepository.updateById(id, {status, reasonRejected: reason})
+            if (status === DeliveryRequestStatusE.RECHAZADA)
+                await this.notifyLogisticsRejected(id);
+
+            return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+        } catch (error) {
+            return this.responseService.badRequest(error?.message ?? error);
+        }
+    }
+    async setFeedback(id: number, data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+        await this.validateDeloveryRequestById(id);
+        await this.validateBodyDeliveryRequestPatchFeedback(data);
+        const {status, feedbackComment, purchaseOrders, documents} = data;
+
+        let ordersToUpdate: NewOrder[] = [];
+
+        for (let index = 0; index < purchaseOrders?.length; index++) {
+
+            const {products, id: purchaseOrderId} = purchaseOrders[index];
+            for (let index = 0; index < products.length; index++) {
+                const {id, isSelected} = products[index];
+                if (isSelected) {
+                    const isUpdated: NewOrder = await this.updateInventory(id);
+                    if (isUpdated.error)
+                        return this.responseService.badRequest("No se ha podido completar la entrega por que la cantidad de articulos supera el stock");
+
+                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO});
+
+                    ordersToUpdate.push(isUpdated);
+                }
+            }
+            const searchSelected = products.filter(value => value.isSelected === true);
+
+
+            if (products.length === searchSelected.length)
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA, deliveryRequestId: id})
+            else
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: id})
+        }
+
+        ordersToUpdate.forEach(async (newOrder: NewOrder) => {
+            if (newOrder?.inventoryUpdate?.data && newOrder.inventoryMovementCreate) {
+                await this.inventoriesRepository.updateById(
+                    newOrder?.inventoryUpdate?.id, newOrder?.inventoryUpdate?.data
+                );
+                await this.inventoryMovementsRepository.create(newOrder?.inventoryMovementCreate);
+            }
+            return;
+        });
+
+        await this.deliveryRequestRepository.updateById(id, {status, feedbackComment});
+
+        if (status === DeliveryRequestStatusE.RECHAZADA)
+            await this.notifyLogisticsRejected(id);
+
+        await this.createDocument(id, documents)
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async patch(id: number, data: {deliveryDay: string, comment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        const deliveryRequest = await this.validateDeloveryRequestById(id);
+        await this.validateBodyDeliveryRequestPatch(data);
+        if (deliveryRequest.status !== DeliveryRequestStatusE.POR_VALIDAR && deliveryRequest.status !== DeliveryRequestStatusE.RECHAZADA)
+            throw this.responseService.badRequest("Solicitud de entrega no puede ser actualizada.");
+
+        const {comment, deliveryDay, purchaseOrders} = data
+        await this.deliveryRequestRepository.updateById(id, {comment, deliveryDay});
+
+        for (let index = 0; index < purchaseOrders?.length; index++) {
+            const {products, id: purchaseOrderId} = purchaseOrders[index];
+            for (let index = 0; index < products.length; index++) {
+                const {id, isSelected} = products[index];
+                if (isSelected)
+                    await this.quotationProductsRepository.updateById(id, {status: QuotationProductStatusE.ENTREGADO})
+            }
+            const searchSelected = products.filter(value => value.isSelected === true);
+
+
+            if (products.length === searchSelected.length)
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA, deliveryRequestId: id})
+            else
+                await this.purchaseOrdersRepository.updateById(purchaseOrderId, {status: PurchaseOrdersStatus.ENTREGA_PARCIAL, deliveryRequestId: id})
+        }
+        await this.notifyLogistics(deliveryRequest.projectId, deliveryDay);
+        return this.responseService.ok({message: '¡En hora buena! La acción se ha realizado con éxito.'});
+    }
+
+    async notifyLogisticsRejected(id: number) {
+        const delivery = await this.deliveryRequestRepository.findById(id, {
+            include: [
+                {
+                    relation: 'project',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'quotation',
+                                scope: {
+                                    include: [
+                                        {
+                                            relation: 'mainProjectManager'
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        })
+        const email = delivery?.project?.quotation?.mainProjectManager?.email;
+        const options = {
+            to: email,
+            templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.id,
+            dynamicTemplateData: {
+                subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC_REJECTED.subject,
+            }
+        };
+        await this.sendgridService.sendNotification(options);
+    }
+
+    async notifyLogistics(projectId: number, deliveryDay: string) {
+        const project = await this.projectRepository.findById(projectId, {
+            include: [
+                {
+                    relation: 'customer'
+                },
+                {
+                    relation: 'quotation',
+                    scope: {
+                        include: [
+                            {
+                                relation: 'mainProjectManager'
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
+        const users = await this.userRepository.find({where: {isLogistics: true}})
+        const emails = users.map(value => value.email);
+        const {customer, quotation} = project;
+        const {mainProjectManager} = quotation;
+        for (let index = 0; index < emails?.length; index++) {
+            const elementMail = emails[index];
+            const options = {
+                to: elementMail,
+                templateId: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.id,
+                dynamicTemplateData: {
+                    subject: SendgridTemplates.DELEVIRY_REQUEST_LOGISTIC.subject,
+                    customerName: `${customer?.name} ${customer?.lastName ?? ''} ${customer?.secondLastName ?? ''}`,
+                    projectId: project.projectId,
+                    mainPM: `${mainProjectManager?.firstName} ${mainProjectManager?.lastName ?? ''}`,
+                    date: dayjs(deliveryDay).format('DD/MM/YYYY')
+                }
+            };
+            await this.sendgridService.sendNotification(options);
+        }
+    }
+
+    async validateBodyDeliveryRequestPatch(data: {deliveryDay: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[]}) {
+        try {
+            await schemaDeliveryRequestPatch.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateBodyDeliveryRequestPatchStatus(data: {status: string, reason?: string}) {
+        try {
+            await schemaDeliveryRequestPatchStatus.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async validateBodyDeliveryRequestPatchFeedback(data: {status: DeliveryRequestStatusE, feedbackComment: string, purchaseOrders: {id: number, products: {id: number, isSelected: boolean}[]}[], documents: {fileURL: string, name: string, extension: string, id?: number}[]}) {
+        try {
+            await schemaDeliveryRequestPatchFeedback.validateAsync(data);
+        }
+        catch (err) {
+            const {details} = err;
+            const {context: {key}, message} = details[0];
+
+            if (message.includes('is required') || message.includes('is not allowed to be empty'))
+                throw this.responseService.unprocessableEntity(`${key} es requerido.`)
+            throw this.responseService.unprocessableEntity(message)
+        }
+    }
+
+    async createDocument(deliveryRequestId: number, documents?: {fileURL: string, name: string, extension: string, id?: number}[]) {
+        if (documents) {
+            for (let index = 0; index < documents?.length; index++) {
+                const element = documents[index];
+                if (element && !element?.id) {
+                    await this.deliveryRequestRepository.documents(deliveryRequestId).create(element);
+                } else if (element) {
+                    await this.documentRepository.updateById(element.id, {...element});
+                }
+            }
+        }
+    }
+
+    async validateDeloveryRequestById(id: number,) {
+        const deliveryRequest = await this.deliveryRequestRepository.findOne({where: {id}});
+        if (!deliveryRequest)
+            throw this.responseService.badRequest("Solicitud de entrega no encontrada.")
+        return deliveryRequest;
+    }
+
+    async updateInventory(orderProductId: number) {
+        const purchaseOrderProduct = await this.quotationProductsRepository.findById(orderProductId, {
+            fields: ["id", "quantity", "quotationId"]
+        });
+
+        const inventory = await this.inventoriesRepository.findOne({
+            where: {quotationProductsId: orderProductId},
+            fields: ["id", "quotationProductsId", "containerId", "collectionId", "warehouseId", "stock"]
+        });
+
+        const currentStock: number = inventory?.stock ? inventory?.stock : 0
+        const productQuantity: number = purchaseOrderProduct.quantity ? purchaseOrderProduct.quantity : 0;
+
+        const newStock = currentStock - productQuantity;
+
+        if (newStock < 0)
+            return {
+                inventoryUpdate: null,
+                inventoryMovementCreate: null,
+                error: true
+            };
+
+        const getProjectId = await this.projectRepository.findOne({
+            where: {quotationId: purchaseOrderProduct.quotationId},
+            fields: ["id", "quotationId"]
+        })
+
+        return {
+            inventoryUpdate: {
+                id: inventory?.id,
+                data: {stock: newStock}
+            },
+            inventoryMovementCreate: {
+                quantity: productQuantity,
+                type: InventoryMovementsTypeE.SALIDA,
+                inventoriesId: inventory?.id,
+                containerId: inventory?.containerId,
+                collectionId: inventory?.collectionId,
+                projectId: getProjectId?.id
+            },
+            error: false
+        };
+    }
+}

@@ -42,6 +42,105 @@ export class Document extends BaseEntity {
   })
   userDataId?: number;
 
+  @property({
+    type: 'number',
+  })
+  productId?: number;
+
+  @property({
+    type: 'number',
+  })
+  assembledProductsId?: number;
+
+  @property({
+    type: 'number',
+  })
+  proofPaymentQuotationId?: number;
+
+  @property({
+    type: 'number',
+  })
+  clientQuoteFileId?: number;
+
+  @property({
+    type: 'number',
+  })
+  providerFileId?: number;
+
+  @property({
+    type: 'number',
+  })
+  advanceFileId?: number;
+
+  @property({
+    type: 'number',
+  })
+  projectId?: number;
+
+  @property({
+    type: 'number',
+  })
+  advancePaymentRecordId?: number;
+
+  @property({
+    type: 'number',
+  })
+  mainMaterialId?: number;
+
+  @property({
+    type: 'number',
+  })
+  mainFinishId?: number;
+
+  @property({
+    type: 'number',
+  })
+  secondaryMaterialId?: number;
+
+  @property({
+    type: 'number',
+  })
+  secondaryFinishingId?: number;
+
+  @property({
+    type: 'number',
+  })
+  proformaId?: number;
+
+  @property({
+    type: 'number',
+  })
+  accountPayableHistoryId?: number;
+
+  @property({
+    type: 'number',
+  })
+  commissionPaymentId?: number;
+
+  @property({
+    type: 'number',
+  })
+  deliveryRequestId?: number;
+
+  @property({
+    type: 'number',
+  })
+  collectionId?: number;
+
+  @property({
+    type: 'number',
+  })
+  containerId?: number;
+
+  @property({
+    type: 'number',
+  })
+  clientQuoteId?: number;
+
+  @property({
+    type: 'number',
+  })
+  purchaseOrdersId?: number;
 
   constructor(data?: Partial<Document>) {
     super(data);

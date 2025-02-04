@@ -126,4 +126,26 @@ export class AuthController {
     // user reset password intent
     return this.authService.resetPassword(resetPassword, token)
   }
+
+  @post('/auth/verify-permissions')
+  async hasPermissions(
+    @requestBody({
+      description: 'The input of request reset password',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              module: {type: 'string'}
+            },
+          },
+        },
+      },
+    })
+    module: {module: string},
+    @param.header.string('authorization') token: string
+  ): Promise<any> {
+    return this.authService.hasPermissions(module, token);
+  }
 }

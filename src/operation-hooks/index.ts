@@ -18,7 +18,6 @@ export class OperationHook {
     async beforeSave(_this: any, ctx: any, modelName: LogModelName) {
         const currentUser = await this.getCurrentUser();
         //const logService = await this.logService();
-        console.log('currentUser: ', currentUser?.id)
         //const token = this.req?.headers?.authorization || undefined;
         const {isNewInstance, instance, data, where} = ctx;
         if (isNewInstance) {

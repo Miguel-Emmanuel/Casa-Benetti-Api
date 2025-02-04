@@ -29,9 +29,9 @@ export class Role extends BaseEntity {
   description: string;
 
   @property({
-    type: 'number',
+    type: 'string',
   })
-  accessLevel: number;
+  accessLevel: string;
 
   @property({
     type: 'number',
