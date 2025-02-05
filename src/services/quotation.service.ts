@@ -983,12 +983,11 @@ export class QuotationService {
                 },
                 include: ['document']
             });
-
             // Si existe una purchaseOrder, elimina el objeto con la key del providerId
             if (existingPurchaseOrder) {
                 purchaseOrderDocuments.push({
                     quotationId,
-                    fileName: existingPurchaseOrder?.document?.fileURL
+                    fileName: existingPurchaseOrder?.document?.name
                 });
                 delete productsByProvider[providerId];
             }
@@ -1058,10 +1057,11 @@ export class QuotationService {
         });
 
         // Filtra los productos que no contengan quotationProducts
-        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts && product?.quotationProducts.length > 0);
+        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts);
         const {customer, mainProjectManager, referenceCustomer, products} = quotation;
 
-        const newProducts = products.filter((product: any) => product.quotationProducts && product.quotationProducts.length > 0);
+        const newProducts = products.filter((product: any) => product.quotationProducts);
+        console.log('newProducts', newProducts)
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
         let prodcutsArray = [];
