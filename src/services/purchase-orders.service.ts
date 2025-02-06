@@ -132,8 +132,11 @@ export class PurchaseOrdersService {
                     ...include
                 ]
             };
-        return (await this.purchaseOrdersRepository.find(filter)).map(value => {
+        const result = (await this.purchaseOrdersRepository.find(filter)).map(value => {
             const {id, proforma, status} = value;
+            if (!proforma || !proforma.project) {
+                return null; // Retornamos un objeto vacío si no hay `project`
+            }
             const {provider, brand, quotationProducts, project} = proforma;
             const {quotation, projectId} = project
             return {
@@ -145,7 +148,8 @@ export class PurchaseOrdersService {
                 status,
                 closingDate: quotation?.closingDate
             }
-        });
+        }).filter(item => item !== null)
+        return result as any
     }
 
     async findById(id: number, filter?: FilterExcludingWhere<PurchaseOrders>) {
