@@ -1530,6 +1530,9 @@ export class ProjectService {
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
         let prodcutsArray = [];
+        if (!products || products.length == 0) {
+            return
+        }
         for (const product of products ?? []) {
             const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
             const descriptionParts = [

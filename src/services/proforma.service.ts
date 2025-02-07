@@ -62,6 +62,15 @@ export class ProformaService {
                 }
             })
 
+            const purchaseOrder = await this.purchaseOrdersRepository.findOne({
+                where: {
+                    quotationId: proforma.quotationId,
+                    providerId: proforma.providerId,
+                }
+            });
+
+            if (!purchaseOrder)
+                return this.responseService.badRequest("Antes de crear la proforma, es necesario generar una orden de compra desde la cotización");
 
             const findProviderBrand = await this.findProviderBrand(proforma)
 
@@ -325,7 +334,6 @@ export class ProformaService {
     async updateById(id: number, data: {proforma: Omit<Proforma, 'id'>, document: Document}) {
         try {
             const {proforma, document} = data
-
             await this.findByIdProforma(id)
             await this.findByIdProvider(proforma.providerId)
             // await this.findByIdProject(proforma.projectId)
@@ -335,9 +343,6 @@ export class ProformaService {
 
             if (findProformaAccount && findProformaAccount?.accountPayable && findProformaAccount?.accountPayable.accountPayableHistories)
                 return this.responseService.badRequest('¡Oh, no! Ya hay un pago registrado, y no es posible modificarlo.');
-
-            if (findProviderBrand)
-                return this.responseService.badRequest('¡Oh, no! Ya hay un registro con esta marca y proveedor, revisa por favor e intenta de nuevo.');
 
             if (!document)
                 return this.responseService.badRequest('¡Oh, no! Debes subir un documento de Proforma');

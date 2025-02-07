@@ -983,12 +983,11 @@ export class QuotationService {
                 },
                 include: ['document']
             });
-
             // Si existe una purchaseOrder, elimina el objeto con la key del providerId
             if (existingPurchaseOrder) {
                 purchaseOrderDocuments.push({
                     quotationId,
-                    fileName: existingPurchaseOrder?.document?.fileURL
+                    fileName: existingPurchaseOrder?.document?.name
                 });
                 delete productsByProvider[providerId];
             }
@@ -1058,10 +1057,11 @@ export class QuotationService {
         });
 
         // Filtra los productos que no contengan quotationProducts
-        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts && product?.quotationProducts.length > 0);
+        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts);
         const {customer, mainProjectManager, referenceCustomer, products} = quotation;
 
-        const newProducts = products.filter((product: any) => product.quotationProducts && product.quotationProducts.length > 0);
+        const newProducts = products.filter((product: any) => product.quotationProducts);
+        console.log('newProducts', newProducts)
         const defaultImage = `data:image/svg+xml;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/NoImageProduct.svg`, {encoding: 'base64'})}`
         //aqui
         let prodcutsArray = [];
@@ -2137,7 +2137,36 @@ export class QuotationService {
                     await this.validateAdvanceCustomerAndEnsamblado(id);
                 }
                 status = StatusQuotationE.CERRADA;
-                await this.projectService.create({quotationId: id}, transaction);
+                const newProject = await this.projectService.create({quotationId: id}, transaction);
+
+                const ordenData = await this.purchaseOrdersRepository.find({where: {quotationId: id}});
+                const proformadata = await this.proformaRepository.find({where: {quotationId: id}});
+                try {
+                    if (proformadata) {
+                        proformadata.forEach(async (i) => {
+                            if (i.id) {
+                                await this.proformaRepository.updateById(
+                                    i.id,
+                                    {projectId: newProject.id}
+                                );
+                            }
+                        })
+                    }
+                } catch (error) {
+                    console.log(error)
+                }
+                try {
+
+                    if (ordenData) {
+                        ordenData.forEach(async (i) => {
+                            if (i.id) {
+                                await this.purchaseOrdersRepository.updateById(i.id, {projectId: newProject.id});
+                            }
+                        })
+                    }
+                } catch (error) {
+                    console.log(error)
+                }
             }
 
             await this.quotationRepository.updateById(id, {status, comment, closingDate: isRejected === true ? undefined : new Date()}, {transaction});
