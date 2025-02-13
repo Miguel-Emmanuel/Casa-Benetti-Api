@@ -134,8 +134,12 @@ export class ProformaService {
         let attachments = undefined;
         if (fileURL && fileURL.includes('/files/')) {
             try {
-                const nameFile = fileURL.replace(`${process.env.URL_BACKEND}//files//`, '')
-                const content = `${await fs.readFile(`${process.cwd()}/.sandbox/${nameFile}`, {encoding: 'base64'})}`
+                const nameFile = fileURL.split('/files/').pop(); // Obtiene solo el nombre del archivo
+
+
+                const filePath = `${process.cwd()}/.sandbox/${nameFile}`;
+
+                const content = `${await fs.readFile(filePath, {encoding: 'base64'})}`;
                 attachments = [
                     {
                         content: content,
@@ -143,9 +147,9 @@ export class ProformaService {
                         type: "application/pdf",
                         disposition: "attachment"
                     }
-                ]
+                ];
             } catch (error) {
-
+                console.error('Error leyendo el archivo:', error);
             }
         }
         const proforma = await this.proformaRepository.findById(proformaId, {
