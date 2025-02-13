@@ -561,20 +561,15 @@ export class ProformaService {
 
             await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {accountPayableId: accountsPayable.id, proformaId, accountsReceivableId});
         } else if (typeQuotation === TypeQuotationE.GENERAL) {
-            if (advance && totalPaid >= advance) {
-                const purchaseOrder = await this.purchaseOrdersRepository.findOne({
-                    where: {
-                        quotationId,
-                        providerId: proforma.providerId,
-                    }
-                });
-
-                if (!purchaseOrder)
-                    return this.responseService.notFound("No se ha encontrado la orden de compra");
-
-                await this.purchaseOrdersRepository.updateById(purchaseOrder.id, {accountPayableId: accountsPayable.id, proformaId, accountsReceivableId});
-
-            }
+            const purchaseOrder = await this.purchaseOrdersRepository.find({
+                where: {
+                    quotationId,
+                    providerId: proforma.providerId,
+                }
+            });
+            if (!purchaseOrder)
+                return this.responseService.notFound("No se ha encontrado la orden de compra");
+            await this.purchaseOrdersRepository.updateById(purchaseOrder[purchaseOrder.length - 1].id, {accountPayableId: accountsPayable.id, proformaId, accountsReceivableId});
         }
 
     }
