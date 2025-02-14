@@ -1,3 +1,4 @@
+import {Storage} from '@google-cloud/storage';
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
@@ -1130,7 +1131,19 @@ export class QuotationService {
 
             const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
 
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
 
             // await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
             await this.purchaseOrdersRepository.document(purchaseOrderId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
@@ -2648,7 +2661,20 @@ export class QuotationService {
             let nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             if (quotation.typeQuotation === TypeQuotationE.SHOWROOM)
                 nameFile = `showroom_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
             await this.projectRepository.clientQuoteFile(projectId).delete();
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
         } catch (error) {
@@ -2727,7 +2753,20 @@ export class QuotationService {
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
             const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
             await this.projectRepository.providerFile(projectId).delete();
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
         } catch (error) {
@@ -2770,7 +2809,22 @@ export class QuotationService {
                 }
 
                 const nameFile = `recibo_anticipo_${paymentCurrency}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-                await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+
+                const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+
+                await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, localPath);
+
+                if (process.env.NODE_ENV === 'production') {
+                    const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                    const bucketName = process.env.GCP_BUCKET_NAME as string;
+                    await storage.bucket(bucketName).upload(localPath, {
+                        destination: nameFile,
+                    });
+
+                    // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                    await fs.unlink(localPath);
+                }
+
                 await this.projectRepository.advanceFile(projectId).delete();
                 await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
             }
