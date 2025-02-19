@@ -1058,7 +1058,6 @@ export class QuotationService {
         });
 
         // Filtra los productos que no contengan quotationProducts
-        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts);
         const {customer, mainProjectManager, referenceCustomer, products} = quotation;
 
         const newProducts = products.filter((product: any) => product.quotationProducts);
@@ -1067,50 +1066,53 @@ export class QuotationService {
         //aqui
         let prodcutsArray = [];
         for (const product of newProducts ?? []) {
-            const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
-            const descriptionParts = [
-                line?.name,
-                name,
-                quotationProducts?.mainMaterial,
-                quotationProducts?.mainFinish,
-                quotationProducts?.secondaryMaterial,
-                quotationProducts?.secondaryFinishing
-            ];
+            if (product.quotationProducts.providerId == providerId) {
+                const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
+                const descriptionParts = [
+                    line?.name,
+                    name,
+                    quotationProducts?.mainMaterial,
+                    quotationProducts?.mainFinish,
+                    quotationProducts?.secondaryMaterial,
+                    quotationProducts?.secondaryFinishing
+                ];
 
-            const description = descriptionParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
+                const description = descriptionParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
 
-            const measuresParts = [
-                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
-                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
-                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
-                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
-            ];
-            const measures = measuresParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
+                const measuresParts = [
+                    quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                    quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                    quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                    quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+                ];
+                const measures = measuresParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
 
-            prodcutsArray.push({
-                brandName: brand?.brandName,
-                status: quotationProducts?.status,
-                description,
-                measures,
-                image: document?.fileURL ?? defaultImage,
-                mainFinish: quotationProducts?.mainFinish,
-                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
-                quantity: quotationProducts?.quantity,
-                typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
-                originCost:
-                    quotationProducts?.originCost
-                        ? `${quotationProducts?.originCost.toLocaleString('es-MX', {
-                            style: 'currency',
-                            currency: 'MXN',
-                        })}`.replace('$', '€')
-                        : '€0.00',
-                originCode: quotationProducts?.originCode,
-                assembledProducts: quotationProducts?.assembledProducts ?? [],
-            })
+                prodcutsArray.push({
+                    brandName: brand?.brandName,
+                    status: quotationProducts?.status,
+                    description,
+                    measures,
+                    image: document?.fileURL ?? defaultImage,
+                    mainFinish: quotationProducts?.mainFinish,
+                    mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
+                    quantity: quotationProducts?.quantity,
+                    typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
+                    originCost:
+                        quotationProducts?.originCost
+                            ? `${quotationProducts?.originCost.toLocaleString('es-MX', {
+                                style: 'currency',
+                                currency: 'MXN',
+                            })}`.replace('$', '€')
+                            : '€0.00',
+                    originCode: quotationProducts?.originCode,
+                    assembledProducts: quotationProducts?.assembledProducts ?? [],
+                })
+            }
+
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
@@ -1129,7 +1131,7 @@ export class QuotationService {
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
 
-            const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            const nameFile = `Orden-de-compra_${quotationId}_${providerId}_${dayjs().format('DD-MM-YYYY')}.pdf`
 
             const localPath = `${process.cwd()}/.sandbox/${nameFile}`
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, localPath);
