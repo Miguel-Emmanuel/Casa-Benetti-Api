@@ -1,3 +1,4 @@
+import {Storage} from '@google-cloud/storage';
 import {AuthenticationComponent} from '@loopback/authentication';
 import {JWTAuthenticationComponent} from '@loopback/authentication-jwt';
 import {
@@ -23,12 +24,13 @@ import {LoanEndDateNotificationCronJob} from './cronjobs/loan-end-date-notificat
 import {ResertvationDayCronJob} from './cronjobs/reservation-days';
 import {DbDataSource} from './datasources';
 import dbConfig from './datasources/db.datasource.config.json';
-import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, ExpenseServiceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
+import {AuthServiceBindings, BranchServiceBindings, BrandServiceBindings, CustomerServiceBindings, DataSourceBindings, ExpenseServiceBindings, FILE_UPLOAD_SERVICE, GroupServiceBindings, OperationHookBindings, PasswordHasherBindings, ProviderServiceBindings, ResponseServiceBindings, RoleBindings, STORAGE_DIRECTORY, SendgridServiceBindings, StorageBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings, WarehouseServiceBindings} from './keys';
 import {OperationHook} from './operation-hooks';
 import {PurchaseOrderHook} from './operation-hooks/purchase-order.hook';
 import {UserCredentialsRepository, UserRepository} from './repositories';
 import {MySequence} from './sequence';
 import {AuthService, BcryptHasher, BranchService, BrandService, CustomerService, ExpenseService, GroupService, JWTService, MyUserService, ProviderService, ResponseService, RoleService, SendgridService, WarehouseService} from './services';
+import {GcpStorageProvider} from './services/gcp-storage.service';
 export {ApplicationConfig};
 
 export class BaseApiLb4Application extends BootMixin(
@@ -38,6 +40,21 @@ export class BaseApiLb4Application extends BootMixin(
     super(options);
 
     dotenv.config();
+
+    // Configuración de las bindings
+    this.bind(StorageBindings.GCP_CONFIG).to(
+      new Storage({
+        projectId: process.env.GCP_PROJECT_ID,
+        keyFilename: process.env.GCP_CREDENTIALS,
+      })
+    );
+
+    // Binding para el nombre del bucket
+    this.bind(StorageBindings.GCP_BUCKET_NAME)
+      .to(process.env.GCP_BUCKET_NAME);
+
+    this.bind('services.gcsProvider').toProvider(GcpStorageProvider);
+
 
     // Set up the custom sequence
     this.sequence(MySequence);

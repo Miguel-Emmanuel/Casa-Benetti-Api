@@ -9,6 +9,17 @@ import {PasswordHasher} from './services/bcrypt.service';
 import {SendgridService} from './services/sendgrid.service';
 import {FileUploadHandler} from './types';
 dotenv.config();
+
+
+// src/keys.ts
+export namespace StorageBindings {
+  // Llave única para la configuración de Google Cloud
+  export const GCP_CONFIG = 'gcp.config';
+
+  // Llave única para el nombre del bucket
+  export const GCP_BUCKET_NAME = 'gcp.bucket.name';
+}
+
 export interface Credentials {
   email: string;
   username: string;
