@@ -1,9 +1,11 @@
+import {Storage} from '@google-cloud/storage';
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, InclusionFilter, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
+import dotenv from "dotenv";
 import fs from "fs/promises";
 import {AccessLevelRolE, AdvancePaymentTypeE, CurrencyE, DeliveryRequestStatusE, ExchangeRateE, ExchangeRateQuotationE, PaymentTypeProofE, ProjectStatusE, PurchaseOrdersStatus, QuotationProductStatusE, TypeAdvancePaymentRecordE, TypeArticleE, TypeQuotationE} from '../enums';
 import {convertToMoney, convertToMoneyEuro} from '../helpers/convertMoney';
@@ -17,6 +19,8 @@ import {LetterNumberService} from './letter-number.service';
 import {PdfService} from './pdf.service';
 import {ResponseService} from './response.service';
 import {SendgridService, SendgridTemplates} from './sendgrid.service';
+
+dotenv.config();
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProjectService {
@@ -1515,8 +1519,22 @@ export class ProjectService {
             let nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             if (quotation.typeQuotation === TypeQuotationE.SHOWROOM)
                 nameFile = `showroom_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
-            await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`;
+
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
+
+            await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction});
         } catch (error) {
             await transaction.rollback()
             console.log('error: ', error)
@@ -1598,7 +1616,21 @@ export class ProjectService {
 
             const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
 
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                // 2. Subir el PDF al bucket de GCP
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
         } catch (error) {
             await transaction.rollback()
@@ -1639,7 +1671,21 @@ export class ProjectService {
                 }
 
                 const nameFile = `recibo_anticipo_${paymentCurrency}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-                await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+                const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+                await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, localPath);
+
+                if (process.env.NODE_ENV === 'production') {
+                    // 2. Subir el PDF al bucket de GCP
+                    const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                    const bucketName = process.env.GCP_BUCKET_NAME as string;
+                    await storage.bucket(bucketName).upload(localPath, {
+                        destination: nameFile,
+                    });
+
+                    // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                    await fs.unlink(localPath);
+                }
+
                 await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'}, {transaction})
 
             }
