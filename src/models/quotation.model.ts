@@ -7,6 +7,7 @@ import {Customer, CustomerWithRelations} from './customer.model';
 import {Document} from './document.model';
 import {Organization} from './organization.model';
 import {Product, ProductWithRelations} from './product.model';
+import {Proforma} from './proforma.model';
 import {Project} from './project.model';
 import {ProofPaymentQuotation, ProofPaymentQuotationWithRelations} from './proof-payment-quotation.model';
 import {QuotationDesigner} from './quotation-designer.model';
@@ -14,7 +15,6 @@ import {QuotationProductsStock, QuotationProductsStockWithRelations} from './quo
 import {QuotationProducts, QuotationProductsWithRelations} from './quotation-products.model';
 import {QuotationProjectManager} from './quotation-project-manager.model';
 import {User, UserWithRelations} from './user.model';
-import {Proforma} from './proforma.model';
 
 @model({
     settings: {
@@ -139,6 +139,12 @@ export class Quotation extends BaseEntity {
 
     @belongsTo(() => Branch)
     branchId: number;
+
+    @property({
+        type: 'boolean',
+        required: false,
+    })
+    isUploaded: boolean;
 
     //Usuario que creo la cotizacion
     @belongsTo(() => User, {name: 'projectManager'})
@@ -304,8 +310,8 @@ export class Quotation extends BaseEntity {
 
 
     //Porcentaje descuento adicional
-  @hasMany(() => Proforma)
-  proformas: Proforma[];
+    @hasMany(() => Proforma)
+    proformas: Proforma[];
     @property({
         type: 'number',
         required: false,
