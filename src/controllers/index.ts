@@ -1,6 +1,6 @@
 export * from './branch.controller';
-export * from './file-download.controller';
-export * from './file-upload.controller';
+// export * from './file-download.controller';
+// export * from './file-upload.controller';
 export * from './location.controller';
 export * from './module.controller';
 export * from './ping.controller';
@@ -19,6 +19,7 @@ export * from './expense.controller';
 export * from './group.controller';
 
 export * from './assembled-products.controller';
+export * from './file.controller';
 export * from './project.controller';
 export * from './proof-payment-quotation.controller';
 

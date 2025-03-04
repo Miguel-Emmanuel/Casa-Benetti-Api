@@ -1,3 +1,4 @@
+import {Storage} from '@google-cloud/storage';
 import { /* inject, */ BindingScope, inject, injectable, service} from '@loopback/core';
 import {Filter, FilterExcludingWhere, IsolationLevel, Where, repository} from '@loopback/repository';
 import {Response, RestBindings} from '@loopback/rest';
@@ -1057,7 +1058,6 @@ export class QuotationService {
         });
 
         // Filtra los productos que no contengan quotationProducts
-        quotation.products = quotation.products.filter((product: any) => product?.quotationProducts);
         const {customer, mainProjectManager, referenceCustomer, products} = quotation;
 
         const newProducts = products.filter((product: any) => product.quotationProducts);
@@ -1066,50 +1066,53 @@ export class QuotationService {
         //aqui
         let prodcutsArray = [];
         for (const product of newProducts ?? []) {
-            const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
-            const descriptionParts = [
-                line?.name,
-                name,
-                quotationProducts?.mainMaterial,
-                quotationProducts?.mainFinish,
-                quotationProducts?.secondaryMaterial,
-                quotationProducts?.secondaryFinishing
-            ];
+            if (product.quotationProducts.providerId == providerId) {
+                const {brand, document, quotationProducts, typeArticle, assembledProducts, line, name} = product;
+                const descriptionParts = [
+                    line?.name,
+                    name,
+                    quotationProducts?.mainMaterial,
+                    quotationProducts?.mainFinish,
+                    quotationProducts?.secondaryMaterial,
+                    quotationProducts?.secondaryFinishing
+                ];
 
-            const description = descriptionParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
+                const description = descriptionParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
 
-            const measuresParts = [
-                quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
-                quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
-                quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
-                quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
-            ];
-            const measures = measuresParts
-                .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
-                .join(' ');  // Únelas con un espacio
+                const measuresParts = [
+                    quotationProducts?.measureWide ? `Ancho: ${quotationProducts?.measureWide}` : "",
+                    quotationProducts?.measureHigh ? `Alto: ${quotationProducts?.measureHigh}` : "",
+                    quotationProducts?.measureDepth ? `Prof: ${quotationProducts?.measureDepth}` : "",
+                    quotationProducts?.measureCircumference ? `Circ: ${quotationProducts?.measureCircumference}` : ""
+                ];
+                const measures = measuresParts
+                    .filter(part => part !== null && part !== undefined && part !== '')  // Filtra partes que no son nulas, indefinidas o vacías
+                    .join(' ');  // Únelas con un espacio
 
-            prodcutsArray.push({
-                brandName: brand?.brandName,
-                status: quotationProducts?.status,
-                description,
-                measures,
-                image: document?.fileURL ?? defaultImage,
-                mainFinish: quotationProducts?.mainFinish,
-                mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
-                quantity: quotationProducts?.quantity,
-                typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
-                originCost:
-                    quotationProducts?.originCost
-                        ? `${quotationProducts?.originCost.toLocaleString('es-MX', {
-                            style: 'currency',
-                            currency: 'MXN',
-                        })}`.replace('$', '€')
-                        : '€0.00',
-                originCode: quotationProducts?.originCode,
-                assembledProducts: quotationProducts?.assembledProducts ?? [],
-            })
+                prodcutsArray.push({
+                    brandName: brand?.brandName,
+                    status: quotationProducts?.status,
+                    description,
+                    measures,
+                    image: document?.fileURL ?? defaultImage,
+                    mainFinish: quotationProducts?.mainFinish,
+                    mainFinishImage: quotationProducts?.mainFinishImage?.fileURL ?? defaultImage,
+                    quantity: quotationProducts?.quantity,
+                    typeArticle: TypeArticleE.PRODUCTO_ENSAMBLADO === typeArticle ? true : false,
+                    originCost:
+                        quotationProducts?.originCost
+                            ? `${quotationProducts?.originCost.toLocaleString('es-MX', {
+                                style: 'currency',
+                                currency: 'MXN',
+                            })}`.replace('$', '€')
+                            : '€0.00',
+                    originCode: quotationProducts?.originCode,
+                    assembledProducts: quotationProducts?.assembledProducts ?? [],
+                })
+            }
+
         }
         const logo = `data:image/png;base64,${await fs.readFile(`${process.cwd()}/src/templates/images/logo_benetti.png`, {encoding: 'base64'})}`
         try {
@@ -1128,9 +1131,21 @@ export class QuotationService {
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
 
-            const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
+            const nameFile = `Orden-de-compra_${quotationId}_${providerId}_${dayjs().format('DD-MM-YYYY')}.pdf`
 
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
 
             // await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
             await this.purchaseOrdersRepository.document(purchaseOrderId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
@@ -1612,7 +1627,7 @@ export class QuotationService {
             filter = {
                 ...filter, include: [...filterInclude]
             };
-        return (await this.quotationRepository.find(filter)).map(value => {
+        return (await this.quotationRepository.find(filter)).filter(quotation => quotation.isUploaded).map(value => {
             const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId, typeQuotation} = value;
             const {total} = this.getPricesQuotation(value);
             return {
@@ -2648,7 +2663,20 @@ export class QuotationService {
             let nameFile = `cotizacion_cliente_${customer ? customer?.name : ''}-${customer ? customer?.lastName : ''}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
             if (quotation.typeQuotation === TypeQuotationE.SHOWROOM)
                 nameFile = `showroom_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
             await this.projectRepository.clientQuoteFile(projectId).delete();
             await this.projectRepository.clientQuoteFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
         } catch (error) {
@@ -2727,7 +2755,20 @@ export class QuotationService {
                 isTypeQuotationGeneral: quotation.typeQuotation === TypeQuotationE.GENERAL
             }
             const nameFile = `Orden-de-compra_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+
+            const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+            await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_proveedor.html`, properties, {format: 'A3'}, localPath);
+
+            if (process.env.NODE_ENV === 'production') {
+                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const bucketName = process.env.GCP_BUCKET_NAME as string;
+                await storage.bucket(bucketName).upload(localPath, {
+                    destination: nameFile,
+                });
+
+                // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                await fs.unlink(localPath);
+            }
             await this.projectRepository.providerFile(projectId).delete();
             await this.projectRepository.providerFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
         } catch (error) {
@@ -2770,7 +2811,22 @@ export class QuotationService {
                 }
 
                 const nameFile = `recibo_anticipo_${paymentCurrency}_${quotationId}_${dayjs().format('DD-MM-YYYY')}.pdf`
-                await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, `${process.cwd()}/.sandbox/${nameFile}`);
+
+                const localPath = `${process.cwd()}/.sandbox/${nameFile}`
+
+                await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/recibo_anticipo.html`, propertiesAdvance, {format: 'A3'}, localPath);
+
+                if (process.env.NODE_ENV === 'production') {
+                    const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                    const bucketName = process.env.GCP_BUCKET_NAME as string;
+                    await storage.bucket(bucketName).upload(localPath, {
+                        destination: nameFile,
+                    });
+
+                    // 3. Opcional: eliminar el archivo local si prefieres no almacenarlo
+                    await fs.unlink(localPath);
+                }
+
                 await this.projectRepository.advanceFile(projectId).delete();
                 await this.projectRepository.advanceFile(projectId).create({fileURL: `${process.env.URL_BACKEND}/files/${nameFile}`, name: nameFile, extension: 'pdf'})
             }

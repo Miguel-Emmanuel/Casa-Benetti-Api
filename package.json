@@ -53,6 +53,7 @@
     "!*/__tests__"
   ],
   "dependencies": {
+    "@google-cloud/storage": "^7.15.1",
     "@loopback/authentication": "^11.0.2",
     "@loopback/authentication-jwt": "^0.15.2",
     "@loopback/authorization": "^0.15.2",
