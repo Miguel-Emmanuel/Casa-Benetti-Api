@@ -1627,7 +1627,7 @@ export class QuotationService {
             filter = {
                 ...filter, include: [...filterInclude]
             };
-        return (await this.quotationRepository.find(filter)).map(value => {
+        return (await this.quotationRepository.find(filter)).filter(quotation => quotation.isUploaded).map(value => {
             const {id, customer, projectManagers, exchangeRateQuotation, status, updatedAt, branch, mainProjectManager, mainProjectManagerId, typeQuotation} = value;
             const {total} = this.getPricesQuotation(value);
             return {

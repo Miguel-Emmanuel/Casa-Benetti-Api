@@ -107,48 +107,69 @@ export class StorageController {
       : this.deleteFileLocal(filename);
   }
 
-  async uploadFileGcp(request: any, response: any) {
-    const bucket = this.storage.bucket(this.bucketName);
+  async uploadFileGcp(request: Request, response: any) {
+    try {
+      const bucket = this.storage.bucket(this.bucketName);
 
-    return new Promise((resolve, reject) => {
-      const upload = multer({
-        storage: multer.memoryStorage(),
-        limits: {fileSize: 5 * 1024 * 1024}, // Límite de 5MB
-      }).single('file');
+      return new Promise((resolve, reject) => {
+        // Configuramos multer con memoria como almacenamiento
+        const upload = multer({
+          storage: multer.memoryStorage(),
+          limits: {fileSize: 5 * 1024 * 1024}, // límite de 5MB
+        }).any();
 
-      upload(request, response, async (err: any) => {
-        if (err) return reject(err);
+        upload(request, response, async (err: any) => {
+          if (err) return reject(err);
 
-        const file = request.file;
-        if (!file) return reject(new Error('No se recibió ningún archivo'));
+          // request.files es ahora un array de archivos
+          const files = request.files as Express.Multer.File[];
+          if (!files || !files.length) {
+            return reject(new Error('No se recibió ningún archivo'));
+          }
 
-        const blob = bucket.file(file.originalname);
-        const blobStream = blob.createWriteStream({
-          resumable: false,
-          metadata: {contentType: file.mimetype},
+          try {
+            // Subimos cada archivo al bucket y recopilamos resultados
+            const uploadPromises = files.map(file => {
+              return new Promise((res, rej) => {
+                const blob = bucket.file(file.originalname);
+                const blobStream = blob.createWriteStream({
+                  resumable: false,
+                  metadata: {contentType: file.mimetype},
+                });
+
+                blobStream.on('error', error => rej(error));
+                blobStream.on('finish', () => {
+                  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+                  // En lugar de usar file.fieldname,
+                  // asignamos el valor de originalname a fieldname.
+                  res({
+                    fieldname: file.originalname,
+                    originalname: file.originalname,
+                    encoding: file.encoding,
+                    mimetype: file.mimetype,
+                    size: file.size,
+                    url: publicUrl,
+                  });
+                });
+
+                blobStream.end(file.buffer);
+              });
+            });
+
+            // Espera a que todas las subidas finalicen
+            const uploadedFiles = await Promise.all(uploadPromises);
+
+            // Devuelve la lista de archivos subidos
+            resolve({files: uploadedFiles, fields: []});
+          } catch (uploadError) {
+            reject(uploadError);
+          }
         });
-
-        blobStream.on('error', error => reject(error));
-        blobStream.on('finish', async () => {
-          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-          resolve({
-            files: [
-              {
-                fieldname: file.fieldname,
-                originalname: file.originalname,
-                encoding: file.encoding,
-                mimetype: file.mimetype,
-                url: publicUrl,
-                size: file.size
-              }
-            ],
-            fields: {}
-          });
-        });
-
-        blobStream.end(file.buffer);
       });
-    });
+    } catch (error) {
+      console.log("error:", error)
+      return error;
+    }
   }
 
   async uploadFileLocal(request: any, response: any) {
