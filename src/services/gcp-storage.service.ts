@@ -10,11 +10,11 @@ export class GcpStorageProvider implements Provider<Storage> {
       projectId: string;
       // keyFilename?: string; // Ya no es necesario
     },
-  ) {}
+  ) { }
 
   value() {
     // Usar la variable de entorno GOOGLE_APPLICATION_CREDENTIALS
-    return new Storage({ projectId: this.config.projectId });
+    return new Storage({projectId: this.config.projectId});
     // Si la variable está definida, la librería la usará automáticamente
   }
 }
