@@ -1524,7 +1524,7 @@ export class ProjectService {
             await this.pdfService.createPDFWithTemplateHtmlSaveFile(`${process.cwd()}/src/templates/cotizacion_cliente.html`, properties, {format: 'A3'}, localPath);
 
             if (process.env.NODE_ENV === 'production') {
-                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const storage = new Storage();
                 const bucketName = process.env.GCP_BUCKET_NAME as string;
                 await storage.bucket(bucketName).upload(localPath, {
                     destination: nameFile,
@@ -1622,7 +1622,7 @@ export class ProjectService {
 
             if (process.env.NODE_ENV === 'production') {
                 // 2. Subir el PDF al bucket de GCP
-                const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                const storage = new Storage();
                 const bucketName = process.env.GCP_BUCKET_NAME as string;
                 await storage.bucket(bucketName).upload(localPath, {
                     destination: nameFile,
@@ -1676,7 +1676,7 @@ export class ProjectService {
 
                 if (process.env.NODE_ENV === 'production') {
                     // 2. Subir el PDF al bucket de GCP
-                    const storage = new Storage({keyFilename: process.env.GCP_CREDENTIALS});
+                    const storage = new Storage();
                     const bucketName = process.env.GCP_BUCKET_NAME as string;
                     await storage.bucket(bucketName).upload(localPath, {
                         destination: nameFile,

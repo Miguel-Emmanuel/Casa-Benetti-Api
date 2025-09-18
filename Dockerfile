@@ -18,16 +18,21 @@ RUN apt-get update \
 # Set to a non-root built-in user `node`
 USER node
 
+
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
 COPY --chown=node package*.json  ./
 COPY --chown=node .env  ./
+COPY --chown=node config/gcs-credentials.json ./config/gcs-credentials.json
 
 RUN npm install --force && npm cache clean --force
 
 # Bundle app source code
 COPY --chown=node . .
+
+# Set Workload Identity Federation credentials path
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/config/gcs-credentials.json
 
 RUN npm run build
 RUN npm run migrate

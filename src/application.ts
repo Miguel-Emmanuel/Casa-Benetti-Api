@@ -44,8 +44,8 @@ export class BaseApiLb4Application extends BootMixin(
     // Configuración de las bindings
     this.bind(StorageBindings.GCP_CONFIG).to(
       new Storage({
-        projectId: process.env.GCP_PROJECT_ID,
-        keyFilename: process.env.GCP_CREDENTIALS,
+        projectId: process.env.GCP_PROJECT_ID
+        // La autenticación se gestiona por GOOGLE_APPLICATION_CREDENTIALS
       })
     );
 

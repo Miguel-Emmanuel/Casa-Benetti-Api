@@ -5,14 +5,16 @@ import {StorageBindings} from '../keys'; // <-- Nueva importación
 
 export class GcpStorageProvider implements Provider<Storage> {
   constructor(
-    @inject(StorageBindings.GCP_CONFIG) // <-- Usa la constante aquí
+    @inject(StorageBindings.GCP_CONFIG)
     private config: {
       projectId: string;
-      keyFilename: string;
+      // keyFilename?: string; // Ya no es necesario
     },
-  ) { }
+  ) {}
 
   value() {
-    return new Storage(this.config);
+    // Usar la variable de entorno GOOGLE_APPLICATION_CREDENTIALS
+    return new Storage({ projectId: this.config.projectId });
+    // Si la variable está definida, la librería la usará automáticamente
   }
 }
