@@ -19,11 +19,7 @@ RUN apt-get update \
 USER node
 
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
 COPY --chown=node package*.json  ./
-COPY --chown=node .env  ./
 COPY --chown=node config/gcs-credentials.json ./config/gcs-credentials.json
 
 RUN npm install --force && npm cache clean --force
